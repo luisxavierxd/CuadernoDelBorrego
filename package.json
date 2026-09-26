@@ -1,7 +1,7 @@
 {
   "name": "cuaderno-del-borrego",
   "private": true,
-  "description": "Cálculo 1 y Física 1 · sitio estático sin build. Solo los scripts de validación usan Node.",
+  "description": "Clases universitarias de cálculo y física · sitio estático sin build. Solo los scripts de validación usan Node.",
   "license": "MIT",
   "scripts": {
     "check": "node scripts/check.js",

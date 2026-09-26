@@ -94,6 +94,7 @@
 .tone-mat-accent { --card-tone: var(--mat-accent); --card-soft: var(--mat-soft); }
 .tone-fis-accent { --card-tone: var(--fis-accent); --card-soft: var(--fis-soft); }
 .tone-mat-n2 { --card-tone: var(--mat-n2); }
+.tone-mat-n3 { --card-tone: var(--mat-n3); }
 .tone-fis-n2 { --card-tone: var(--fis-n2); }
 .tone-fis-n3 { --card-tone: var(--fis-n3); }
 

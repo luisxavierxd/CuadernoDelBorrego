@@ -1,6 +1,7 @@
 # Cuaderno del Borrego
 
-Cursos autogestionados de **Cálculo 1** y **Física 1** para alumnos de nuevo ingreso, cada uno de 15 sesiones,
+Clases universitarias de cálculo y física, autogestionadas. Empieza con **Cálculo 1** y **Física 1** (15 sesiones cada uno);
+Cálculo 2 y 3 (ecuaciones diferenciales) y Física 2 y 3 están en el plan. Cada curso trae
 con explicaciones gráficas, labs que comparan tu respuesta contra la real y simulacros de examen.
 Sitio estático para GitHub Pages. **Proyecto de alumnos, no oficial.**
 

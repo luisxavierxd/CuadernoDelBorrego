@@ -18,7 +18,7 @@ for (const bg of BACKGROUNDS) {
   PAIRS.push(['--line-strong', bg, GRAPHIC, 'borde de control']);
   PAIRS.push(['--focus', bg, GRAPHIC, 'anillo de foco']);
   // Tarjetas "próximamente" del hub: el tono del nivel solo se usa como marca gráfica.
-  for (const fg of ['--mat-n2', '--fis-n2', '--fis-n3']) PAIRS.push([fg, bg, GRAPHIC, 'marca de nivel soon (gráfico)', ['hub']]);
+  for (const fg of ['--mat-n2', '--mat-n3', '--fis-n2', '--fis-n3']) PAIRS.push([fg, bg, GRAPHIC, 'marca de nivel soon (gráfico)', ['hub']]);
 }
 PAIRS.push(['--on-accent', '--accent', TEXT, 'botón primario']);
 PAIRS.push(['--accent', '--accent-soft', TEXT, 'chip']);

@@ -18,7 +18,7 @@ window.COURSES = [
   {
     subject: 'mat',
     label: 'Matemáticas',
-    blurb: 'De la razón de cambio a los sólidos de revolución, con gráficas que se mueven contigo.',
+    blurb: 'De la derivada a las ecuaciones diferenciales, con gráficas que se mueven contigo.',
     levels: [
       {
         level: 'N1', tone: 'mat-accent', status: 'live', url: 'calculo-1/', sessions: 15,
@@ -29,13 +29,18 @@ window.COURSES = [
         level: 'N2', tone: 'mat-n2', status: 'soon',
         title: 'Cálculo 2: multivariable',
         blurb: 'Funciones de varias variables, integrales dobles y triples.'
+      },
+      {
+        level: 'N3', tone: 'mat-n3', status: 'soon',
+        title: 'Cálculo 3: ecuaciones diferenciales',
+        blurb: 'Ecuaciones de primer orden, lineales de orden superior, transformada de Laplace, sistemas y series.'
       }
     ]
   },
   {
     subject: 'fis',
     label: 'Física',
-    blurb: 'Vectores, movimiento y fuerzas, con labs que comparan tu respuesta contra la simulación.',
+    blurb: 'De los vectores al electromagnetismo, con labs que comparan tu respuesta contra la simulación.',
     levels: [
       {
         level: 'N1', tone: 'fis-accent', status: 'live', url: 'fisica-1/', sessions: 15,
