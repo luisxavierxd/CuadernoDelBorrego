@@ -87,7 +87,28 @@
     };
   }
 
-  window.LabMath.antiderivative = { prep: prep, build: build, simpson: simpson, yRange: yRange, verify: verify };
+  // Cruces por cero de fn en (a, b): muestreo + bisección. Sirve para partir el área
+  // sombreada en tramos de un solo signo (un polígono que cruza el eje se triangula mal).
+  function roots(fn, a, b, n) {
+    n = n || 800;
+    var out = [], h = (b - a) / n, x0 = a, y0 = fn(a);
+    for (var i = 1; i <= n; i++) {
+      var x1 = a + i * h, y1 = fn(x1);
+      if (y1 === 0 && i < n) out.push(x1);                 // la muestra cae justo en la raíz
+      else if (isFinite(y0) && isFinite(y1) && y0 * y1 < 0) {
+        var lo = x0, hi = x1, flo = y0;
+        for (var k = 0; k < 50; k++) {
+          var mid = (lo + hi) / 2, fm = fn(mid);
+          if (flo * fm <= 0) hi = mid; else { lo = mid; flo = fm; }
+        }
+        out.push((lo + hi) / 2);
+      }
+      x0 = x1; y0 = y1;
+    }
+    return out;
+  }
+
+  window.LabMath.antiderivative = { prep: prep, build: build, simpson: simpson, yRange: yRange, verify: verify, roots: roots };
 
   /* ------------------------------ UI ------------------------------ */
   var PRESETS = [
@@ -144,6 +165,19 @@
       if (typeof m.color === 'string' && /^#?f{6}$/i.test(m.color.replace('#', '')) && typeof m.setColor === 'function') m.setColor(color);
       (m.submobjects || m.children || []).forEach(walk);
     })(mob);
+  }
+
+  // Las etiquetas del eje y quedan centradas a una distancia fija, así que las anchas
+  // (como −2) chocan con el eje. Se alinean a la derecha cuando ya tienen tamaño.
+  function alignYLabels(axes) {
+    var labels = axes.yAxis && axes.yAxis.getNumberLabels ? axes.yAxis.getNumberLabels() : [];
+    return Promise.all(labels.map(function (l) { return l.waitForRender ? l.waitForRender().catch(function () {}) : null; }))
+      .then(function () {
+        labels.forEach(function (l) {
+          var w = l.getWidth ? l.getWidth() : 0;
+          if (w > 0) l.position.set(-0.16 - w / 2, l.position.y, 0);
+        });
+      });
   }
 
   window.Labs['antiderivative-check'] = function (mount, cfg) {
@@ -243,6 +277,8 @@
         var axes = new M.Axes({ xRange: R.x, yRange: R.y, xLength: W * 0.86, yLength: H * 0.82, color: C.axes, tips: false,
           axisConfig: { includeNumbers: true, numberFontSize: 20, decimalPlaces: R.x[2] < 1 || R.y[2] < 1 ? 1 : 0, strokeWidth: 1.5 } });
         recolorWhite(axes, C.axes);
+        await alignYLabels(axes);
+        if (stale()) return;
         var ylo = R.y[0], yhi = R.y[1];
         var opts = function (c, w) { return { color: c, strokeWidth: w, xRange: [R.x[0], R.x[1]], numSamples: 240 }; };
         var fG = axes.plot(clampFn(r.f, ylo, yhi), opts(C.f, 5));
@@ -256,14 +292,23 @@
         var N = 400, hh = (b - a) / N, cum = [0];
         for (var i = 1; i <= N; i++) cum.push(cum[i - 1] + simpson(r.f, a + (i - 1) * hh, a + i * hh, 4));
         var areaAt = function (x) { var t = (x - a) / hh, j = Math.max(0, Math.min(N - 1, Math.floor(t))); return cum[j] + (cum[j + 1] - cum[j]) * (t - j); };
-        var fArea = axes.plot(r.f, { xRange: [a, b], numSamples: 240, strokeWidth: 0 });
+        var fArea = axes.plot(clampFn(r.f, ylo, yhi), { xRange: [a, b], numSamples: 240, strokeWidth: 0 });
+        var cuts = roots(r.f, a, b);
+        // Un tramo por signo de f: getArea de manim-web cierra un solo polígono y,
+        // si f cruza el eje, la triangulación deja una cuña.
+        var areaPieces = function (xx) {
+          var pts = [a].concat(cuts.filter(function (c) { return c < xx; }), [xx]), out = [];
+          for (var p = 0; p < pts.length - 1; p++) {
+            if (pts[p + 1] - pts[p] > 1e-6) out.push(axes.getArea(fArea, [pts[p], pts[p + 1]], { color: C.f, opacity: 0.28, strokeWidth: 0 }));
+          }
+          return out;
+        };
         var areaAtX = function (x) {
           var xx = Math.max(a + 1e-6, x);
-          return [
-            axes.getArea(fArea, [a, xx], { color: C.f, opacity: 0.28, strokeWidth: 0 }),
+          return areaPieces(xx).concat([
             axes.plot(clampFn(areaAt, ylo, yhi), { xRange: [a, xx], color: C.trace, strokeWidth: 2.5, numSamples: Math.max(8, Math.round(240 * (xx - a) / (b - a))) }),
             new M.Dot({ point: axes.c2p(x, Math.max(ylo, Math.min(yhi, areaAt(x)))), radius: 0.09, color: C.trace })
-          ];
+          ]);
         };
         var done = r.kind === 'ok' ? 'Listo. El área acumulada coincide con F(x) − F(a) en todo el intervalo.'
           : 'Listo. Donde el punto se separa de la curva punteada, tu F no es la antiderivada.';

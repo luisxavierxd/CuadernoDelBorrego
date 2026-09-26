@@ -12,6 +12,7 @@
     "validate": "node scripts/check.js && node scripts/contrast.js && node scripts/labs-math.test.js && node scripts/examples.test.js && node scripts/qa-browser.js"
   },
   "devDependencies": {
+    "mathjs": "15.2.0",
     "playwright": "1.63.0"
   }
 }

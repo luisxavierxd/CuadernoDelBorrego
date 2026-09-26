@@ -66,6 +66,12 @@ function near(got, want, tol, msg) {
   test('Simpson n = 400 integra sin(x) en [0, π] ≈ 2', () => {
     near(A.simpson(Math.sin, 0, Math.PI, 400), 2, 1e-9);
   });
+  test('roots encuentra los cruces por cero (para partir el área)', () => {
+    const r = A.roots((x) => x * x - 2 * x, -1, 3);       // raíces 0 y 2
+    eq(r.length, 2, 'número de raíces');
+    near(r[0], 0, 1e-9); near(r[1], 2, 1e-9);
+    eq(A.roots((x) => x * x + 1, -2, 2).length, 0, 'sin raíces');
+  });
   test('yRange usa percentiles 2–98 e incluye el 0', () => {
     const vals = []; for (let i = 0; i < 100; i++) vals.push(i + 1);
     vals.push(1e9);                                   // atípico: no debe estirar el eje

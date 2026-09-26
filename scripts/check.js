@@ -131,6 +131,16 @@ function checkCourse(course) {
   }
 }
 
+/* ---------- 2b. Versiones: lo que prueba Node = lo que carga el sitio ---------- */
+function checkVersions() {
+  const pkg = JSON.parse(fs.readFileSync(path.join(ROOT, 'package.json'), 'utf8'));
+  const dev = pkg.devDependencies || {};
+  const reg = fs.readFileSync(path.join(ROOT, 'shared/js/labs/registry.js'), 'utf8');
+  const cdn = (reg.match(/mathjs@([\d.]+)/) || [])[1];
+  if (!cdn) err('shared/js/labs/registry.js', 'no encontré la URL de math.js');
+  else if (dev.mathjs !== cdn) err('package.json', `mathjs ${dev.mathjs} para pruebas, pero el sitio carga ${cdn}`);
+}
+
 /* ---------- 3. Colores fuera de tokens.css ---------- */
 function checkColors() {
   const hex = /(?<![&\w])#(?:[0-9a-fA-F]{8}|[0-9a-fA-F]{6}|[0-9a-fA-F]{3,4})(?![\w-])/g;
@@ -213,6 +223,7 @@ async function checkExternal(urls) {
   checkCourses();
   checkPresets();
   COURSE_DIRS.forEach(checkCourse);
+  checkVersions();
   checkColors();
   const external = new Set();
   checkPages(external);
