@@ -6,8 +6,10 @@
   "scripts": {
     "check": "node scripts/check.js",
     "contrast": "node scripts/contrast.js",
+    "test:labs": "node scripts/labs-math.test.js",
+    "test:examples": "node scripts/examples.test.js",
     "qa": "node scripts/qa-browser.js",
-    "validate": "node scripts/check.js && node scripts/contrast.js"
+    "validate": "node scripts/check.js && node scripts/contrast.js && node scripts/labs-math.test.js && node scripts/examples.test.js && node scripts/qa-browser.js"
   },
   "devDependencies": {
     "playwright": "1.63.0"

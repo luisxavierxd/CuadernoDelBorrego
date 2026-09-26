@@ -27,7 +27,7 @@ window.COURSE_META = {
       sessions: [
         { n: 4,  title: 'Posición, velocidad y aceleración como derivadas · MRU', lab: 'motion-graphs' },
         { n: 5,  title: 'MRUA · caída libre y tiro vertical', lab: 'kinematics-check' },
-        { n: 6,  title: 'Tiro parabólico', lab: 'projectile-check' },
+        { n: 6,  title: 'Tiro parabólico', lab: 'projectile-check', ready: true },
         { n: 7,  title: 'Movimiento circular y relativo', lab: 'circular-vectors' }
       ]
     },

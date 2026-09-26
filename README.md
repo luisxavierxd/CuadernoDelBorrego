@@ -11,30 +11,42 @@ HTML/CSS/JS vanilla, **sin build step ni framework**. Librerías por CDN con ver
 ## Estructura
 
 ```
-index.html                    Hub: hero, cómo funciona, biblioteca y atajos de práctica
-calculo-1/ · fisica-1/        Portadas de curso (y, desde F1, sesiones/sesion-NN/)
+index.html                         Hub: hero, cómo funciona, biblioteca y atajos de práctica
+calculo-1/ · fisica-1/             Portadas de curso
+  sesiones/sesion-NN/index.html    Shell mínimo de cada sesión (lo crea scripts/make-shell.js)
 quiz/ · formularios/ · creditos/
-shared/css/tokens.css         ÚNICO archivo con colores (cuaderno claro y pizarrón oscuro)
-shared/css/*.css              base, theme (fondos y paneles), home, course
-shared/js/theme.js            Tema claro/oscuro, clave 'cb-theme', evento 'cb:themechange'
-shared/js/*.js                animaciones, filtros de trazo, biblioteca, hero del hub, portada de curso
-data/courses.js               Fuente única de cursos del hub
-data/quiz-presets.js          Atajos del ritmo sugerido (quiz y parciales)
-data/<curso>/course-meta.js   Bloques y sesiones del curso
-reference/lab-antiderivada.html  Demo aprobada que se porta al registro de labs
-scripts/                      Validación en Node
+shared/css/tokens.css              ÚNICO archivo con colores (cuaderno claro y pizarrón oscuro)
+shared/css/*.css                   base, theme, home, course, sesion, labs
+shared/js/theme.js                 Tema claro/oscuro, clave 'cb-theme', evento 'cb:themechange'
+shared/js/session-template.js      CBTemplate.render(SESSION_DATA)
+shared/js/labs/registry.js         window.Labs · window.LabMath · window.LabUI
+shared/js/labs/<tipo>.js           Un archivo por lab (antiderivative-check, projectile-check…)
+shared/js/diagrams/<curso>.js      Diagramas SVG: Diagrams[id](state)
+shared/js/exercises.js             Ejercicios parametrizados y su calificación
+data/courses.js                    Fuente única de cursos del hub
+data/quiz-presets.js               Atajos del ritmo sugerido (quiz y parciales)
+data/<curso>/course-meta.js        Bloques y sesiones (ready: true = sesión publicada)
+data/<curso>/sesion-NN.js          Contenido de cada sesión (window.SESSION_DATA)
+reference/lab-antiderivada.html    Demo aprobada que se portó a antiderivative-check
+scripts/                           Validación en Node
 ```
 
 ## Previsualizar y validar
 
 ```bash
 python -m http.server 8000      # y abre http://localhost:8000
-npm install                     # solo instala Playwright (para QA en navegador)
+npm install                     # solo instala Playwright (QA en navegador)
+npm run validate                # todo lo de abajo, en orden
 npm run check                   # esquemas, links internos y externos, colores fuera de tokens, pie de página
 npm run contrast                # WCAG AA de los tokens en ambos temas
+npm run test:labs               # LabMath (math.js 15.2.0 se descarga una vez a scripts/.cache)
+npm run test:examples           # ejemplos y ejercicios contra LabMath, en cientos de instancias
+npm run qa                      # Playwright: 360/1024/1440 px, ambos temas, reduced-motion, labs montados
 ```
 
 `node scripts/check.js --offline` omite la revisión de links externos.
+Para publicar una sesión nueva: escribe `data/<curso>/sesion-NN.js`, marca `ready: true` en su
+`course-meta.js` y corre `node scripts/make-shell.js <curso> NN`.
 
 ## Reglas
 

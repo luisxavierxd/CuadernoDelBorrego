@@ -173,7 +173,8 @@ function checkPages(external) {
       if (/^(mailto:|tel:|data:|javascript:)/.test(url)) continue;
       if (/^https?:\/\//.test(url)) { external.add(url); continue; }
       if (url.startsWith('#')) {
-        if (url.length > 1 && !ids.has(url.slice(1))) err(r, `ancla ${url} no existe en la página`);
+        // En los shells de sesión, los ids los crea session-template.js al renderizar.
+        if (!isShell && url.length > 1 && !ids.has(url.slice(1))) err(r, `ancla ${url} no existe en la página`);
         continue;
       }
       const clean = url.split('#')[0].split('?')[0];

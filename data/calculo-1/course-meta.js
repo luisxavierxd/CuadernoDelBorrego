@@ -36,7 +36,7 @@ window.COURSE_META = {
       id: 'C', label: 'Integral',
       sessions: [
         { n: 9,  title: 'La integral y el Teorema Fundamental del Cálculo', temario: ['5.1', '5.2'], lab: 'riemann' },
-        { n: 10, title: 'Integrales directas y cambio de variable', temario: [], lab: 'antiderivative-check' },
+        { n: 10, title: 'Integrales directas y cambio de variable', temario: [], lab: 'antiderivative-check', ready: true },
         { n: 11, title: 'Integración por partes', temario: ['5.6'], lab: 'antiderivative-check' },
         { n: 12, title: 'Sustitución trigonométrica', temario: ['5.6'], lab: 'antiderivative-check' },
         { n: 13, title: 'Fracciones parciales', temario: ['5.6'], lab: 'antiderivative-check' },

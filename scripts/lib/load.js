@@ -1,13 +1,14 @@
-// Ejecuta archivos de data/ (que cuelgan de window.*) en un sandbox de Node.
+// Ejecuta archivos de data/ y de labs (que cuelgan de window.*) sin DOM.
+// Corren en el mismo realm que Node (con new Function) para que sus objetos
+// sean compatibles con librerías como math.js, igual que en el navegador.
 'use strict';
 const fs = require('fs');
-const vm = require('vm');
 
 function loadData(files, win) {
   const window = win || {};
-  const ctx = vm.createContext({ window, console, Math, JSON, String, Number, Array, Object });
   for (const f of [].concat(files)) {
-    vm.runInContext(fs.readFileSync(f, 'utf8'), ctx, { filename: f });
+    const src = fs.readFileSync(f, 'utf8') + '\n//# sourceURL=' + f;
+    new Function('window', 'document', src)(window, undefined);
   }
   return window;
 }

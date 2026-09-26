@@ -1,0 +1,250 @@
+/* =====================================================================
+   Ejercicios autocalificables (§9).
+   Esquema de un ejercicio (en data/<curso>/sesion-NN.js):
+     id, title?
+     vars:     { a: [min, max, step], … }        where?(v) → bool (restricción)
+     derive?(v) → { … }                          valores extra calculados
+     prompt(v) → HTML con $…$                    diagram?: { id, state(v) }
+     check:    'numeric' | 'expr' | 'choice'
+     answer(v) → número | expresión (string)
+     unit?, tol?: { rel } | { abs }              (numeric; por omisión rel 1 %)
+     integrand?(v) → string, domain?: [a, b]     (expr: la respuesta es una antiderivada, se acepta + C)
+     options?(v) → [{ text, correct?, say? }]    (choice)
+     mistakes?: { clave: v → valor típico erróneo }
+     feedback?: [{ when: 'clave', say: string | v → string }]   mensaje "casi"
+     hint, solution(v) → HTML con $…$
+   La parte pura (instance, grade) no toca el DOM: la prueba scripts/examples.test.js.
+   ===================================================================== */
+(function () {
+  /* ------------------------- Parte pura ------------------------- */
+  function decimals(step) { var s = String(step); return s.indexOf('.') < 0 ? 0 : s.length - s.indexOf('.') - 1; }
+
+  function instance(ex, rnd) {
+    rnd = rnd || Math.random;
+    for (var tries = 0; tries < 200; tries++) {
+      var v = {};
+      Object.keys(ex.vars || {}).forEach(function (k) {
+        var r = ex.vars[k], min = r[0], max = r[1], step = r[2] || 1;
+        var n = Math.round((max - min) / step);
+        v[k] = +(min + step * Math.floor(rnd() * (n + 1))).toFixed(decimals(step));
+      });
+      if (!ex.where || ex.where(v)) {
+        if (ex.derive) { var d = ex.derive(v); for (var key in d) v[key] = d[key]; }
+        return v;
+      }
+    }
+    throw new Error('No encontré valores que cumplan la restricción de ' + ex.id);
+  }
+
+  function parseNumber(s, math) {
+    var t = String(s == null ? '' : s).trim().replace(/\s+/g, '').replace(/,/g, '.').replace(/−/g, '-');
+    if (t === '') return NaN;
+    var n = Number(t);
+    if (isFinite(n)) return n;
+    if (math) { try { var e = math.evaluate(t); if (typeof e === 'number') return e; } catch (err) {} }
+    return NaN;
+  }
+
+  function withinTol(val, ans, tol) {
+    tol = tol || { rel: 0.01 };
+    if (tol.abs != null) return Math.abs(val - ans) <= tol.abs;
+    return Math.abs(val - ans) <= tol.rel * Math.max(Math.abs(ans), 1e-9);
+  }
+
+  function sayFor(ex, key, v) {
+    var fb = (ex.feedback || []).filter(function (f) { return f.when === key; })[0];
+    if (!fb) return null;
+    return typeof fb.say === 'function' ? fb.say(v) : fb.say;
+  }
+
+  // ¿Dos expresiones en x son iguales en `n` puntos del dominio? (upToC: se permite una constante)
+  function sameExpr(math, e1, e2, dom, upToC) {
+    var prep = window.LabMath && window.LabMath.antiderivative ? window.LabMath.antiderivative.prep : function (s) { return s; };
+    var c1 = math.parse(prep(e1)).compile(), c2 = math.parse(prep(e2)).compile();
+    var a = dom[0], b = dom[1], diffs = [], n = 30;
+    for (var i = 0; i < n; i++) {
+      var x = a + (b - a) * (i + 0.5) / n, y1, y2;
+      try { y1 = c1.evaluate({ x: x }); y2 = c2.evaluate({ x: x }); } catch (e) { continue; }
+      if (typeof y1 !== 'number' || typeof y2 !== 'number' || !isFinite(y1) || !isFinite(y2)) continue;
+      diffs.push({ d: y1 - y2, s: 1 + Math.abs(y2) });
+    }
+    if (diffs.length < 10) return false;
+    var shift = upToC ? diffs[0].d : 0;
+    return diffs.every(function (p) { return Math.abs(p.d - shift) / p.s < 1e-6; });
+  }
+
+  // → { kind: 'ok'|'warn'|'bad'|'invalid', key?, say? }
+  function grade(ex, v, input, deps) {
+    deps = deps || {};
+    var math = deps.math, LM = deps.LabMath || window.LabMath;
+    if (ex.check === 'choice') {
+      var opt = ex.options(v).filter(function (o) { return o.text === input; })[0];
+      if (!opt) return { kind: 'invalid', say: 'Elige una opción.' };
+      return opt.correct ? { kind: 'ok' } : { kind: 'bad', say: opt.say || null };
+    }
+    if (ex.check === 'numeric') {
+      var val = parseNumber(input, math);
+      if (!isFinite(val)) return { kind: 'invalid', say: 'Escribe un número (usa punto decimal).' };
+      if (withinTol(val, ex.answer(v), ex.tol)) return { kind: 'ok' };
+      for (var k in (ex.mistakes || {})) {
+        if (withinTol(val, ex.mistakes[k](v), ex.tol)) return { kind: 'warn', key: k, say: sayFor(ex, k, v) };
+      }
+      return { kind: 'bad' };
+    }
+    if (ex.check === 'expr') {
+      if (!math) return { kind: 'invalid', say: 'Cargando el verificador…' };
+      if (!String(input || '').trim()) return { kind: 'invalid', say: 'Escribe una expresión.' };
+      var dom = ex.domain || [0.2, 2.2];
+      try {
+        if (ex.integrand) {
+          var r = LM.antiderivative.verify(math, ex.integrand(v), input, dom[0], dom[1]);
+          if (r.reason === 'correct') return { kind: 'ok' };
+          for (var m in (ex.mistakes || {})) {
+            if (sameExpr(math, input, ex.mistakes[m](v), dom, true)) return { kind: 'warn', key: m, say: sayFor(ex, m, v) };
+          }
+          if (r.reason === 'sign') return { kind: 'warn', key: 'sign', say: sayFor(ex, 'sign', v) || 'Casi: tu signo está invertido. Deriva tu respuesta y compárala.' };
+          if (r.reason === 'factor') return { kind: 'warn', key: 'factor', say: sayFor(ex, 'factor', v) || 'Casi: tu derivada sale ' + (+r.k.toPrecision(4)) + ' veces el integrando. Revisa la regla de la cadena.' };
+          if (r.reason === 'domain') return { kind: 'invalid', say: 'No pude evaluar tu expresión en el intervalo; revisa paréntesis y dominio.' };
+          return { kind: 'bad' };
+        }
+        if (sameExpr(math, input, ex.answer(v), dom, false)) return { kind: 'ok' };
+        for (var q in (ex.mistakes || {})) {
+          if (sameExpr(math, input, ex.mistakes[q](v), dom, false)) return { kind: 'warn', key: q, say: sayFor(ex, q, v) };
+        }
+        return { kind: 'bad' };
+      } catch (e) {
+        return { kind: 'invalid', say: 'No pude leer la expresión: ' + e.message };
+      }
+    }
+    throw new Error('check desconocido: ' + ex.check);
+  }
+
+  var api = { instance: instance, grade: grade, parseNumber: parseNumber, sameExpr: sameExpr, withinTol: withinTol };
+  window.CBExercises = api;
+
+  /* ------------------------------ UI ------------------------------ */
+  var TITLES = { ok: '¡Bien!', warn: 'Vas cerca', bad: 'Todavía no' };
+
+  function shuffle(list) {
+    var a = list.slice();
+    for (var i = a.length - 1; i > 0; i--) { var j = Math.floor(Math.random() * (i + 1)); var t = a[i]; a[i] = a[j]; a[j] = t; }
+    return a;
+  }
+
+  function mountOne(ex, n) {
+    var UI = window.LabUI, h = UI.h;
+    var v, attempts = 0, math = null;
+    var inputId = UI.id('ej');
+    var prompt = h('div', { class: 'exercise__prompt' });
+    var diagram = h('div', { class: 'exercise__diagram', hidden: !ex.diagram });
+    var answer = h('div', { class: 'exercise__answer' });
+    var verdict = h('div', { class: 'verdict', hidden: true, role: 'status' });
+    var hint = h('div', { class: 'exercise__hint', hidden: true });
+    var sol = h('div', { class: 'exercise__solution', hidden: true });
+    var btnCheck = UI.button('Revisar', 'primary', check);
+    var btnHint = UI.button('Pista', 'ghost', function () {
+      hint.hidden = !hint.hidden;
+      btnHint.setAttribute('aria-expanded', String(!hint.hidden));
+    });
+    var btnSol = UI.button('Ver solución', 'ghost', function () {
+      sol.hidden = !sol.hidden;
+      btnSol.setAttribute('aria-expanded', String(!sol.hidden));
+    });
+    btnHint.setAttribute('aria-expanded', 'false');
+    btnSol.setAttribute('aria-expanded', 'false');
+    btnSol.disabled = true;
+    btnSol.title = 'Disponible después de tu primer intento';
+    var btnNew = UI.button('Otro ejercicio', 'ghost', function () { fresh(); });
+    var get = function () { return ''; };
+
+    var card = h('article', { class: 'exercise', id: 'ej-' + (ex.id || n) }, [
+      h('header', { class: 'exercise__head' }, [
+        h('h3', { class: 'exercise__title' }, ['Ejercicio ' + n + (ex.title ? ' · ' + ex.title : '')]),
+        btnNew
+      ]),
+      prompt, diagram, answer,
+      h('div', { class: 'lab-buttons' }, [btnCheck, btnHint, btnSol]),
+      verdict, hint, sol
+    ]);
+
+    function buildAnswer() {
+      answer.innerHTML = '';
+      if (ex.check === 'choice') {
+        var name = UI.id('opt');
+        var fs = h('fieldset', { class: 'exercise__options' }, [h('legend', { class: 'visually-hidden' }, ['Opciones'])]);
+        shuffle(ex.options(v)).forEach(function (o) {
+          var oid = UI.id('o');
+          fs.appendChild(h('div', { class: 'exercise__option' }, [
+            h('input', { type: 'radio', name: name, id: oid, value: o.text }),
+            h('label', { for: oid, html: o.text })
+          ]));
+        });
+        answer.appendChild(fs);
+        get = function () { var c = fs.querySelector('input:checked'); return c ? c.value : ''; };
+        return;
+      }
+      var isExpr = ex.check === 'expr';
+      var inp = h('input', {
+        id: inputId, type: 'text', class: 'lab-input' + (isExpr ? ' lab-input--mono' : ' lab-input--num'),
+        inputmode: isExpr ? null : 'decimal', spellcheck: 'false', autocomplete: 'off',
+        'aria-describedby': inputId + '-help'
+      });
+      var preview = isExpr ? h('div', { class: 'exercise__preview', 'aria-hidden': 'true' }) : null;
+      answer.appendChild(h('div', { class: 'lab-field' }, [
+        h('label', { for: inputId, class: 'lab-field__label' }, [isExpr ? 'Tu respuesta' : 'Tu resultado']),
+        h('div', { class: 'exercise__inputrow' }, [inp, ex.unit ? h('span', { class: 'exercise__unit' }, [ex.unit]) : null]),
+        h('p', { id: inputId + '-help', class: 'lab-field__hint', html: isExpr
+          ? (ex.integrand ? 'Escribe F(x); la constante C es opcional. Ej.: <code>x^3/3</code>, <code>e^(2x)/2</code>, <code>sin(x^2)</code>, <code>ln(x)</code>.' : 'Usa <code>x</code>, <code>^</code>, <code>sqrt()</code>, <code>sin()</code>…')
+          : 'Usa punto decimal' + (ex.tol && ex.tol.abs != null ? '.' : '; se acepta ±1 %.') }),
+        preview
+      ]));
+      inp.addEventListener('keydown', function (e) { if (e.key === 'Enter') { e.preventDefault(); check(); } });
+      if (preview) {
+        inp.addEventListener('input', function () {
+          preview.textContent = '';
+          if (!math || !window.katex || !inp.value.trim()) return;
+          try { window.katex.render(math.parse(window.LabMath.antiderivative.prep(inp.value)).toTex({ implicit: 'hide' }), preview, { throwOnError: false }); } catch (e) {}
+        });
+      }
+      get = function () { return inp.value; };
+    }
+
+    function fresh() {
+      v = instance(ex);
+      attempts = 0;
+      prompt.innerHTML = ex.prompt(v);
+      if (ex.diagram && window.Diagrams && window.Diagrams[ex.diagram.id]) {
+        diagram.innerHTML = window.Diagrams[ex.diagram.id](ex.diagram.state ? ex.diagram.state(v) : {});
+      }
+      hint.innerHTML = '<strong>Pista.</strong> ' + (typeof ex.hint === 'function' ? ex.hint(v) : ex.hint || '');
+      sol.innerHTML = '<strong>Solución.</strong> ' + ex.solution(v);
+      hint.hidden = true; sol.hidden = true; verdict.hidden = true;
+      btnSol.disabled = true;
+      btnHint.setAttribute('aria-expanded', 'false');
+      btnSol.setAttribute('aria-expanded', 'false');
+      buildAnswer();
+      if (window.CBMath) window.CBMath.render(card);
+    }
+
+    function check() {
+      var r = grade(ex, v, get(), { math: math });
+      if (r.kind === 'invalid') { UI.verdict(verdict, 'bad', r.say || 'Revisa tu respuesta.', null); return; }
+      attempts++;
+      btnSol.disabled = false;
+      btnSol.removeAttribute('title');
+      var note = r.say || (r.kind === 'ok' ? 'Puedes pedir otro ejercicio para practicar con otros números.' : 'Intenta de nuevo, pide una pista o mira la solución.');
+      UI.verdict(verdict, r.kind, TITLES[r.kind], note);
+      if (window.CBMath) window.CBMath.render(verdict);
+    }
+
+    fresh();
+    if (ex.check === 'expr' || ex.check === 'numeric') {
+      UI.loadMath().then(function (m) { math = m; }).catch(function () {});
+    }
+    return card;
+  }
+
+  api.mount = function (container, list) {
+    list.forEach(function (ex, i) { container.appendChild(mountOne(ex, i + 1)); });
+  };
+})();
