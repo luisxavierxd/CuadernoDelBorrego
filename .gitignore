@@ -1,0 +1,13 @@
+# Documentación de trabajo y archivos del asistente (no se publican)
+docs/
+BRIEF*.md
+CLAUDE.md
+.claude/
+design-system/
+
+# Entorno
+node_modules/
+test-results/
+playwright-report/
+.DS_Store
+Thumbs.db

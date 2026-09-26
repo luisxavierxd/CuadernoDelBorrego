@@ -1,0 +1,84 @@
+/* =====================================================================
+   Superficies temáticas (§5.3)
+   - Página: cuaderno cuadriculado (claro) o pizarrón con gis (oscuro).
+   - .sheet: panel gráfico. Cuaderno = hoja con espiral y línea de margen.
+     Pizarrón = tablero con marco de madera (10 + 2 px).
+   ===================================================================== */
+
+/* ===== Página ===== */
+body {
+  position: relative;
+  isolation: isolate;
+  background-color: var(--page);
+  background-image:
+    linear-gradient(var(--grid) 1px, transparent 1px),
+    linear-gradient(90deg, var(--grid) 1px, transparent 1px);
+  background-size: var(--grid-step) var(--grid-step);
+  background-position: -1px -1px;
+}
+/* Textura de ruido del pizarrón (opacidad 0 en el cuaderno) */
+body::before {
+  content: ""; position: fixed; inset: 0; z-index: -1; pointer-events: none;
+  background-image: var(--chalk-noise);
+  opacity: var(--chalk-noise-opacity);
+  mix-blend-mode: soft-light;
+}
+/* Velo de polvo de gis */
+:root[data-theme="dark"] body::after {
+  content: ""; position: fixed; inset: 0; z-index: -1; pointer-events: none;
+  background:
+    radial-gradient(70% 45% at 22% 12%, var(--chalk-dust), transparent 70%),
+    radial-gradient(60% 50% at 85% 78%, var(--chalk-dust), transparent 72%);
+}
+
+/* ===== Panel gráfico ===== */
+.sheet {
+  position: relative;
+  background-color: var(--panel);
+  border-radius: var(--radius-panel);
+  box-shadow: var(--shadow-panel);
+  padding: var(--space-4) var(--space-4) var(--space-4) calc(48px + var(--space-3));
+  /* Perforaciones de espiral cada 42 px + línea de margen a 48 px */
+  background-image:
+    radial-gradient(circle at 17px 21px, var(--hole) 0 5.5px, var(--hole-edge) 5.5px 7px, transparent 7.5px),
+    linear-gradient(90deg, transparent 47px, var(--margin-line) 47px, var(--margin-line) 48.5px, transparent 48.5px);
+  background-size: 34px 42px, 100% 100%;
+  background-repeat: repeat-y, no-repeat;
+}
+.sheet__title { font-family: var(--font-panel-title); }
+
+:root[data-theme="dark"] .sheet {
+  border: 10px solid var(--frame);
+  border-radius: var(--radius-panel);
+  box-shadow: inset 0 0 0 2px var(--frame-inner);
+  padding-left: var(--space-4);
+  background-image: none;
+}
+:root[data-theme="dark"] .sheet::before {
+  content: ""; position: absolute; inset: 0; border-radius: 4px; pointer-events: none;
+  background-image: var(--chalk-noise);
+  opacity: var(--chalk-noise-opacity);
+  mix-blend-mode: soft-light;
+}
+:root[data-theme="dark"] .sheet__title { font-weight: 700; }
+
+@media (max-width: 560px) {
+  .sheet { padding: var(--space-3) var(--space-2) var(--space-3) calc(40px + var(--space-2)); background-size: 30px 42px, 100% 100%; }
+  .sheet { background-image:
+    radial-gradient(circle at 14px 21px, var(--hole) 0 5px, var(--hole-edge) 5px 6.5px, transparent 7px),
+    linear-gradient(90deg, transparent 39px, var(--margin-line) 39px, var(--margin-line) 40.5px, transparent 40.5px); }
+  :root[data-theme="dark"] .sheet { border-width: 8px; padding: var(--space-3) var(--space-2); background-image: none; }
+}
+
+/* ===== Trazos a mano: pluma en el cuaderno, gis en el pizarrón ===== */
+.sketch { filter: url(#f-pen); }
+:root[data-theme="dark"] .sketch { filter: url(#f-chalk); }
+
+/* Roles de curva (§5.4) para cualquier SVG del sitio */
+.ref     { stroke: var(--plot-ref); }
+.student { stroke: var(--plot-student); stroke-dasharray: 9 7; }
+.error   { stroke: var(--plot-error); }
+.aux     { stroke: var(--plot-aux); }
+.trace   { stroke: var(--plot-trace); }
+.axis    { stroke: var(--plot-axis); }
+.ann     { font-family: var(--font-hand); fill: var(--pen); stroke: none; }

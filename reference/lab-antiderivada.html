@@ -1,0 +1,314 @@
+<title>Lab · ¿Es tu antiderivada?</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;700;800&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+  :root{
+    --paper:#eef1f4; --sheet:#ffffff; --ink:#18202b; --muted:#5b6674; --line:#d5dbe2;
+    --accent:#1f6f8b; --accent-ink:#ffffff;
+    --ok:#1d7a4b; --ok-bg:#e3f3ea; --warn:#9a6200; --warn-bg:#fbf0d9; --bad:#b3352b; --bad-bg:#fae5e2;
+    --board:#141a22; --f:#58c4dd; --F:#ffd166; --dF:#fc6255; --area:#58c4dd;
+    --sans:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+    --mono:"IBM Plex Mono",ui-monospace,"SFMono-Regular",Menlo,monospace;
+    --display:"Archivo","IBM Plex Sans",system-ui,sans-serif;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      color-scheme:dark;
+      --paper:#0f1318; --sheet:#171d25; --ink:#e6ebf1; --muted:#98a3b1; --line:#2a3340;
+      --accent:#58c4dd; --accent-ink:#0b1016;
+      --ok:#6fd49b; --ok-bg:#15291f; --warn:#f0bf5a; --warn-bg:#2c2412; --bad:#ff8a7e; --bad-bg:#321816;
+    }
+  }
+  :root[data-theme="dark"]{
+    color-scheme:dark;
+    --paper:#0f1318; --sheet:#171d25; --ink:#e6ebf1; --muted:#98a3b1; --line:#2a3340;
+    --accent:#58c4dd; --accent-ink:#0b1016;
+    --ok:#6fd49b; --ok-bg:#15291f; --warn:#f0bf5a; --warn-bg:#2c2412; --bad:#ff8a7e; --bad-bg:#321816;
+  }
+  *{box-sizing:border-box}
+  body{background:var(--paper);color:var(--ink);font:15px/1.55 var(--sans);padding-inline:16px;padding-block:20px 40px}
+  .wrap{max-width:1180px;margin:0 auto;display:grid;gap:18px}
+  header{display:flex;flex-wrap:wrap;align-items:baseline;justify-content:space-between;gap:8px 20px}
+  .crumb{font:500 12px/1 var(--mono);letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+  h1{font:800 clamp(26px,4vw,36px)/1.1 var(--display);margin:6px 0 0;text-wrap:balance;letter-spacing:-.01em}
+  .lede{color:var(--muted);max-width:62ch;margin:6px 0 0}
+  .grid{display:grid;grid-template-columns:minmax(0,360px) minmax(0,1fr);gap:18px;align-items:start}
+  @media (max-width:880px){.grid{grid-template-columns:1fr}}
+  .panel{background:var(--sheet);border:1px solid var(--line);border-radius:10px;padding:18px;display:grid;gap:14px}
+  label{font:600 12px/1.2 var(--sans);letter-spacing:.05em;text-transform:uppercase;color:var(--muted);display:block;margin-bottom:6px}
+  select,input[type=text],input[type=number]{width:100%;font:500 15px/1.3 var(--mono);color:var(--ink);background:var(--paper);border:1px solid var(--line);border-radius:6px;padding:9px 10px}
+  select{font-family:var(--sans)}
+  input:focus-visible,select:focus-visible,button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+  .row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .given{font:500 17px/1.4 var(--mono);padding:10px 12px;border-left:3px solid var(--f);background:var(--paper);border-radius:0 6px 6px 0;overflow-x:auto}
+  .hint{font-size:13px;color:var(--muted)}
+  .hint code{font-family:var(--mono);font-size:12.5px}
+  .btns{display:flex;gap:10px;flex-wrap:wrap}
+  button{font:600 14px/1 var(--sans);border-radius:6px;padding:11px 16px;cursor:pointer;border:1px solid var(--accent)}
+  .primary{background:var(--accent);color:var(--accent-ink)}
+  .ghost{background:transparent;color:var(--accent)}
+  button:disabled{opacity:.5;cursor:progress}
+  .verdict{border-radius:8px;padding:12px 14px;display:grid;gap:4px}
+  .verdict b{font:700 15px/1.3 var(--display)}
+  .verdict.ok{background:var(--ok-bg);color:var(--ok)} .verdict.warn{background:var(--warn-bg);color:var(--warn)} .verdict.bad{background:var(--bad-bg);color:var(--bad)}
+  .verdict p{margin:0;color:var(--ink);font-size:14px}
+  dl{margin:0;display:grid;grid-template-columns:auto 1fr;gap:6px 12px;font-size:14px}
+  dt{color:var(--muted)} dd{margin:0;font-family:var(--mono);font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
+  .board{background:var(--board);border-radius:10px;overflow:hidden;border:1px solid var(--line)}
+  #stage{width:100%;aspect-ratio:16/10;max-width:100%}
+  .legend{display:flex;flex-wrap:wrap;gap:6px 18px;padding:10px 14px;font:500 13px/1.3 var(--mono);color:#c9d2dc;border-top:1px solid #243040}
+  .sw{display:inline-block;width:18px;height:3px;border-radius:2px;vertical-align:middle;margin-right:6px}
+  .status{padding:8px 14px;font:400 12.5px/1.4 var(--mono);color:#8a97a6;min-height:1.4em}
+  .how{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:14px}
+  .how div{background:var(--sheet);border:1px solid var(--line);border-radius:10px;padding:14px 16px}
+  .how h3{font:700 14px/1.3 var(--display);margin:0 0 4px}
+  .how p{margin:0;font-size:13.5px;color:var(--muted)}
+  @media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+
+<div class="wrap">
+  <header>
+    <div>
+      <div class="crumb">Cálculo 1 · Tema 5.1–5.2 · Laboratorio</div>
+      <h1>¿Es tu antiderivada?</h1>
+      <p class="lede">Escribe la F(x) que obtuviste a mano. El lab la deriva, la compara con f(x) y anima el Teorema Fundamental: si tu F es correcta, el área acumulada bajo f recorre exactamente tu curva.</p>
+    </div>
+  </header>
+
+  <div class="grid">
+    <section class="panel" aria-label="Ejercicio">
+      <div>
+        <label for="preset">Ejercicio</label>
+        <select id="preset"></select>
+      </div>
+      <div>
+        <label for="fIn">Integrando f(x)</label>
+        <input id="fIn" type="text" spellcheck="false" autocomplete="off">
+        <div class="given" id="given" aria-live="polite"></div>
+      </div>
+      <div>
+        <label for="FIn">Tu antiderivada F(x)</label>
+        <input id="FIn" type="text" spellcheck="false" autocomplete="off">
+        <p class="hint">Sintaxis: <code>x^3</code>, <code>2x</code>, <code>sin(x)</code>, <code>e^(2x)</code>, <code>ln(x)</code>, <code>sqrt(x)</code>, <code>atan(x)</code>. La constante C es opcional.</p>
+      </div>
+      <div class="row">
+        <div><label for="aIn">a</label><input id="aIn" type="number" step="any"></div>
+        <div><label for="bIn">b</label><input id="bIn" type="number" step="any"></div>
+      </div>
+      <div class="btns">
+        <button class="primary" id="run">Verificar y animar</button>
+        <button class="ghost" id="replay">Repetir animación</button>
+      </div>
+      <div id="verdict" class="verdict" hidden></div>
+      <dl id="facts" hidden>
+        <dt>F′(x)</dt><dd id="dF"></dd>
+        <dt>∫ₐᵇ f dx</dt><dd id="num"></dd>
+        <dt>F(b) − F(a)</dt><dd id="tfc"></dd>
+        <dt>error máx.</dt><dd id="err"></dd>
+      </dl>
+    </section>
+
+    <section class="board" aria-label="Animación">
+      <div id="stage"></div>
+      <div class="legend">
+        <span><i class="sw" style="background:var(--f)"></i>f(x)</span>
+        <span><i class="sw" style="background:var(--dF)"></i>F′(x) de tu respuesta</span>
+        <span><i class="sw" style="background:var(--F)"></i>F(x) − F(a)</span>
+        <span><i class="sw" style="background:#ffffff"></i>área acumulada ∫ₐˣ f</span>
+      </div>
+      <div class="status" id="status">Cargando motor de animación…</div>
+    </section>
+  </div>
+
+  <section class="how" aria-label="Cómo verifica">
+    <div><h3>1 · Derivada simbólica</h3><p>Deriva tu F(x) con math.js. Si F′ − f se simplifica a 0, tu respuesta es algebraicamente correcta.</p></div>
+    <div><h3>2 · Prueba numérica</h3><p>Evalúa F′ y f en 60 puntos del intervalo. Detecta respuestas correctas que no se simplifican, y diagnostica factores o signos equivocados.</p></div>
+    <div><h3>3 · Teorema Fundamental</h3><p>Integra f con Simpson (n = 400) y compara con F(b) − F(a). En la animación, el punto blanco es el área; la curva amarilla es tu F.</p></div>
+  </section>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/mathjs@15.2.0/lib/browser/math.js"></script>
+<script type="module">
+const MANIM_URL = "https://cdn.jsdelivr.net/npm/manim-web@0.3.24/dist/manim-web.browser.js";
+
+const PRESETS = [
+  { name:"Polinomio · 5.1", f:"3x^2 - 4x + 1", F:"x^3 - 2x^2 + x", a:-1, b:2 },
+  { name:"Regla de la cadena al revés", f:"2x*cos(x^2)", F:"sin(x^2)", a:0, b:2 },
+  { name:"Exponencial · error típico", f:"e^(2x)", F:"e^(2x)", a:-1, b:1 },
+  { name:"Por partes · 5.6", f:"x*cos(x)", F:"x*sin(x) + cos(x)", a:0, b:4 },
+  { name:"Trig. inversa", f:"1/(1+x^2)", F:"atan(x)", a:-3, b:3 },
+  { name:"Logaritmo · signo", f:"2x/(x^2+1)", F:"-ln(x^2+1)", a:-2, b:2 },
+  { name:"Fracciones parciales · 5.6", f:"1/(x*(x+1))", F:"ln(x) - ln(x+1)", a:0.5, b:3 },
+];
+
+const $ = id => document.getElementById(id);
+const status = t => { $("status").textContent = t; };
+
+// ---------- parsing / math ----------
+function prep(s){
+  return s.replace(/\bln\s*\(/g,"log(").replace(/\barctan\s*\(/g,"atan(")
+          .replace(/\barcsin\s*\(/g,"asin(").replace(/\barccos\s*\(/g,"acos(")
+          .replace(/\+\s*C\b/g,"").replace(/−/g,"-");
+}
+function build(src){
+  const node = math.parse(prep(src));
+  const code = node.compile();
+  return { node, fn: x => { const v = code.evaluate({x}); return (typeof v === "number") ? v : NaN; } };
+}
+function simpson(fn,a,b,n=400){
+  if (a===b) return 0; if (n%2) n++;
+  const h=(b-a)/n; let s=fn(a)+fn(b);
+  for (let i=1;i<n;i++) s += (i%2?4:2)*fn(a+i*h);
+  return s*h/3;
+}
+const fmt = v => Number.isFinite(v) ? (Math.abs(v)<1e-12?"0":Number(v.toPrecision(6)).toString()) : "—";
+
+function verify(fSrc,FSrc,a,b){
+  const f = build(fSrc), F = build(FSrc);
+  const dNode = math.derivative(F.node,"x");
+  const dCode = dNode.compile();
+  const dF = x => { const v = dCode.evaluate({x}); return typeof v==="number"?v:NaN; };
+  let dText; try { dText = math.simplify(dNode).toString(); } catch { dText = dNode.toString(); }
+  let symZero = false;
+  try { symZero = math.simplify(math.parse(`(${dNode.toString()}) - (${prep(fSrc)})`)).toString()==="0"; } catch {}
+
+  const xs=[], N=60;
+  for (let i=0;i<N;i++){ const x=a+(b-a)*(i+0.5)/N; if (Number.isFinite(f.fn(x)) && Number.isFinite(dF(x))) xs.push(x); }
+  let maxErr=0, ratios=[];
+  for (const x of xs){
+    const fv=f.fn(x), dv=dF(x);
+    maxErr=Math.max(maxErr, Math.abs(dv-fv)/(1+Math.abs(fv)));
+    if (Math.abs(fv)>1e-6) ratios.push(dv/fv);
+  }
+  const numOK = xs.length>=10 && maxErr<1e-6;
+  let kind="bad", title="F′(x) no coincide con f(x)", note="Revisa tu procedimiento. Compara la curva roja con la azul: donde se separan está el error.";
+  if (numOK){ kind="ok"; title="Correcto: F′(x) = f(x)"; note = symZero ? "Verificado de forma simbólica y numérica." : "Verificado numéricamente; math.js no logró simplificar F′ − f a 0, pero son iguales en todo el intervalo."; }
+  else if (ratios.length>=10){
+    const k = ratios.reduce((s,r)=>s+r,0)/ratios.length;
+    const spread = Math.max(...ratios.map(r=>Math.abs(r-k)));
+    if (spread<1e-6*Math.max(1,Math.abs(k))){
+      if (Math.abs(k+1)<1e-6){ kind="warn"; title="Casi: tu signo está invertido"; note="F′(x) = −f(x). Revisa el signo al integrar (por ejemplo ∫sin = −cos)."; }
+      else { kind="warn"; title=`Casi: te sobra un factor de ${fmt(k)}`; note = `F′(x) = ${fmt(k)}·f(x). Suele ser la regla de la cadena: al integrar e^(kx) o sin(kx) hay que dividir entre k.`; }
+    }
+  }
+  if (xs.length<10){ kind="bad"; title="No se pudo evaluar en el intervalo"; note="f o F′ no están definidas en casi todo [a, b]. Revisa el dominio (por ejemplo ln(x) requiere x > 0)."; }
+  const I = simpson(f.fn,a,b), D = F.fn(b)-F.fn(a);
+  return { f, F, dF, dText, kind, title, note, I, D, maxErr };
+}
+
+// ---------- UI ----------
+PRESETS.forEach((p,i)=>{ const o=document.createElement("option"); o.value=i; o.textContent=p.name; $("preset").append(o); });
+function loadPreset(i){
+  const p=PRESETS[i]; $("fIn").value=p.f; $("FIn").value=p.F; $("aIn").value=p.a; $("bIn").value=p.b; showGiven();
+}
+function showGiven(){ $("given").textContent = `∫ ${$("fIn").value}  dx = ?`; }
+$("preset").addEventListener("change", e=>loadPreset(+e.target.value));
+$("fIn").addEventListener("input", showGiven);
+loadPreset(0);
+
+// ---------- animation ----------
+let M=null, scene=null, last=null, gen=0, running=null;
+const COLORS = { f:"#58c4dd", F:"#ffd166", dF:"#fc6255", area:"#58c4dd", axes:"#7d8a99" };
+const frame = () => new Promise(r=>requestAnimationFrame(r));
+
+function niceStep(span){ const raw=span/6, p=10**Math.floor(Math.log10(raw)); const m=raw/p; return (m<1.5?1:m<3.5?2:m<7.5?5:10)*p; }
+
+function ranges(r,a,b){
+  const pad=(b-a)*0.08, x0=a-pad, x1=b+pad; const ys=[0];
+  const Fa=r.F.fn(a);
+  for (let i=0;i<=200;i++){ const x=x0+(x1-x0)*i/200; for (const v of [r.f.fn(x), r.dF(x), r.F.fn(x)-Fa]) if (Number.isFinite(v)) ys.push(v); }
+  ys.sort((p,q)=>p-q);
+  let y0=ys[Math.floor(ys.length*0.02)], y1=ys[Math.ceil(ys.length*0.98)-1];
+  y0=Math.min(y0,0); y1=Math.max(y1,0); if (y1-y0<1){ y1+=0.5; y0-=0.5; }
+  const py=(y1-y0)*0.12; y0-=py; y1+=py;
+  const sx=niceStep(x1-x0), sy=niceStep(y1-y0);
+  return { x:[Math.floor(x0/sx)*sx, Math.ceil(x1/sx)*sx, sx], y:[Math.floor(y0/sy)*sy, Math.ceil(y1/sy)*sy, sy] };
+}
+
+function clampFn(fn, lo, hi){ const m=(hi-lo)*0.1; return x=>{ const v=fn(x); return Number.isFinite(v)?Math.max(lo-m,Math.min(hi+m,v)):NaN; }; }
+
+function animate(r,a,b){
+  if (!M) return;
+  const my = ++gen;
+  const prev = running || Promise.resolve();
+  running = prev.then(()=>draw(r,a,b,my));
+}
+async function draw(r,a,b,my){
+  const stale = () => my!==gen;
+  if (stale()) return;
+  try{
+    scene.clear();
+    const R = ranges(r,a,b);
+    const aspect = 16/10, W = 14, H = W/aspect;
+    const axes = new M.Axes({ xRange:R.x, yRange:R.y, xLength:W*0.86, yLength:H*0.82, color:COLORS.axes, tips:false,
+      axisConfig:{ includeNumbers:true, numberFontSize:20, decimalPlaces: R.x[2]<1||R.y[2]<1 ? 1 : 0, strokeWidth:1.5 } });
+    const [ylo,yhi]=R.y;
+    const opts = (c,w=4,range=[R.x[0],R.x[1]]) => ({ color:c, strokeWidth:w, xRange:range, numSamples:240 });
+    const fG  = axes.plot(clampFn(r.f.fn,ylo,yhi), opts(COLORS.f,5));
+    const dFG = axes.plot(clampFn(r.dF,ylo,yhi), opts(COLORS.dF,2.5));
+    const Fa = r.F.fn(a);
+    const GG  = axes.plot(clampFn(x=>r.F.fn(x)-Fa,ylo,yhi), opts(COLORS.F,4));
+
+    if (stale()) return;
+    status("1/4  Trazando f(x)");
+    await scene.play(new M.Create(axes, {duration:0.8}));
+    await scene.play(new M.Create(fG, {duration:1.1}));
+    if (stale()) return;
+    status("2/4  Tu F′(x) encima de f(x): si coinciden, la curva roja cubre a la azul");
+    await scene.play(new M.Create(dFG, {duration:1.4}));
+    await scene.wait(0.4);
+    if (stale()) return;
+    status("3/4  Tu F(x) desplazada para que valga 0 en x = a");
+    await scene.play(new M.Create(GG, {duration:1.1}));
+
+    // cumulative area table for the tracer
+    const N=400, h=(b-a)/N, cum=[0];
+    for (let i=1;i<=N;i++){ cum.push(cum[i-1] + simpson(r.f.fn, a+(i-1)*h, a+i*h, 4)); }
+    const areaAt = x => { const t=(x-a)/h, i=Math.max(0,Math.min(N-1,Math.floor(t))); return cum[i]+(cum[i+1]-cum[i])*(t-i); };
+    const fArea = axes.plot(r.f.fn, { xRange:[a,b], numSamples:240, strokeWidth:0 });
+
+    status("4/4  Acumulando ∫ₐˣ f: el punto blanco debe viajar sobre la curva amarilla");
+    let areaM=null, dot=null, trace=null;
+    const steps = matchMedia("(prefers-reduced-motion: reduce)").matches ? 2 : 120;
+    for (let k=1;k<=steps;k++){
+      if (stale()) return;
+      const x = a + (b-a)*k/steps;
+      const nA = axes.getArea(fArea, [a, Math.max(a+1e-6,x)], { color:COLORS.area, opacity:0.28, strokeWidth:0 });
+      const nT = axes.plot(clampFn(areaAt,ylo,yhi), { xRange:[a, Math.max(a+1e-6,x)], color:"#ffffff", strokeWidth:2.5, numSamples:Math.max(8,k*2) });
+      const nD = new M.Dot({ point: axes.c2p(x, Math.max(ylo,Math.min(yhi,areaAt(x)))), radius:0.09, color:"#ffffff" });
+      if (areaM) scene.remove(areaM, trace, dot);
+      areaM=nA; trace=nT; dot=nD;
+      scene.add(areaM, trace, dot);
+      await frame();
+    }
+    status(r.kind==="ok" ? "Listo. El área acumulada coincide con F(x) − F(a) en todo el intervalo." : "Listo. Donde el punto blanco se separa de la curva amarilla, tu F no es la antiderivada.");
+  } catch(e){ console.error(e); status("Error en la animación: " + e.message); }
+}
+
+function run(){
+  const a=parseFloat($("aIn").value), b=parseFloat($("bIn").value);
+  const v=$("verdict");
+  try{
+    if (!(b>a)) throw new Error("El intervalo necesita a < b.");
+    const r = verify($("fIn").value, $("FIn").value, a, b);
+    v.className = "verdict " + r.kind; v.hidden=false;
+    v.innerHTML = ""; const t=document.createElement("b"); t.textContent=r.title; const p=document.createElement("p"); p.textContent=r.note; v.append(t,p);
+    $("facts").hidden=false; $("dF").textContent=r.dText; $("num").textContent=fmt(r.I); $("tfc").textContent=fmt(r.D); $("err").textContent = r.maxErr.toExponential(1);
+    last={r,a,b}; animate(r,a,b);
+  } catch(e){
+    v.className="verdict bad"; v.hidden=false; v.innerHTML="";
+    const t=document.createElement("b"); t.textContent="No pude leer la expresión"; const p=document.createElement("p"); p.textContent=e.message; v.append(t,p);
+    $("facts").hidden=true;
+  }
+}
+$("run").addEventListener("click", run);
+$("replay").addEventListener("click", ()=>{ if (last) animate(last.r,last.a,last.b); });
+
+try{
+  M = await import(MANIM_URL);
+  const el=$("stage"); const w=el.clientWidth||800;
+  scene = new M.Scene(el, { width:w, height:Math.round(w/1.6), backgroundColor:"#141a22" });
+  status("Motor listo.");
+  run();
+} catch(e){ console.error(e); status("No se pudo cargar manim-web: " + e.message); run(); }
+</script>

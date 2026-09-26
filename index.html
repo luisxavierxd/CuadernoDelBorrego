@@ -1,0 +1,191 @@
+<!doctype html>
+<html lang="es-MX">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Cuaderno del Borrego · Cálculo 1 y Física 1</title>
+    <meta name="description" content="Cálculo 1 y Física 1 explicados paso a paso, con labs para comprobar tus respuestas y simulacros para tus parciales. Proyecto de alumnos, no oficial.">
+    <meta property="og:type" content="website">
+    <meta property="og:title" content="Cuaderno del Borrego">
+    <meta property="og:description" content="Apuntes de un borrego que ya pasó por aquí: Cálculo 1 y Física 1 con labs y simulacros.">
+    <link rel="icon" type="image/svg+xml" href="shared/img/favicon.svg">
+    <script>(function(){var t;try{t=localStorage.getItem('cb-theme');}catch(e){}if(t!=='light'&&t!=='dark'){t=window.matchMedia&&matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light';}document.documentElement.setAttribute('data-theme',t);})();</script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Archivo:wght@700;800&family=IBM+Plex+Mono:wght@500&family=IBM+Plex+Sans:wght@400;500;600&family=Kalam:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="shared/css/tokens.css">
+    <link rel="stylesheet" href="shared/css/base.css">
+    <link rel="stylesheet" href="shared/css/theme.css">
+    <link rel="stylesheet" href="shared/css/home.css">
+</head>
+
+<body data-subject="hub">
+    <a class="visually-hidden skip-link" href="#contenido">Saltar al contenido</a>
+
+    <header class="site-header">
+        <div class="container">
+            <a class="brand" href="./">
+                <svg viewBox="-12 -12 24 24" fill="currentColor" aria-hidden="true"><path d="M-1.4 -9 C-6.2 -9 -7.8 -2 -7.2 3.4 C-6.6 7.8 -3.8 9.8 -1.6 8.8 C-0.8 4.4 -0.6 -3.4 -1.4 -9 Z M1.4 -9 C6.2 -9 7.8 -2 7.2 3.4 C6.6 7.8 3.8 9.8 1.6 8.8 C0.8 4.4 0.6 -3.4 1.4 -9 Z"/></svg>
+                <span>Cuaderno del Borrego<small>Cálculo 1 · Física 1</small></span>
+            </a>
+            <nav class="site-nav" aria-label="Principal">
+                <a class="nav-link" href="#biblioteca">Cursos</a>
+                <a class="nav-link" href="quiz/">Practicar</a>
+                <a class="nav-link" href="formularios/">Formularios</a>
+                <button class="theme-toggle" type="button" data-theme-toggle aria-pressed="false" aria-label="Cambiar a pizarrón (tema oscuro)">
+                    <span class="to-dark"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="13" rx="1.5"/><path d="M7 21h10M9 17v4M15 17v4M7 9c2-2 4 2 6 0s3-1 4 0"/></svg><span class="label">Pizarrón</span></span>
+                    <span class="to-light"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="3" width="15" height="18" rx="1.5"/><path d="M9 3v18M3 7h4M3 12h4M3 17h4M12 8h5M12 12h5"/></svg><span class="label">Cuaderno</span></span>
+                </button>
+            </nav>
+        </div>
+    </header>
+
+    <main id="contenido">
+        <!-- ===== HERO: el camino ya tiene huellas ===== -->
+        <section class="hub-hero" aria-labelledby="hero-title">
+            <div class="container">
+                <div class="sheet hub-hero__sheet">
+                    <div class="hub-hero__copy" data-intro>
+                        <p class="crumb">Nuevo ingreso · Cálculo 1 · Física 1</p>
+                        <h1 id="hero-title">Apuntes de un borrego que ya pasó por aquí.</h1>
+                        <p class="lead">Cálculo 1 y Física 1 explicados paso a paso, con labs para comprobar tus respuestas y simulacros para tus parciales.</p>
+                    </div>
+
+                    <svg id="hub-hero-art" class="hub-hero__art" viewBox="0 0 1200 640" preserveAspectRatio="xMaxYMid meet" aria-hidden="true" focusable="false">
+                        <defs>
+                            <mask id="road-reveal" maskUnits="userSpaceOnUse" x="0" y="0" width="1200" height="640">
+                                <path class="road-mask" d="M1140 230 C1095 110 1030 100 995 190 C960 270 870 340 840 280 Q700 0 560 580" fill="none" stroke="white" stroke-width="22" stroke-linecap="round"/>
+                            </mask>
+                            <clipPath id="clip-n1"><rect x="0" y="0" width="1200" height="640"/></clipPath>
+                            <clipPath id="clip-n2"><rect x="0" y="0" width="1200" height="640"/></clipPath>
+                            <clipPath id="clip-n3"><rect x="0" y="0" width="1200" height="640"/></clipPath>
+                            <clipPath id="clip-n4"><rect x="0" y="0" width="1200" height="640"/></clipPath>
+                        </defs>
+                        <g class="sketch">
+                            <!-- Tramo de función (referencia para la tangente; invisible) -->
+                            <path class="road-fn" d="M1140 230 C1095 110 1030 100 995 190 C960 270 870 340 840 280" fill="none" stroke="none"/>
+                            <path class="road" d="M1140 230 C1095 110 1030 100 995 190 C960 270 870 340 840 280 Q700 0 560 580" mask="url(#road-reveal)"/>
+                            <g class="hoofs"></g>
+                            <g class="tangent"><line x1="0" y1="0" x2="0" y2="0"/><circle r="6" cx="-20" cy="-20"/></g>
+
+                            <g class="note" data-clip="clip-n1" clip-path="url(#clip-n1)">
+                                <text class="ann" x="1170" y="410" text-anchor="end">aquí todos olvidan</text>
+                                <text class="ann" x="1170" y="446" text-anchor="end">la regla de la cadena</text>
+                                <path class="note-arrow" d="M1010 372 C990 350 975 335 962 310 M962 310 l-2 16 M962 310 l13 8"/>
+                            </g>
+                            <g class="note" data-clip="clip-n2" clip-path="url(#clip-n2)">
+                                <text class="ann" x="820" y="70">ojo: N ≠ mg si empujas</text>
+                                <text class="ann" x="820" y="106">con ángulo</text>
+                                <path class="note-arrow" d="M810 88 C785 110 770 140 758 172 M758 172 l-10 -12 M758 172 l14 -7"/>
+                            </g>
+                            <g class="note" data-clip="clip-n3" clip-path="url(#clip-n3)">
+                                <text class="ann" x="660" y="508">esto viene en el parcial</text>
+                                <path class="note-underline" d="M662 522 C740 516 820 526 905 516"/>
+                            </g>
+                            <g class="note" data-clip="clip-n4" clip-path="url(#clip-n4)">
+                                <text class="ann ann--soft" x="640" y="606">el camino ya tiene huellas</text>
+                            </g>
+                        </g>
+                    </svg>
+
+                    <div class="hub-hero__actions">
+                        <a class="btn btn--primary" href="#biblioteca">Ver cursos</a>
+                        <a class="btn btn--ghost" href="quiz/?modo=simulacro">Hacer un simulacro</a>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ===== CÓMO FUNCIONA ===== -->
+        <section class="section how" aria-labelledby="how-title">
+            <div class="container">
+                <div class="section-head reveal">
+                    <p class="eyebrow">Cómo funciona</p>
+                    <h2 id="how-title">Ves la idea, la compruebas y la practicas</h2>
+                </div>
+                <ol class="how__steps">
+                    <li class="card how__step reveal">
+                        <span class="how__icon"><svg class="sketch" viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 42h36M8 44V6"/><path d="M10 36c8-2 10-20 18-20s8 10 14 8"/><path d="M14 22l22 6" stroke-dasharray="3 4"/><circle cx="26" cy="25" r="2"/></svg></span>
+                        <span class="how__num">1</span>
+                        <h3>Explicación gráfica</h3>
+                        <p>Cada idea se dibuja paso a paso: la secante gira hasta ser tangente, el área se acumula, los vectores se suman.</p>
+                    </li>
+                    <li class="card how__step reveal">
+                        <span class="how__icon"><svg class="sketch" viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 38c6-16 12-24 18-24s12 8 18 24"/><path d="M6 38c6-12 12-20 18-20s12 8 18 20" stroke-dasharray="4 4"/><path d="M34 8l4 4 7-8"/></svg></span>
+                        <span class="how__num">2</span>
+                        <h3>Lab</h3>
+                        <p>Escribes tu respuesta y el lab la compara contra la real. Si fallas, te dice si fue el signo, un factor o la regla de la cadena.</p>
+                    </li>
+                    <li class="card how__step reveal">
+                        <span class="how__icon"><svg class="sketch" viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="8" y="6" width="32" height="38" rx="3"/><path d="M16 16h16M16 25h16M16 34h9"/><circle cx="12.5" cy="16" r="0.8"/><circle cx="12.5" cy="25" r="0.8"/><circle cx="12.5" cy="34" r="0.8"/></svg></span>
+                        <span class="how__num">3</span>
+                        <h3>Quiz y simulacro</h3>
+                        <p>Practicas con preguntas que cambian cada vez y ves por tema si ya estás listo, casi o si toca reforzar.</p>
+                    </li>
+                </ol>
+            </div>
+        </section>
+
+        <!-- ===== BIBLIOTECA (desde data/courses.js) ===== -->
+        <section class="section library" id="biblioteca" aria-labelledby="library-title">
+            <div class="container">
+                <div class="section-head reveal">
+                    <p class="eyebrow">Biblioteca</p>
+                    <h2 id="library-title">Elige tu cuaderno</h2>
+                    <p>Por materia y, dentro de cada una, por nivel. Lo marcado como “Próximamente” ya está en el plan.</p>
+                </div>
+                <div id="course-grid"></div>
+            </div>
+        </section>
+
+        <!-- ===== PRACTICA PARA TU EXAMEN ===== -->
+        <section class="section practice" id="practica" aria-labelledby="practice-title">
+            <div class="container">
+                <div class="sheet practice__sheet reveal">
+                    <div class="practice__copy">
+                        <p class="eyebrow">Practica para tu examen</p>
+                        <h2 id="practice-title" class="sheet__title">Quiz rápido o simulacro completo</h2>
+                        <p>Elige tus temas o usa un atajo. El simulacro trae problemas encadenados y reloj sugerido; al final ves tu calificación y un semáforo por tema.</p>
+                        <a class="btn btn--primary" href="quiz/">Abrir el lanzador</a>
+                    </div>
+                    <div class="practice__presets">
+                        <p class="crumb" id="presets-note"></p>
+                        <ul class="presets" id="presets" aria-describedby="presets-note"></ul>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer class="site-footer">
+        <div class="container">
+            <div class="site-footer__row">
+                <span class="site-footer__brand">Cuaderno del Borrego</span>
+                <nav aria-label="Pie de página">
+                    <a href="#biblioteca">Cursos</a>
+                    <a href="quiz/">Practicar</a>
+                    <a href="formularios/">Formularios</a>
+                    <a href="creditos/">Créditos y licencias</a>
+                    <a href="https://github.com/luisxavierxd/CuadernoDelBorrego">Código</a>
+                </nav>
+            </div>
+            <div class="site-footer__row">
+                <p class="site-footer__note">Proyecto de alumnos, no oficial</p>
+                <p>Código bajo licencia MIT. Contenido basado en OpenStax (CC BY 4.0).</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/animejs@3.2.1/lib/anime.min.js"></script>
+    <script src="shared/js/theme.js"></script>
+    <script src="shared/js/sketch-filters.js"></script>
+    <script src="shared/js/animations.js"></script>
+    <script src="data/courses.js"></script>
+    <script src="data/quiz-presets.js"></script>
+    <script src="shared/js/course-grid.js"></script>
+    <script src="shared/js/hub-hero.js"></script>
+    <script src="shared/js/hub.js"></script>
+</body>
+
+</html>

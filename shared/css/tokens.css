@@ -1,0 +1,140 @@
+/* =====================================================================
+   Cuaderno del Borrego · tokens
+   ÚNICO archivo con colores (lo valida scripts/check.js).
+   Claro  = cuaderno cuadriculado  (:root)
+   Oscuro = pizarrón               (:root[data-theme="dark"])
+   La materia la elige <body data-subject="mat|fis|hub">.
+   ===================================================================== */
+:root {
+  color-scheme: light;
+
+  /* ===== Acentos por materia (§5.2) ===== */
+  --mat-accent: #1f53b8;
+  --mat-soft:   #e9f1fe;
+  --fis-accent: #a52205;
+  --fis-soft:   #ffebe7;
+  --mat-n2: #2e62c9;
+  --fis-n2: #b6351b;
+  --fis-n3: #891901;
+  --hub-accent: #1f2530;
+  --hub-soft:   #eef1f5;
+  --on-dark-accent: #ffffff;   /* texto sobre un acento oscuro (tema claro) */
+
+  /* ===== Superficies (§5.3 · cuaderno) ===== */
+  --page:        #fbfcfe;
+  --grid:        #cfdcec;
+  --grid-step:   20px;
+  --margin-line: #e8837f;
+  --text:        #1f2530;
+  --text-muted:  #6c737c;
+  --pen:         #233c9b;
+  --panel:       #ffffff;
+  --line:        #d5dbe2;
+  --line-strong: #87919d;
+  --frame:       transparent;
+  --frame-inner: transparent;
+  --shadow-panel: 0 10px 30px rgba(20, 30, 50, 0.12);
+  --shadow-card:  none;
+  --header-bg:   rgba(251, 252, 254, 0.88);
+  --hole:        #e4e9f0;   /* perforación de espiral */
+  --hole-edge:   #c3ccd8;
+  --focus:       #1f53b8;
+
+  /* ===== Roles de curva (§5.4 · tinta) ===== */
+  --plot-ref:     #1f6fb5;
+  --plot-student: #b86e00;
+  --plot-error:   #c62f2f;
+  --plot-aux:     #2f8a4a;
+  --plot-trace:   #1f2530;
+  --plot-axis:    #6c737c;
+
+  /* ===== Estados (§5.5) ===== */
+  --ok:   #1d7a4b;  --ok-bg:   #e3f3ea;
+  --warn: #8a5700;  --warn-bg: #fbf0d9;
+  --bad:  #b3352b;  --bad-bg:  #fae5e2;
+
+  /* ===== Texturas (data URI sin colores propios) ===== */
+  --chalk-noise: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  --chalk-noise-opacity: 0;
+  --chalk-dust: rgba(255, 255, 255, 0.07);
+
+  /* ===== Tipografía (§5.6) ===== */
+  --font-display: 'Archivo', 'IBM Plex Sans', system-ui, sans-serif;
+  --font-body:    'IBM Plex Sans', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-mono:    'IBM Plex Mono', ui-monospace, 'SFMono-Regular', Menlo, monospace;
+  --font-hand:    'Kalam', 'Comic Sans MS', cursive;
+  --font-panel-title: var(--font-display);
+
+  /* ===== Espacio (escala MadRams) ===== */
+  --space-1: 0.5rem;
+  --space-2: 1rem;
+  --space-3: 1.5rem;
+  --space-4: 2.5rem;
+  --space-5: 4rem;
+  --space-6: 6rem;
+
+  /* ===== Forma (§5.7) ===== */
+  --radius:       6px;
+  --radius-panel: 14px;
+  --radius-card:  12px;
+  --max-width:    1160px;
+  --header-h:     64px;
+  --measure:      65ch;
+}
+
+/* ===== Pizarrón ===== */
+:root[data-theme="dark"] {
+  color-scheme: dark;
+
+  --mat-accent: #9abeff;
+  --mat-soft:   #15233e;
+  --fis-accent: #fea28e;
+  --fis-soft:   #3a1912;
+  --mat-n2: #6fa0fb;
+  --fis-n2: #ed7c65;
+  --fis-n3: #ce604a;
+  --hub-accent: #eef2ee;
+  --hub-soft:   #232b33;
+
+  --page:        #12171b;
+  --panel:       #191f25;
+  --grid:        rgba(255, 255, 255, 0.055);
+  --grid-step:   22px;
+  --margin-line: transparent;
+  --text:        #eef2ee;
+  --text-muted:  #b3b9b4;
+  --pen:         var(--text);
+  --line:        rgba(238, 242, 238, 0.16);
+  --line-strong: rgba(238, 242, 238, 0.4);
+  --frame:       #3a2a1e;
+  --frame-inner: #25190f;
+  --shadow-panel: none;
+  --shadow-card:  none;
+  --header-bg:   rgba(18, 23, 27, 0.86);
+  --focus:       #9abeff;
+
+  --plot-ref:     #58c4dd;
+  --plot-student: #ffd166;
+  --plot-error:   #fc6255;
+  --plot-aux:     #83c167;
+  --plot-trace:   #ffffff;
+  --plot-axis:    #8795a5;
+
+  --ok:   #6fd49b;  --ok-bg:   #15291f;
+  --warn: #f0bf5a;  --warn-bg: #2c2412;
+  --bad:  #ff8a7e;  --bad-bg:  #321816;
+
+  --chalk-noise-opacity: 0.32;
+  --font-panel-title: var(--font-hand);
+}
+
+/* Matiz de materia en el pizarrón (§5.3) */
+:root[data-theme="dark"] body[data-subject="mat"] { --page: #101725; --panel: #151e2e; --header-bg: rgba(16, 23, 37, 0.86); }
+:root[data-theme="dark"] body[data-subject="fis"] { --page: #22130f; --panel: #2b1915; --header-bg: rgba(34, 19, 15, 0.86); }
+
+/* ===== Acento activo: ningún componente nombra la materia ===== */
+body[data-subject="mat"] { --accent: var(--mat-accent); --accent-soft: var(--mat-soft); }
+body[data-subject="fis"] { --accent: var(--fis-accent); --accent-soft: var(--fis-soft); }
+body[data-subject="hub"] { --accent: var(--hub-accent); --accent-soft: var(--hub-soft); }
+body { --on-accent: var(--on-dark-accent); }
+:root[data-theme="dark"] body { --on-accent: var(--page); }
