@@ -114,9 +114,17 @@ math-field::part(menu-toggle), math-field::part(virtual-keyboard-toggle) { displ
 .lab-plot .dot-aux { fill: var(--plot-aux); }
 .lab-plot .dot-error { fill: var(--plot-error); }
 .lab-plot .dot-trace { fill: var(--plot-trace); }
+.lab-plot .dot-student { fill: var(--plot-student); }
+.lab-plot .area-fill { fill: var(--plot-ref); fill-opacity: 0.18; stroke: none; }
+.lab-plot .rect-fill { fill: var(--plot-aux); fill-opacity: 0.22; stroke: var(--plot-aux); stroke-width: 1.2; }
+.lab-plot .rect-fill--neg { fill: var(--plot-error); stroke: var(--plot-error); }
+.lab-stack { display: grid; gap: 4px; }
+.lab-stack .lab-plot { width: 100%; height: auto; }
+.lab-stack__label { font: 600 0.8rem/1.2 var(--font-mono); color: var(--text-muted); margin: 6px 0 0; }
 .sw--dashed { border-top-style: dashed; }
 .lab-table-wrap { overflow-x: auto; }
 .lab-table { border-collapse: collapse; font-size: 0.88rem; min-width: 280px; }
 .lab-table caption { text-align: left; color: var(--text-muted); font-size: 0.82rem; padding-bottom: 4px; }
 .lab-table th, .lab-table td { text-align: left; padding: 6px 12px; border-bottom: 1px solid var(--line); font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
 .lab-table th { font-family: var(--font-body); font-weight: 600; color: var(--text-muted); }
+.lab-list { margin: 0; padding-left: 1.1rem; font-size: 0.9rem; display: grid; gap: 4px; }

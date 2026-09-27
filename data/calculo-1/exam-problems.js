@@ -2,7 +2,7 @@
    Problemas de examen · Cálculo 1 (§10.3). Propios y parametrizados.
    part.answer(v, prev): prev son las respuestas DEL ALUMNO en los incisos
    anteriores, para dar crédito por arrastre de error.
-   Bloque A (S01–S06) y bloque C (piloto S10). Se agregan 6–8 por bloque en F3.
+   Bloques A (S01–S06) y B (S07–S08), y bloque C (S09 y S10). Se agregan 6–8 por bloque en F3.
    ===================================================================== */
 (function () {
   var ex = (window.CB_EXAMS = window.CB_EXAMS || {});
@@ -314,6 +314,266 @@
           prompt: function () { return '¿Qué porcentaje de la iluminación del inciso b) se pierde por cada metro que te alejas? Da el cambio relativo $I\'/I$ en porcentaje (será negativo).'; },
           answer: function (v, prev) { return prev[2] / prev[1] * 100; },
           solution: function (v) { return '$\\dfrac{I\'}{I}\\times 100 = -\\dfrac{300x}{d^2} = ' + fx(-300 * v.x / (v.d * v.d), 2) + '\\,\\%$ por metro.'; }
+        }
+      ]
+    },
+
+    /* ================= Bloque B · Optimización (S07–S08) ================= */
+    {
+      id: 'c1-ex-eficiencia', tags: ['c1.S04', 'c1.S08'], block: 'B', title: 'La velocidad más eficiente',
+      vars: { k: [20, 80, 10], s: [2, 6, 1] },
+      statement: function (v) { return '<p>La eficiencia de un dron repartidor depende de su velocidad $v$ (m/s) según $E(v) = \\dfrac{' + v.k + 'v}{v^2 + ' + v.s * v.s + '}$ (km por batería).</p>'; },
+      diagram: { id: 'exam-grafica', state: function (v) { return { kind: 'eficiencia', k: v.k, c: v.s * v.s }; } },
+      parts: [
+        {
+          label: 'a', type: 'numeric', points: 3, unit: 'm/s',
+          prompt: function () { return '¿A qué velocidad es máxima la eficiencia?'; },
+          answer: function (v) { return v.s; },
+          solution: function (v) { return '$E\'(v) = 0$ cuando $v^2 = ' + v.s * v.s + '$: $v = ' + v.s + '$ m/s (antes $E\' > 0$, después $E\' < 0$).'; }
+        },
+        {
+          label: 'b', type: 'numeric', points: 2, unit: 'km',
+          prompt: function () { return 'Con tu velocidad del inciso a), ¿cuál es la eficiencia máxima?'; },
+          answer: function (v, prev) { return v.k * prev[0] / (prev[0] * prev[0] + v.s * v.s); },
+          solution: function (v) { return '$E(' + v.s + ') = \\dfrac{' + v.k * v.s + '}{' + 2 * v.s * v.s + '} = ' + fx(v.k / (2 * v.s)) + '$ km.'; }
+        },
+        {
+          label: 'c', type: 'numeric', points: 3,
+          prompt: function (v) { return 'Con la regla del cociente, calcula $E\'(' + (v.s + 2) + ')$.'; },
+          answer: function (v) { var c = v.s * v.s, x = v.s + 2; return v.k * (c - x * x) / Math.pow(x * x + c, 2); },
+          solution: function (v) { var c = v.s * v.s, x = v.s + 2; return '$E\'(v) = \\dfrac{' + v.k + '(v^2 + ' + c + ') - ' + v.k + 'v\\cdot 2v}{(v^2 + ' + c + ')^2} = \\dfrac{' + v.k + '(' + c + ' - v^2)}{(v^2 + ' + c + ')^2}$; en $v = ' + x + '$: $\\approx ' + fx(v.k * (c - x * x) / Math.pow(x * x + c, 2), 4) + '$. Negativa: a esa velocidad ya conviene ir más despacio.'; }
+        },
+        {
+          label: 'd', type: 'numeric', points: 2, unit: '%',
+          prompt: function (v) { return 'Volando a $' + (v.s + 2) + '$ m/s, ¿qué porcentaje de la eficiencia máxima del inciso b) se aprovecha?'; },
+          answer: function (v, prev) { var x = v.s + 2; return v.k * x / (x * x + v.s * v.s) / prev[1] * 100; },
+          solution: function (v) { var x = v.s + 2, E = v.k * x / (x * x + v.s * v.s); return '$E(' + x + ') \\approx ' + fx(E) + '$, que es el $' + fx(E / (v.k / (2 * v.s)) * 100, 1) + '\\,\\%$ del máximo.'; }
+        }
+      ]
+    },
+    {
+      id: 'c1-ex-caja', tags: ['c1.S08'], block: 'B', title: 'La caja de lámina',
+      vars: { L: [12, 48, 6] },
+      statement: function (v) { return '<p>De una lámina cuadrada de ' + v.L + ' cm de lado se recortan cuadros de lado $x$ en las cuatro esquinas y se doblan los lados para formar una caja sin tapa.</p>'; },
+      diagram: { id: 'box-cut', state: function (v) { return { L: v.L, x: v.L / 6 }; } },
+      parts: [
+        {
+          label: 'a', type: 'numeric', points: 3, unit: 'cm',
+          prompt: function () { return '¿Qué lado $x$ deben tener los cuadros para que el volumen sea máximo?'; },
+          answer: function (v) { return v.L / 6; },
+          solution: function (v) { return '$V(x) = x(' + v.L + ' - 2x)^2$, $V\'(x) = (' + v.L + ' - 2x)(' + v.L + ' - 6x) = 0$. En el dominio $0 < x < ' + v.L / 2 + '$: $x = ' + fx(v.L / 6) + '$ cm.'; }
+        },
+        {
+          label: 'b', type: 'numeric', points: 3, unit: 'cm³',
+          prompt: function () { return 'Con tu $x$ del inciso a), ¿cuál es el volumen máximo?'; },
+          answer: function (v, prev) { return prev[0] * Math.pow(v.L - 2 * prev[0], 2); },
+          solution: function (v) { var x = v.L / 6; return '$V = ' + fx(x) + '\\,(' + v.L + ' - ' + fx(2 * x) + ')^2 = ' + fx(x * Math.pow(v.L - 2 * x, 2), 2) + '$ cm³.'; }
+        },
+        {
+          label: 'c', type: 'numeric', points: 2, unit: 'cm³',
+          prompt: function () { return 'Si se recortan cuadros de 2 cm, ¿qué volumen tiene la caja?'; },
+          answer: function (v) { return 2 * (v.L - 4) * (v.L - 4); },
+          solution: function (v) { return '$V(2) = 2(' + v.L + ' - 4)^2 = ' + 2 * (v.L - 4) * (v.L - 4) + '$ cm³.'; }
+        },
+        {
+          label: 'd', type: 'numeric', points: 2, unit: 'cm²',
+          prompt: function () { return 'Con ese mismo $x$ del inciso a), ¿cuánta lámina se desperdicia en las cuatro esquinas?'; },
+          answer: function (v, prev) { return 4 * prev[0] * prev[0]; },
+          solution: function (v) { return '$4x^2 = 4\\,(' + fx(v.L / 6) + ')^2 = ' + fx(4 * v.L * v.L / 36, 2) + '$ cm².'; }
+        }
+      ]
+    },
+    {
+      id: 'c1-ex-terreno', tags: ['c1.S08'], block: 'B', title: 'Un terreno junto al río',
+      vars: { B: [1200, 6000, 600], c1: [10, 30, 10], c2: [10, 30, 10] },
+      statement: function (v) { return '<p>Se cerca un terreno rectangular junto a un río; el lado del río no lleva cerca. El lado paralelo al río ($y$) cuesta ' + v.c1 + ' pesos/m y cada lado perpendicular ($x$) cuesta ' + v.c2 + ' pesos/m. Hay ' + v.B + ' pesos de presupuesto.</p>'; },
+      parts: [
+        {
+          label: 'a', type: 'numeric', points: 3, unit: 'm',
+          prompt: function () { return 'Con $' + '2c_2x + c_1y = B' + '$, ¿qué $x$ maximiza el área?'; },
+          answer: function (v) { return v.B / (4 * v.c2); },
+          solution: function (v) { return '$y = \\dfrac{' + v.B + ' - ' + 2 * v.c2 + 'x}{' + v.c1 + '}$ y $A(x) = xy$. $A\'(x) = \\dfrac{' + v.B + ' - ' + 4 * v.c2 + 'x}{' + v.c1 + '} = 0 \\Rightarrow x = ' + fx(v.B / (4 * v.c2)) + '$ m.'; }
+        },
+        {
+          label: 'b', type: 'numeric', points: 3, unit: 'm',
+          prompt: function () { return 'Con tu $x$ del inciso a), ¿cuánto mide el lado $y$?'; },
+          answer: function (v, prev) { return (v.B - 2 * v.c2 * prev[0]) / v.c1; },
+          solution: function (v) { return '$y = \\dfrac{' + v.B + ' - ' + 2 * v.c2 + '\\cdot ' + fx(v.B / (4 * v.c2)) + '}{' + v.c1 + '} = ' + fx(v.B / (2 * v.c1)) + '$ m: la mitad del presupuesto va al lado $y$.'; }
+        },
+        {
+          label: 'c', type: 'numeric', points: 2, unit: 'm²',
+          prompt: function () { return 'Con los incisos a) y b), ¿cuál es el área máxima?'; },
+          answer: function (v, prev) { return prev[0] * prev[1]; },
+          solution: function (v) { return '$A = ' + fx(v.B / (4 * v.c2)) + '\\cdot ' + fx(v.B / (2 * v.c1)) + ' = ' + fx(v.B * v.B / (8 * v.c1 * v.c2), 2) + '$ m².'; }
+        },
+        {
+          label: 'd', type: 'numeric', points: 2, unit: '%',
+          prompt: function () { return 'Si el presupuesto sube un 10 %, ¿en qué porcentaje sube el área máxima?'; },
+          answer: function () { return 21; },
+          solution: function () { return 'El área máxima es $\\tfrac{B^2}{8c_1c_2}$: proporcional a $B^2$. $1.1^2 = 1.21$, sube un 21 %.'; }
+        }
+      ]
+    },
+    {
+      id: 'c1-ex-cubica-extremos', tags: ['c1.S07'], block: 'B', title: 'Máximos, mínimos e inflexión',
+      vars: { a: [1, 3, 1], b: [10, 60, 5] },
+      where: function (v) { return v.b !== 4 * Math.pow(v.a, 3); },
+      statement: function (v) { return '<p>Considera $f(x) = x^3 - ' + 3 * v.a + 'x^2 + ' + v.b + '$.</p>'; },
+      diagram: { id: 'exam-grafica', state: function (v) { return { kind: 'cubica', a: v.a, b: v.b }; } },
+      parts: [
+        {
+          label: 'a', type: 'numeric', points: 3,
+          prompt: function () { return 'Además de $x = 0$, ¿en qué $x$ tiene $f$ un punto crítico?'; },
+          answer: function (v) { return 2 * v.a; },
+          solution: function (v) { return '$f\'(x) = 3x^2 - ' + 6 * v.a + 'x = 3x(x - ' + 2 * v.a + ')$: críticos en 0 y ' + 2 * v.a + '.'; }
+        },
+        {
+          label: 'b', type: 'numeric', points: 3,
+          prompt: function () { return 'Evalúa $f$ en tu punto crítico del inciso a).'; },
+          answer: function (v, prev) { return Math.pow(prev[0], 3) - 3 * v.a * prev[0] * prev[0] + v.b; },
+          solution: function (v) { var x = 2 * v.a; return '$f(' + x + ') = ' + Math.pow(x, 3) + ' - ' + 3 * v.a * x * x + ' + ' + v.b + ' = ' + (v.b - 4 * Math.pow(v.a, 3)) + '$.'; }
+        },
+        {
+          label: 'c', type: 'numeric', points: 2,
+          prompt: function () { return 'Calcula $f\'\'$ en tu punto crítico del inciso a). (Si es positiva, ahí hay un mínimo.)'; },
+          answer: function (v, prev) { return 6 * prev[0] - 6 * v.a; },
+          solution: function (v) { return '$f\'\'(x) = 6x - ' + 6 * v.a + '$; en $x = ' + 2 * v.a + '$: $' + 6 * v.a + ' > 0$, mínimo relativo.'; }
+        },
+        {
+          label: 'd', type: 'numeric', points: 2,
+          prompt: function () { return '¿En qué $x$ está el punto de inflexión?'; },
+          answer: function (v) { return v.a; },
+          solution: function (v) { return '$f\'\'(x) = 6x - ' + 6 * v.a + '$ cambia de signo en $x = ' + v.a + '$, justo a la mitad de los dos críticos.'; }
+        }
+      ]
+    },
+    {
+      id: 'c1-ex-lata', tags: ['c1.S08'], block: 'B', title: 'Una lata con tapas caras',
+      vars: { V: [300, 1000, 100], c: [1, 5, 1] },
+      statement: function (v) { return '<p>Una lata cilíndrica cerrada debe guardar ' + v.V + ' cm³. La pared cuesta ' + v.c + ' centavos por cm² y las tapas, más gruesas, cuestan el doble. El costo es $C(r) = 2\\cdot(2\\pi r^2)(' + v.c + ') + 2\\pi r h\\,(' + v.c + ')$.</p>'; },
+      parts: [
+        {
+          label: 'a', type: 'numeric', points: 3, unit: 'cm', tol: { rel: 0.005 },
+          prompt: function () { return 'Usa $\\pi r^2 h = V$ para dejar $C$ en función de $r$. ¿Qué radio minimiza el costo?'; },
+          answer: function (v) { return Math.cbrt(v.V / (4 * Math.PI)); },
+          solution: function (v) { return '$C(r) = ' + 4 * v.c + '\\pi r^2 + \\dfrac{' + 2 * v.c * v.V + '}{r}$, $C\'(r) = ' + 8 * v.c + '\\pi r - \\dfrac{' + 2 * v.c * v.V + '}{r^2} = 0 \\Rightarrow r^3 = \\dfrac{' + v.V + '}{4\\pi}$, $r \\approx ' + fx(Math.cbrt(v.V / (4 * Math.PI)), 3) + '$ cm.'; }
+        },
+        {
+          label: 'b', type: 'numeric', points: 2, unit: 'cm', tol: { rel: 0.005 },
+          prompt: function () { return 'Con tu radio del inciso a), ¿qué altura tiene la lata?'; },
+          answer: function (v, prev) { return v.V / (Math.PI * prev[0] * prev[0]); },
+          solution: function (v) { var r = Math.cbrt(v.V / (4 * Math.PI)); return '$h = \\dfrac{' + v.V + '}{\\pi r^2} \\approx ' + fx(v.V / (Math.PI * r * r), 3) + '$ cm.'; }
+        },
+        {
+          label: 'c', type: 'numeric', points: 2, tol: { rel: 0.005 },
+          prompt: function () { return '¿Cuánto vale el cociente $h/r$ con tus incisos a) y b)?'; },
+          answer: function (v, prev) { return prev[1] / prev[0]; },
+          solution: function () { return '$h/r = 4$: con tapas al doble de precio, la lata óptima es el doble de alta que la de material uniforme ($h = 2r$).'; }
+        },
+        {
+          label: 'd', type: 'numeric', points: 3, unit: 'centavos', tol: { rel: 0.005 },
+          prompt: function () { return 'Con tu radio del inciso a), ¿cuánto cuesta la lata más barata?'; },
+          answer: function (v, prev) { return 4 * v.c * Math.PI * prev[0] * prev[0] + 2 * v.c * v.V / prev[0]; },
+          solution: function (v) { var r = Math.cbrt(v.V / (4 * Math.PI)); return '$C(r) \\approx ' + fx(4 * v.c * Math.PI * r * r + 2 * v.c * v.V / r, 2) + '$ centavos.'; }
+        }
+      ]
+    },
+    {
+      id: 'c1-ex-parabola', tags: ['c1.S07', 'c1.S08', 'c1.S05'], block: 'B', title: 'El punto más cercano',
+      vars: { m: [1, 4, 1] },
+      statement: function (v) { return '<p>Un sensor está en $P = (0, ' + (v.m * v.m + 0.5) + ')$ y un riel sigue la curva $y = x^2$. Se busca el punto del riel, con $x > 0$, más cercano al sensor.</p>'; },
+      diagram: { id: 'exam-parabola-dist', state: function (v) { return { m: v.m }; } },
+      parts: [
+        {
+          label: 'a', type: 'numeric', points: 3,
+          prompt: function () { return 'Minimiza $d^2(x) = x^2 + (x^2 - k)^2$, con $k$ la altura del sensor. ¿Qué $x$ da la distancia mínima?'; },
+          answer: function (v) { return v.m; },
+          solution: function (v) { var k = v.m * v.m + 0.5; return '$\\dfrac{d}{dx}d^2 = 2x + 4x(x^2 - ' + k + ') = 2x(2x^2 - ' + (2 * k - 1) + ')$. Con $x > 0$: $x^2 = ' + v.m * v.m + '$, $x = ' + v.m + '$.'; }
+        },
+        {
+          label: 'b', type: 'numeric', points: 2,
+          prompt: function () { return '¿Cuál es la coordenada $y$ de ese punto, con tu $x$ del inciso a)?'; },
+          answer: function (v, prev) { return prev[0] * prev[0]; },
+          solution: function (v) { return '$y = ' + v.m + '^2 = ' + v.m * v.m + '$.'; }
+        },
+        {
+          label: 'c', type: 'numeric', points: 3, tol: { abs: 0.005 },
+          prompt: function () { return 'Con los incisos a) y b), ¿cuál es la distancia mínima?'; },
+          answer: function (v, prev) { var k = v.m * v.m + 0.5; return Math.sqrt(prev[0] * prev[0] + Math.pow(prev[1] - k, 2)); },
+          solution: function (v) { return '$d = \\sqrt{' + v.m * v.m + ' + 0.25} \\approx ' + fx(Math.sqrt(v.m * v.m + 0.25), 3) + '$.'; }
+        },
+        {
+          label: 'd', type: 'numeric', points: 2, tol: { abs: 0.005 },
+          prompt: function () { return '¿Qué pendiente tiene la recta tangente al riel en ese punto? (Comprueba que es perpendicular al segmento hacia el sensor.)'; },
+          answer: function (v, prev) { return 2 * prev[0]; },
+          solution: function (v) { return '$y\' = 2x = ' + 2 * v.m + '$. El segmento tiene pendiente $\\dfrac{' + v.m * v.m + ' - ' + (v.m * v.m + 0.5) + '}{' + v.m + '} = -\\dfrac{1}{' + 2 * v.m + '}$: el producto es $-1$.'; }
+        }
+      ]
+    },
+
+    /* ================= Bloque C · S09 ================= */
+    {
+      id: 'c1-ex-flujo', tags: ['c1.S09'], block: 'C', title: 'Agua que entra a una cisterna',
+      vars: { a: [1, 5, 1], T: [4, 12, 4] },
+      statement: function (v) { return '<p>Durante ' + v.T + ' minutos entra agua a una cisterna con caudal $r(t) = ' + v.a + 't(' + v.T + ' - t)$ L/min.</p>'; },
+      diagram: { id: 'exam-grafica', state: function (v) { return { kind: 'flujo', a: v.a, T: v.T }; } },
+      parts: [
+        {
+          label: 'a', type: 'numeric', points: 3, unit: 'L',
+          prompt: function () { return 'Estima el volumen con la suma de punto medio y $n = 4$.'; },
+          answer: function (v) { var dx = v.T / 4, s = 0; for (var i = 0; i < 4; i++) { var t = (i + 0.5) * dx; s += v.a * t * (v.T - t) * dx; } return s; },
+          solution: function (v) { var dx = v.T / 4, s = 0; for (var i = 0; i < 4; i++) { var t = (i + 0.5) * dx; s += v.a * t * (v.T - t) * dx; } return '$\\Delta t = ' + fx(dx) + '$; las alturas se toman en $t = ' + [0.5, 1.5, 2.5, 3.5].map(function (k) { return fx(k * dx); }).join(',\\ ') + '$. Suma $\\approx ' + fx(s, 3) + '$ L.'; }
+        },
+        {
+          label: 'b', type: 'numeric', points: 3, unit: 'L',
+          prompt: function () { return 'Calcula el volumen exacto con el Teorema Fundamental.'; },
+          answer: function (v) { return v.a * Math.pow(v.T, 3) / 6; },
+          solution: function (v) { return '$\\displaystyle\\int_0^{' + v.T + '} (' + v.a * v.T + 't - ' + v.a + 't^2)\\,dt = \\left[' + fx(v.a * v.T / 2) + 't^2 - ' + fx(v.a / 3) + 't^3\\right]_0^{' + v.T + '} = ' + fx(v.a * Math.pow(v.T, 3) / 6, 3) + '$ L.'; }
+        },
+        {
+          label: 'c', type: 'numeric', points: 2, unit: 'L', tol: { abs: 0.05 },
+          prompt: function () { return '¿Cuál es el error de tu estimación del inciso a) respecto al valor del inciso b)? (b − a)'; },
+          answer: function (v, prev) { return prev[1] - prev[0]; },
+          solution: function (v) { var dx = v.T / 4, s = 0; for (var i = 0; i < 4; i++) { var t = (i + 0.5) * dx; s += v.a * t * (v.T - t) * dx; } return 'Exacto menos aproximado: $' + fx(v.a * Math.pow(v.T, 3) / 6 - s, 3) + '$ L. El punto medio se pasa un poco porque la parábola es cóncava hacia abajo.'; }
+        },
+        {
+          label: 'd', type: 'numeric', points: 2, unit: 'L/min',
+          prompt: function () { return 'Con tu volumen del inciso b), ¿cuál fue el caudal promedio?'; },
+          answer: function (v, prev) { return prev[1] / v.T; },
+          solution: function (v) { return 'Promedio $= V/' + v.T + ' = ' + fx(v.a * v.T * v.T / 6, 3) + '$ L/min.'; }
+        }
+      ]
+    },
+    {
+      id: 'c1-ex-ida-vuelta', tags: ['c1.S09', 'c1.S07'], block: 'C', title: 'Un carrito que va y vuelve',
+      vars: { k: [1, 4, 1], T: [4, 8, 1] },
+      where: function (v) { return v.T >= v.k + 2; },
+      statement: function (v) { return '<p>Un carrito se mueve sobre un riel con velocidad $v(t) = t^2 - ' + v.k + 't$ m/s, para $0 \\leq t \\leq ' + v.T + '$ s.</p>'; },
+      diagram: { id: 'exam-grafica', state: function (v) { return { kind: 'velocidad', k: v.k, T: v.T }; } },
+      parts: [
+        {
+          label: 'a', type: 'numeric', points: 2, unit: 's',
+          prompt: function () { return '¿En qué instante $t > 0$ cambia de sentido?'; },
+          answer: function (v) { return v.k; },
+          solution: function (v) { return '$v(t) = t(t - ' + v.k + ') = 0$ en $t = ' + v.k + '$; antes es negativa y después positiva.'; }
+        },
+        {
+          label: 'b', type: 'numeric', points: 3, unit: 'm',
+          prompt: function (v) { return 'Calcula su desplazamiento entre $t = 0$ y $t = ' + v.T + '$.'; },
+          answer: function (v) { return Math.pow(v.T, 3) / 3 - v.k * v.T * v.T / 2; },
+          solution: function (v) { return '$\\left[\\tfrac{t^3}{3} - \\tfrac{' + v.k + 't^2}{2}\\right]_0^{' + v.T + '} = ' + fx(Math.pow(v.T, 3) / 3 - v.k * v.T * v.T / 2, 3) + '$ m.'; }
+        },
+        {
+          label: 'c', type: 'numeric', points: 3, unit: 'm',
+          prompt: function () { return 'Con tus incisos a) y b), ¿qué distancia total recorre? (El retroceso de $0$ a $a)$ mide $\\tfrac{a^3}{6}$ y cuenta dos veces: una por restar y otra por recorrer.)'; },
+          answer: function (v, prev) { return prev[1] + Math.pow(prev[0], 3) / 3; },
+          solution: function (v) { var disp = Math.pow(v.T, 3) / 3 - v.k * v.T * v.T / 2; return 'De 0 a ' + v.k + ' retrocede $' + fx(Math.pow(v.k, 3) / 6, 3) + '$ m. Distancia $= ' + fx(disp, 3) + ' + 2\\cdot ' + fx(Math.pow(v.k, 3) / 6, 3) + ' = ' + fx(disp + Math.pow(v.k, 3) / 3, 3) + '$ m.'; }
+        },
+        {
+          label: 'd', type: 'numeric', points: 2, unit: 'm/s',
+          prompt: function () { return 'Con tu desplazamiento del inciso b), ¿cuál fue la velocidad media?'; },
+          answer: function (v, prev) { return prev[1] / v.T; },
+          solution: function (v) { return '$\\bar{v} = \\dfrac{' + fx(Math.pow(v.T, 3) / 3 - v.k * v.T * v.T / 2, 3) + '}{' + v.T + '} = ' + fx((Math.pow(v.T, 3) / 3 - v.k * v.T * v.T / 2) / v.T, 3) + '$ m/s.'; }
         }
       ]
     }

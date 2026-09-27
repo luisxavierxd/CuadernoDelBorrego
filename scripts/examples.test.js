@@ -8,7 +8,7 @@ const { loadData } = require('./lib/load');
 const { loadMathjs } = require('./lib/vendor');
 
 const ROOT = path.join(__dirname, '..');
-const LIBS = ['labs/registry', 'labs/antiderivative-check', 'labs/projectile-check', 'labs/secant-tangent', 'labs/derivative-check', 'labs/chain-composition', 'labs/implicit-tangent', 'exercises']
+const LIBS = ['labs/registry', 'labs/antiderivative-check', 'labs/projectile-check', 'labs/secant-tangent', 'labs/derivative-check', 'labs/chain-composition', 'labs/implicit-tangent', 'labs/f-fprime-fsecond', 'labs/optimize-slider', 'labs/riemann', 'exercises']
   .map((n) => path.join(ROOT, 'shared/js', n + '.js'));
 const N_FAST = 200, N_EXPR = 50;
 
@@ -64,6 +64,24 @@ function checkExample(where, b, LM, math) {
     const r = LM.implicit.verify(math, v.eq, v.d, v.x0, v.y0);
     ok(r.reason === 'correct', `${where}: dy/dx de ${v.eq} ≠ ${v.d} (${r.reason})`);
     if (v.slope != null) ok(relClose(v.slope, r.trueSlope, 1e-6), `${where}: pendiente ${v.slope} ≠ ${r.trueSlope}`);
+  } else if (v.lab === 'extrema') {
+    const r = LM.extrema.analyze(LM.core.build(math, v.f).fn, v.a, v.b);
+    ok(r.crit.length === v.crit.length, `${where}: ${r.crit.length} críticos y el ejemplo dice ${v.crit.length}`);
+    v.crit.forEach((c, i) => ok(r.crit[i] && Math.abs(r.crit[i].x - c[0]) < 1e-4 && r.crit[i].kind === c[1], `${where}: crítico ${i} (${c}) ≠ ${JSON.stringify(r.crit[i])}`));
+    ok(r.infl.length === (v.infl || []).length, `${where}: ${r.infl.length} inflexiones y el ejemplo dice ${(v.infl || []).length}`);
+    (v.infl || []).forEach((x, i) => ok(r.infl[i] && Math.abs(r.infl[i].x - x) < 1e-3, `${where}: inflexión ${x} ≠ ${r.infl[i] && r.infl[i].x}`));
+  } else if (v.lab === 'optimum') {
+    const r = LM.optimize.optimum(LM.core.build(math, v.f).fn, v.a, v.b, v.kind);
+    ok(relClose(r.x, v.x, 1e-6), `${where}: óptimo en ${r.x} y el ejemplo dice ${v.x}`);
+    if (v.value != null) ok(relClose(r.value, v.value, 1e-8), `${where}: valor óptimo ${r.value} ≠ ${v.value}`);
+  } else if (v.lab === 'riemann') {
+    const got = LM.riemann.sum(LM.core.build(math, v.f).fn, v.a, v.b, v.n, v.type);
+    ok(relClose(got, v.value, 1e-9), `${where}: suma ${v.type} = ${got} y el ejemplo dice ${v.value}`);
+  } else if (v.lab === 'ftc1') {
+    const f = LM.core.build(math, v.f).fn, e = 1e-4;
+    const G = (x) => LM.riemann.simpson(f, v.a, x, 400);
+    const want = (G(v.x + e) - G(v.x - e)) / (2 * e);
+    ok(relClose(v.value, want, 1e-6), `${where}: d/dx ∫ = ${v.value} y numéricamente ${want}`);
   } else ok(false, `${where}: verify.lab desconocido ${v.lab}`);
 }
 
@@ -126,6 +144,16 @@ function checkExercise(where, ex, W, LM, math) {
       } else if (o && o.lab === 'value') {
         const want = o.value(v);
         ok(relClose(ans, want, 1e-9), `${at}: respuesta ${ans} y el cálculo independiente da ${want}`);
+      } else if (o && (o.lab === 'extremum' || o.lab === 'inflection')) {
+        const r = LM.extrema.analyze(LM.core.build(math, o.f(v)).fn, o.a(v), o.b(v));
+        const hit = o.lab === 'extremum' ? r.crit.find((c) => c.kind === o.kind) : r.infl[0];
+        ok(hit && Math.abs(ans - (o.field === 'value' ? hit.y : hit.x)) < 1e-4 * (1 + Math.abs(ans)), `${at}: respuesta ${ans} y el análisis da ${JSON.stringify(hit)}`);
+      } else if (o && o.lab === 'optimum') {
+        const r = LM.optimize.optimum(LM.core.build(math, o.f(v)).fn, o.a(v), o.b(v), o.kind);
+        ok(relClose(ans, o.field === 'value' ? r.value : r.x, 1e-6), `${at}: respuesta ${ans} y el óptimo numérico da ${JSON.stringify(r)}`);
+      } else if (o && o.lab === 'riemann') {
+        const want = LM.riemann.sum(LM.core.build(math, o.f(v)).fn, o.a(v), o.b(v), o.n(v), o.type);
+        ok(relClose(ans, want, 1e-9), `${at}: respuesta ${ans} y la suma da ${want}`);
       } else if (o && o.lab === 'integral') {
         const f = LM.antiderivative.build(math, o.f(v)).fn;
         const want = LM.antiderivative.simpson(f, o.a(v), o.b(v), 400);

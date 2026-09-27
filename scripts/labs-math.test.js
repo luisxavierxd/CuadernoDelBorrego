@@ -7,7 +7,7 @@ const { loadData } = require('./lib/load');
 const { loadMathjs } = require('./lib/vendor');
 
 const ROOT = path.join(__dirname, '..');
-const LABS = ['registry', 'antiderivative-check', 'projectile-check', 'secant-tangent', 'derivative-check', 'chain-composition', 'implicit-tangent']
+const LABS = ['registry', 'antiderivative-check', 'projectile-check', 'secant-tangent', 'derivative-check', 'chain-composition', 'implicit-tangent', 'f-fprime-fsecond', 'optimize-slider', 'riemann']
   .map((n) => path.join(ROOT, 'shared/js/labs', n + '.js'));
 
 let pass = 0, fail = 0;
@@ -196,6 +196,75 @@ function near(got, want, tol, msg) {
     eq(IM.verify(math, 'x^2 + y^2 = 25', 'x/y', 3, 4).reason, 'sign');
     eq(IM.verify(math, 'x^2 + y^2 = 25', '-y/x', 3, 4).reason, 'mismatch');
     eq(IM.verify(math, 'x^3 + y^3 = 6x*y', '(2y - x^2)/(y^2 - 2x)', 3, 3).reason, 'correct');
+  });
+
+  /* ---------- f-fprime-fsecond ---------- */
+  const X = LM.extrema;
+  const fnOf = (src) => LM.core.build(math, src).fn;
+  test('extremos: x³ − 3x tiene máx en −1, mín en 1 e inflexión en 0', () => {
+    const r = X.analyze(fnOf('x^3 - 3x'), -2.5, 2.5);
+    eq(r.crit.length, 2, 'críticos');
+    near(r.crit[0].x, -1, 1e-5); eq(r.crit[0].kind, 'max');
+    near(r.crit[1].x, 1, 1e-5); eq(r.crit[1].kind, 'min');
+    eq(r.infl.length, 1, 'inflexiones'); near(r.infl[0].x, 0, 1e-4);
+  });
+  test('extremos: x³ tiene un crítico sin extremo y una inflexión', () => {
+    const r = X.analyze(fnOf('x^3'), -1.6, 1.6);
+    eq(r.crit.length, 1, 'críticos'); near(r.crit[0].x, 0, 1e-3); eq(r.crit[0].kind, 'none');
+    eq(r.infl.length, 1, 'inflexiones'); near(r.infl[0].x, 0, 1e-3);
+  });
+  test('extremos: x⁴ − 4x² tiene 3 críticos y 2 inflexiones', () => {
+    const r = X.analyze(fnOf('x^4 - 4x^2'), -2.4, 2.4);
+    eq(r.crit.map((c) => c.kind).join(','), 'min,max,min');
+    near(r.crit[0].x, -Math.SQRT2, 1e-5); near(r.crit[1].x, 0, 1e-5);
+    eq(r.infl.length, 2); near(r.infl[1].x, Math.sqrt(2 / 3), 1e-4);
+  });
+  test('extremos: x·e^(−x) tiene máx en 1 e inflexión en 2', () => {
+    const r = X.analyze(fnOf('x*e^(-x)'), -0.8, 5);
+    eq(r.crit.length, 1); near(r.crit[0].x, 1, 1e-5); eq(r.crit[0].kind, 'max');
+    eq(r.infl.length, 1); near(r.infl[0].x, 2, 1e-4);
+  });
+  test('extremos: una asíntota no cuenta como crítico', () => {
+    const r = X.analyze(fnOf('1/x'), -2, 2);
+    eq(r.crit.length, 0, 'críticos'); eq(r.infl.length, 0, 'inflexiones');
+  });
+
+  /* ---------- optimize-slider ---------- */
+  const O = LM.optimize;
+  test('optimización: cada problema modelo cae en su óptimo exacto', () => {
+    for (const [k, P] of Object.entries(O.problems)) {
+      for (const p of [P.param.min, P.param.value, P.param.max]) {
+        const d = P.domain(p), r = O.optimum((x) => P.f(x, p), d[0], d[1], P.kind);
+        near(r.x, P.exact(p), 1e-5 * (1 + P.exact(p)), `${k}(${p})`);
+        near(O.slope((x) => P.f(x, p), r.x), 0, 1e-3 * (1 + Math.abs(r.value)), `${k}(${p}) pendiente`);
+      }
+    }
+  });
+  test('optimización: mínimo de x² − 4x en [0, 5] es 2', () => {
+    const r = O.optimum((x) => x * x - 4 * x, 0, 5, 'min');
+    near(r.x, 2, 1e-7); near(r.value, -4, 1e-9);
+  });
+
+  /* ---------- riemann ---------- */
+  const Rm = LM.riemann;
+  test('riemann: sumas de x² en [0, 2] con n = 4', () => {
+    const f = (x) => x * x;
+    near(Rm.sum(f, 0, 2, 4, 'left'), 1.75, 1e-12);
+    near(Rm.sum(f, 0, 2, 4, 'right'), 3.75, 1e-12);
+    near(Rm.sum(f, 0, 2, 4, 'mid'), 2.625, 1e-12);
+    near(Rm.sum(f, 0, 2, 4, 'trap'), 2.75, 1e-12);
+  });
+  test('riemann: las sumas convergen a la integral', () => {
+    const f = Math.sin, I = 2;
+    near(Rm.simpson(f, 0, Math.PI, 400), I, 1e-9);
+    ['left', 'right', 'mid', 'trap'].forEach((t) => {
+      const e1 = Math.abs(Rm.sum(f, 0, Math.PI, 10, t) - I), e2 = Math.abs(Rm.sum(f, 0, Math.PI, 100, t) - I);
+      if (!(e2 < e1 / 5)) throw new Error(`${t}: el error no baja (${e1} → ${e2})`);
+    });
+  });
+  test('riemann: rectángulos cubren [a, b] con ancho Δx', () => {
+    const r = Rm.rects((x) => x, 1, 3, 8, 'left');
+    eq(r.length, 8); near(r[0].x0, 1, 1e-12); near(r[7].x1, 3, 1e-12); near(r[3].x1 - r[3].x0, 0.25, 1e-12);
   });
 
   console.log(`\nlabs-math.test.js: ${pass} ok, ${fail} fallan.`);

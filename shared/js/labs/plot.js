@@ -84,6 +84,12 @@
       el('path', { d: d, class: cls, fill: 'none', 'stroke-width': w || 3, 'stroke-linecap': 'round', 'clip-path': 'url(#' + clipId + ')' });
       return api;
     }
+    // Región cerrada con relleno: pts = [[x, y], ...] en unidades de la gráfica.
+    function poly(pts, cls) {
+      var d = pts.map(function (p, i) { return (i ? 'L' : 'M') + X(p[0]).toFixed(1) + ' ' + Y(Math.max(yr[0] - 1e3, Math.min(yr[1] + 1e3, p[1]))).toFixed(1); }).join('') + 'Z';
+      el('path', { d: d, class: cls, 'clip-path': 'url(#' + clipId + ')' });
+      return api;
+    }
     function point(x, y, cls, r) {
       if (isFinite(x) && isFinite(y) && y >= yr[0] && y <= yr[1]) el('circle', { cx: X(x), cy: Y(y), r: r || 6, class: cls });
       return api;
@@ -93,7 +99,7 @@
       el('text', { x: X(x) + (dx || 0), y: py, class: 'ann', 'text-anchor': anchor || 'start', 'font-size': size || 16 }, null, text);
       return api;
     }
-    var api = { clear: clear, grid: grid, axes: axes, curve: curve, line: line, segments: segments, point: point, label: label, X: X, Y: Y, xr: xr, yr: yr };
+    var api = { clear: clear, grid: grid, axes: axes, curve: curve, line: line, segments: segments, poly: poly, point: point, label: label, X: X, Y: Y, xr: xr, yr: yr };
     return api;
   }
 

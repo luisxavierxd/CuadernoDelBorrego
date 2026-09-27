@@ -29,14 +29,14 @@ window.COURSE_META = {
     {
       id: 'B', label: 'Optimización',
       sessions: [
-        { n: 7,  title: 'Extremos relativos', temario: ['4.1'], lab: 'f-fprime-fsecond' },
-        { n: 8,  title: 'Problemas de optimización', temario: ['4.2'], lab: 'optimize-slider' }
+        { n: 7,  title: 'Extremos relativos', temario: ['4.1'], lab: 'f-fprime-fsecond', ready: true, bank: true },
+        { n: 8,  title: 'Problemas de optimización', temario: ['4.2'], lab: 'optimize-slider', ready: true, bank: true }
       ]
     },
     {
       id: 'C', label: 'Integral',
       sessions: [
-        { n: 9,  title: 'La integral y el Teorema Fundamental del Cálculo', temario: ['5.1', '5.2'], lab: 'riemann' },
+        { n: 9,  title: 'La integral y el Teorema Fundamental del Cálculo', short: 'La integral y el TFC', temario: ['5.1', '5.2'], lab: 'riemann', ready: true, bank: true },
         { n: 10, title: 'Integrales directas y cambio de variable', temario: [], lab: 'antiderivative-check', ready: true, bank: true },
         { n: 11, title: 'Integración por partes', temario: ['5.6'], lab: 'antiderivative-check' },
         { n: 12, title: 'Sustitución trigonométrica', temario: ['5.6'], lab: 'antiderivative-check' },

@@ -375,4 +375,159 @@
       text((lx + px) / 2 + 14, (ly + by) / 2 - 6, 'd', ' font-size="18"');
     return svg('0 0 600 290', 'Lámpara a ' + h + ' m de altura; un punto del piso a ' + x + ' m de la base, a distancia d de la lámpara.', body);
   };
+
+  /* ================= Bloque B · Optimización (S07–S08) ================= */
+  function cubic3(x) { return x * x * x - 3 * x; }
+
+  // S07 · Puntos críticos de x³ − 3x: tangentes horizontales en el máximo y el mínimo.
+  D['critical-points'] = function () {
+    var F = frame(-2.3, 2.3, -3.2, 3.2);
+    var body = F.axes +
+      '<path class="ref" d="' + path(cubic3, -2.2, 2.2, F.X, F.Y) + '" fill="none" stroke-width="3.5" stroke-linecap="round"/>' +
+      line(F, 0, -1, 2, -1.7, -0.3, 'aux') + line(F, 0, 1, -2, 0.3, 1.7, 'aux') +
+      '<circle class="dot-aux" cx="' + F.X(-1) + '" cy="' + F.Y(2) + '" r="6"/><circle class="dot-aux" cx="' + F.X(1) + '" cy="' + F.Y(-2) + '" r="6"/>' +
+      text(F.X(-1), F.Y(2) - 14, 'máximo relativo · f′ = 0', ' text-anchor="middle" font-size="17"') +
+      text(F.X(1), F.Y(-2) + 28, 'mínimo relativo · f′ = 0', ' text-anchor="middle" font-size="17"') +
+      text(F.X(2.25), F.Y(3.2) + 16, 'f(x) = x³ − 3x', ' text-anchor="end" font-size="18"');
+    return svg('0 0 600 290', 'Gráfica de x³ − 3x con tangentes horizontales en su máximo relativo (x = −1) y su mínimo relativo (x = 1).', body);
+  };
+
+  // S07 · El signo de f′: un cursor recorre x³ − 3x con su tangente y la tabla de signos abajo.
+  D['fprime-sign'] = function (st) {
+    var x = st && st.x != null ? st.x : -1.8, m = 3 * x * x - 3;
+    var X = function (t) { return 60 + (t + 2.3) * 500 / 4.6; }, Y = function (y) { return 175 - y * 36; };
+    var F = { X: X, Y: Y };
+    var body = '<path class="axis" d="M' + X(-2.3) + ' ' + Y(0) + 'H' + X(2.3) + '" stroke-width="1.5" fill="none"/>' +
+      '<path class="ref" d="' + path(cubic3, -2.1, 2.1, X, Y) + '" fill="none" stroke-width="3.5" stroke-linecap="round"/>' +
+      line(F, m, x, cubic3(x), x - 70 / Math.hypot(108.7, 36 * m), x + 70 / Math.hypot(108.7, 36 * m), 'aux') +
+      '<circle class="dot-aux" cx="' + X(x).toFixed(1) + '" cy="' + Y(cubic3(x)).toFixed(1) + '" r="6"/>';
+    // Tabla de signos de f′ = 3(x + 1)(x − 1)
+    var yb = 300;
+    body += '<path class="axis" d="M' + X(-2.3) + ' ' + yb + 'H' + X(2.3) + '" stroke-width="1.5"/>';
+    [[-2.3, -1, '+ · sube'], [-1, 1, '− · baja'], [1, 2.3, '+ · sube']].forEach(function (s) {
+      body += text((X(s[0]) + X(s[1])) / 2, yb - 10, s[2], ' text-anchor="middle" font-size="17"');
+    });
+    [-1, 1].forEach(function (c) { body += '<path class="axis" d="M' + X(c) + ' ' + (yb - 6) + 'V' + (yb + 6) + '" stroke-width="2"/>' + text(X(c), yb + 24, String(c), ' text-anchor="middle" font-size="16"'); });
+    body += '<path class="error" d="M' + X(x).toFixed(1) + ' ' + (yb - 26) + 'V' + (yb + 8) + '" stroke-width="2" stroke-dasharray="4 4"/>' +
+      text(24, 30, 'f′(x) = ' + (Math.abs(m) < 0.05 ? '0' : m.toFixed(2).replace('-', '−')), ' font-size="19"') +
+      text(24, yb + 24, 'signo de f′', ' font-size="15"');
+    return svg('0 0 600 330', 'Un punto recorre x³ − 3x con su tangente; abajo, la tabla de signos de f′: positiva, negativa y positiva, con cambios en −1 y 1.', body);
+  };
+
+  // S07 · Concavidad de x³: ∩ a la izquierda, ∪ a la derecha, inflexión en 0.
+  D['concavity'] = function () {
+    var f = function (x) { return x * x * x; };
+    var F = frame(-1.6, 1.6, -3.6, 3.6);
+    var body = F.axes +
+      '<path class="trace" d="' + path(f, -1.5, 0, F.X, F.Y) + '" fill="none" stroke-width="3.5" stroke-linecap="round"/>' +
+      '<path class="ref" d="' + path(f, 0, 1.5, F.X, F.Y) + '" fill="none" stroke-width="3.5" stroke-linecap="round"/>' +
+      '<circle class="dot-aux" cx="' + F.X(0) + '" cy="' + F.Y(0) + '" r="6"/>' +
+      text(F.X(-0.9), F.Y(0.9), 'f″ < 0 · cóncava ∩', ' text-anchor="middle" font-size="17"') +
+      text(F.X(0.9), F.Y(-0.9), 'f″ > 0 · cóncava ∪', ' text-anchor="middle" font-size="17"') +
+      text(F.X(0) + 12, F.Y(0) - 12, 'inflexión', ' font-size="17"');
+    return svg('0 0 600 290', 'Gráfica de x³: cóncava hacia abajo para x negativa, cóncava hacia arriba para x positiva, con inflexión en el origen.', body);
+  };
+
+  // S08 · Caja sin tapa: lámina de 30 con cuadros de lado x recortados, y V(x) a la derecha.
+  D['box-cut'] = function (st) {
+    var L = st && st.L ? st.L : 30, x = st && st.x != null ? st.x : L / 10, S = 222 / L, ox = 30, oy = 40;
+    var V = function (t) { return t * (L - 2 * t) * (L - 2 * t); };
+    var Vm = 2 * L * L * L / 27, xm = L / 6, lab = function (v) { return Number(v.toFixed(2)).toString(); };
+    var body = '<rect class="axis" x="' + ox + '" y="' + oy + '" width="' + (L * S).toFixed(1) + '" height="' + (L * S).toFixed(1) + '" fill="none" stroke-width="2"/>';
+    [[0, 0], [L - x, 0], [0, L - x], [L - x, L - x]].forEach(function (c) {
+      body += '<rect class="error" x="' + (ox + c[0] * S).toFixed(1) + '" y="' + (oy + c[1] * S).toFixed(1) + '" width="' + (x * S).toFixed(1) + '" height="' + (x * S).toFixed(1) + '" fill="none" stroke-width="2" stroke-dasharray="5 4"/>';
+    });
+    body += '<rect class="aux" x="' + (ox + x * S).toFixed(1) + '" y="' + (oy + x * S).toFixed(1) + '" width="' + ((L - 2 * x) * S).toFixed(1) + '" height="' + ((L - 2 * x) * S).toFixed(1) + '" fill="none" stroke-width="2.5"/>' +
+      text(ox + x * S / 2, oy - 8, 'x', ' text-anchor="middle" font-size="17"') +
+      text(ox + L * S / 2, oy + L * S + 24, 'L = ' + L, ' text-anchor="middle" font-size="17"');
+    var X = function (t) { return 320 + t * 260 / (L / 2); }, Y = function (v) { return 260 - v * 190 / (Vm * 1.1); };
+    body += '<path class="axis" d="M' + X(0) + ' ' + Y(0) + 'H' + X(L / 2) + 'M' + X(0) + ' ' + Y(0) + 'V' + Y(Vm * 1.15) + '" stroke-width="1.5" fill="none"/>' +
+      '<path class="ref" d="' + path(V, 0, L / 2, X, Y) + '" fill="none" stroke-width="3.5" stroke-linecap="round"/>' +
+      '<path class="trace" d="M' + X(xm) + ' ' + Y(0) + 'V' + Y(Vm) + '" stroke-width="1.5" stroke-dasharray="4 6"/>' +
+      '<circle class="dot-aux" cx="' + X(x).toFixed(1) + '" cy="' + Y(V(x)).toFixed(1) + '" r="6"/>' +
+      text(X(0) + 8, Y(Vm * 1.15) + 4, 'V(x) = x(' + L + ' − 2x)²', ' font-size="17"') +
+      text(X(xm), Y(0) + 22, 'x = ' + lab(xm), ' text-anchor="middle" font-size="16"') +
+      text(X(L / 2), Y(Vm * 1.15) + 30, 'V = ' + Math.round(V(x)), ' text-anchor="end" font-size="18"');
+    return svg('0 0 600 290', 'Lámina de ' + L + ' por ' + L + ' con cuadros de lado x recortados en las esquinas; a la derecha, el volumen V(x), máximo en x = ' + lab(xm) + '.', body);
+  };
+
+  /* ================= Bloque C · S09: la integral ================= */
+  // S09 · Suma de Riemann izquierda de x² en [0, 2] con n rectángulos.
+  D['riemann-rects'] = function (st) {
+    var n = Math.max(1, Math.round(st && st.n != null ? st.n : 4));
+    var f = function (x) { return x * x; };
+    var F = frame(-0.1, 2.2, 0, 4.4);
+    var body = '', dx = 2 / n, S = 0;
+    for (var i = 0; i < n; i++) {
+      var x0 = i * dx, y = f(x0);
+      S += y * dx;
+      body += '<path class="area-fill" d="M' + F.X(x0).toFixed(1) + ' ' + F.Y(0).toFixed(1) + 'V' + F.Y(y).toFixed(1) + 'H' + F.X(x0 + dx).toFixed(1) + 'V' + F.Y(0).toFixed(1) + 'Z"/>' +
+        '<path class="aux" d="M' + F.X(x0).toFixed(1) + ' ' + F.Y(0).toFixed(1) + 'V' + F.Y(y).toFixed(1) + 'H' + F.X(x0 + dx).toFixed(1) + 'V' + F.Y(0).toFixed(1) + '" fill="none" stroke-width="1.5"/>';
+    }
+    body += F.axes + '<path class="ref" d="' + path(f, 0, 2.1, F.X, F.Y) + '" fill="none" stroke-width="3.5" stroke-linecap="round"/>' +
+      text(F.X(0) + 10, F.Y(4.4) + 18, 'n = ' + n + ' · suma izquierda = ' + S.toFixed(4), ' font-size="18"') +
+      text(F.X(0) + 10, F.Y(4.4) + 42, 'área exacta = 8/3 ≈ 2.6667', ' font-size="17"') +
+      text(F.X(2), F.Y(0) + 22, '2', ' text-anchor="middle" font-size="16"');
+    return svg('0 0 600 290', 'Rectángulos bajo x² entre 0 y 2 con altura en el extremo izquierdo; con más rectángulos la suma se acerca a 8/3.', body);
+  };
+
+  // S09 · Teorema Fundamental: el área acumulada A(x) crece con rapidez f(x).
+  D['ftc-accumulate'] = function (st) {
+    var x = st && st.x != null ? st.x : 1.2;
+    var f = function (t) { return 1 + 0.8 * Math.sin(1.6 * t); };
+    var A = function (t) { return t + 0.5 * (1 - Math.cos(1.6 * t)); };
+    var X = function (t) { return 60 + t * 500 / 3.2; };
+    var Yf = function (y) { return 130 - y * 50; }, YA = function (y) { return 300 - y * 38; };
+    var n = 60, d = 'M' + X(0) + ' ' + Yf(0);
+    for (var i = 0; i <= n; i++) { var t = x * i / n; d += 'L' + X(t).toFixed(1) + ' ' + Yf(f(t)).toFixed(1); }
+    d += 'L' + X(x).toFixed(1) + ' ' + Yf(0) + 'Z';
+    var body = '<path class="area-fill" d="' + d + '"/>' +
+      '<path class="axis" d="M' + X(0) + ' ' + Yf(0) + 'H' + X(3.2) + 'M' + X(0) + ' ' + YA(0) + 'H' + X(3.2) + '" stroke-width="1.5" fill="none"/>' +
+      '<path class="ref" d="' + path(f, 0, 3.1, X, Yf) + '" fill="none" stroke-width="3.5" stroke-linecap="round"/>' +
+      '<path class="aux" d="' + path(A, 0, x, X, YA, 80) + '" fill="none" stroke-width="3.5" stroke-linecap="round"/>' +
+      '<path class="axis" d="M' + X(x).toFixed(1) + ' ' + Yf(f(x)).toFixed(1) + 'V' + YA(A(x)).toFixed(1) + '" stroke-dasharray="4 6" stroke-width="1.2"/>' +
+      '<circle class="dot-ref" cx="' + X(x).toFixed(1) + '" cy="' + Yf(f(x)).toFixed(1) + '" r="5"/>' +
+      '<circle class="dot-aux" cx="' + X(x).toFixed(1) + '" cy="' + YA(A(x)).toFixed(1) + '" r="6"/>' +
+      text(X(0) + 8, 26, 'f(t)', ' font-size="18"') +
+      text(X(0) + 8, YA(0) - 84, 'A(x) = área de 0 a x', ' font-size="18"') +
+      text(X(3.2), YA(0) - 84, 'A′(x) = f(x) = ' + f(x).toFixed(2), ' text-anchor="end" font-size="18"');
+    return svg('0 0 600 320', 'Arriba, el área bajo f desde 0 hasta x; abajo, esa área como función A(x). La pendiente de A en x es la altura f(x).', body);
+  };
+
+  /* ---------- Problemas de examen · bloque B y S09 ---------- */
+  // Gráfica genérica de una función del problema, con un punto marcado.
+  var EXAM_FN = {
+    eficiencia: function (s) { return { f: function (v) { return s.k * v / (v * v + s.c); }, x: [0, 4 * Math.sqrt(s.c)], mark: Math.sqrt(s.c), xl: 'v (m/s)', yl: 'E(v)' }; },
+    cubica: function (s) { return { f: function (x) { return x * x * x - 3 * s.a * x * x + s.b; }, x: [-s.a, 3 * s.a], mark: 2 * s.a, xl: 'x', yl: 'f(x)' }; },
+    flujo: function (s) { return { f: function (t) { return s.a * t * (s.T - t); }, x: [0, s.T], area: true, xl: 't (min)', yl: 'r(t) en L/min' }; },
+    velocidad: function (s) { return { f: function (t) { return t * t - s.k * t; }, x: [0, s.T], area: true, mark: s.k, xl: 't (s)', yl: 'v(t) en m/s' }; }
+  };
+  D['exam-grafica'] = function (s) {
+    var g = EXAM_FN[s.kind](s), ys = [];
+    for (var i = 0; i <= 80; i++) ys.push(g.f(g.x[0] + (g.x[1] - g.x[0]) * i / 80));
+    var lo = Math.min(0, Math.min.apply(null, ys)), hi = Math.max(0, Math.max.apply(null, ys)), pad = (hi - lo) * 0.12;
+    var F = frame(g.x[0], g.x[1], lo - pad, hi + pad), body = '';
+    if (g.area) {
+      var d = 'M' + F.X(g.x[0]).toFixed(1) + ' ' + F.Y(0).toFixed(1) + path(g.f, g.x[0], g.x[1], F.X, F.Y, 120).replace(/^M/, 'L') + 'L' + F.X(g.x[1]).toFixed(1) + ' ' + F.Y(0).toFixed(1) + 'Z';
+      body += '<path class="area-fill" d="' + d + '"/>';
+    }
+    body += F.axes + '<path class="ref" d="' + path(g.f, g.x[0], g.x[1], F.X, F.Y) + '" fill="none" stroke-width="3.5" stroke-linecap="round"/>';
+    if (g.mark != null) body += '<circle class="dot-aux" cx="' + F.X(g.mark).toFixed(1) + '" cy="' + F.Y(g.f(g.mark)).toFixed(1) + '" r="6"/>';
+    body += text(F.X(g.x[1]), F.Y(0) + 22, g.xl, ' text-anchor="end" font-size="16"') +
+      text(F.X(g.x[0]) + 8, F.Y(hi + pad) + 14, g.yl, ' font-size="17"');
+    return svg('0 0 600 290', 'Gráfica de ' + g.yl + ' contra ' + g.xl + ' para el problema.', body);
+  };
+
+  // Punto de y = x² más cercano a (0, k).
+  D['exam-parabola-dist'] = function (s) {
+    var m = s.m || 2, k = m * m + 0.5, L = m + 1.5;
+    var F = frame(-L, L, -0.5, Math.max(L * L, k) * 1.05), f = function (x) { return x * x; };
+    var body = F.axes + '<path class="ref" d="' + path(f, -L, L, F.X, F.Y) + '" fill="none" stroke-width="3.5" stroke-linecap="round"/>' +
+      '<path class="aux" d="M' + F.X(0) + ' ' + F.Y(k).toFixed(1) + 'L' + F.X(m).toFixed(1) + ' ' + F.Y(m * m).toFixed(1) + '" stroke-width="2.5" stroke-dasharray="6 5"/>' +
+      '<circle class="dot-ref" cx="' + F.X(0) + '" cy="' + F.Y(k).toFixed(1) + '" r="6"/>' +
+      '<circle class="dot-aux" cx="' + F.X(m).toFixed(1) + '" cy="' + F.Y(m * m).toFixed(1) + '" r="6"/>' +
+      text(F.X(0) - 10, F.Y(k) - 8, '(0, ' + k + ')', ' text-anchor="end" font-size="17"') +
+      text(F.X(-L) + 6, F.Y(Math.max(L * L, k) * 1.05) + 16, 'y = x²', ' font-size="18"');
+    return svg('0 0 600 290', 'Parábola y = x² y el segmento más corto desde el punto (0, ' + k + ') hasta la curva.', body);
+  };
 })();
