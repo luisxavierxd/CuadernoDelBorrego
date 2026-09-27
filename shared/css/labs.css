@@ -116,6 +116,7 @@ math-field::part(menu-toggle), math-field::part(virtual-keyboard-toggle) { displ
 .lab-plot .dot-trace { fill: var(--plot-trace); }
 .lab-plot .dot-student { fill: var(--plot-student); }
 .lab-plot .area-fill { fill: var(--plot-ref); fill-opacity: 0.18; stroke: none; }
+.lab-plot .area-fill--aux { fill: var(--plot-aux); fill-opacity: 0.22; }
 .lab-plot .rect-fill { fill: var(--plot-aux); fill-opacity: 0.22; stroke: var(--plot-aux); stroke-width: 1.2; }
 .lab-plot .rect-fill--neg { fill: var(--plot-error); stroke: var(--plot-error); }
 .lab-stack { display: grid; gap: 4px; }

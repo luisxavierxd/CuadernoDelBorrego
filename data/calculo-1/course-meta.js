@@ -38,11 +38,11 @@ window.COURSE_META = {
       sessions: [
         { n: 9,  title: 'La integral y el Teorema Fundamental del Cálculo', short: 'La integral y el TFC', temario: ['5.1', '5.2'], lab: 'riemann', ready: true, bank: true },
         { n: 10, title: 'Integrales directas y cambio de variable', temario: [], lab: 'antiderivative-check', ready: true, bank: true },
-        { n: 11, title: 'Integración por partes', temario: ['5.6'], lab: 'antiderivative-check' },
-        { n: 12, title: 'Sustitución trigonométrica', temario: ['5.6'], lab: 'antiderivative-check' },
-        { n: 13, title: 'Fracciones parciales', temario: ['5.6'], lab: 'antiderivative-check' },
-        { n: 14, title: 'Longitud de arco y áreas', temario: ['5.3', '5.4'], lab: 'area-between' },
-        { n: 15, title: 'Sólidos de revolución', temario: ['5.5'], lab: 'solid-revolution' }
+        { n: 11, title: 'Integración por partes', temario: ['5.6'], lab: 'antiderivative-check', ready: true },
+        { n: 12, title: 'Sustitución trigonométrica', temario: ['5.6'], lab: 'antiderivative-check', ready: true },
+        { n: 13, title: 'Fracciones parciales', temario: ['5.6'], lab: 'antiderivative-check', ready: true },
+        { n: 14, title: 'Longitud de arco y áreas', temario: ['5.3', '5.4'], lab: 'area-between', ready: true },
+        { n: 15, title: 'Sólidos de revolución', temario: ['5.5'], lab: 'solid-revolution', ready: true }
       ]
     }
   ]

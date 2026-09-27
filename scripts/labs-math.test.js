@@ -7,7 +7,7 @@ const { loadData } = require('./lib/load');
 const { loadMathjs } = require('./lib/vendor');
 
 const ROOT = path.join(__dirname, '..');
-const LABS = ['registry', 'antiderivative-check', 'projectile-check', 'secant-tangent', 'derivative-check', 'chain-composition', 'implicit-tangent', 'f-fprime-fsecond', 'optimize-slider', 'riemann']
+const LABS = ['registry', 'antiderivative-check', 'projectile-check', 'secant-tangent', 'derivative-check', 'chain-composition', 'implicit-tangent', 'f-fprime-fsecond', 'optimize-slider', 'riemann', 'area-between', 'solid-revolution']
   .map((n) => path.join(ROOT, 'shared/js/labs', n + '.js'));
 
 let pass = 0, fail = 0;
@@ -284,6 +284,51 @@ function near(got, want, tol, msg) {
   test('riemann: rectángulos cubren [a, b] con ancho Δx', () => {
     const r = Rm.rects((x) => x, 1, 3, 8, 'left');
     eq(r.length, 8); near(r[0].x0, 1, 1e-12); near(r[7].x1, 3, 1e-12); near(r[3].x1 - r[3].x0, 0.25, 1e-12);
+  });
+
+  /* ---------- area-between ---------- */
+  const Ar = LM.area;
+  test('área: parábola y recta, x + 2 contra x² en [−1, 2] = 4.5', () => {
+    near(Ar.between((x) => x + 2, (x) => x * x, -1, 2), 4.5, 1e-9);
+    const xs = Ar.intersections((x) => x + 2, (x) => x * x, -5, 5);
+    eq(xs.length, 2); near(xs[0], -1, 1e-9); near(xs[1], 2, 1e-9);
+  });
+  test('área: x³ y x en [−1, 1] se cruzan adentro; área 0.5 y neta 0', () => {
+    near(Ar.between((x) => x ** 3, (x) => x, -1, 1), 0.5, 1e-9);
+    near(Ar.net((x) => x ** 3, (x) => x, -1, 1), 0, 1e-9);
+  });
+  test('área: entre seno y coseno de π/4 a 5π/4 = 2√2', () => {
+    near(Ar.between(Math.sin, Math.cos, Math.PI / 4, 5 * Math.PI / 4), 2 * Math.SQRT2, 1e-8);
+  });
+  test('arco: x^(3/2) en [0, 4] mide (80√10 − 8)/27', () => {
+    near(Ar.arcLength((x) => Math.pow(x, 1.5), 0, 4), (80 * Math.sqrt(10) - 8) / 27, 1e-5);
+    near(Ar.arcLength((x) => 3 * x + 1, 0, 2), 2 * Math.sqrt(10), 1e-8);
+  });
+  test('arco: la poligonal crece hacia la longitud exacta', () => {
+    const f = (x) => x * x / 2, L = Ar.arcLength(f, 0, 2);
+    const p4 = Ar.polyLength(f, 0, 2, 4), p40 = Ar.polyLength(f, 0, 2, 40);
+    if (!(p4 < p40 && p40 < L && L - p40 < 1e-3)) throw new Error(`${p4} ${p40} ${L}`);
+  });
+
+  /* ---------- solid-revolution ---------- */
+  const Sd = LM.solid, zero = () => 0;
+  test('sólidos: cono, esfera y paraboloide por discos', () => {
+    near(Sd.disks((x) => x / 2, zero, 0, 4), 16 * Math.PI / 3, 1e-9);
+    near(Sd.disks((x) => Math.sqrt(Math.max(0, 4 - x * x)), zero, -2, 2), 32 * Math.PI / 3, 1e-4);
+    near(Sd.disks(Math.sqrt, zero, 0, 4), 8 * Math.PI, 1e-9);
+  });
+  test('sólidos: arandelas entre x y x² en [0, 1] = 2π/15', () => {
+    near(Sd.disks((x) => x, (x) => x * x, 0, 1), 2 * Math.PI / 15, 1e-10);
+  });
+  test('sólidos: capas bajo x − x² = π/6 y bajo √x en [0, 4] = 128π/5', () => {
+    near(Sd.shells((x) => x - x * x, zero, 0, 1), Math.PI / 6, 1e-10);
+    near(Sd.shells(Math.sqrt, zero, 0, 4), 128 * Math.PI / 5, 1e-6);
+  });
+  test('sólidos: la suma de piezas converge al volumen', () => {
+    const f = (x) => x / 2, V = 16 * Math.PI / 3;
+    const e1 = Math.abs(Sd.pieces(f, zero, 0, 4, 4, 'disk') - V), e2 = Math.abs(Sd.pieces(f, zero, 0, 4, 40, 'disk') - V);
+    if (!(e2 < e1 / 50)) throw new Error(`${e1} → ${e2}`);
+    near(Sd.pieces((x) => x - x * x, zero, 0, 1, 400, 'shell'), Math.PI / 6, 1e-5);
   });
 
   console.log(`\nlabs-math.test.js: ${pass} ok, ${fail} fallan.`);

@@ -1,6 +1,6 @@
 /* =====================================================================
    Cálculo 1 · S01 · Razón de cambio y la derivada (bloque A · temas 1.1–1.2).
-   Fuentes: OpenStax, Calculus Volume 1, §3.1, §3.2 y §3.4 (CC BY 4.0).
+   Fuentes: OpenStax, Calculus Volume 1, §3.1, §3.2 y §3.4 (CC BY-NC-SA 4.0).
    ===================================================================== */
 (function () {
   function fx(v, d) { return Number((+v).toFixed(d == null ? 4 : d)).toString(); }
@@ -216,9 +216,9 @@
     },
 
     bibliography: [
-      'OpenStax. <em>Calculus Volume 1</em>, §3.1 “Defining the Derivative”. <a href="https://openstax.org/books/calculus-volume-1/pages/3-1-defining-the-derivative">openstax.org</a> (CC BY 4.0).',
-      'OpenStax. <em>Calculus Volume 1</em>, §3.2 “The Derivative as a Function”. <a href="https://openstax.org/books/calculus-volume-1/pages/3-2-the-derivative-as-a-function">openstax.org</a> (CC BY 4.0).',
-      'OpenStax. <em>Calculus Volume 1</em>, §3.4 “Derivatives as Rates of Change”. <a href="https://openstax.org/books/calculus-volume-1/pages/3-4-derivatives-as-rates-of-change">openstax.org</a> (CC BY 4.0).'
+      'OpenStax. <em>Calculus Volume 1</em>, §3.1 “Defining the Derivative”. <a href="https://openstax.org/books/calculus-volume-1/pages/3-1-defining-the-derivative">openstax.org</a> (CC BY-NC-SA 4.0).',
+      'OpenStax. <em>Calculus Volume 1</em>, §3.2 “The Derivative as a Function”. <a href="https://openstax.org/books/calculus-volume-1/pages/3-2-the-derivative-as-a-function">openstax.org</a> (CC BY-NC-SA 4.0).',
+      'OpenStax. <em>Calculus Volume 1</em>, §3.4 “Derivatives as Rates of Change”. <a href="https://openstax.org/books/calculus-volume-1/pages/3-4-derivatives-as-rates-of-change">openstax.org</a> (CC BY-NC-SA 4.0).'
     ],
 
     prev: null,

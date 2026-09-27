@@ -1,6 +1,6 @@
 /* =====================================================================
    Cálculo 1 · S07 · Extremos relativos (bloque B · tema 4.1).
-   Fuente: OpenStax, Calculus Volume 1, §4.3 y §4.5 (CC BY 4.0).
+   Fuente: OpenStax, Calculus Volume 1, §4.3 y §4.5 (CC BY-NC-SA 4.0).
    ===================================================================== */
 (function () {
   function fx(v, d) { return Number((+v).toFixed(d == null ? 4 : d)).toString(); }
@@ -204,8 +204,8 @@
     },
 
     bibliography: [
-      'OpenStax. <em>Calculus Volume 1</em>, §4.3 “Maxima and Minima”. <a href="https://openstax.org/books/calculus-volume-1/pages/4-3-maxima-and-minima">openstax.org</a> (CC BY 4.0).',
-      'OpenStax. <em>Calculus Volume 1</em>, §4.5 “Derivatives and the Shape of a Graph”. <a href="https://openstax.org/books/calculus-volume-1/pages/4-5-derivatives-and-the-shape-of-a-graph">openstax.org</a> (CC BY 4.0).'
+      'OpenStax. <em>Calculus Volume 1</em>, §4.3 “Maxima and Minima”. <a href="https://openstax.org/books/calculus-volume-1/pages/4-3-maxima-and-minima">openstax.org</a> (CC BY-NC-SA 4.0).',
+      'OpenStax. <em>Calculus Volume 1</em>, §4.5 “Derivatives and the Shape of a Graph”. <a href="https://openstax.org/books/calculus-volume-1/pages/4-5-derivatives-and-the-shape-of-a-graph">openstax.org</a> (CC BY-NC-SA 4.0).'
     ],
 
     prev: 'sesion-06',

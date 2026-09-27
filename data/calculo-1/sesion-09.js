@@ -1,7 +1,7 @@
 /* =====================================================================
    Cálculo 1 · S09 · La integral y el Teorema Fundamental del Cálculo
    (bloque C · temas 5.1–5.2).
-   Fuente: OpenStax, Calculus Volume 1, §5.1–5.3 (CC BY 4.0).
+   Fuente: OpenStax, Calculus Volume 1, §5.1–5.3 (CC BY-NC-SA 4.0).
    ===================================================================== */
 (function () {
   function fx(v, d) { return Number((+v).toFixed(d == null ? 4 : d)).toString(); }
@@ -255,9 +255,9 @@
     },
 
     bibliography: [
-      'OpenStax. <em>Calculus Volume 1</em>, §5.1 “Approximating Areas”. <a href="https://openstax.org/books/calculus-volume-1/pages/5-1-approximating-areas">openstax.org</a> (CC BY 4.0).',
-      'OpenStax. <em>Calculus Volume 1</em>, §5.2 “The Definite Integral”. <a href="https://openstax.org/books/calculus-volume-1/pages/5-2-the-definite-integral">openstax.org</a> (CC BY 4.0).',
-      'OpenStax. <em>Calculus Volume 1</em>, §5.3 “The Fundamental Theorem of Calculus”. <a href="https://openstax.org/books/calculus-volume-1/pages/5-3-the-fundamental-theorem-of-calculus">openstax.org</a> (CC BY 4.0).'
+      'OpenStax. <em>Calculus Volume 1</em>, §5.1 “Approximating Areas”. <a href="https://openstax.org/books/calculus-volume-1/pages/5-1-approximating-areas">openstax.org</a> (CC BY-NC-SA 4.0).',
+      'OpenStax. <em>Calculus Volume 1</em>, §5.2 “The Definite Integral”. <a href="https://openstax.org/books/calculus-volume-1/pages/5-2-the-definite-integral">openstax.org</a> (CC BY-NC-SA 4.0).',
+      'OpenStax. <em>Calculus Volume 1</em>, §5.3 “The Fundamental Theorem of Calculus”. <a href="https://openstax.org/books/calculus-volume-1/pages/5-3-the-fundamental-theorem-of-calculus">openstax.org</a> (CC BY-NC-SA 4.0).'
     ],
 
     prev: 'sesion-08',

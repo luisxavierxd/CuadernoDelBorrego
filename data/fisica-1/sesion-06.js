@@ -1,6 +1,6 @@
 /* =====================================================================
    Física 1 · S06 · Tiro parabólico (bloque B · Cinemática).
-   Fuentes: OpenStax, University Physics Volume 1, §3.5 y §4.3 (CC BY 4.0).
+   Fuentes: OpenStax, University Physics Volume 1, §3.5 y §4.3 (CC BY-NC-SA 4.0).
    Sin resistencia del aire; g = 9.81 m/s², unidades SI.
    Las cuentas se hacen aquí con fórmulas propias y scripts/examples.test.js
    las compara contra LabMath.projectile (verify / oracle).
@@ -258,8 +258,8 @@
     },
 
     bibliography: [
-      'OpenStax. <em>University Physics Volume 1</em>, §4.3 “Projectile Motion”. <a href="https://openstax.org/books/university-physics-volume-1/pages/4-3-projectile-motion">openstax.org</a> (CC BY 4.0).',
-      'OpenStax. <em>University Physics Volume 1</em>, §3.5 “Free Fall”. <a href="https://openstax.org/books/university-physics-volume-1/pages/3-5-free-fall">openstax.org</a> (CC BY 4.0).'
+      'OpenStax. <em>University Physics Volume 1</em>, §4.3 “Projectile Motion”. <a href="https://openstax.org/books/university-physics-volume-1/pages/4-3-projectile-motion">openstax.org</a> (CC BY-NC-SA 4.0).',
+      'OpenStax. <em>University Physics Volume 1</em>, §3.5 “Free Fall”. <a href="https://openstax.org/books/university-physics-volume-1/pages/3-5-free-fall">openstax.org</a> (CC BY-NC-SA 4.0).'
     ],
 
     prev: 'sesion-05',

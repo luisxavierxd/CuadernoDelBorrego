@@ -1,6 +1,6 @@
 /* =====================================================================
    Cálculo 1 · S08 · Problemas de optimización (bloque B · tema 4.2).
-   Fuente: OpenStax, Calculus Volume 1, §4.7 (CC BY 4.0).
+   Fuente: OpenStax, Calculus Volume 1, §4.7 (CC BY-NC-SA 4.0).
    ===================================================================== */
 (function () {
   function fx(v, d) { return Number((+v).toFixed(d == null ? 4 : d)).toString(); }
@@ -205,7 +205,7 @@
     },
 
     bibliography: [
-      'OpenStax. <em>Calculus Volume 1</em>, §4.7 “Applied Optimization Problems”. <a href="https://openstax.org/books/calculus-volume-1/pages/4-7-applied-optimization-problems">openstax.org</a> (CC BY 4.0).'
+      'OpenStax. <em>Calculus Volume 1</em>, §4.7 “Applied Optimization Problems”. <a href="https://openstax.org/books/calculus-volume-1/pages/4-7-applied-optimization-problems">openstax.org</a> (CC BY-NC-SA 4.0).'
     ],
 
     prev: 'sesion-07',

@@ -341,7 +341,7 @@
     return el('footer', { class: 'site-footer', html:
       '<div class="container"><div class="site-footer__row"><a class="site-footer__brand" href="' + ROOT + '">Cuaderno del Borrego</a>' +
       '<nav aria-label="Pie de página"><a href="../../">' + META.name + '</a><a href="' + ROOT + 'quiz/">Practicar</a><a href="' + ROOT + 'formularios/">Formularios</a><a href="' + ROOT + 'creditos/">Créditos y licencias</a></nav></div>' +
-      '<div class="site-footer__row"><p class="site-footer__note">Proyecto de alumnos, no oficial</p><p>Código bajo licencia MIT. Contenido basado en OpenStax (CC BY 4.0).</p></div></div>' });
+      '<div class="site-footer__row"><p class="site-footer__note">Proyecto de alumnos, no oficial</p><p>Código bajo licencia MIT. Contenido basado en OpenStax (CC BY-NC-SA 4.0).</p></div></div>' });
   }
 
   /* ---------- Rieles ---------- */

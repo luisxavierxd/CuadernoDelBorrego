@@ -1,6 +1,6 @@
 /* =====================================================================
    Cálculo 1 · S04 · Regla del cociente (bloque A · tema 3.3).
-   Fuentes: OpenStax, Calculus Volume 1, §3.3 y §3.5 (CC BY 4.0).
+   Fuentes: OpenStax, Calculus Volume 1, §3.3 y §3.5 (CC BY-NC-SA 4.0).
    ===================================================================== */
 (function () {
   function fx(v, d) { return Number((+v).toFixed(d == null ? 4 : d)).toString(); }
@@ -190,8 +190,8 @@
     },
 
     bibliography: [
-      'OpenStax. <em>Calculus Volume 1</em>, §3.3 “Differentiation Rules” (The Quotient Rule). <a href="https://openstax.org/books/calculus-volume-1/pages/3-3-differentiation-rules">openstax.org</a> (CC BY 4.0).',
-      'OpenStax. <em>Calculus Volume 1</em>, §3.5 “Derivatives of Trigonometric Functions”. <a href="https://openstax.org/books/calculus-volume-1/pages/3-5-derivatives-of-trigonometric-functions">openstax.org</a> (CC BY 4.0).'
+      'OpenStax. <em>Calculus Volume 1</em>, §3.3 “Differentiation Rules” (The Quotient Rule). <a href="https://openstax.org/books/calculus-volume-1/pages/3-3-differentiation-rules">openstax.org</a> (CC BY-NC-SA 4.0).',
+      'OpenStax. <em>Calculus Volume 1</em>, §3.5 “Derivatives of Trigonometric Functions”. <a href="https://openstax.org/books/calculus-volume-1/pages/3-5-derivatives-of-trigonometric-functions">openstax.org</a> (CC BY-NC-SA 4.0).'
     ],
 
     prev: 'sesion-03',

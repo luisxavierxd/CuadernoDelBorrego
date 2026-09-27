@@ -88,6 +88,7 @@ a.dot:hover::before { background: var(--accent-soft); transform: scale(1.2); }
 .dot-ref { fill: var(--plot-ref); }
 .dot-trace { fill: var(--plot-trace); }
 .area-fill { fill: var(--plot-ref); fill-opacity: 0.2; stroke: none; }
+.rect-fill { fill: var(--plot-aux); fill-opacity: 0.22; stroke: var(--plot-aux); stroke-width: 1.2; }
 .area-fill--neg { fill: var(--plot-error); }
 .wall { fill: var(--plot-axis); stroke: none; }
 .table { stroke: var(--plot-axis); }

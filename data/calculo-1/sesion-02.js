@@ -1,7 +1,7 @@
 /* =====================================================================
    Cálculo 1 · S02 · Fórmulas directas de derivación (bloque A).
    Temas 1.3–1.5, 2.1–2.2, 3.4, 3.6, 3.7.
-   Fuentes: OpenStax, Calculus Volume 1, §3.3, §3.5, §3.7 y §3.9 (CC BY 4.0).
+   Fuentes: OpenStax, Calculus Volume 1, §3.3, §3.5, §3.7 y §3.9 (CC BY-NC-SA 4.0).
    ===================================================================== */
 (function () {
   function fx(v, d) { return Number((+v).toFixed(d == null ? 4 : d)).toString(); }
@@ -219,10 +219,10 @@
     },
 
     bibliography: [
-      'OpenStax. <em>Calculus Volume 1</em>, §3.3 “Differentiation Rules”. <a href="https://openstax.org/books/calculus-volume-1/pages/3-3-differentiation-rules">openstax.org</a> (CC BY 4.0).',
-      'OpenStax. <em>Calculus Volume 1</em>, §3.5 “Derivatives of Trigonometric Functions”. <a href="https://openstax.org/books/calculus-volume-1/pages/3-5-derivatives-of-trigonometric-functions">openstax.org</a> (CC BY 4.0).',
-      'OpenStax. <em>Calculus Volume 1</em>, §3.7 “Derivatives of Inverse Functions”. <a href="https://openstax.org/books/calculus-volume-1/pages/3-7-derivatives-of-inverse-functions">openstax.org</a> (CC BY 4.0).',
-      'OpenStax. <em>Calculus Volume 1</em>, §3.9 “Derivatives of Exponential and Logarithmic Functions”. <a href="https://openstax.org/books/calculus-volume-1/pages/3-9-derivatives-of-exponential-and-logarithmic-functions">openstax.org</a> (CC BY 4.0).'
+      'OpenStax. <em>Calculus Volume 1</em>, §3.3 “Differentiation Rules”. <a href="https://openstax.org/books/calculus-volume-1/pages/3-3-differentiation-rules">openstax.org</a> (CC BY-NC-SA 4.0).',
+      'OpenStax. <em>Calculus Volume 1</em>, §3.5 “Derivatives of Trigonometric Functions”. <a href="https://openstax.org/books/calculus-volume-1/pages/3-5-derivatives-of-trigonometric-functions">openstax.org</a> (CC BY-NC-SA 4.0).',
+      'OpenStax. <em>Calculus Volume 1</em>, §3.7 “Derivatives of Inverse Functions”. <a href="https://openstax.org/books/calculus-volume-1/pages/3-7-derivatives-of-inverse-functions">openstax.org</a> (CC BY-NC-SA 4.0).',
+      'OpenStax. <em>Calculus Volume 1</em>, §3.9 “Derivatives of Exponential and Logarithmic Functions”. <a href="https://openstax.org/books/calculus-volume-1/pages/3-9-derivatives-of-exponential-and-logarithmic-functions">openstax.org</a> (CC BY-NC-SA 4.0).'
     ],
 
     prev: 'sesion-01',

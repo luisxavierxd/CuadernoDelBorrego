@@ -5,6 +5,7 @@
      K.N(id, subtema, dificultad, vars, enunciado(v), respuesta(v), why, opts)      numérica
      K.C(id, subtema, dificultad, enunciado, correcta, [[incorrecta, explicación]], why, opts)  opción múltiple
      K.IM(id, subtema, dificultad, vars, enunciado(v), implicita(v), respuesta(v), why)          dy/dx implícita
+     K.I(id, subtema, dificultad, vars, texF(v), integrando(v), antiderivada(v), why, opts)      antiderivada (+ C)
      K.register(subtemas, preguntas)
    Todas las preguntas son propias (source: 'propia').
    ===================================================================== */
@@ -43,6 +44,14 @@
           },
           answer: function (v) { return str(correct, v); },
           where: o.where, why: why
+        });
+      },
+      // Antiderivada escrita: se califica derivándola; se acepta + C.
+      I: function (id, sub, d, vars, tex, integrand, answer, why, o) {
+        o = o || {};
+        return Object.assign(base(id, sub, d, 'expr', vars), {
+          prompt: function (v) { return '<p>' + (o.lead ? o.lead(v, tex(v)) : 'Calcula $\\displaystyle\\int ' + tex(v) + '\\,dx$.') + '</p>'; },
+          integrand: integrand, answer: answer, domain: o.domain, where: o.where, mistakes: o.mistakes, feedback: o.feedback, why: why
         });
       },
       IM: function (id, sub, d, vars, prompt, implicit, answer, why, o) {

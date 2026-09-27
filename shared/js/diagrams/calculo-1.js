@@ -530,4 +530,131 @@
       text(F.X(-L) + 6, F.Y(Math.max(L * L, k) * 1.05) + 16, 'y = x²', ' font-size="18"');
     return svg('0 0 600 290', 'Parábola y = x² y el segmento más corto desde el punto (0, ' + k + ') hasta la curva.', body);
   };
+
+  /* ================= Bloque C · S11–S15 ================= */
+  // S11 · Por partes: el rectángulo uv se reparte entre ∫u dv y ∫v du.
+  D['parts-area'] = function (st) {
+    var stage = st && st.stage != null ? st.stage : 2;
+    var u = function (t) { return 1 + t; }, v = function (t) { return t * t; };   // curva (u(t), v(t)) para t ∈ [0, 1.6]
+    var X = function (U) { return 90 + (U - 0) * 170; }, Y = function (V) { return 270 - V * 88; };
+    var n = 80, curve = '', below = 'M' + X(1) + ' ' + Y(0), left = 'M' + X(0) + ' ' + Y(0);
+    for (var i = 0; i <= n; i++) {
+      var t = 1.6 * i / n, p = X(u(t)).toFixed(1) + ' ' + Y(v(t)).toFixed(1);
+      curve += (i ? 'L' : 'M') + p; below += 'L' + p;
+    }
+    below += 'L' + X(u(1.6)) + ' ' + Y(0) + 'Z';
+    for (i = n; i >= 0; i--) { t = 1.6 * i / n; left += (i === n ? 'L' + X(0) + ' ' + Y(v(t)).toFixed(1) : '') + 'L' + X(u(t)).toFixed(1) + ' ' + Y(v(t)).toFixed(1); }
+    left += 'L' + X(1) + ' ' + Y(0) + 'Z';
+    var body = '<path class="axis" d="M' + X(0) + ' ' + Y(0) + 'H' + X(3) + 'M' + X(0) + ' ' + Y(0) + 'V' + Y(2.9) + '" stroke-width="1.5" fill="none"/>';
+    if (stage >= 1) body += '<path class="area-fill" d="' + below + '"/>' + text(X(2), Y(0.45), '∫ v du', ' text-anchor="middle" font-size="19"');
+    if (stage >= 2) body += '<path class="rect-fill" d="' + left + '" style="fill-opacity:.18"/>' + text(X(0.7), Y(1.7), '∫ u dv', ' text-anchor="middle" font-size="19"');
+    body += '<path class="ref" d="' + curve + '" fill="none" stroke-width="3.5" stroke-linecap="round"/>' +
+      '<path class="axis" d="M' + X(0) + ' ' + Y(v(1.6)) + 'H' + X(u(1.6)) + 'V' + Y(0) + '" stroke-dasharray="5 5" stroke-width="1.4" fill="none"/>' +
+      text(X(3) - 4, Y(0) + 22, 'u', ' text-anchor="end" font-size="18"') + text(X(0) - 10, Y(2.9) + 8, 'v', ' text-anchor="end" font-size="18"') +
+      text(X(2.6) + 20, Y(2.7), stage >= 2 ? 'juntas: el rectángulo uv' : 'la curva une (u, v)', ' text-anchor="end" font-size="18"');
+    return svg('0 0 600 300', 'Curva en el plano u-v: el área bajo ella es ∫v du y el área a su izquierda es ∫u dv; juntas forman el rectángulo uv.', body);
+  };
+
+  // S12 · Sustitución trigonométrica: triángulo con x = a sen θ.
+  D['trig-triangle'] = function (st) {
+    var th = st && st.theta != null ? st.theta : 0.7, a = 3, S = 60;
+    var x = a * Math.sin(th), c = a * Math.cos(th), ox = 120, oy = 250;
+    var A = [ox, oy], B = [ox + c * S, oy], C = [ox + c * S, oy - x * S];
+    var body = '<path class="ref" d="M' + A.join(' ') + 'L' + B.join(' ') + 'L' + C.join(' ') + 'Z" fill="none" stroke-width="3.2" stroke-linejoin="round"/>' +
+      '<path class="axis" d="M' + (B[0] - 14) + ' ' + B[1] + 'V' + (B[1] - 14) + 'H' + B[0] + '" fill="none" stroke-width="1.4"/>' +
+      '<path class="aux" d="M' + (ox + 38) + ' ' + oy + 'A38 38 0 0 0 ' + (ox + 38 * Math.cos(th)).toFixed(1) + ' ' + (oy - 38 * Math.sin(th)).toFixed(1) + '" fill="none" stroke-width="2.5"/>' +
+      text(ox + 48, oy - 10, 'θ', ' font-size="20"') +
+      text((A[0] + C[0]) / 2 - 12, (A[1] + C[1]) / 2 - 8, 'a = 3', ' text-anchor="end" font-size="18"') +
+      text(C[0] + 10, (B[1] + C[1]) / 2, 'x = 3 sen θ = ' + x.toFixed(2), ' font-size="18"') +
+      text((A[0] + B[0]) / 2, oy + 24, '√(9 − x²) = 3 cos θ = ' + c.toFixed(2), ' text-anchor="middle" font-size="18"');
+    return svg('0 0 600 300', 'Triángulo rectángulo de hipotenusa 3: el cateto opuesto a θ es x = 3 sen θ y el adyacente es √(9 − x²) = 3 cos θ.', body);
+  };
+
+  // S13 · Fracciones parciales: 1/(x(x+1)) = 1/x − 1/(x+1).
+  D['partial-fractions'] = function (st) {
+    var stage = st && st.stage != null ? st.stage : 2;
+    var F = frame(0.25, 3, -1.2, 3.4);
+    var f1 = function (x) { return 1 / x; }, f2 = function (x) { return -1 / (x + 1); }, sum = function (x) { return 1 / (x * (x + 1)); };
+    var body = F.axes +
+      '<path class="aux" d="' + path(f1, 0.3, 3, F.X, F.Y) + '" fill="none" stroke-width="2.6"' + (stage === 2 ? ' stroke-dasharray="6 5"' : '') + '/>' +
+      '<path class="trace" d="' + path(f2, 0.25, 3, F.X, F.Y) + '" fill="none" stroke-width="2.6"' + (stage === 2 ? ' stroke-dasharray="6 5"' : '') + '/>' +
+      text(F.X(0.55), F.Y(2.4), '1/x', ' font-size="18"') + text(F.X(2.3), F.Y(-0.55), '−1/(x + 1)', ' font-size="18"');
+    if (stage >= 1) body += '<path class="ref" d="' + path(sum, 0.3, 3, F.X, F.Y) + '" fill="none" stroke-width="3.6" stroke-linecap="round"/>' +
+      text(F.X(1.1), F.Y(1.1), '1/(x(x + 1)): la suma', ' font-size="18"');
+    return svg('0 0 600 290', 'Las curvas 1/x y −1/(x + 1) sumadas dan 1/(x(x + 1)): la fracción difícil es la suma de dos fáciles.', body);
+  };
+
+  // S14 · Área entre curvas: una tira vertical de altura f − g.
+  D['area-strip'] = function (st) {
+    var x = st && st.x != null ? st.x : 0.5;
+    var f = function (t) { return t + 2; }, g = function (t) { return t * t; };
+    var F = frame(-1.5, 2.6, -0.6, 4.8), n = 100, d = '';
+    for (var i = 0; i <= n; i++) { var t = -1 + 3 * i / n; d += (i ? 'L' : 'M') + F.X(t).toFixed(1) + ' ' + F.Y(f(t)).toFixed(1); }
+    for (i = n; i >= 0; i--) { t = -1 + 3 * i / n; d += 'L' + F.X(t).toFixed(1) + ' ' + F.Y(g(t)).toFixed(1); }
+    var w = 0.12;
+    var body = '<path class="area-fill" d="' + d + 'Z"/>' + F.axes +
+      '<path class="ref" d="' + path(f, -1.4, 2.5, F.X, F.Y) + '" fill="none" stroke-width="3.4"/>' +
+      '<path class="trace" d="' + path(g, -1.4, 2.2, F.X, F.Y) + '" fill="none" stroke-width="3"/>' +
+      '<path class="rect-fill" d="M' + F.X(x - w / 2).toFixed(1) + ' ' + F.Y(g(x)).toFixed(1) + 'V' + F.Y(f(x)).toFixed(1) + 'H' + F.X(x + w / 2).toFixed(1) + 'V' + F.Y(g(x)).toFixed(1) + 'Z" style="fill-opacity:.55"/>' +
+      text(F.X(-1.45), F.Y(4.6) + 4, 'arriba: f = x + 2', ' font-size="17"') +
+      text(F.X(-1.45), F.Y(4.6) + 26, 'abajo: g = x²', ' font-size="17"') +
+      text(F.X(2.55), F.Y(-0.6) - 8, 'altura de la tira: f − g = ' + (f(x) - g(x)).toFixed(2), ' text-anchor="end" font-size="17"') +
+      '<circle class="dot-aux" cx="' + F.X(-1) + '" cy="' + F.Y(1) + '" r="5"/><circle class="dot-aux" cx="' + F.X(2) + '" cy="' + F.Y(4) + '" r="5"/>';
+    return svg('0 0 600 290', 'Región entre la recta y = x + 2 y la parábola y = x², de x = −1 a x = 2; una tira vertical tiene altura f(x) − g(x).', body);
+  };
+
+  // S14 · Longitud de arco: poligonal con n segmentos sobre y = x²/2.
+  D['arc-polyline'] = function (st) {
+    var n = Math.max(1, Math.round(st && st.n != null ? st.n : 2));
+    var f = function (t) { return t * t / 2; }, F = frame(-0.2, 2.3, -0.3, 2.4), segs = '', L = 0;
+    for (var i = 0; i < n; i++) {
+      var a = 2 * i / n, b = 2 * (i + 1) / n;
+      segs += 'M' + F.X(a).toFixed(1) + ' ' + F.Y(f(a)).toFixed(1) + 'L' + F.X(b).toFixed(1) + ' ' + F.Y(f(b)).toFixed(1);
+      L += Math.hypot(b - a, f(b) - f(a));
+    }
+    var body = F.axes + '<path class="ref" d="' + path(f, 0, 2.2, F.X, F.Y) + '" fill="none" stroke-width="3.4"/>' +
+      '<path class="aux" d="' + segs + '" fill="none" stroke-width="2.6" stroke-linecap="round"/>';
+    for (i = 0; i <= n; i++) { var x = 2 * i / n; body += '<circle class="dot-aux" cx="' + F.X(x).toFixed(1) + '" cy="' + F.Y(f(x)).toFixed(1) + '" r="4"/>'; }
+    body += text(F.X(0) + 10, F.Y(2.4) + 18, 'n = ' + n + ' · poligonal = ' + L.toFixed(4), ' font-size="18"') +
+      text(F.X(0) + 10, F.Y(2.4) + 42, 'arco exacto ≈ 2.9579', ' font-size="17"');
+    return svg('0 0 600 290', 'Poligonal inscrita en y = x²/2 entre 0 y 2; con más segmentos su longitud se acerca a la del arco.', body);
+  };
+
+  // S15 · Discos: el cono que genera y = x/2 al girar alrededor del eje x.
+  D['disk-slice'] = function (st) {
+    var n = Math.max(1, Math.round(st && st.n != null ? st.n : 4));
+    var r = function (t) { return t / 2; };
+    var X = function (t) { return 80 + t * 110; }, Y = function (y) { return 140 - y * 55; };
+    var body = '<path class="error" d="M' + X(-0.3) + ' ' + Y(0) + 'H' + X(4.4) + '" stroke-width="1.6" stroke-dasharray="6 5"/>', dx = 4 / n, V = 0;
+    for (var i = 0; i < n; i++) {
+      var x0 = i * dx, R = r(x0 + dx / 2);
+      V += Math.PI * R * R * dx;
+      body += '<path class="rect-fill" d="M' + X(x0).toFixed(1) + ' ' + Y(-R).toFixed(1) + 'V' + Y(R).toFixed(1) + 'H' + X(x0 + dx).toFixed(1) + 'V' + Y(-R).toFixed(1) + 'Z"/>' +
+        '<ellipse class="rect-fill" cx="' + X(x0 + dx).toFixed(1) + '" cy="' + Y(0) + '" rx="' + (R * 55 * 0.28).toFixed(1) + '" ry="' + (R * 55).toFixed(1) + '"/>';
+    }
+    body += '<path class="ref" d="M' + X(0) + ' ' + Y(0) + 'L' + X(4) + ' ' + Y(2) + 'M' + X(0) + ' ' + Y(0) + 'L' + X(4) + ' ' + Y(-2) + '" stroke-width="3.2" fill="none"/>' +
+      text(X(4.4), Y(0) - 8, 'eje x', ' text-anchor="end" font-size="16"') +
+      text(330, 285, 'n = ' + n + ' discos · V ≈ ' + V.toFixed(3) + ' (exacto 16π/3 ≈ 16.755)', ' text-anchor="middle" font-size="18"');
+    return svg('0 0 600 310', 'Cono generado por y = x/2 al girar alrededor del eje x, aproximado con ' + n + ' discos.', body);
+  };
+
+  // S15 · Capas cilíndricas: la región bajo x − x² gira alrededor del eje y.
+  D['shell-slice'] = function (st) {
+    var x = st && st.x != null ? st.x : 0.5;
+    var f = function (t) { return t - t * t; };
+    var X = function (t) { return 300 + t * 220; }, Y = function (y) { return 250 - y * 520; };
+    var body = '<path class="error" d="M' + X(0) + ' ' + Y(-0.05) + 'V' + Y(0.42) + '" stroke-width="1.6" stroke-dasharray="6 5"/>' +
+      '<path class="axis" d="M' + X(-1.15) + ' ' + Y(0) + 'H' + X(1.15) + '" stroke-width="1.4"/>' +
+      '<path class="ref" d="' + path(f, 0, 1, X, Y) + '" fill="none" stroke-width="3.2"/>' +
+      '<path class="ref" d="' + path(function (t) { return f(-t); }, -1, 0, X, Y) + '" fill="none" stroke-width="3.2"/>';
+    var w = 0.05, h = f(x);
+    [[x - w / 2, x + w / 2], [-x - w / 2, -x + w / 2]].forEach(function (p) {
+      body += '<path class="rect-fill" d="M' + X(p[0]).toFixed(1) + ' ' + Y(0) + 'V' + Y(h).toFixed(1) + 'H' + X(p[1]).toFixed(1) + 'V' + Y(0) + 'Z" style="fill-opacity:.5"/>';
+    });
+    body += '<ellipse class="area-fill" cx="' + X(0) + '" cy="' + Y(h).toFixed(1) + '" rx="' + (x * 220).toFixed(1) + '" ry="' + (x * 30).toFixed(1) + '"/>' +
+      '<ellipse class="aux" cx="' + X(0) + '" cy="' + Y(0) + '" rx="' + (x * 220).toFixed(1) + '" ry="' + (x * 30).toFixed(1) + '" fill="none" stroke-width="2"/>' +
+      text(X(0) + 8, Y(0.42) + 6, 'eje y', ' font-size="16"') +
+      text(X(-1.12), Y(0.4), 'radio x = ' + x.toFixed(2), ' font-size="17"') + text(X(-1.12), Y(0.4) + 22, 'altura x − x² = ' + h.toFixed(3), ' font-size="17"');
+    return svg('0 0 600 300', 'Región bajo y = x − x² girando alrededor del eje y; una tira vertical en x barre una capa cilíndrica de radio x.', body);
+  };
 })();

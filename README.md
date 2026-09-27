@@ -59,6 +59,6 @@ Para publicar una sesión nueva: escribe `data/<curso>/sesion-NN.js`, marca `rea
 
 - Todo color sale de `shared/css/tokens.css`; ningún componente nombra la materia (`data-subject` en `<body>` elige el acento).
 - Toda animación respeta `prefers-reduced-motion`.
-- Todo concepto sale de una fuente verificable (OpenStax, CC BY 4.0) y va en la bibliografía de la sesión.
+- Todo concepto sale de una fuente verificable (OpenStax, CC BY-NC-SA 4.0) y va en la bibliografía de la sesión.
 
 Código bajo licencia MIT.

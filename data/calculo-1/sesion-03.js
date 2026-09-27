@@ -1,6 +1,6 @@
 /* =====================================================================
    Cálculo 1 · S03 · Regla del producto (bloque A · tema 3.2).
-   Fuente: OpenStax, Calculus Volume 1, §3.3 (CC BY 4.0).
+   Fuente: OpenStax, Calculus Volume 1, §3.3 (CC BY-NC-SA 4.0).
    ===================================================================== */
 (function () {
   function fx(v, d) { return Number((+v).toFixed(d == null ? 4 : d)).toString(); }
@@ -189,7 +189,7 @@
     },
 
     bibliography: [
-      'OpenStax. <em>Calculus Volume 1</em>, §3.3 “Differentiation Rules” (The Product Rule). <a href="https://openstax.org/books/calculus-volume-1/pages/3-3-differentiation-rules">openstax.org</a> (CC BY 4.0).'
+      'OpenStax. <em>Calculus Volume 1</em>, §3.3 “Differentiation Rules” (The Product Rule). <a href="https://openstax.org/books/calculus-volume-1/pages/3-3-differentiation-rules">openstax.org</a> (CC BY-NC-SA 4.0).'
     ],
 
     prev: 'sesion-02',

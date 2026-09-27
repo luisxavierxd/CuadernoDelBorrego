@@ -8,7 +8,7 @@ const { loadData } = require('./lib/load');
 const { loadMathjs } = require('./lib/vendor');
 
 const ROOT = path.join(__dirname, '..');
-const LIBS = ['labs/registry', 'labs/antiderivative-check', 'labs/projectile-check', 'labs/secant-tangent', 'labs/derivative-check', 'labs/chain-composition', 'labs/implicit-tangent', 'labs/f-fprime-fsecond', 'labs/optimize-slider', 'labs/riemann', 'exercises']
+const LIBS = ['labs/registry', 'labs/antiderivative-check', 'labs/projectile-check', 'labs/secant-tangent', 'labs/derivative-check', 'labs/chain-composition', 'labs/implicit-tangent', 'labs/f-fprime-fsecond', 'labs/optimize-slider', 'labs/riemann', 'labs/area-between', 'labs/solid-revolution', 'exercises']
   .map((n) => path.join(ROOT, 'shared/js', n + '.js'));
 const N_FAST = 200, N_EXPR = 50;
 
@@ -82,7 +82,18 @@ function checkExample(where, b, LM, math) {
     const G = (x) => LM.riemann.simpson(f, v.a, x, 400);
     const want = (G(v.x + e) - G(v.x - e)) / (2 * e);
     ok(relClose(v.value, want, 1e-6), `${where}: d/dx ∫ = ${v.value} y numéricamente ${want}`);
+  } else if (v.lab === 'area' || v.lab === 'arc' || v.lab === 'volume') {
+    const got = geo(LM, math, v);
+    ok(relClose(got, v.value, 1e-6), `${where}: ${v.lab} = ${got} y el ejemplo dice ${v.value}`);
   } else ok(false, `${where}: verify.lab desconocido ${v.lab}`);
+}
+
+// Área entre curvas, longitud de arco o volumen, calculados con LabMath.
+function geo(LM, math, o) {
+  const f = LM.core.build(math, o.f).fn, g = LM.core.build(math, o.g || '0').fn;
+  if (o.lab === 'area') return LM.area.between(f, g, o.a, o.b);
+  if (o.lab === 'arc') return LM.area.arcLength(f, o.a, o.b);
+  return o.method === 'shell' ? LM.solid.shells(f, g, o.a, o.b) : LM.solid.disks(f, g, o.a, o.b);
 }
 
 function textOk(s) { return typeof s === 'string' && s.length > 0 && !/undefined|NaN|Infinity/.test(s); }
@@ -151,6 +162,9 @@ function checkExercise(where, ex, W, LM, math) {
       } else if (o && o.lab === 'optimum') {
         const r = LM.optimize.optimum(LM.core.build(math, o.f(v)).fn, o.a(v), o.b(v), o.kind);
         ok(relClose(ans, o.field === 'value' ? r.value : r.x, 1e-6), `${at}: respuesta ${ans} y el óptimo numérico da ${JSON.stringify(r)}`);
+      } else if (o && (o.lab === 'area' || o.lab === 'arc' || o.lab === 'volume')) {
+        const want = geo(LM, math, { lab: o.lab, method: o.method, f: o.f(v), g: o.g ? o.g(v) : '0', a: o.a(v), b: o.b(v) });
+        ok(relClose(ans, want, 1e-6), `${at}: respuesta ${ans} y LabMath da ${want}`);
       } else if (o && o.lab === 'riemann') {
         const want = LM.riemann.sum(LM.core.build(math, o.f(v)).fn, o.a(v), o.b(v), o.n(v), o.type);
         ok(relClose(ans, want, 1e-9), `${at}: respuesta ${ans} y la suma da ${want}`);

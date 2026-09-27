@@ -1,6 +1,6 @@
 /* =====================================================================
    Cálculo 1 · S10 · Integrales directas y cambio de variable (bloque C).
-   Fuentes: OpenStax, Calculus Volume 1, §4.10, §5.5, §5.6 y §5.7 (CC BY 4.0).
+   Fuentes: OpenStax, Calculus Volume 1, §4.10, §5.5, §5.6 y §5.7 (CC BY-NC-SA 4.0).
    Las respuestas se calculan aquí y scripts/examples.test.js las verifica
    contra LabMath (verify / oracle).
    ===================================================================== */
@@ -272,10 +272,10 @@
     },
 
     bibliography: [
-      'OpenStax. <em>Calculus Volume 1</em>, §4.10 “Antiderivatives”. <a href="https://openstax.org/books/calculus-volume-1/pages/4-10-antiderivatives">openstax.org</a> (CC BY 4.0).',
-      'OpenStax. <em>Calculus Volume 1</em>, §5.5 “Substitution”. <a href="https://openstax.org/books/calculus-volume-1/pages/5-5-substitution">openstax.org</a> (CC BY 4.0).',
-      'OpenStax. <em>Calculus Volume 1</em>, §5.6 “Integrals Involving Exponential and Logarithmic Functions”. <a href="https://openstax.org/books/calculus-volume-1/pages/5-6-integrals-involving-exponential-and-logarithmic-functions">openstax.org</a> (CC BY 4.0).',
-      'OpenStax. <em>Calculus Volume 1</em>, §5.7 “Integrals Resulting in Inverse Trigonometric Functions”. <a href="https://openstax.org/books/calculus-volume-1/pages/5-7-integrals-resulting-in-inverse-trigonometric-functions">openstax.org</a> (CC BY 4.0).'
+      'OpenStax. <em>Calculus Volume 1</em>, §4.10 “Antiderivatives”. <a href="https://openstax.org/books/calculus-volume-1/pages/4-10-antiderivatives">openstax.org</a> (CC BY-NC-SA 4.0).',
+      'OpenStax. <em>Calculus Volume 1</em>, §5.5 “Substitution”. <a href="https://openstax.org/books/calculus-volume-1/pages/5-5-substitution">openstax.org</a> (CC BY-NC-SA 4.0).',
+      'OpenStax. <em>Calculus Volume 1</em>, §5.6 “Integrals Involving Exponential and Logarithmic Functions”. <a href="https://openstax.org/books/calculus-volume-1/pages/5-6-integrals-involving-exponential-and-logarithmic-functions">openstax.org</a> (CC BY-NC-SA 4.0).',
+      'OpenStax. <em>Calculus Volume 1</em>, §5.7 “Integrals Resulting in Inverse Trigonometric Functions”. <a href="https://openstax.org/books/calculus-volume-1/pages/5-7-integrals-resulting-in-inverse-trigonometric-functions">openstax.org</a> (CC BY-NC-SA 4.0).'
     ],
 
     prev: 'sesion-09',

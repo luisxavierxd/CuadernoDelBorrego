@@ -1,6 +1,6 @@
 /* =====================================================================
    Cálculo 1 · S06 · Derivación implícita (bloque A · tema 3.5).
-   Fuente: OpenStax, Calculus Volume 1, §3.8 (CC BY 4.0).
+   Fuente: OpenStax, Calculus Volume 1, §3.8 (CC BY-NC-SA 4.0).
    ===================================================================== */
 (function () {
   function fx(v, d) { return Number((+v).toFixed(d == null ? 4 : d)).toString(); }
@@ -176,7 +176,7 @@
     },
 
     bibliography: [
-      'OpenStax. <em>Calculus Volume 1</em>, §3.8 “Implicit Differentiation”. <a href="https://openstax.org/books/calculus-volume-1/pages/3-8-implicit-differentiation">openstax.org</a> (CC BY 4.0).'
+      'OpenStax. <em>Calculus Volume 1</em>, §3.8 “Implicit Differentiation”. <a href="https://openstax.org/books/calculus-volume-1/pages/3-8-implicit-differentiation">openstax.org</a> (CC BY-NC-SA 4.0).'
     ],
 
     prev: 'sesion-05',

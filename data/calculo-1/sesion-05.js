@@ -1,6 +1,6 @@
 /* =====================================================================
    Cálculo 1 · S05 · Regla de la cadena (bloque A · tema 3.1).
-   Fuente: OpenStax, Calculus Volume 1, §3.6 (CC BY 4.0).
+   Fuente: OpenStax, Calculus Volume 1, §3.6 (CC BY-NC-SA 4.0).
    ===================================================================== */
 (function () {
   function fx(v, d) { return Number((+v).toFixed(d == null ? 4 : d)).toString(); }
@@ -198,7 +198,7 @@
     },
 
     bibliography: [
-      'OpenStax. <em>Calculus Volume 1</em>, §3.6 “The Chain Rule”. <a href="https://openstax.org/books/calculus-volume-1/pages/3-6-the-chain-rule">openstax.org</a> (CC BY 4.0).'
+      'OpenStax. <em>Calculus Volume 1</em>, §3.6 “The Chain Rule”. <a href="https://openstax.org/books/calculus-volume-1/pages/3-6-the-chain-rule">openstax.org</a> (CC BY-NC-SA 4.0).'
     ],
 
     prev: 'sesion-04',
