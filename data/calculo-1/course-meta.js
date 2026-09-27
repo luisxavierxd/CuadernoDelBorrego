@@ -18,12 +18,12 @@ window.COURSE_META = {
     {
       id: 'A', label: 'Derivada',
       sessions: [
-        { n: 1,  title: 'Razón de cambio y la derivada', temario: ['1.1', '1.2'], lab: 'secant-tangent', ready: true },
-        { n: 2,  title: 'Fórmulas directas: potencia, polinomios, exponencial, logaritmo, trigonométricas y trigonométricas inversas', short: 'Fórmulas directas de derivación', temario: ['1.3', '1.4', '1.5', '2.1', '2.2', '3.4', '3.6', '3.7'], lab: 'derivative-check', ready: true },
-        { n: 3,  title: 'Regla del producto', temario: ['3.2'], lab: 'derivative-check', ready: true },
-        { n: 4,  title: 'Regla del cociente', temario: ['3.3'], lab: 'derivative-check', ready: true },
-        { n: 5,  title: 'Regla de la cadena', temario: ['3.1'], lab: 'chain-composition', ready: true },
-        { n: 6,  title: 'Derivación implícita', temario: ['3.5'], lab: 'implicit-tangent', ready: true }
+        { n: 1,  title: 'Razón de cambio y la derivada', temario: ['1.1', '1.2'], lab: 'secant-tangent', ready: true, bank: true },
+        { n: 2,  title: 'Fórmulas directas: potencia, polinomios, exponencial, logaritmo, trigonométricas y trigonométricas inversas', short: 'Fórmulas directas de derivación', temario: ['1.3', '1.4', '1.5', '2.1', '2.2', '3.4', '3.6', '3.7'], lab: 'derivative-check', ready: true, bank: true },
+        { n: 3,  title: 'Regla del producto', temario: ['3.2'], lab: 'derivative-check', ready: true, bank: true },
+        { n: 4,  title: 'Regla del cociente', temario: ['3.3'], lab: 'derivative-check', ready: true, bank: true },
+        { n: 5,  title: 'Regla de la cadena', temario: ['3.1'], lab: 'chain-composition', ready: true, bank: true },
+        { n: 6,  title: 'Derivación implícita', temario: ['3.5'], lab: 'implicit-tangent', ready: true, bank: true }
       ]
     },
     {

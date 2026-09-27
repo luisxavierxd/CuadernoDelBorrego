@@ -48,7 +48,7 @@
   /* ---------- Tarjeta de pregunta ----------
      mode 'practice': retroalimentación inmediata con why.
      mode 'exam': sin revisar; "Ver solución" con confirmación en la página. */
-  function answerInput(kind, opts, v, unit) {
+  function answerInput(kind, opts, v, unit, q) {
     var id = uid('qa');
     if (kind === 'choice') {
       var name = uid('opt');
@@ -62,14 +62,18 @@
     }
     var isExpr = kind === 'expr';
     if (isExpr && window.CBMathInput) {
-      var mi = window.CBMathInput.create({ label: 'Tu antiderivada F(x)', hint: 'Escribe como en papel; la constante C es opcional.' });
+      var anti = !!(q && q.integrand);
+      var mi = window.CBMathInput.create({
+        label: anti ? 'Tu antiderivada F(x)' : (q && q.implicit ? 'Tu dy/dx' : 'Tu respuesta'),
+        hint: anti ? 'Escribe como en papel; la constante C es opcional.' : (q && q.implicit ? 'Puedes usar x y y. Escribe como en papel.' : 'Escribe como en papel; usa la paleta para fracciones, raíces y funciones.')
+      });
       return { node: mi.node, get: mi.get, lock: mi.lock, input: null };
     }
     var inp = h('input', { id: id, type: 'text', class: 'lab-input ' + (isExpr ? 'lab-input--mono' : 'lab-input--num'), inputmode: isExpr ? null : 'decimal', spellcheck: 'false', autocomplete: 'off' });
     var node = h('div', { class: 'lab-field' }, [
-      h('label', { for: id, class: 'lab-field__label' }, [isExpr ? 'Tu antiderivada F(x)' : 'Tu resultado']),
+      h('label', { for: id, class: 'lab-field__label' }, [isExpr ? (q && q.integrand ? 'Tu antiderivada F(x)' : 'Tu respuesta') : 'Tu resultado']),
       h('div', { class: 'exercise__inputrow' }, [inp, unit ? h('span', { class: 'exercise__unit' }, [unit]) : null]),
-      h('p', { class: 'lab-field__hint', html: isExpr ? 'La constante C es opcional. Ej.: <code>x^3/3</code>, <code>e^(2x)/2</code>, <code>ln(x)</code>.' : 'Usa punto decimal; se acepta ±1 %.' })
+      h('p', { class: 'lab-field__hint', html: isExpr ? (q && q.integrand ? 'La constante C es opcional. Ej.:' : 'Ej.:') + ' <code>x^3/3</code>, <code>e^(2x)/2</code>, <code>ln(x)</code>.' : 'Usa punto decimal; se acepta ±1 %.' })
     ]);
     return { node: node, input: inp, get: function () { return inp.value; }, lock: function () { inp.readOnly = true; } };
   }
@@ -93,7 +97,7 @@
       h('span', { class: 'qcard__n mono' }, ['Pregunta ' + n]),
       h('span', { class: 'qcard__meta mono' }, [['', 'fácil', 'media', 'difícil'][q.difficulty] || ''])
     ]);
-    var inp = answerInput(q.type, q.options ? q.options(v) : null, v, q.unit);
+    var inp = answerInput(q.type, q.options ? q.options(v) : null, v, q.unit, q);
     var verdict = h('div', { class: 'verdict', hidden: true, role: 'status' });
     var why = h('div', { class: 'qcard__why', hidden: true, html: '<strong>Por qué.</strong> ' + str(q.why, v) });
     var state = { done: false, seen: false, input: '' };

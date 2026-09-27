@@ -133,13 +133,15 @@
     var files = allSessions(meta).filter(function (s) { return s.bank; }).map(function (s) {
       return '../data/' + meta.slug + '/bank/sesion-' + pad(s.n) + '.js';
     });
-    return Promise.all(files.map(function (src) {
+    function load(src) {
       return new Promise(function (resolve) {
         var sc = document.createElement('script');
         sc.src = src; sc.onload = resolve; sc.onerror = resolve;
         document.head.appendChild(sc);
       });
-    }));
+    }
+    // Los bancos usan el kit de constructores: se carga primero.
+    return load('../shared/js/quiz/bank-kit.js').then(function () { return Promise.all(files.map(load)); });
   }
 
   function renderStats(meta, root) {

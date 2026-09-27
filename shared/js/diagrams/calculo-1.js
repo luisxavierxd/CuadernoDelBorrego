@@ -251,4 +251,128 @@
       text(X(px) + 10, Y(py) - 10, '(' + (+px.toFixed(1)) + ', ' + (+py.toFixed(1)) + ')', ' font-size="17"');
     return svg('0 0 600 340', 'Círculo de radio 5 con un punto y su recta tangente, perpendicular al radio; la pendiente es −x/y.', body);
   };
+
+  /* ---------- Problemas de examen · bloque A ---------- */
+  // Marco común: [x0, x1] × [y0, y1] dentro de un lienzo de 600 × 290.
+  function frame(x0, x1, y0, y1) {
+    var X = function (x) { return 60 + (x - x0) * 500 / (x1 - x0); };
+    var Y = function (y) { return 250 - (y - y0) * 210 / (y1 - y0); };
+    var axes = '<path class="axis" d="M' + X(x0) + ' ' + Y(Math.max(y0, Math.min(0, y1))) + 'H' + (X(x1) + 14) + 'M' + X(Math.max(x0, Math.min(0, x1))) + ' ' + (Y(y0) + 6) + 'V' + (Y(y1) - 12) + '" stroke-width="1.5" fill="none"/>';
+    return { X: X, Y: Y, axes: axes };
+  }
+  function line(F, m, x, y, x0, x1, cls) {
+    return '<path class="' + cls + '" d="M' + F.X(x0).toFixed(1) + ' ' + F.Y(y + m * (x0 - x)).toFixed(1) + 'L' + F.X(x1).toFixed(1) + ' ' + F.Y(y + m * (x1 - x)).toFixed(1) + '" stroke-width="3" stroke-linecap="round" fill="none"/>';
+  }
+
+  // Dron: h(t) = p t² + q t; secante desde 0 y tangente en T.
+  D['exam-dron'] = function (s) {
+    var p = s.p || 2, q = s.q || 3, T = s.T || 4;
+    var h = function (t) { return p * t * t + q * t; };
+    var F = frame(0, T * 1.1, 0, h(T) * 1.15);
+    var body = F.axes +
+      '<path class="ref" d="' + path(h, 0, T * 1.1, F.X, F.Y) + '" fill="none" stroke-width="3.5" stroke-linecap="round"/>' +
+      line(F, h(T) / T, 0, 0, 0, T, 'aux') +
+      line(F, 2 * p * T + q, T, h(T), T * 0.65, T * 1.1, 'student') +
+      '<circle class="dot-ref" cx="' + F.X(T) + '" cy="' + F.Y(h(T)) + '" r="5"/>' +
+      text(F.X(T * 0.3) - 6, F.Y(h(T) * 0.3) - 12, 'secante (promedio)', ' text-anchor="end" font-size="17"') +
+      text(F.X(T) - 14, F.Y(h(T)) - 12, 'tangente en t = ' + T, ' text-anchor="end" font-size="17"') +
+      text(F.X(0) + 8, F.Y(h(T) * 1.15) + 4, 'h(t) en m', ' font-size="17"');
+    return svg('0 0 600 290', 'Altura del dron contra el tiempo, con la secante desde t = 0 y la tangente en t = ' + T + ', más empinada.', body);
+  };
+
+  // Cúbica x³ − kx con su tangente en x = a.
+  D['exam-tangente'] = function (s) {
+    var a = s.a || 2, k = s.k || 3;
+    var f = function (x) { return x * x * x - k * x; };
+    var m = 3 * a * a - k, L = a + 1.2;
+    var F = frame(-L, L, f(-L) * 1.05, f(L) * 1.05);
+    var body = F.axes +
+      '<path class="ref" d="' + path(f, -L, L, F.X, F.Y) + '" fill="none" stroke-width="3.5" stroke-linecap="round"/>' +
+      line(F, m, a, f(a), Math.max(-L, a - 1.2), Math.min(L, a + 0.8), 'aux') +
+      '<circle class="dot-aux" cx="' + F.X(a) + '" cy="' + F.Y(f(a)) + '" r="5"/>' +
+      text(F.X(a) + 10, F.Y(f(a)) + 22, 'x = ' + a, ' font-size="17"') +
+      text(F.X(-L) + 6, F.Y(f(L) * 1.05) + 16, 'f(x) = x³ − ' + k + 'x', ' font-size="18"');
+    return svg('0 0 600 290', 'Cúbica f(x) = x³ − ' + k + 'x con su recta tangente en x = ' + a + '.', body);
+  };
+
+  // Costo promedio A(x) = F/x + b + 0.01x, mínimo en x = 10√F.
+  D['exam-costo'] = function (s) {
+    var Fc = s.F || 900, b = s.b || 10, x0 = s.x0 || 100;
+    var A = function (x) { return Fc / x + b + 0.01 * x; };
+    var xm = 10 * Math.sqrt(Fc), x1 = Math.max(2.2 * xm, x0 * 1.3), top = A(xm) * 2.2;
+    var F = frame(0, x1, 0, top);
+    var body = F.axes +
+      '<path class="ref" d="' + path(A, Fc / (top - b), x1, F.X, F.Y) + '" fill="none" stroke-width="3.5" stroke-linecap="round"/>' +
+      '<circle class="dot-aux" cx="' + F.X(x0) + '" cy="' + F.Y(A(x0)) + '" r="5"/>' +
+      text(F.X(x0) + 8, F.Y(A(x0)) - 10, 'x = ' + x0, ' font-size="17"') +
+      text(F.X(x1), F.Y(top) + 4, 'A(x) en pesos por pieza', ' text-anchor="end" font-size="17"') +
+      text(F.X(x1), F.Y(0) + 24, 'x (piezas)', ' text-anchor="end" font-size="17"');
+    return svg('0 0 600 290', 'Costo promedio por pieza: baja, llega a un mínimo y vuelve a subir.', body);
+  };
+
+  // Bacterias N0·2^(t/d).
+  D['exam-bacterias'] = function (s) {
+    var N0 = s.N0 || 200, d = s.d || 3, T = s.T || 6;
+    var N = function (t) { return N0 * Math.pow(2, t / d); };
+    var F = frame(0, T * 1.1, 0, N(T * 1.1) * 1.05);
+    var body = F.axes +
+      '<path class="ref" d="' + path(N, 0, T * 1.1, F.X, F.Y) + '" fill="none" stroke-width="3.5" stroke-linecap="round"/>';
+    for (var t = d; t <= T * 1.1; t += d) {
+      body += '<path class="axis" d="M' + F.X(t) + ' ' + F.Y(0) + 'V' + F.Y(N(t)) + '" stroke-dasharray="4 6" stroke-width="1.2"/>' +
+        text(F.X(t), F.Y(0) + 22, t + ' h', ' text-anchor="middle" font-size="16"');
+    }
+    body += text(F.X(0) + 8, F.Y(N(T * 1.1) * 1.05) + 4, 'N(t): se duplica cada ' + d + ' h', ' font-size="17"');
+    return svg('0 0 600 290', 'Crecimiento exponencial de una colonia que se duplica cada ' + d + ' horas.', body);
+  };
+
+  // Temperatura diaria 20 + A sin(πt/12) con tangente en t0.
+  D['exam-temperatura'] = function (s) {
+    var A = s.A || 6, t0 = s.t0 || 3;
+    var T = function (t) { return 20 + A * Math.sin(Math.PI * t / 12); };
+    var m = A * Math.PI / 12 * Math.cos(Math.PI * t0 / 12);
+    var F = frame(0, 24, 20 - A * 1.3, 20 + A * 1.4);
+    var body = '<path class="axis" d="M' + F.X(0) + ' ' + F.Y(20) + 'H' + (F.X(24) + 14) + 'M' + F.X(0) + ' ' + (F.Y(20 - A * 1.3) + 6) + 'V' + (F.Y(20 + A * 1.4) - 12) + '" stroke-width="1.5" fill="none"/>' +
+      '<path class="ref" d="' + path(T, 0, 24, F.X, F.Y) + '" fill="none" stroke-width="3.5" stroke-linecap="round"/>' +
+      line(F, m, t0, T(t0), Math.max(0, t0 - 2.5), t0 + 2.5, 'aux') +
+      '<circle class="dot-aux" cx="' + F.X(t0) + '" cy="' + F.Y(T(t0)) + '" r="5"/>' +
+      text(F.X(24), F.Y(20) + 22, '24 h', ' text-anchor="end" font-size="16"') +
+      text(F.X(0) + 8, F.Y(20) + 20, '20 °C', ' font-size="16"') +
+      text(F.X(t0) + 12, F.Y(T(t0)) + 24, 't = ' + t0 + ' h', ' font-size="17"');
+    return svg('0 0 600 290', 'Temperatura a lo largo del día: una onda alrededor de 20 °C, con la tangente en t = ' + t0 + ' h.', body);
+  };
+
+  // Elipse x² + xy + y² = c con la tangente en (p, q).
+  D['exam-elipse'] = function (s) {
+    var p = s.p || 1, q = s.q || 2, c = p * p + p * q + q * q;
+    var R = Math.sqrt(2 * c) * 1.15, m = -(2 * p + q) / (p + 2 * q);
+    var X = function (x) { return 300 + x * 125 / R; }, Y = function (y) { return 145 - y * 125 / R; };
+    var d = '';
+    for (var i = 0; i <= 120; i++) {
+      var th = 2 * Math.PI * i / 120, u = Math.sqrt(2 * c / 3) * Math.cos(th), w = Math.sqrt(2 * c) * Math.sin(th);
+      d += (i ? 'L' : 'M') + X((u + w) / Math.SQRT2).toFixed(1) + ' ' + Y((u - w) / Math.SQRT2).toFixed(1);
+    }
+    var dx = 0.45 * R / Math.sqrt(1 + m * m);
+    var body = '<path class="axis" d="M' + X(-R) + ' ' + Y(0) + 'H' + X(R) + 'M' + X(0) + ' ' + Y(-R) + 'V' + Y(R) + '" stroke-width="1.5" fill="none"/>' +
+      '<path class="ref" d="' + d + 'Z" fill="none" stroke-width="3.5"/>' +
+      '<path class="aux" d="M' + X(p - dx).toFixed(1) + ' ' + Y(q - m * dx).toFixed(1) + 'L' + X(p + dx).toFixed(1) + ' ' + Y(q + m * dx).toFixed(1) + '" stroke-width="3" stroke-linecap="round"/>' +
+      '<circle class="dot-aux" cx="' + X(p) + '" cy="' + Y(q) + '" r="5"/>' +
+      text(X(p) + 12, Y(q) - 10, '(' + p + ', ' + q + ')', ' font-size="17"') +
+      text(20, 30, 'x² + xy + y² = ' + c, ' font-size="18"');
+    return svg('0 0 600 290', 'Elipse inclinada x² + xy + y² = ' + c + ' con su tangente en el punto (' + p + ', ' + q + ').', body);
+  };
+
+  // Lámpara a altura h sobre el piso; punto a distancia x de la base.
+  D['exam-lampara'] = function (s) {
+    var h = s.h || 4, x = s.x || 3, S = 200 / Math.max(h, x);
+    var bx = 120, by = 260, lx = bx, ly = by - h * S, px = bx + x * S;
+    var body = '<path class="axis" d="M40 ' + by + 'H560" stroke-width="2"/>' +
+      '<path class="axis" d="M' + lx + ' ' + by + 'V' + ly + '" stroke-width="3"/>' +
+      '<circle class="dot-ref" cx="' + lx + '" cy="' + ly + '" r="8"/>' +
+      '<path class="aux" d="M' + lx + ' ' + ly + 'L' + px + ' ' + by + '" stroke-width="2.5" stroke-dasharray="6 5"/>' +
+      '<circle class="dot-aux" cx="' + px + '" cy="' + by + '" r="5"/>' +
+      text(lx - 12, (ly + by) / 2, 'h = ' + h + ' m', ' text-anchor="end" font-size="17"') +
+      text((lx + px) / 2, by + 24, 'x = ' + x + ' m', ' text-anchor="middle" font-size="17"') +
+      text((lx + px) / 2 + 14, (ly + by) / 2 - 6, 'd', ' font-size="18"');
+    return svg('0 0 600 290', 'Lámpara a ' + h + ' m de altura; un punto del piso a ' + x + ' m de la base, a distancia d de la lámpara.', body);
+  };
 })();

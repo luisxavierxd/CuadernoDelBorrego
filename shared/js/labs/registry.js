@@ -16,7 +16,7 @@
   function prep(s) {
     return String(s)
       // (^|no-letra) en lugar de \b: “2ln(x)” también es ln
-      .replace(/(^|[^a-zA-Z])ln\s*\(/g, '$1log(').replace(/(^|[^a-zA-Z])arctan\s*\(/g, '$1atan(')
+      .replace(/(?<![a-zA-Z])ln\s*\(/g, 'log(').replace(/(?<![a-zA-Z])arctan\s*\(/g, 'atan(')
       .replace(/(^|[^a-zA-Z])arcsin\s*\(/g, '$1asin(').replace(/(^|[^a-zA-Z])arccos\s*\(/g, '$1acos(')
       .replace(/\+\s*C\b/g, '').replace(/−/g, '-')
       // math.js lee 0x, 0b y 0o como prefijos hexadecimal, binario y octal: “0x” debe ser 0·x

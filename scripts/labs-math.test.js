@@ -125,6 +125,10 @@ function near(got, want, tol, msg) {
     near(LM.core.build(math, '3x^2 + 0x').fn(2), 12, 1e-12);
     near(LM.core.build(math, '10x + 0x^2 + 5').fn(1), 15, 1e-12);
   });
+  test('prep: ln anidado y pegado a un coeficiente', () => {
+    near(LM.core.build(math, 'ln(ln(x))').fn(Math.E * Math.E), Math.log(2), 1e-12);
+    near(LM.core.build(math, '2ln(x)').fn(Math.E), 2, 1e-12);
+  });
   test('core.build evalúa con varias variables', () => {
     const f = LM.core.build(math, 'x^2 + y', ['x', 'y']);
     eq(f.fn(3, 1), 10);

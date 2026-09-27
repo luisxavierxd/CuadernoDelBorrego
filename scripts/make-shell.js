@@ -69,6 +69,7 @@ ${labFile ? `    <script src="${R}shared/js/labs/${labFile}.js"></script>\n` : '
     <script src="${R}shared/js/exercises.js"></script>
 ${hasBank ? `    <script src="${R}shared/js/quiz/engine.js"></script>
     <script src="${R}shared/js/quiz/ui.js"></script>
+    <script src="${R}shared/js/quiz/bank-kit.js"></script>
     <script src="${R}data/${course}/bank/sesion-${NN}.js"></script>
 ` : ''}    <script src="${R}data/${course}/course-meta.js"></script>
     <script src="${R}data/${course}/sesion-${NN}.js"></script>

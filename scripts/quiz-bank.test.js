@@ -10,7 +10,7 @@ const { loadData } = require('./lib/load');
 const { loadMathjs } = require('./lib/vendor');
 
 const ROOT = path.join(__dirname, '..');
-const LIBS = ['labs/registry', 'labs/antiderivative-check', 'labs/projectile-check', 'labs/secant-tangent', 'labs/derivative-check', 'labs/chain-composition', 'labs/implicit-tangent', 'exercises', 'quiz/engine'].map((n) => path.join(ROOT, 'shared/js', n + '.js'));
+const LIBS = ['labs/registry', 'labs/antiderivative-check', 'labs/projectile-check', 'labs/secant-tangent', 'labs/derivative-check', 'labs/chain-composition', 'labs/implicit-tangent', 'exercises', 'quiz/engine', 'quiz/bank-kit'].map((n) => path.join(ROOT, 'shared/js', n + '.js'));
 const N = 200, N_EXPR = 40, N_DUP = 20;
 const MIN = 100, MIX = { 1: 30, 2: 50, 3: 20 }, MIX_TOL = 6, MIN_CONCEPT = 30, MIN_PER_SUB = 5;
 
@@ -60,6 +60,7 @@ function validSource(s) {
       const byPrompt = new Map(), byAnswers = new Map();
       for (const q of Q) {
         const at = `${where} ${q.id}`;
+        const balanced = (t) => ((t || '').match(/(?<!\\)\$/g) || []).length % 2 === 0;
         ok(q.id && !ids.has(q.id), `${at}: id vacío o repetido`);
         ids.add(q.id);
         ok(Array.isArray(q.tags) && q.tags[0] === `${code}.S${NN}`, `${at}: la primera etiqueta debe ser ${code}.S${NN}`);
@@ -86,6 +87,7 @@ function validSource(s) {
           const prompt = q.prompt(v), why = str(q.why, v);
           ok(typeof prompt === 'string' && prompt.length > 8 && !/undefined|NaN|Infinity/.test(prompt), `${vi}: prompt inválido`);
           ok(typeof why === 'string' && why.length > 8 && !/undefined|NaN/.test(why), `${vi}: falta why`);
+          ok(balanced(prompt) && balanced(why), `${vi}: $ sin cerrar en enunciado o why`);
           if (i === 0) {
             const key = norm(prompt);
             ok(!byPrompt.has(key), `${at}: mismo enunciado que ${byPrompt.get(key)}`);
@@ -94,6 +96,7 @@ function validSource(s) {
           if (q.type === 'choice') {
             const opts = q.options(v), texts = opts.map((o) => o.text);
             ok(opts.length >= 3, `${vi}: pocas opciones`);
+            ok(opts.every((o) => balanced(o.text) && (!o.say || balanced(o.say))), `${vi}: $ sin cerrar en una opción`);
             ok(new Set(texts).size === texts.length, `${vi}: opciones repetidas: ${texts.join(' | ')}`);
             ok(opts.filter((o) => o.correct).length === 1, `${vi}: debe haber exactamente una correcta`);
             const right = opts.find((o) => o.correct);
@@ -117,7 +120,10 @@ function validSource(s) {
           if (i < N_DUP) answers.push(typeof ans === 'number' ? +ans.toPrecision(8) : ans);
         }
         const akey = q.type + ':' + JSON.stringify(Object.keys(q.vars || {}).sort()) + ':' + JSON.stringify(answers);
-        ok(q.type === 'choice' || !byAnswers.has(akey), `${at}: mismas respuestas que ${byAnswers.get(akey)} (¿duplicado?)`);
+        // Solo en preguntas parametrizadas: dos preguntas fijas pueden tener la misma respuesta
+        // con enunciados distintos (esas ya se comparan por enunciado).
+        const parametrized = Object.keys(q.vars || {}).length > 0;
+        ok(q.type === 'choice' || !parametrized || !byAnswers.has(akey), `${at}: mismas respuestas que ${byAnswers.get(akey)} (¿duplicado?)`);
         byAnswers.set(akey, q.id);
       }
       const total = Q.length || 1;
