@@ -4,6 +4,7 @@ BRIEF*.md
 CLAUDE.md
 .claude/
 design-system/
+notes/
 
 # Entorno
 node_modules/
