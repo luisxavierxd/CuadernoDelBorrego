@@ -100,6 +100,8 @@
     var inp = answerInput(q.type, q.options ? q.options(v) : null, v, q.unit, q);
     var verdict = h('div', { class: 'verdict', hidden: true, role: 'status' });
     var why = h('div', { class: 'qcard__why', hidden: true, html: '<strong>Por qué.</strong> ' + str(q.why, v) });
+    // La respuesta correcta se muestra siempre que la del alumno no lo sea.
+    var right = h('p', { class: 'qcard__right', hidden: true, html: '<strong>Respuesta correcta:</strong> ' + correctText(q, v) });
     var state = { done: false, seen: false, input: '' };
     var buttons = h('div', { class: 'lab-buttons' });
     card.appendChild(head);
@@ -107,7 +109,9 @@
     card.appendChild(inp.node);
     card.appendChild(buttons);
     card.appendChild(verdict);
+    card.appendChild(right);
     card.appendChild(why);
+    function showRight(kind) { right.hidden = kind === 'ok'; card.classList.add(kind === 'ok' ? 'is-ok' : kind === 'warn' ? 'is-partial' : 'is-bad'); }
 
     if (mode === 'practice') {
       var check = window.LabUI.button('Revisar', 'primary', function () {
@@ -118,7 +122,7 @@
         state.done = true; state.input = input;
         inp.lock(); check.disabled = true;
         window.LabUI.verdict(verdict, r.kind, VERDICT_TITLE[r.kind], r.say || null);
-        why.hidden = false;
+        why.hidden = false; showRight(r.kind);
         render(card);
         onResult({ q: q, v: v, score: r.kind === 'ok' ? 1 : 0, kind: r.kind });
       });
@@ -140,11 +144,12 @@
         try { input = inp.get(); } catch (e) { window.LabUI.verdict(verdict, 'bad', e.message, null); return; }
         var r = Q().grade(q, v, input, { math: window.math });
         if (r.kind === 'invalid') { window.LabUI.verdict(verdict, 'bad', r.say || 'Escribe tu respuesta.', null); return; }
-        state.reviewed = true;
+        state.reviewed = true; state.input = input;
         inp.lock(); rev.disabled = true; sol.disabled = true;
         window.LabUI.verdict(verdict, r.kind, VERDICT_TITLE[r.kind], r.say || null);
-        why.hidden = false;
+        why.hidden = false; showRight(r.kind);
         render(card);
+        if (onResult) onResult({ q: q, v: v, kind: r.kind });
       }) : null;
       if (rev) {
         buttons.appendChild(rev);
@@ -152,7 +157,19 @@
       }
       buttons.appendChild(sol);
     }
-    return { node: card, state: state, get: function () { return safeGet(inp.get); }, lock: inp.lock, q: q, v: v };
+    // Al entregar: marca la tarjeta como en Canvas (bien, parcial o mal) con la correcta y el porqué.
+    function mark(res) {
+      inp.lock();
+      buttons.querySelectorAll('button').forEach(function (b) { b.disabled = true; });
+      var kind = res.correct ? 'ok' : res.earned > 0 ? 'warn' : 'bad';
+      if (!state.reviewed && !state.done) {
+        window.LabUI.verdict(verdict, kind, res.correct ? '¡Bien!' : (String(safeGet(inp.get)).trim() ? 'Incorrecta' : 'Sin respuesta'),
+          fmtPts(res.earned) + ' / 1' + (res.withSolution ? ' · viste la solución' : ''));
+      }
+      why.hidden = false; showRight(kind);
+      render(card);
+    }
+    return { node: card, state: state, get: function () { return safeGet(inp.get); }, lock: inp.lock, mark: mark, q: q, v: v };
   }
 
   /* ---------- Quiz de práctica ---------- */
@@ -183,6 +200,9 @@
         var r = results.filter(function (x) { return x.q === c.q; })[0];
         return Object.assign(r || { q: c.q, score: 0, kind: 'skip' }, { card: c });
       });
+      // Las que quedaron sin revisar también muestran la respuesta correcta.
+      all.forEach(function (r) { if (!r.card.state.done) r.card.mark({ correct: false, earned: 0 }); });
+      cards.forEach(function (c) { c.lock(); });
       var scores = Q().scoreByTag(all);
       var total = all.reduce(function (s, r) { return s + r.score; }, 0);
       var pct = total / all.length * 100;
@@ -196,6 +216,7 @@
       render(out);
       out.scrollIntoView({ behavior: window.CBAnim && window.CBAnim.canAnimate() ? 'smooth' : 'auto', block: 'start' });
       Q().saveHistory('cb-quiz-history', {
+        id: Date.now().toString(36) + Math.random().toString(36).slice(2, 6), kind: 'quiz', scores: scores,
         date: new Date().toISOString(), score: Math.round(pct), n: all.length,
         topics: (opts.topics || []).join(', '),
         detail: all.map(function (r) { return shortDetail(r.q, r.card.v, r.card.state.input || r.card.get(), r.score, false); })
@@ -335,7 +356,7 @@
         h('p', { class: 'part__prompt', html: '<strong>' + part.label + ')</strong> ' + part.prompt(v) + ' <span class="part__pts mono">(' + part.points + ' pts)</span>' }),
         inp.node, btns, verdict, sol
       ]);
-      parts.push({ node: node, inp: inp, st: st });
+      parts.push({ node: node, inp: inp, st: st, verdict: verdict, sol: sol, btns: btns, part: part });
     });
     var diagram = p.diagram && window.Diagrams && window.Diagrams[p.diagram.id]
       ? h('figure', { class: 'figure sheet problem__figure', html: window.Diagrams[p.diagram.id](p.diagram.state(v)) }) : null;
@@ -345,7 +366,27 @@
       diagram,
       h('ol', { class: 'problem__parts' }, parts.map(function (x) { return x.node; }))
     ]);
-    return { node: node, parts: parts, p: p, v: v };
+    // Al entregar: cada inciso con su resultado, el valor correcto y la solución.
+    // Si el alumno arrastró un error, se muestra el valor esperado con SUS datos y el de la solución.
+    function mark(res) {
+      res.parts.forEach(function (pr, k) {
+        var x = parts[k], unit = x.part.unit ? ' ' + x.part.unit : '';
+        x.inp.lock();
+        x.btns.querySelectorAll('button').forEach(function (b) { b.disabled = true; });
+        var kind = pr.correct ? 'ok' : 'bad';
+        var fmtV = function (val) { return typeof val === 'number' && isFinite(val) ? fmtPts(val) + unit : String(val); };
+        var note = fmtPts(pr.earned) + ' / ' + pr.points + ' pts';
+        if (pr.carried) note += ' · con tu resultado anterior cuenta completo (arrastre de error)';
+        if (!pr.correct) note += ' · resultado correcto: ' + (isFinite(pr.expected) && Math.abs(pr.expected - pr.expectedTrue) > 1e-9
+          ? fmtV(pr.expected) + ' con tus datos (' + fmtV(pr.expectedTrue) + ' con los datos correctos)' : fmtV(pr.expectedTrue));
+        if (!x.st.reviewed) window.LabUI.verdict(x.verdict, kind, pr.correct ? '¡Bien!' : (String(pr.answer || '').trim() ? 'Incorrecto' : 'Sin respuesta'), note);
+        else if (!pr.correct) x.verdict.appendChild(h('p', { class: 'verdict__note' }, [note]));
+        x.node.classList.add(pr.correct ? 'is-ok' : 'is-bad');
+        x.sol.hidden = false; x.sol.innerHTML = '<strong>Solución.</strong> ' + x.part.solution(v);
+      });
+      render(node);
+    }
+    return { node: node, parts: parts, mark: mark, p: p, v: v };
   }
 
   function runSimulacro(root, questions, problems, opts) {
@@ -551,7 +592,6 @@
       start.disabled = !n || (state.kind === 'custom' && cQ.get() + cP.get() === 0);
     }
 
-    var stage = h('div', { class: 'launcher__stage' });
     var form = h('div', { class: 'sheet launcher' }, [
       step(1, 'Curso', [courseCards]),
       step(2, 'Tipo', [kindCards]),
@@ -559,7 +599,6 @@
       step(4, 'Opciones', [options, h('div', { class: 'launcher__go' }, [summary, start])])
     ]);
     root.appendChild(form);
-    root.appendChild(stage);
     root.appendChild(historyPanel());
     drawTopics();
     drawOptions();
@@ -573,68 +612,232 @@
     });
     upd();
 
-    function loadAll(sel, needExams) {
-      var meta = M[state.code];
-      var loads = [window.LabUI.loadMath()];
-      sel.forEach(function (b) {
-        if (!(window.CB_BANK && window.CB_BANK[b.code] && window.CB_BANK[b.code]['S' + pad(b.n)])) loads.push(window.LabUI.loadScript('../data/' + meta.slug + '/bank/sesion-' + pad(b.n) + '.js'));
-      });
-      if (needExams && !(window.CB_EXAMS && window.CB_EXAMS[state.code])) loads.push(window.LabUI.loadScript('../data/' + meta.slug + '/exam-problems.js'));
-      return Promise.all(loads);
-    }
-
+    // Empezar: el examen corre en su propia página (quiz/examen/), como en Canvas.
+    // El plan viaja en sessionStorage y se consume al empezar: recargar cancela el intento.
     function go() {
       var sel = selected();
       if (!sel.length) return;
-      var custom = state.kind === 'custom';
-      var needExams = state.kind === 'sim' || (custom && cP.get() > 0);
-      start.disabled = true;
-      stage.innerHTML = '<p class="muted">Cargando preguntas…</p>';
-      loadAll(sel, needExams).then(function () {
-        start.disabled = false;
-        var code = state.code, meta = M[code];
-        var pool = Q().pool(window.CB_BANK, [{ code: code, sessions: sel.map(function (b) { return b.n; }) }]);
-        var tags = sel.map(function (b) { return code + '.S' + pad(b.n); });
-        var probs = needExams ? Q().eligibleProblems((window.CB_EXAMS || {})[code], tags) : [];
-        var tagOf = {}; sessionsOf(meta).forEach(function (s) { tagOf[s.n] = s.tag; });
-        var topics = sel.map(function (b) { return meta.name + ' S' + pad(b.n) + (tagOf[b.n] ? ' · ' + tagOf[b.n] : ''); });
-        var common = { topics: topics, root: '../', onFinish: showBack };
-        if (state.kind === 'quiz') {
-          form.hidden = true;
-          runPractice(stage, Q().pick(pool, [5, 8, 10, 15][+countSel.input.value]), Object.assign({ tagFilter: function (t) { return t.split('.').length === 2 || sel.length === 1; }, again: go }, common));
-        } else if (state.kind === 'sim') {
-          var comp = Q().composeSimulacro(pool, probs);
-          if (comp.questions.length < 3 || comp.problems.length < 1) {
-            stage.innerHTML = '<p class="verdict verdict--warn">Con estas sesiones todavía no alcanza para un simulacro (hacen falta 3 preguntas y al menos 1 problema). Agrega sesiones, prueba el modo personalizado o el quiz de práctica.</p>';
-            return;
-          }
-          form.hidden = true;
-          runSimulacro(stage, comp.questions, comp.problems, Object.assign({ presetId: state.preset, kind: 'Simulacro' }, common));
-        } else {
-          var qs = Q().pick(pool, cQ.get());
-          var ps = probs.slice().sort(function () { return Math.random() - 0.5; }).slice(0, cP.get());
-          var note = [];
-          if (qs.length < cQ.get()) note.push('solo hay ' + qs.length + ' preguntas');
-          if (ps.length < cP.get()) note.push('solo hay ' + ps.length + ' problemas');
-          if (!qs.length && !ps.length) { stage.innerHTML = '<p class="verdict verdict--warn">Con estas sesiones todavía no hay preguntas ni problemas.</p>'; return; }
-          form.hidden = true;
-          stage.innerHTML = '';
-          var run = h('div', {});
-          if (note.length) stage.appendChild(h('p', { class: 'verdict verdict--warn' }, ['Con estas sesiones ' + note.join(' y ') + '; el examen usa las que hay.']));
-          stage.appendChild(run);
-          runSimulacro(run, qs, ps, Object.assign({ minutes: cMin.get(), clockLabel: 'Reloj', finishLabel: 'Terminar examen', kind: 'Personalizado', review: cFeed.input.value === '1' }, common));
+      var plan = {
+        code: state.code, kind: state.kind, preset: state.preset,
+        sessions: sel.map(function (b) { return b.n; }),
+        count: [5, 8, 10, 15][+countSel.input.value],
+        qN: cQ.get(), pN: cP.get(), minutes: cMin.get(), review: cFeed.input.value === '1'
+      };
+      try { sessionStorage.setItem('cb-exam-plan', JSON.stringify(plan)); }
+      catch (e) { summary.textContent = 'Tu navegador no permite guardar el examen en esta pestaña.'; return; }
+      window.location.href = 'examen/';
+    }
+  }
+
+  /* ---------- Página del examen (quiz/examen/) ----------
+     Dos modos: un intento nuevo (plan en sessionStorage) o la revisión de un intento
+     guardado (?intento=ID). Preguntas a la izquierda; a la derecha los temas, el
+     avance, el reloj y, al entregar, el semáforo. Salir a media prueba pide
+     confirmación y cancela el intento (no se guarda). */
+  var KIND_NAME = { quiz: 'Quiz de práctica', sim: 'Simulacro de examen', custom: 'Examen personalizado' };
+  function historyKeyOf(kind) { return kind === 'quiz' ? 'cb-quiz-history' : 'cb-exam-history'; }
+
+  function examPage(root) {
+    var params = new URLSearchParams(window.location.search);
+    var id = params.get('intento');
+    if (id) return reviewPage(root, id);
+    var plan = null;
+    try { plan = JSON.parse(sessionStorage.getItem('cb-exam-plan') || 'null'); sessionStorage.removeItem('cb-exam-plan'); } catch (e) {}
+    if (!plan) {
+      root.appendChild(h('div', { class: 'sheet exam-empty' }, [
+        h('h1', {}, ['No hay un examen en curso']),
+        h('p', {}, ['Los intentos se empiezan desde el lanzador. Si recargaste la página a media prueba, ese intento se canceló.']),
+        h('p', {}, [h('a', { class: 'btn btn--primary', href: '../' }, ['Ir al lanzador'])])
+      ]));
+      return;
+    }
+    var M = metas(), meta = M[plan.code];
+    if (!meta) { root.appendChild(h('p', { class: 'verdict verdict--bad' }, ['Curso desconocido.'])); return; }
+    var tagOf = {}; sessionsOf(meta).forEach(function (s) { tagOf[s.n] = s.tag; });
+    var topics = plan.sessions.map(function (n) { return meta.name + ' S' + pad(n) + (tagOf[n] ? ' · ' + tagOf[n] : ''); });
+    root.appendChild(h('p', { class: 'muted' }, ['Cargando preguntas…']));
+    var loads = [window.LabUI.loadMath()];
+    plan.sessions.forEach(function (n) {
+      if (!(window.CB_BANK && window.CB_BANK[plan.code] && window.CB_BANK[plan.code]['S' + pad(n)])) loads.push(window.LabUI.loadScript('../../data/' + meta.slug + '/bank/sesion-' + pad(n) + '.js'));
+    });
+    var needExams = plan.kind === 'sim' || (plan.kind === 'custom' && plan.pN > 0);
+    if (needExams && !(window.CB_EXAMS && window.CB_EXAMS[plan.code])) loads.push(window.LabUI.loadScript('../../data/' + meta.slug + '/exam-problems.js'));
+    Promise.all(loads).then(function () {
+      root.innerHTML = '';
+      var pool = Q().pool(window.CB_BANK, [{ code: plan.code, sessions: plan.sessions }]);
+      var tags = plan.sessions.map(function (n) { return plan.code + '.S' + pad(n); });
+      var probs = needExams ? Q().eligibleProblems((window.CB_EXAMS || {})[plan.code], tags) : [];
+      var qs, ps, notes = [];
+      if (plan.kind === 'quiz') { qs = Q().pick(pool, plan.count); ps = []; }
+      else if (plan.kind === 'sim') {
+        var comp = Q().composeSimulacro(pool, probs);
+        if (comp.questions.length < 3 || comp.problems.length < 1) {
+          root.appendChild(h('div', { class: 'sheet exam-empty' }, [h('p', { class: 'verdict verdict--warn' }, ['Con estas sesiones todavía no alcanza para un simulacro (hacen falta 3 preguntas y al menos 1 problema). Agrega sesiones o prueba el modo personalizado.']), h('p', {}, [h('a', { class: 'btn btn--ghost', href: '../' }, ['Volver al lanzador'])])]));
+          return;
         }
-        stage.scrollIntoView({ block: 'start' });
-      }, function (e) {
-        start.disabled = false;
-        stage.innerHTML = '<p class="verdict verdict--bad">No se pudieron cargar las preguntas: ' + e.message + '</p>';
+        qs = comp.questions; ps = comp.problems;
+      } else {
+        qs = Q().pick(pool, plan.qN);
+        ps = probs.slice().sort(function () { return Math.random() - 0.5; }).slice(0, plan.pN);
+        if (qs.length < plan.qN) notes.push('solo hay ' + qs.length + ' preguntas');
+        if (ps.length < plan.pN) notes.push('solo hay ' + ps.length + ' problemas');
+      }
+      if (!qs.length && !ps.length) { root.appendChild(h('p', { class: 'verdict verdict--warn' }, ['Con estas sesiones todavía no hay preguntas.'])); return; }
+      runAttempt(root, plan, meta, qs, ps, topics, notes);
+    }, function (e) {
+      root.innerHTML = '';
+      root.appendChild(h('p', { class: 'verdict verdict--bad' }, ['No se pudieron cargar las preguntas: ' + e.message]));
+    });
+  }
+
+  function examLayout(root, title, sub) {
+    var main = h('div', { class: 'exam__main' });
+    var side = h('aside', { class: 'exam__side', 'aria-label': 'Temas y avance' });
+    var head = h('header', { class: 'exam__head' }, [h('p', { class: 'crumb' }, [h('a', { href: '../' }, ['Practicar'])]), h('h1', {}, [title]), sub ? h('p', { class: 'muted' }, [sub]) : null]);
+    var results = h('section', { class: 'exam__results', hidden: true, 'aria-live': 'polite' });
+    root.appendChild(h('div', { class: 'exam' }, [h('div', { class: 'exam__col' }, [head, results, main]), side]));
+    return { main: main, side: side, results: results, head: head };
+  }
+  function sideTopics(side, meta, sessions) {
+    side.appendChild(h('h2', { class: 'exam__side-title' }, ['Temas']));
+    side.appendChild(h('ul', { class: 'exam__topics' }, sessions.map(function (n) {
+      var s = sessionsOf(meta).filter(function (x) { return x.n === n; })[0] || {};
+      return h('li', {}, [h('span', { class: 'mono' }, ['S' + pad(n)]), ' ', s.tag || s.title || '']);
+    })));
+  }
+
+  function runAttempt(root, plan, meta, questions, problems, topics, notes) {
+    var immediate = plan.kind === 'quiz' || (plan.kind === 'custom' && plan.review);
+    var L = examLayout(root, KIND_NAME[plan.kind] + ' · ' + meta.name, immediate
+      ? 'Revisión inmediata: pulsa “Revisar” al contestar cada pregunta o inciso. “Ver solución” antes de contestar deja máximo el 30 %.'
+      : 'No hay revisión hasta que entregues. “Ver solución” está disponible, pero deja máximo el 30 % de esa pregunta o inciso.');
+    if (notes.length) L.main.appendChild(h('p', { class: 'verdict verdict--warn' }, ['Con estas sesiones ' + notes.join(' y ') + '; el examen usa las que hay.']));
+    var both = questions.length && problems.length;
+    var minutes = plan.kind === 'sim' ? Q().suggestedMinutes(plan.preset) : plan.kind === 'custom' ? plan.minutes : 0;
+    var ck = minutes > 0 ? clock(minutes, plan.kind === 'sim' ? 'Reloj sugerido' : 'Reloj') : null;
+    var progress = h('p', { class: 'exam__progress mono', 'aria-live': 'polite' });
+    function submit(host) {
+      var left = total - answered();
+      if (left > 0) confirmInline(host, 'Te faltan ' + left + (left === 1 ? ' respuesta' : ' respuestas') + '. ¿Entregar de todos modos?', done, 'Entregar');
+      else done();
+    }
+    var finish = window.LabUI.button('Entregar', 'primary', function () { submit(actions); });
+    var leave = window.LabUI.button('Salir', 'ghost', function () {
+      confirmInline(actions, '¿Salir del examen? Este intento se cancela y no se guarda.', function () { finished = true; window.location.href = '../'; }, 'Sí, salir');
+    });
+    var actions = h('div', { class: 'lab-buttons exam__actions' }, [finish, leave]);
+    sideTopics(L.side, meta, plan.sessions);
+    if (ck) L.side.appendChild(ck.node);
+    L.side.appendChild(progress);
+    L.side.appendChild(actions);
+    var sem = h('div', { class: 'exam__sem' });
+    L.side.appendChild(sem);
+
+    var qBox = h('div', { class: 'quiz-list' }), pBox = h('div', { class: 'quiz-list' });
+    if (questions.length) L.main.appendChild(h('h2', { class: 'sim-run__title' }, ['Preguntas' + (plan.kind === 'quiz' ? '' : ' cortas · ' + (both ? '40' : '100') + ' %')]));
+    L.main.appendChild(qBox);
+    if (problems.length) L.main.appendChild(h('h2', { class: 'sim-run__title' }, ['Problemas · ' + (both ? '60' : '100') + ' %']));
+    L.main.appendChild(pBox);
+    // Al final de las preguntas también se puede entregar (en móvil la barra queda arriba).
+    var endBar = h('div', { class: 'lab-buttons exam__end' });
+    endBar.appendChild(window.LabUI.button('Entregar examen', 'primary', function () { submit(endBar); }));
+    L.main.appendChild(endBar);
+    var qCards = questions.map(function (q, i) { var c = questionCard(q, window.CBExercises.instance(q), i + 1, immediate ? 'exam-review' : 'exam', upd); qBox.appendChild(c.node); return c; });
+    var pCards = problems.map(function (p, i) { var c = problemCard(p, window.CBExercises.instance(p), i + 1, immediate); pBox.appendChild(c.node); return c; });
+    var total = qCards.length + pCards.reduce(function (s, c) { return s + c.parts.length; }, 0);
+    function answered() {
+      return qCards.filter(function (c) { return String(c.get()).trim(); }).length +
+        pCards.reduce(function (s, c) { return s + c.parts.filter(function (x) { return String(safeGet(x.inp.get)).trim(); }).length; }, 0);
+    }
+    function upd() { progress.textContent = answered() + ' de ' + total + ' contestadas'; }
+    L.main.addEventListener('input', upd); L.main.addEventListener('change', upd); L.main.addEventListener('click', function () { setTimeout(upd, 0); });
+    upd();
+    render(L.main);
+
+    // Salir a media prueba: el navegador pide confirmación; el intento no se guarda.
+    var finished = false;
+    function guard(e) { if (finished) return; e.preventDefault(); e.returnValue = ''; return ''; }
+    window.addEventListener('beforeunload', guard);
+
+    function done() {
+      finished = true;
+      window.removeEventListener('beforeunload', guard);
+      if (ck) { ck.stop(); ck.node.hidden = true; }
+      var deps = { math: window.math };
+      var shortRes = qCards.map(function (c) {
+        var raw = c.get(), r = Q().gradeShort(c.q, c.v, raw, c.state.seen, deps);
+        c.mark(r);
+        return Object.assign(r, { q: c.q, v: c.v, score: r.earned, raw: raw });
       });
+      var examRes = pCards.map(function (c) {
+        var r = Q().gradeProblem(c.p, c.v, c.parts.map(function (x) { return safeGet(x.inp.get); }), c.parts.map(function (x) { return x.st.seen; }), deps);
+        c.mark(r);
+        return Object.assign(r, { p: c.p, v: c.v });
+      });
+      var tagRows = shortRes.map(function (r) { return { q: r.q, score: r.earned }; })
+        .concat(examRes.map(function (r) { return { q: { tags: r.p.tags }, score: r.total ? r.earned / r.total : 0 }; }));
+      var scores = Q().scoreByTag(tagRows);
+      var score, line;
+      if (plan.kind === 'quiz') {
+        var got = shortRes.reduce(function (s, r) { return s + r.earned; }, 0);
+        score = shortRes.length ? got / shortRes.length * 100 : 0;
+        line = fmtPts(got) + ' de ' + shortRes.length + ' preguntas';
+      } else {
+        var sc = Q().simulacroScore(shortRes, examRes);
+        score = sc.total;
+        var bits = [];
+        if (sc.weights.short) bits.push('Preguntas ' + fmtPts(sc.short) + ' / ' + sc.weights.short);
+        if (sc.weights.exam) bits.push('Problemas ' + fmtPts(sc.exam) + ' / ' + sc.weights.exam);
+        line = bits.join(' · ');
+      }
+      var entry = {
+        id: Date.now().toString(36) + Math.random().toString(36).slice(2, 6), date: new Date().toISOString(),
+        kind: plan.kind, code: plan.code, sessions: plan.sessions, score: Math.round(score), line: line,
+        topics: KIND_NAME[plan.kind] + ' · ' + topics.join(', '), scores: scores,
+        detail: shortRes.map(function (r) { return shortDetail(r.q, r.v, r.raw, r.earned, r.withSolution); })
+          .concat(examRes.map(function (r) { return problemDetail(r.p, r.v, r); }))
+      };
+      Q().saveHistory(historyKeyOf(plan.kind), entry);
+      var sub = L.head.querySelector('.muted');
+      if (sub) sub.remove();
+      showResults(L, entry, meta);
+      actions.innerHTML = '';
+      actions.appendChild(h('a', { class: 'btn btn--primary', href: '../' }, ['Volver al lanzador']));
+      endBar.remove();
+      progress.textContent = 'Entregado';
+      window.scrollTo(0, 0);
     }
-    function showBack() {
-      var back = window.LabUI.button('Volver al lanzador', 'ghost', function () { form.hidden = false; stage.innerHTML = ''; refreshHistory(); form.scrollIntoView({ block: 'start' }); });
-      stage.appendChild(h('div', { class: 'lab-buttons' }, [back]));
-      refreshHistory();
+  }
+
+  // Encabezado de resultados (arriba, como en Canvas) y semáforo en la barra lateral.
+  function showResults(L, entry, meta) {
+    L.results.hidden = false;
+    L.results.innerHTML = '';
+    L.results.appendChild(h('p', { class: 'exam__score' }, [h('strong', {}, [entry.score + (entry.kind === 'quiz' ? ' %' : ' / 100')]), entry.line ? h('span', { class: 'muted' }, [' · ' + entry.line]) : null]));
+    L.results.appendChild(h('p', { class: 'muted' }, ['Cada pregunta quedó marcada con la respuesta correcta y el porqué. Este intento se guardó en tu historial.']));
+    var sem = L.side.querySelector('.exam__sem') || L.side.appendChild(h('div', { class: 'exam__sem' }));
+    sem.innerHTML = '';
+    sem.appendChild(h('h2', { class: 'exam__side-title' }, ['Semáforo por tema']));
+    sem.appendChild(semaforo(entry.scores || {}, { filter: function (t) { return t.split('.').length === 2; }, root: '../../' }));
+  }
+
+  // Revisión de un intento guardado: misma página, solo lectura.
+  function reviewPage(root, id) {
+    var all = Q().loadHistory('cb-exam-history').concat(Q().loadHistory('cb-quiz-history'));
+    var entry = all.filter(function (e) { return e.id === id; })[0];
+    if (!entry) {
+      root.appendChild(h('div', { class: 'sheet exam-empty' }, [h('h1', {}, ['No encontré ese intento']), h('p', {}, ['Quizá se borró del historial de este navegador.']), h('p', {}, [h('a', { class: 'btn btn--primary', href: '../' }, ['Ir al lanzador'])])]));
+      return;
     }
+    var meta = metas()[entry.code] || { name: '', groups: [] };
+    var d = new Date(entry.date);
+    var L = examLayout(root, 'Revisión · ' + (KIND_NAME[entry.kind] || 'Intento'), isNaN(d) ? '' : d.toLocaleDateString('es-MX') + ' ' + d.toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' }));
+    if (entry.sessions && meta.groups.length) sideTopics(L.side, meta, entry.sessions);
+    L.side.appendChild(h('div', { class: 'exam__sem' }));
+    L.side.appendChild(h('div', { class: 'lab-buttons exam__actions' }, [h('a', { class: 'btn btn--primary', href: '../' }, ['Volver al lanzador'])]));
+    showResults(L, entry, meta);
+    L.main.appendChild(renderDetail(entry.detail));
+    render(L.main);
   }
 
   var historyNode = null;
@@ -654,6 +857,8 @@
       return h('div', { class: 'history__block' }, [h('h3', {}, [title]), h('ul', { class: 'history__list' }, list.map(function (e) {
         var d = new Date(e.date);
         var sum = h('summary', { class: 'history__row' }, [h('span', { class: 'mono' }, [isNaN(d) ? '' : d.toLocaleDateString('es-MX') + ' ' + d.toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' })]), h('strong', {}, [e.score + (title === 'Simulacros' ? ' / 100' : ' %')]), h('span', { class: 'muted' }, [e.topics || '']), h('span', { class: 'history__open' }, ['Ver intento'])]);
+        // Intentos con id: se reabren en la página del examen, en modo revisión.
+        if (e.id) return h('li', {}, [h('a', { class: 'history__item history__link', href: 'examen/?intento=' + encodeURIComponent(e.id) }, Array.prototype.slice.call(sum.childNodes))]);
         var det = h('details', { class: 'history__item' }, [sum]);
         det.addEventListener('toggle', function () {
           if (det.open && !det.querySelector('.history__detail')) { var body = renderDetail(e.detail); det.appendChild(body); render(body); }
@@ -679,5 +884,5 @@
     }
   }
 
-  window.CBQuizUI = { semaforo: semaforo, questionCard: questionCard, runPractice: runPractice, sessionQuiz: sessionQuiz, runSimulacro: runSimulacro, launcher: launcher };
+  window.CBQuizUI = { semaforo: semaforo, questionCard: questionCard, runPractice: runPractice, sessionQuiz: sessionQuiz, runSimulacro: runSimulacro, launcher: launcher, examPage: examPage };
 })();

@@ -4,20 +4,21 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Practicar · Cuaderno del Borrego</title>
-    <meta name="description" content="Quiz de práctica y simulacro de examen de cálculo y física universitarios, con semáforo por tema. Proyecto de alumnos, no oficial.">
-    <link rel="icon" type="image/svg+xml" href="../shared/img/favicon.svg">
+    <title>Examen · Cuaderno del Borrego</title>
+    <meta name="description" content="Intento de quiz o simulacro de examen, con revisión y semáforo por tema. Proyecto de alumnos, no oficial.">
+    <meta name="robots" content="noindex">
+    <link rel="icon" type="image/svg+xml" href="../../shared/img/favicon.svg">
     <script>(function(){var t;try{t=localStorage.getItem('cb-theme');}catch(e){}if(t!=='light'&&t!=='dark'){t=window.matchMedia&&matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light';}document.documentElement.setAttribute('data-theme',t);})();</script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Archivo:wght@700;800&family=IBM+Plex+Mono:wght@500&family=IBM+Plex+Sans:wght@400;500;600&family=Kalam:wght@400;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.47/dist/katex.min.css">
-    <link rel="stylesheet" href="../shared/css/tokens.css">
-    <link rel="stylesheet" href="../shared/css/base.css">
-    <link rel="stylesheet" href="../shared/css/theme.css">
-    <link rel="stylesheet" href="../shared/css/sesion.css">
-    <link rel="stylesheet" href="../shared/css/labs.css">
-    <link rel="stylesheet" href="../shared/css/quiz.css">
+    <link rel="stylesheet" href="../../shared/css/tokens.css">
+    <link rel="stylesheet" href="../../shared/css/base.css">
+    <link rel="stylesheet" href="../../shared/css/theme.css">
+    <link rel="stylesheet" href="../../shared/css/sesion.css">
+    <link rel="stylesheet" href="../../shared/css/labs.css">
+    <link rel="stylesheet" href="../../shared/css/quiz.css">
     <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.47/dist/katex.min.js"></script>
     <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.47/dist/contrib/auto-render.min.js"></script>
 
@@ -28,14 +29,14 @@
 
     <header class="site-header">
         <div class="container">
-            <a class="brand" href="../">
+            <a class="brand" href="../../">
                 <svg viewBox="-12 -12 24 24" fill="currentColor" aria-hidden="true"><path d="M-1.4 -9 C-6.2 -9 -7.8 -2 -7.2 3.4 C-6.6 7.8 -3.8 9.8 -1.6 8.8 C-0.8 4.4 -0.6 -3.4 -1.4 -9 Z M1.4 -9 C6.2 -9 7.8 -2 7.2 3.4 C6.6 7.8 3.8 9.8 1.6 8.8 C0.8 4.4 0.6 -3.4 1.4 -9 Z"/></svg>
                 <span>Cuaderno del Borrego<small>Clases universitarias</small></span>
             </a>
             <nav class="site-nav" aria-label="Principal">
-                <a class="nav-link" href="../#biblioteca">Cursos</a>
-                <a class="nav-link" href="../quiz/" aria-current="page">Practicar</a>
-                <a class="nav-link" href="../formularios/">Formularios</a>
+                <a class="nav-link" href="../../#biblioteca">Cursos</a>
+                <a class="nav-link" href="../../quiz/" aria-current="page">Practicar</a>
+                <a class="nav-link" href="../../formularios/">Formularios</a>
                 <button class="theme-toggle" type="button" data-theme-toggle aria-pressed="false" aria-label="Cambiar a pizarrón (tema oscuro)">
                     <span class="to-dark"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="13" rx="1.5"/><path d="M7 21h10M9 17v4M15 17v4M7 9c2-2 4 2 6 0s3-1 4 0"/></svg><span class="label">Pizarrón</span></span>
                     <span class="to-light"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="3" width="15" height="18" rx="1.5"/><path d="M9 3v18M3 7h4M3 12h4M3 17h4M12 8h5M12 12h5"/></svg><span class="label">Cuaderno</span></span>
@@ -44,16 +45,11 @@
         </div>
     </header>
 
-    <main id="contenido" class="quiz-page">
+    <main id="contenido" class="quiz-page exam-page">
         <section class="section section--tight">
             <div class="container">
-                <div class="section-head" data-intro>
-                    <p class="crumb">Practicar</p>
-                    <h1>Quiz de práctica y simulacro de examen</h1>
-                    <p class="lead">Elige tu curso y el tipo de práctica. El quiz te dice al momento si vas bien; el simulacro es como un parcial, con reloj sugerido y calificación sobre 100; en el personalizado tú decides cuántas preguntas, problemas y minutos. Al final ves tu semáforo por tema.</p>
-                </div>
-                <div id="launcher"></div>
-                <noscript><p>El lanzador necesita JavaScript.</p></noscript>
+                <div id="exam"></div>
+                <noscript><p>El examen necesita JavaScript.</p></noscript>
             </div>
         </section>
     </main>
@@ -61,12 +57,12 @@
     <footer class="site-footer">
         <div class="container">
             <div class="site-footer__row">
-                <a class="site-footer__brand" href="../">Cuaderno del Borrego</a>
+                <a class="site-footer__brand" href="../../">Cuaderno del Borrego</a>
                 <nav aria-label="Pie de página">
-                    <a href="../#biblioteca">Cursos</a>
-                    <a href="../quiz/">Practicar</a>
-                    <a href="../formularios/">Formularios</a>
-                    <a href="../creditos/">Créditos y licencias</a>
+                    <a href="../../#biblioteca">Cursos</a>
+                    <a href="../../quiz/">Practicar</a>
+                    <a href="../../formularios/">Formularios</a>
+                    <a href="../../creditos/">Créditos y licencias</a>
                     <a href="https://github.com/luisxavierxd/CuadernoDelBorrego">Código</a>
                 </nav>
             </div>
@@ -78,28 +74,28 @@
     </footer>
 
     <script src="https://cdn.jsdelivr.net/npm/animejs@3.2.1/lib/anime.min.js"></script>
-    <script src="../shared/js/theme.js"></script>
-    <script src="../shared/js/sketch-filters.js"></script>
-    <script src="../shared/js/animations.js"></script>
-    <script src="../shared/js/math-render.js"></script>
-    <script src="../shared/js/labs/registry.js"></script>
-    <script src="../shared/js/labs/antiderivative-check.js"></script>
-    <script src="../shared/js/labs/derivative-check.js"></script>
-    <script src="../shared/js/labs/implicit-tangent.js"></script>
-    <script src="../shared/js/diagrams/calculo-1.js"></script>
-    <script src="../shared/js/diagrams/fisica-1.js"></script>
-    <script src="../shared/js/latex-to-math.js"></script>
-    <script src="../shared/js/math-input.js"></script>
-    <script src="../shared/js/exercises.js"></script>
-    <script src="../shared/js/quiz/engine.js"></script>
-    <script src="../shared/js/quiz/ui.js"></script>
-    <script src="../shared/js/quiz/bank-kit.js"></script>
-    <script src="../data/quiz-presets.js"></script>
-    <script src="../data/calculo-1/course-meta.js"></script>
-    <script src="../data/fisica-1/course-meta.js"></script>
+    <script src="../../shared/js/theme.js"></script>
+    <script src="../../shared/js/sketch-filters.js"></script>
+    <script src="../../shared/js/animations.js"></script>
+    <script src="../../shared/js/math-render.js"></script>
+    <script src="../../shared/js/labs/registry.js"></script>
+    <script src="../../shared/js/labs/antiderivative-check.js"></script>
+    <script src="../../shared/js/labs/derivative-check.js"></script>
+    <script src="../../shared/js/labs/implicit-tangent.js"></script>
+    <script src="../../shared/js/diagrams/calculo-1.js"></script>
+    <script src="../../shared/js/diagrams/fisica-1.js"></script>
+    <script src="../../shared/js/latex-to-math.js"></script>
+    <script src="../../shared/js/math-input.js"></script>
+    <script src="../../shared/js/exercises.js"></script>
+    <script src="../../shared/js/quiz/engine.js"></script>
+    <script src="../../shared/js/quiz/ui.js"></script>
+    <script src="../../shared/js/quiz/bank-kit.js"></script>
+    <script src="../../data/quiz-presets.js"></script>
+    <script src="../../data/calculo-1/course-meta.js"></script>
+    <script src="../../data/fisica-1/course-meta.js"></script>
     <script>
         CBTheme.init();
-        CBQuizUI.launcher(document.getElementById('launcher'));
+        CBQuizUI.examPage(document.getElementById('exam'));
         CBAnim.init();
     </script>
 </body>

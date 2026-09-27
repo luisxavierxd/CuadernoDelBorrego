@@ -21,9 +21,10 @@ const bankFile = path.join(ROOT, 'data', course, 'bank', `sesion-${NN}.js`);
 const hasBank = !!s.bank && fs.existsSync(bankFile);
 if (s.bank && !hasBank) { console.error(`S${NN} dice bank: true pero falta ${path.relative(ROOT, bankFile)}`); process.exit(1); }
 const labFile = lab && fs.existsSync(path.join(ROOT, 'shared/js/labs', lab.type + '.js')) ? lab.type : null;
-// Matemática que los ejercicios y quizzes usan aunque el lab de la sesión sea otro.
-const MATH_MODULES = { 'calculo-1': ['derivative-check', 'implicit-tangent'], 'fisica-1': [] };
-const extraLabs = (MATH_MODULES[course] || []).filter((m) => m !== labFile);
+// Calificadores que usan los ejercicios y quizzes (antiderivadas, derivadas e implícitas),
+// aunque el lab de la sesión sea otro. Todas las páginas que califican los cargan (check.js lo exige).
+const GRADERS = ['antiderivative-check', 'derivative-check', 'implicit-tangent'];
+const extraLabs = GRADERS.filter((m) => m !== labFile);
 
 const R = '../../../';
 const KATEX = 'https://cdn.jsdelivr.net/npm/katex@0.16.47/dist/';

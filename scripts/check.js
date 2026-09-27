@@ -180,6 +180,13 @@ function checkPages(external) {
     const cssAt = html.indexOf('rel="stylesheet"');
     if (themeAt < 0 || (cssAt >= 0 && themeAt > cssAt)) err(r, 'falta el script inline de tema antes de las hojas de estilo');
     if (!/<html lang="es/.test(html)) err(r, 'falta lang="es-MX"');
+    // Toda página que califica respuestas (exercises.js) necesita los tres calificadores:
+    // sin ellos, una pregunta de derivada o implícita falla con "LM.derivative is undefined".
+    if (/shared\/js\/exercises\.js/.test(html)) {
+      ['registry', 'antiderivative-check', 'derivative-check', 'implicit-tangent'].forEach((m) => {
+        if (!html.includes('shared/js/labs/' + m + '.js')) err(r, `califica respuestas pero no carga labs/${m}.js`);
+      });
+    }
 
     const ids = new Set(attrs(html, 'id'));
     for (const url of [...attrs(html, 'href'), ...attrs(html, 'src')]) {
