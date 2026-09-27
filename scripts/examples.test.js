@@ -11,7 +11,8 @@ const { loadMathjs } = require('./lib/vendor');
 const cache = require('./lib/cache');
 
 const ROOT = path.join(__dirname, '..');
-const LIBS = ['labs/registry', 'labs/antiderivative-check', 'labs/projectile-check', 'labs/secant-tangent', 'labs/derivative-check', 'labs/chain-composition', 'labs/implicit-tangent', 'labs/f-fprime-fsecond', 'labs/optimize-slider', 'labs/riemann', 'labs/area-between', 'labs/solid-revolution', 'exercises']
+const LIBS = ['labs/registry', 'labs/antiderivative-check', 'labs/projectile-check', 'labs/secant-tangent', 'labs/derivative-check', 'labs/chain-composition', 'labs/implicit-tangent', 'labs/f-fprime-fsecond', 'labs/optimize-slider', 'labs/riemann', 'labs/area-between', 'labs/solid-revolution',
+  'labs/units', 'labs/vector-sum', 'labs/dot-cross', 'labs/motion-graphs', 'labs/kinematics-check', 'labs/circular-vectors', 'exercises']
   .map((n) => path.join(ROOT, 'shared/js', n + '.js'));
 const N_FAST = 200, N_EXPR = 50;
 
@@ -88,7 +89,30 @@ function checkExample(where, b, LM, math) {
   } else if (v.lab === 'area' || v.lab === 'arc' || v.lab === 'volume') {
     const got = geo(LM, math, v);
     ok(relClose(got, v.value, 1e-6), `${where}: ${v.lab} = ${got} y el ejemplo dice ${v.value}`);
+  } else if (v.lab === 'call') {
+    const got = callLab(LM, math, v, v.args);
+    if (got === undefined) return ok(false, `${where}: LabMath.${v.mod}.${v.fn} no existe`);
+    if (v.values) for (const k of Object.keys(v.values)) {
+      const g = pick(got, k);
+      ok(relClose(v.values[k], g, 1e-9), `${where}: ${v.mod}.${v.fn} → ${k} = ${g} y el ejemplo dice ${v.values[k]}`);
+    }
+    if ('value' in v) {
+      const same = typeof v.value === 'number' ? relClose(v.value, got, 1e-9) : JSON.stringify(v.value) === JSON.stringify(got);
+      ok(same, `${where}: ${v.mod}.${v.fn} da ${JSON.stringify(got)} y el ejemplo dice ${JSON.stringify(v.value)}`);
+    }
   } else ok(false, `${where}: verify.lab desconocido ${v.lab}`);
+}
+
+// Llama LabMath[mod][fn](math?, ...args). Física usa esto para sus ejemplos y oráculos.
+function callLab(LM, math, o, args) {
+  const fn = LM[o.mod] && LM[o.mod][o.fn];
+  if (typeof fn !== 'function') return undefined;
+  return fn.apply(LM[o.mod], (o.math ? [math] : []).concat(args));
+}
+// Campo de un resultado: 'R', 'pos.0' o el resultado entero si no hay campo.
+function pick(obj, field) {
+  if (field == null) return obj;
+  return String(field).split('.').reduce((o, k) => (o == null ? undefined : o[k]), obj);
 }
 
 // Área entre curvas, longitud de arco o volumen, calculados con LabMath.
@@ -155,6 +179,9 @@ function checkExercise(where, ex, W, LM, math) {
         const want = LM.implicit.slope(F, o.x0(v), o.y0(v));
         ok(Math.abs(F(o.x0(v), o.y0(v))) < 1e-9, `${at}: el punto no está sobre la curva`);
         ok(relClose(ans, want, 1e-6), `${at}: respuesta ${ans} y −F_x/F_y da ${want}`);
+      } else if (o && o.lab === 'call') {
+        const want = pick(callLab(LM, math, o, o.args(v)), o.field);
+        ok(relClose(ans, want, 1e-9), `${at}: respuesta ${ans} y LabMath.${o.mod}.${o.fn} da ${want}`);
       } else if (o && o.lab === 'value') {
         const want = o.value(v);
         ok(relClose(ans, want, 1e-9), `${at}: respuesta ${ans} y el cálculo independiente da ${want}`);

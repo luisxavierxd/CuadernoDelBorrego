@@ -7,7 +7,8 @@ const { loadData } = require('./lib/load');
 const { loadMathjs } = require('./lib/vendor');
 
 const ROOT = path.join(__dirname, '..');
-const LABS = ['registry', 'antiderivative-check', 'projectile-check', 'secant-tangent', 'derivative-check', 'chain-composition', 'implicit-tangent', 'f-fprime-fsecond', 'optimize-slider', 'riemann', 'area-between', 'solid-revolution']
+const LABS = ['registry', 'antiderivative-check', 'projectile-check', 'secant-tangent', 'derivative-check', 'chain-composition', 'implicit-tangent', 'f-fprime-fsecond', 'optimize-slider', 'riemann', 'area-between', 'solid-revolution',
+  'units', 'vector-sum', 'dot-cross', 'motion-graphs', 'kinematics-check', 'circular-vectors']
   .map((n) => path.join(ROOT, 'shared/js/labs', n + '.js'));
 
 let pass = 0, fail = 0;
@@ -343,6 +344,154 @@ function near(got, want, tol, msg) {
     near(Sd.pieces((x) => x - x * x, zero, 0, 1, 400, 'shell'), Math.PI / 6, 1e-5);
   });
 
+  /* ---------- units (Física S01) ---------- */
+  const U = LM.units;
+  test('unidades: conversiones con prefijos, potencias y cocientes', () => {
+    near(U.convert(90, 'km/h', 'm/s'), 25, 1e-12);
+    near(U.convert(2.5, 'm^2', 'cm^2'), 25000, 1e-9);
+    near(U.convert(1, 'g/cm^3', 'kg/m^3'), 1000, 1e-9);
+    near(U.convert(3, 'mL', 'm^3'), 3e-6, 1e-18);
+    near(U.convert(1, 'd', 's'), 86400, 1e-9);
+    near(U.convert(60, 'mi/h', 'km/h'), 96.56064, 1e-9);
+    if (!isNaN(U.convert(1, 'm', 's'))) throw new Error('m → s debe dar NaN');
+  });
+  test('unidades: dimensiones y comparación', () => {
+    eq(JSON.stringify(U.dims('kg*m/s^2')), JSON.stringify({ M: 1, L: 1, T: -2 }));
+    eq(U.sameDims('N', 'kg*m/s^2'), true);
+    eq(U.sameDims('J', 'N*m'), true);
+    eq(U.sameDims('W', 'J/s'), true);
+    eq(U.sameDims('m/s', 'm/s^2'), false);
+    const pend = U.product([['m', 0.5], ['m/s^2', -0.5]]);        // √(L/g) es un tiempo
+    eq(JSON.stringify(pend), JSON.stringify({ M: 0, L: 0, T: 1 }));
+  });
+
+  /* ---------- vector-sum ---------- */
+  const V = LM.vectors;
+  test('vectores: componentes, polar en los cuatro cuadrantes y suma', () => {
+    const c = V.comps(10, 30); near(c.x, 10 * Math.sqrt(3) / 2, 1e-12); near(c.y, 5, 1e-12);
+    near(V.polar(-4, 3).ang, 180 - Math.atan(3 / 4) * 180 / Math.PI, 1e-9);
+    near(V.polar(-4, -3).ang, 180 + Math.atan(3 / 4) * 180 / Math.PI, 1e-9);
+    near(V.polar(4, -3).ang, 360 - Math.atan(3 / 4) * 180 / Math.PI, 1e-9);
+    near(V.polar(-4, 3).mag, 5, 1e-12);
+    const r = V.sum([[3, 0], [4, 90]]); near(r.mag, 5, 1e-12); near(r.ang, Math.atan(4 / 3) * 180 / Math.PI, 1e-9);
+    const d = V.sum([[3, 0], [4, 90]], [1, -1]); near(d.y, -4, 1e-12);
+  });
+  test('vectores: diagnóstico de errores típicos', () => {
+    const L = [[3, 60], [5, 160]], r = V.sum(L);
+    eq(V.diagnose(L, null, { mag: r.mag, ang: r.ang }), 'ok');
+    eq(V.diagnose(L, null, { mag: r.mag, ang: r.ang + 360 }), 'ok', 'ángulo equivalente');
+    eq(V.diagnose(L, null, { mag: 8, ang: r.ang }), 'addedMagnitudes');
+    eq(V.diagnose(L, null, { mag: r.mag, ang: Math.atan(r.y / r.x) * 180 / Math.PI }), 'rawArctan');
+    const sw = V.mistakes(L).swapped;
+    eq(V.diagnose(L, null, { mag: sw.mag, ang: sw.ang }), 'swapped');
+    eq(V.diagnose(L, null, { mag: 1, ang: 10 }), 'bad');
+  });
+
+  /* ---------- dot-cross ---------- */
+  const V3 = LM.vec3;
+  test('vec3: producto escalar, vectorial, ángulo y proyección', () => {
+    const A = [2, -1, 3], B = [1, 4, -2];
+    eq(V3.dot(A, B), -8);
+    eq(JSON.stringify(V3.cross(A, B)), JSON.stringify([-10, 7, 9]));
+    near(V3.dot(V3.cross(A, B), A), 0, 1e-12); near(V3.dot(V3.cross(A, B), B), 0, 1e-12);
+    near(V3.angle([1, 0, 0], [0, 1, 0]), 90, 1e-9);
+    near(V3.angle(A, B), Math.acos(-8 / (Math.sqrt(14) * Math.sqrt(21))) * 180 / Math.PI, 1e-9);
+    near(V3.projScalar([3, 4, 0], [1, 0, 0]), 3, 1e-12);
+    near(V3.area([3, 0, 0], [0, 2, 0]), 6, 1e-12);
+    eq(JSON.stringify(V3.cross([1, 0, 0], [0, 1, 0])), JSON.stringify([0, 0, 1]), 'i × j = k');
+    near(V3.mag(V3.unit([3, 4, 12])), 1, 1e-12);
+  });
+  test('vec3: diagnóstico y lectura de vectores', () => {
+    const A = [2, -1, 3], B = [1, 4, -2];
+    eq(V3.diagnoseCross(A, B, [-10, 7, 9]), 'ok');
+    eq(V3.diagnoseCross(A, B, [10, -7, -9]), 'reversed');
+    eq(V3.diagnoseCross(A, B, [-10, -7, 9]), 'jSign');
+    eq(V3.diagnoseCross(A, B, [1, 2, 3]), 'bad');
+    eq(V3.diagnoseDot(A, B, -8), 'ok');
+    eq(V3.diagnoseDot(A, B, Math.sqrt(14 * 21)), 'magsProduct');
+    eq(JSON.stringify(V3.parse('2i - j + 3k')), JSON.stringify([2, -1, 3]));
+    eq(JSON.stringify(V3.parse('(1, 4, −2)')), JSON.stringify([1, 4, -2]));
+    eq(JSON.stringify(V3.parse('3, 4')), JSON.stringify([3, 4, 0]));
+    eq(V3.parse('hola'), null);
+  });
+
+  /* ---------- motion-graphs ---------- */
+  const Mo = LM.motion;
+  test('movimiento: derivadas de x(t) en un instante', () => {
+    const r = Mo.at(math, '2t^3 - 9t^2 + 12t + 1', 3);
+    near(r.x, 10, 1e-9); near(r.v, 12, 1e-9); near(r.a, 18, 1e-9);
+    near(Mo.at(math, '3sin(1.5t)', 0).v, 4.5, 1e-9);
+  });
+  test('movimiento: vueltas, distancia contra desplazamiento', () => {
+    const x = (t) => 8 * t - t * t, v = (t) => 8 - 2 * t;
+    const tt = Mo.turns(v, 0, 10); eq(tt.length, 1); near(tt[0], 4, 1e-9);
+    near(Mo.distance(x, v, 0, 6), 16 + 4, 1e-9);        // sube a 16 y regresa a 12
+    near(x(6) - x(0), 12, 1e-12);
+    near(Mo.avgVelocity(x, 1, 3), 4, 1e-12);
+    near(Mo.integrate(v, 0, 6, 400), 12, 1e-9);
+  });
+  test('movimiento: encuentro de dos móviles con MRU', () => {
+    const m = Mo.meet(0, 20, 300, -10); near(m.t, 10, 1e-12); near(m.x, 200, 1e-12);
+    if (!isNaN(Mo.meet(0, 5, 10, 5).t)) throw new Error('misma velocidad: no se encuentran');
+  });
+  test('movimiento: la v(t) del alumno', () => {
+    eq(Mo.compareV(math, '8t - t^2', '8 - 2t', 0, 9).reason, 'correct');
+    eq(Mo.compareV(math, '8t - t^2', '8 - t', 0, 9).reason, 'mismatch');
+    eq(Mo.compareV(math, '3sin(1.5t)', '3cos(1.5t)', 0, 8).reason, 'factor');
+    eq(Mo.compareV(math, 't^2', '-2t', 0.5, 3).reason, 'sign');
+  });
+
+  /* ---------- kinematics-check ---------- */
+  const Ki = LM.kinematics;
+  test('cinemática: tiro vertical desde una azotea', () => {
+    const r = Ki.vertical({ h0: 20, v0: 15 });
+    near(r.tTop, 15 / 9.81, 1e-12); near(r.H, 20 + 225 / (2 * 9.81), 1e-12);
+    near(Ki.pos({ h0: 20, v0: 15 }, r.T), 0, 1e-9);
+    near(r.vImpact, Ki.vel({ h0: 20, v0: 15 }, r.T), 1e-9);
+    near(Ki.vertical({ h0: 45, v0: 0 }).T, Math.sqrt(90 / 9.81), 1e-12);
+  });
+  test('cinemática: frenado y v² = v0² + 2aΔx', () => {
+    const s = Ki.stop(25, -5); near(s.t, 5, 1e-12); near(s.d, 62.5, 1e-12);
+    near(Ki.speedAfter(0, 9.81, 20), Math.sqrt(2 * 9.81 * 20), 1e-12);
+    near(Ki.pos({ v0: 25, a: -5 }, 5), 62.5, 1e-12);
+  });
+  test('cinemática: diagnóstico de la y(t) del alumno', () => {
+    const p = { h0: 20, v0: 15 };
+    eq(Ki.diagnose(math, '20 + 15t - 4.905t^2', p).kind, 'ok');
+    eq(Ki.diagnose(math, '20 + 15t + 4.905t^2', p).kind, 'plusG');
+    eq(Ki.diagnose(math, '20 + 15t - 9.81t^2', p).kind, 'noHalf');
+    eq(Ki.diagnose(math, '15t - 4.905t^2', p).kind, 'noH0');
+    eq(Ki.diagnose(math, '20 - 15t - 4.905t^2', p).kind, 'signV0');
+    eq(Ki.diagnose(math, '3t', p).kind, 'bad');
+    eq(Ki.diagnose(math, '15t - 4.905t^2', { h0: 0, v0: 15 }).kind, 'ok', 'con h0 = 0, noH0 es la correcta');
+  });
+
+  /* ---------- circular-vectors ---------- */
+  const Ci = LM.circular, Re = LM.relative;
+  test('circular: ω, v, a_c, periodo y rpm', () => {
+    const u = Ci.uniform({ r: 0.4, rpm: 120 });
+    near(u.omega, 4 * Math.PI, 1e-12); near(u.v, 1.6 * Math.PI, 1e-12); near(u.ac, u.omega * u.omega * 0.4, 1e-9); near(u.T, 0.5, 1e-12);
+    near(Ci.uniform({ r: 2, v: 6 }).ac, 18, 1e-12);
+    near(Ci.uniform({ r: 2, T: Math.PI }).omega, 2, 1e-12);
+  });
+  test('circular: v tangente y a hacia el centro', () => {
+    const s = Ci.state({ r: 1.5, omega: 2 }, 0.7);
+    near(s.pos[0] * s.vel[0] + s.pos[1] * s.vel[1], 0, 1e-12);        // v ⟂ r
+    near(Math.hypot(s.acc[0], s.acc[1]), 6, 1e-12);
+    near(s.acc[0] * s.pos[1] - s.acc[1] * s.pos[0], 0, 1e-12);        // a ∥ r
+    if (!(s.acc[0] * s.pos[0] + s.acc[1] * s.pos[1] < 0)) throw new Error('a debe apuntar hacia el centro');
+    const nu = Ci.nonUniform(4, 2, 6); near(nu.ac, 8, 1e-12); near(nu.a, 10, 1e-12);
+  });
+  test('circular: diagnóstico de a_c', () => {
+    const p = { omega: 2, r: 1.5 };
+    eq(Ci.diagnoseAc(p, 6), 'ok'); eq(Ci.diagnoseAc(p, 3), 'gaveV'); eq(Ci.diagnoseAc(p, 2), 'gaveOmega'); eq(Ci.diagnoseAc(p, 9), 'bad');
+  });
+  test('relativo: marco en movimiento, río y cruce recto', () => {
+    const f = Ci.inFrame({ r: 1, omega: 1 }, 2, 0); near(f.vel[0], -2, 1e-12); near(f.vel[1], 1, 1e-12);
+    const r = Re.river({ vb: 4, vc: 3, w: 80 }); near(r.t, 20, 1e-12); near(r.drift, 60, 1e-12); near(r.speed, 5, 1e-12);
+    const s = Re.riverStraight({ vb: 5, vc: 3, w: 80 }); near(s.speed, 4, 1e-12); near(s.t, 20, 1e-12); near(s.alpha, Math.asin(0.6) * 180 / Math.PI, 1e-9);
+    if (!isNaN(Re.riverStraight({ vb: 2, vc: 3, w: 80 }).t)) throw new Error('si la corriente es más rápida no puede cruzar recto');
+  });
   console.log(`\nlabs-math.test.js: ${pass} ok, ${fail} fallan.`);
   process.exit(fail ? 1 : 0);
 })().catch((e) => { console.error(e); process.exit(1); });

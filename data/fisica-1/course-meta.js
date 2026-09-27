@@ -18,18 +18,18 @@ window.COURSE_META = {
     {
       id: 'A', label: 'Herramientas',
       sessions: [
-        { n: 1,  tag: 'Unidades', title: 'Modelación, unidades y análisis dimensional', lab: null },
-        { n: 2,  tag: 'Suma de vectores', title: 'Vectores: componentes y suma', lab: 'vector-sum' },
-        { n: 3,  tag: 'Producto de vectores', title: 'Operaciones vectoriales: vector unitario, producto escalar y producto vectorial', short: 'Operaciones vectoriales', lab: 'dot-cross' }
+        { n: 1,  tag: 'Unidades', title: 'Modelación, unidades y análisis dimensional', lab: null, ready: true, bank: true },
+        { n: 2,  tag: 'Suma de vectores', title: 'Vectores: componentes y suma', lab: 'vector-sum', ready: true, bank: true },
+        { n: 3,  tag: 'Producto de vectores', title: 'Operaciones vectoriales: vector unitario, producto escalar y producto vectorial', short: 'Operaciones vectoriales', lab: 'dot-cross', ready: true, bank: true }
       ]
     },
     {
       id: 'B', label: 'Cinemática',
       sessions: [
-        { n: 4,  tag: 'Derivadas y MRU', title: 'Posición, velocidad y aceleración como derivadas · MRU', lab: 'motion-graphs' },
-        { n: 5,  tag: 'Caída libre', title: 'MRUA · caída libre y tiro vertical', lab: 'kinematics-check' },
+        { n: 4,  tag: 'Derivadas y MRU', title: 'Posición, velocidad y aceleración como derivadas · MRU', lab: 'motion-graphs', ready: true, bank: true },
+        { n: 5,  tag: 'Caída libre', title: 'MRUA · caída libre y tiro vertical', lab: 'kinematics-check', ready: true, bank: true },
         { n: 6,  tag: 'Tiro parabólico', title: 'Tiro parabólico', lab: 'projectile-check', ready: true, bank: true },
-        { n: 7,  tag: 'Circular y relativo', title: 'Movimiento circular y relativo', lab: 'circular-vectors' }
+        { n: 7,  tag: 'Circular y relativo', title: 'Movimiento circular y relativo', lab: 'circular-vectors', ready: true, bank: true }
       ]
     },
     {
