@@ -2,7 +2,7 @@
 // QA en navegador (§11): cada página a 360, 1024 y 1440 px, en ambos temas y con reduced-motion
 // (más una pasada con animaciones activas): cero errores de consola, cero 4xx/5xx,
 // sin scroll horizontal y todos los labs montados.
-//   node scripts/qa-browser.js [--base http://127.0.0.1:8123]
+//   node scripts/qa-browser.js [--base http://127.0.0.1:8123] [--only fisica-1/sesiones]
 // Sin --base levanta un servidor estático propio en un puerto libre.
 'use strict';
 const fs = require('fs');
@@ -77,7 +77,10 @@ async function checkPage(browser, base, url, c) {
   if (i > 0) base = process.argv[i + 1].replace(/\/$/, '');
   else { server = await serve(); base = 'http://127.0.0.1:' + server.address().port; }
 
-  const list = pages();
+  // --only <texto>: revisa solo las páginas cuya ruta contiene ese texto (útil para repetir tras un fallo de red).
+  const o = process.argv.indexOf('--only');
+  const list = pages().filter((u) => o < 0 || u.includes(process.argv[o + 1]));
+  if (!list.length) { console.error('Ninguna página coincide con --only ' + process.argv[o + 1]); process.exit(1); }
   const browser = await chromium.launch();
   let bad = 0, runs = 0;
   for (const url of list) {

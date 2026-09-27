@@ -500,7 +500,10 @@
     eficiencia: function (s) { return { f: function (v) { return s.k * v / (v * v + s.c); }, x: [0, 4 * Math.sqrt(s.c)], mark: Math.sqrt(s.c), xl: 'v (m/s)', yl: 'E(v)' }; },
     cubica: function (s) { return { f: function (x) { return x * x * x - 3 * s.a * x * x + s.b; }, x: [-s.a, 3 * s.a], mark: 2 * s.a, xl: 'x', yl: 'f(x)' }; },
     flujo: function (s) { return { f: function (t) { return s.a * t * (s.T - t); }, x: [0, s.T], area: true, xl: 't (min)', yl: 'r(t) en L/min' }; },
-    velocidad: function (s) { return { f: function (t) { return t * t - s.k * t; }, x: [0, s.T], area: true, mark: s.k, xl: 't (s)', yl: 'v(t) en m/s' }; }
+    velocidad: function (s) { return { f: function (t) { return t * t - s.k * t; }, x: [0, s.T], area: true, mark: s.k, xl: 't (s)', yl: 'v(t) en m/s' }; },
+    florero: function (s) { return { f: function (x) { return s.k * Math.sqrt(Math.max(0, x)); }, x: [0, s.L], area: true, xl: 'x (cm)', yl: 'radio k√x en cm' }; },
+    letrero: function (s) { return { f: function (x) { return s.m * s.m - x * x; }, x: [-s.m, s.m], area: true, xl: 'x (m)', yl: 'y = a − x²' }; },
+    concentracion: function (s) { return { f: function (t) { return s.k * t * Math.exp(-t); }, x: [0, s.T], area: true, mark: 1, xl: 't (h)', yl: 'C(t) en mg/L' }; }
   };
   D['exam-grafica'] = function (s) {
     var g = EXAM_FN[s.kind](s), ys = [];

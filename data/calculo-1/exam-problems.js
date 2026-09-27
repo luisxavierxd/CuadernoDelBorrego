@@ -2,7 +2,7 @@
    Problemas de examen · Cálculo 1 (§10.3). Propios y parametrizados.
    part.answer(v, prev): prev son las respuestas DEL ALUMNO en los incisos
    anteriores, para dar crédito por arrastre de error.
-   Bloques A (S01–S06) y B (S07–S08), y bloque C (S09 y S10). Se agregan 6–8 por bloque en F3.
+   Bloques A (S01–S06), B (S07–S08) y C (S09–S15), con 6–8 problemas por bloque.
    ===================================================================== */
 (function () {
   var ex = (window.CB_EXAMS = window.CB_EXAMS || {});
@@ -574,6 +574,104 @@
           prompt: function () { return 'Con tu desplazamiento del inciso b), ¿cuál fue la velocidad media?'; },
           answer: function (v, prev) { return prev[1] / v.T; },
           solution: function (v) { return '$\\bar{v} = \\dfrac{' + fx(Math.pow(v.T, 3) / 3 - v.k * v.T * v.T / 2, 3) + '}{' + v.T + '} = ' + fx((Math.pow(v.T, 3) / 3 - v.k * v.T * v.T / 2) / v.T, 3) + '$ m/s.'; }
+        }
+      ]
+    },
+
+    /* ================= Bloque C · S11–S15 ================= */
+    {
+      id: 'c1-ex-florero', tags: ['c1.S15', 'c1.S09'], block: 'C', title: 'Un florero torneado',
+      vars: { k: [2, 4, 1], L: [10, 30, 10], r: [1, 3, 1] },
+      statement: function (v) { return '<p>Un florero se tornea girando la curva $y = ' + v.k + '\\sqrt{x}$, $0 \\leq x \\leq ' + v.L + '$ (en cm), alrededor del eje $x$. Se llena con una llave que da ' + v.r + ' L/min.</p>'; },
+      diagram: { id: 'exam-grafica', state: function (v) { return { kind: 'florero', k: v.k, L: v.L }; } },
+      parts: [
+        {
+          label: 'a', type: 'numeric', points: 4, unit: 'cm³', tol: { rel: 0.005 },
+          prompt: function () { return 'Con discos, calcula el volumen del florero.'; },
+          answer: function (v) { return Math.PI * v.k * v.k * v.L * v.L / 2; },
+          solution: function (v) { return '$V = \\pi\\int_0^{' + v.L + '} ' + v.k * v.k + 'x\\,dx = \\pi\\cdot ' + v.k * v.k + '\\cdot\\tfrac{' + v.L * v.L + '}{2} \\approx ' + fx(Math.PI * v.k * v.k * v.L * v.L / 2, 1) + '$ cm³.'; }
+        },
+        {
+          label: 'b', type: 'numeric', points: 2, unit: 'L', tol: { rel: 0.005 },
+          prompt: function () { return 'Con tu volumen del inciso a), ¿cuántos litros caben? (1 L = 1000 cm³)'; },
+          answer: function (v, prev) { return prev[0] / 1000; },
+          solution: function (v) { return '$' + fx(Math.PI * v.k * v.k * v.L * v.L / 2, 1) + ' / 1000 \\approx ' + fx(Math.PI * v.k * v.k * v.L * v.L / 2000, 3) + '$ L.'; }
+        },
+        {
+          label: 'c', type: 'numeric', points: 2, unit: 'min', tol: { rel: 0.005 },
+          prompt: function (v) { return 'Con tus litros del inciso b), ¿cuántos minutos tarda en llenarse con ' + v.r + ' L/min?'; },
+          answer: function (v, prev) { return prev[1] / v.r; },
+          solution: function (v) { return 'Tiempo $= ' + fx(Math.PI * v.k * v.k * v.L * v.L / 2000, 3) + ' / ' + v.r + ' \\approx ' + fx(Math.PI * v.k * v.k * v.L * v.L / (2000 * v.r), 3) + '$ min.'; }
+        },
+        {
+          label: 'd', type: 'numeric', points: 2, unit: 'cm', tol: { rel: 0.005 },
+          prompt: function (v) { return '¿Qué radio tiene la boca del florero, en $x = ' + v.L + '$?'; },
+          answer: function (v) { return v.k * Math.sqrt(v.L); },
+          solution: function (v) { return '$y(' + v.L + ') = ' + v.k + '\\sqrt{' + v.L + '} \\approx ' + fx(v.k * Math.sqrt(v.L), 3) + '$ cm.'; }
+        }
+      ]
+    },
+    {
+      id: 'c1-ex-letrero', tags: ['c1.S14', 'c1.S09'], block: 'C', title: 'Un letrero parabólico',
+      vars: { m: [1, 3, 1], c: [100, 500, 100] },
+      statement: function (v) { return '<p>Un letrero tiene la forma de la región entre $y = ' + v.m * v.m + ' - x^2$ y el eje $x$ (en metros). La pintura cuesta ' + v.c + ' pesos por m².</p>'; },
+      diagram: { id: 'exam-grafica', state: function (v) { return { kind: 'letrero', m: v.m }; } },
+      parts: [
+        {
+          label: 'a', type: 'numeric', points: 2, unit: 'm',
+          prompt: function () { return '¿En qué $x > 0$ corta la parábola al eje $x$?'; },
+          answer: function (v) { return v.m; },
+          solution: function (v) { return '$' + v.m * v.m + ' - x^2 = 0 \\Rightarrow x = ' + v.m + '$.'; }
+        },
+        {
+          label: 'b', type: 'numeric', points: 4, unit: 'm²', tol: { rel: 0.005 },
+          prompt: function (v) { return 'Usa tu límite del inciso a) para calcular el área del letrero, $\\int_{-x_0}^{x_0}(' + v.m * v.m + ' - x^2)\\,dx$.'; },
+          answer: function (v, prev) { return 2 * (v.m * v.m * prev[0] - Math.pow(prev[0], 3) / 3); },
+          solution: function (v) { return '$2\\left[' + v.m * v.m + 'x - \\tfrac{x^3}{3}\\right]_0^{' + v.m + '} = ' + fx(4 * Math.pow(v.m, 3) / 3, 4) + '$ m².'; }
+        },
+        {
+          label: 'c', type: 'numeric', points: 2, unit: 'pesos', tol: { rel: 0.005 },
+          prompt: function () { return 'Con tu área del inciso b), ¿cuánto cuesta pintar una cara?'; },
+          answer: function (v, prev) { return prev[1] * v.c; },
+          solution: function (v) { return '$' + fx(4 * Math.pow(v.m, 3) / 3, 4) + '\\cdot ' + v.c + ' \\approx ' + fx(4 * Math.pow(v.m, 3) / 3 * v.c, 2) + '$ pesos.'; }
+        },
+        {
+          label: 'd', type: 'numeric', points: 2, unit: 'm', tol: { rel: 0.005 },
+          prompt: function () { return 'Con los incisos a) y b), ¿cuál es la altura promedio del letrero? (área entre el ancho)'; },
+          answer: function (v, prev) { return prev[1] / (2 * prev[0]); },
+          solution: function (v) { return '$\\bar{h} = \\dfrac{' + fx(4 * Math.pow(v.m, 3) / 3, 4) + '}{' + 2 * v.m + '} = ' + fx(2 * v.m * v.m / 3, 4) + '$ m: dos tercios de la altura máxima.'; }
+        }
+      ]
+    },
+    {
+      id: 'c1-ex-medicamento', tags: ['c1.S11', 'c1.S07', 'c1.S09'], block: 'C', title: 'Concentración de un medicamento',
+      vars: { k: [4, 12, 2], T: [4, 8, 2] },
+      statement: function (v) { return '<p>Después de una dosis, la concentración de un medicamento en la sangre es $C(t) = ' + v.k + 't\\,e^{-t}$ mg/L, con $t$ en horas. Se estudian las primeras ' + v.T + ' horas.</p>'; },
+      diagram: { id: 'exam-grafica', state: function (v) { return { kind: 'concentracion', k: v.k, T: v.T }; } },
+      parts: [
+        {
+          label: 'a', type: 'numeric', points: 4, unit: 'mg·h/L', tol: { rel: 0.005 },
+          prompt: function (v) { return 'Por partes, calcula la exposición total $\\displaystyle\\int_0^{' + v.T + '} C(t)\\,dt$.'; },
+          answer: function (v) { return v.k * (1 - (v.T + 1) * Math.exp(-v.T)); },
+          solution: function (v) { return '$\\int t\\,e^{-t}dt = -e^{-t}(t + 1)$, así que $' + v.k + '\\left[1 - ' + (v.T + 1) + 'e^{-' + v.T + '}\\right] \\approx ' + fx(v.k * (1 - (v.T + 1) * Math.exp(-v.T)), 4) + '$.'; }
+        },
+        {
+          label: 'b', type: 'numeric', points: 2, unit: 'mg/L', tol: { rel: 0.005 },
+          prompt: function (v) { return 'Con tu resultado del inciso a), ¿cuál es la concentración promedio en esas ' + v.T + ' horas?'; },
+          answer: function (v, prev) { return prev[0] / v.T; },
+          solution: function (v) { return '$\\bar{C} = \\tfrac{1}{' + v.T + '}\\int_0^{' + v.T + '}C \\approx ' + fx(v.k * (1 - (v.T + 1) * Math.exp(-v.T)) / v.T, 4) + '$ mg/L.'; }
+        },
+        {
+          label: 'c', type: 'numeric', points: 2, unit: 'h',
+          prompt: function () { return '¿En qué instante es máxima la concentración?'; },
+          answer: function () { return 1; },
+          solution: function (v) { return '$C\'(t) = ' + v.k + 'e^{-t}(1 - t) = 0$ en $t = 1$ h.'; }
+        },
+        {
+          label: 'd', type: 'numeric', points: 2, unit: '%', tol: { abs: 0.5 },
+          prompt: function () { return 'La concentración máxima es $C(1) = k/e$. ¿Qué porcentaje de ella es tu promedio del inciso b)?'; },
+          answer: function (v, prev) { return prev[1] / (v.k / Math.E) * 100; },
+          solution: function (v) { var avg = v.k * (1 - (v.T + 1) * Math.exp(-v.T)) / v.T; return '$\\dfrac{' + fx(avg, 4) + '}{' + fx(v.k / Math.E, 4) + '}\\times 100 \\approx ' + fx(avg / (v.k / Math.E) * 100, 1) + '\\,\\%$.'; }
         }
       ]
     }
