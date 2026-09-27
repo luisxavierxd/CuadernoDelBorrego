@@ -116,7 +116,7 @@
     C('k-raiz-positiva', 'seno', 2, '¿Por qué $\\sqrt{a^2\\cos^2\\theta} = a\\cos\\theta$ y no $-a\\cos\\theta$?', 'Porque con $|\\theta| \\leq \\tfrac{\\pi}{2}$ el coseno no es negativo', [['Porque la raíz siempre es negativa'], ['Porque $a < 0$'], ['Es indistinto']], 'Se elige el rango de $\\theta$ para eso.'),
     C('k-verifica-asin', 'seno', 2, '¿Cuál es la derivada de $\\arcsin\\tfrac{x}{a}$ (con $a > 0$)?', '$\\dfrac{1}{\\sqrt{a^2 - x^2}}$', [['$\\dfrac{1}{a\\sqrt{a^2 - x^2}}$'], ['$\\dfrac{a}{\\sqrt{a^2 - x^2}}$'], ['$\\dfrac{1}{\\sqrt{1 - x^2}}$']], '$\\tfrac{1}{\\sqrt{1 - x^2/a^2}}\\cdot\\tfrac{1}{a}$.'),
     C('k-abs', 'tangente', 2, 'En $\\ln|\\sec\\theta + \\tan\\theta|$ con $x = a\\tan\\theta$ y $|\\theta| < \\tfrac{\\pi}{2}$, ¿hace falta el valor absoluto?', 'No: $\\sec\\theta + \\tan\\theta > 0$ en ese rango', [['Sí, siempre'], ['Solo si $x < 0$'], ['Solo si $a > 1$']], 'Por eso se escribe $\\ln(x + \\sqrt{x^2 + a^2})$ sin barras.'),
-    C('k-sec-cuad', 'secante', 2, 'Con $x = a\sec\theta$, ¿qué rango de $\theta$ se usa para $x \geq a$?', '$0 \leq \theta < \tfrac{\pi}{2}$', [['$-\tfrac{\pi}{2} \leq \theta \leq \tfrac{\pi}{2}$'], ['$0 \leq \theta \leq \pi$ sin excepciones'], ['cualquier $\theta$']], 'Ahí $\tan\theta \geq 0$ y $\sqrt{a^2\tan^2\theta} = a\tan\theta$.')
+    C('k-sec-cuad', 'secante', 2, 'Con $x = a\\sec\\theta$, ¿qué rango de $\\theta$ se usa para $x \\geq a$?', '$0 \\leq \\theta < \\tfrac{\\pi}{2}$', [['$-\\tfrac{\\pi}{2} \\leq \\theta \\leq \\tfrac{\\pi}{2}$'], ['$0 \\leq \\theta \\leq \\pi$ sin excepciones'], ['cualquier $\\theta$']], 'Ahí $\\tan\\theta \\geq 0$ y $\\sqrt{a^2\\tan^2\\theta} = a\\tan\\theta$.')
   ];
 
   K.register({

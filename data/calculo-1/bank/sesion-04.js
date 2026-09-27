@@ -110,13 +110,13 @@
     C('k-xn-1', 'racionales', 1, 'Si aplicas la regla del cociente a $\\dfrac{x^n}{1}$, obtienes…', '$n\\,x^{n-1}$', [['$0$'], ['$x^n$'], ['$\\dfrac{n}{x}$']], 'Con $v = 1$ y $v\' = 0$ queda la regla de la potencia.'),
 
     /* ---------- Extra: calentamiento y retos ---------- */
-    D('r-a-x', 'racionales', 1, { a: [2, 9, 1] }, function (v) { return '\frac{' + v.a + '}{x}'; }, function (v) { return v.a + '/x'; }, function (v) { return '-' + v.a + '/x^2'; }, '$\tfrac{a}{x} = a\,x^{-1}$.', POS),
-    D('t-1-sin', 'trascendentes', 1, {}, function () { return '\frac{1}{\sin x}'; }, function () { return '1/sin(x)'; }, function () { return '-cos(x)/sin(x)^2'; }, '$-\tfrac{v\'}{v^2}$ con $v = \sin x$.', { domain: [0.3, 2.8] }),
-    N('m-a-x', 'tangentes', 1, { a: [2, 9, 1] }, function (v) { return 'Si $f(x) = \dfrac{' + v.a + '}{x}$, ¿cuánto vale $f\'(1)$?'; }, function (v) { return -v.a; }, '$f\'(x) = -\dfrac{a}{x^2}$.', { tol: { abs: 0.01 } }),
-    C('k-1x-deriv', 'regla', 1, '¿Cuál es la derivada de $\dfrac{1}{x}$?', '$-\dfrac{1}{x^2}$', [['$\dfrac{1}{x^2}$'], ['$\ln x$'], ['$0$']], '$x^{-1}$ deriva a $-x^{-2}$.'),
+    D('r-a-x', 'racionales', 1, { a: [2, 9, 1] }, function (v) { return '\\frac{' + v.a + '}{x}'; }, function (v) { return v.a + '/x'; }, function (v) { return '-' + v.a + '/x^2'; }, '$\\tfrac{a}{x} = a\\,x^{-1}$.', POS),
+    D('t-1-sin', 'trascendentes', 1, {}, function () { return '\\frac{1}{\\sin x}'; }, function () { return '1/sin(x)'; }, function () { return '-cos(x)/sin(x)^2'; }, '$-\\tfrac{v\'}{v^2}$ con $v = \\sin x$.', { domain: [0.3, 2.8] }),
+    N('m-a-x', 'tangentes', 1, { a: [2, 9, 1] }, function (v) { return 'Si $f(x) = \\dfrac{' + v.a + '}{x}$, ¿cuánto vale $f\'(1)$?'; }, function (v) { return -v.a; }, '$f\'(x) = -\\dfrac{a}{x^2}$.', { tol: { abs: 0.01 } }),
+    C('k-1x-deriv', 'regla', 1, '¿Cuál es la derivada de $\\dfrac{1}{x}$?', '$-\\dfrac{1}{x^2}$', [['$\\dfrac{1}{x^2}$'], ['$\\ln x$'], ['$0$']], '$x^{-1}$ deriva a $-x^{-2}$.'),
     C('k-signo-v2', 'regla', 1, '¿Puede ser negativo el denominador $v^2$ del resultado?', 'No: un cuadrado nunca es negativo', [['Sí, si $v < 0$'], ['Sí, si $v\' < 0$'], ['Depende de $u$']], 'Por eso el signo de la derivada lo decide solo el numerador.'),
-    D('t-xex-x1', 'trascendentes', 3, {}, function () { return '\frac{x e^x}{x + 1}'; }, function () { return 'x*e^x/(x + 1)'; }, function () { return 'e^x*(x^2 + x + 1)/(x + 1)^2'; }, QR + ' Con $u = xe^x$, $u\' = e^x(1 + x)$.', POS),
-    D('r-x21-x2m1', 'racionales', 3, {}, function () { return '\frac{x^2 + 1}{x^2 - 1}'; }, function () { return '(x^2 + 1)/(x^2 - 1)'; }, function () { return '-4x/(x^2 - 1)^2'; }, QR + ' El numerador se reduce a $-4x$.', { domain: [1.3, 3] }),
+    D('t-xex-x1', 'trascendentes', 3, {}, function () { return '\\frac{x e^x}{x + 1}'; }, function () { return 'x*e^x/(x + 1)'; }, function () { return 'e^x*(x^2 + x + 1)/(x + 1)^2'; }, QR + ' Con $u = xe^x$, $u\' = e^x(1 + x)$.', POS),
+    D('r-x21-x2m1', 'racionales', 3, {}, function () { return '\\frac{x^2 + 1}{x^2 - 1}'; }, function () { return '(x^2 + 1)/(x^2 - 1)'; }, function () { return '-4x/(x^2 - 1)^2'; }, QR + ' El numerador se reduce a $-4x$.', { domain: [1.3, 3] }),
     N('a-invertido', 'aplicaciones', 3, { p: [1, 5, 1], q: [1, 5, 1], dp: [-3, 3, 1], dq: [-3, 3, 1] }, function (v) { return '$p(1) = ' + v.p + '$, $p\'(1) = ' + v.dp + '$, $q(1) = ' + v.q + '$, $q\'(1) = ' + v.dq + '$. ¿Cuánto vale $(q/p)\'(1)$?'; }, function (v) { return (v.dq * v.p - v.q * v.dp) / (v.p * v.p); }, 'Ojo: aquí $q$ va arriba y $p$ abajo.', { tol: { abs: 0.01 }, where: function (v) { return v.dq * v.p !== v.q * v.dp; }, mistakes: { swapped: function (v) { return (v.dp * v.q - v.p * v.dq) / (v.q * v.q); } }, feedback: [{ when: 'swapped', say: 'Calculaste $(p/q)\'$: revisa quién va arriba.' }] })
   ];
 

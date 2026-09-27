@@ -181,7 +181,7 @@
       // Las que no respondió cuentan como no logradas.
       var all = cards.map(function (c) {
         var r = results.filter(function (x) { return x.q === c.q; })[0];
-        return r || { q: c.q, score: 0, kind: 'skip' };
+        return Object.assign(r || { q: c.q, score: 0, kind: 'skip' }, { card: c });
       });
       var scores = Q().scoreByTag(all);
       var total = all.reduce(function (s, r) { return s + r.score; }, 0);
@@ -197,7 +197,8 @@
       out.scrollIntoView({ behavior: window.CBAnim && window.CBAnim.canAnimate() ? 'smooth' : 'auto', block: 'start' });
       Q().saveHistory('cb-quiz-history', {
         date: new Date().toISOString(), score: Math.round(pct), n: all.length,
-        topics: (opts.topics || []).join(', ')
+        topics: (opts.topics || []).join(', '),
+        detail: all.map(function (r) { return shortDetail(r.q, r.card.v, r.card.state.input || r.card.get(), r.score, false); })
       });
       if (opts.onFinish) opts.onFinish();
     }
@@ -220,11 +221,58 @@
   }
 
   // Expresión de math.js → LaTeX para mostrar la respuesta correcta.
-  function exprTex(src) {
+  function exprTex(src, withC) {
     try {
-      var prep = window.LabMath.antiderivative.prep;
-      return '$' + window.math.parse(prep(src)).toTex({ implicit: 'hide', parenthesis: 'auto' }) + ' + C$';
+      var prep = window.LabMath.core.prep;
+      return '$' + window.math.parse(prep(src)).toTex({ implicit: 'hide', parenthesis: 'auto' }) + (withC ? ' + C' : '') + '$';
     } catch (e) { return '<code>' + src + '</code>'; }
+  }
+
+  /* ---------- Detalle de un intento para el historial ----------
+     Se guarda lo necesario para volver a verlo: enunciado, respuesta del alumno,
+     respuesta correcta, puntos y porqué. HTML ya generado: no depende de las plantillas. */
+  function correctText(q, v) {
+    var a = q.answer(v);
+    return q.type === 'choice' ? a : q.type === 'expr' ? exprTex(a, !!q.integrand) : fmtPts(a) + (q.unit ? ' ' + q.unit : '');
+  }
+  function studentText(q, raw) {
+    raw = raw == null ? '' : String(raw).trim();
+    if (!raw) return '<em>sin respuesta</em>';
+    return q.type === 'expr' ? exprTex(raw, false) : raw.replace(/</g, '&lt;');
+  }
+  function shortDetail(q, v, raw, earned, seen) {
+    return { p: q.prompt(v), a: studentText(q, raw), c: correctText(q, v), e: earned, s: !!seen, w: str(q.why, v) };
+  }
+  function problemDetail(p, v, res) {
+    return {
+      t: p.title, st: p.statement(v),
+      parts: res.parts.map(function (pr, k) {
+        var part = p.parts[k];
+        return { l: pr.label, p: part.prompt(v, []), a: studentText({ type: part.type || 'numeric' }, pr.answer) + (part.unit && pr.answer ? ' ' + part.unit : ''),
+          e: pr.earned, pts: pr.points, cr: !!pr.carried, s: !!pr.withSolution, sol: part.solution(v) };
+      })
+    };
+  }
+  function renderDetail(d) {
+    var box = h('div', { class: 'history__detail' });
+    if (!d || !d.length) { box.appendChild(h('p', { class: 'muted' }, ['Este intento se guardó antes de que el historial incluyera el detalle.'])); return box; }
+    var ol = h('ol', { class: 'breakdown' });
+    d.forEach(function (it, i) {
+      if (it.parts) {
+        ol.appendChild(h('li', {}, [h('p', { html: '<strong>Problema · ' + it.t + '</strong>' }), h('div', { class: 'muted', html: it.st })].concat(it.parts.map(function (pt) {
+          var flags = (pt.cr ? ' <span class="tag">arrastre de error</span>' : '') + (pt.s ? ' <span class="tag">con solución</span>' : '');
+          return h('div', { class: 'breakdown__part', html: '<strong>' + pt.l + ')</strong> ' + pt.p + '<br>Tu respuesta: ' + pt.a + ' · ' + fmtPts(pt.e) + ' / ' + pt.pts + flags + '<br><span class="muted">' + pt.sol + '</span>' });
+        }))));
+      } else {
+        ol.appendChild(h('li', {}, [
+          h('div', { html: it.p }),
+          h('p', { html: 'Tu respuesta: ' + it.a + ' · ' + (it.e >= 1 - 1e-9 ? '<strong>bien</strong>' : 'correcta: ' + it.c) + ' · ' + fmtPts(it.e) + ' / 1' + (it.s ? ' <span class="tag">con solución</span>' : '') }),
+          h('p', { class: 'muted', html: it.w })
+        ]));
+      }
+    });
+    box.appendChild(ol);
+    return box;
   }
 
   /* ---------- Simulacro de examen (§10.4) ---------- */
@@ -327,9 +375,10 @@
       finish.disabled = true;
       var deps = { math: window.math };
       var shortRes = qCards.map(function (c) {
-        var r = Q().gradeShort(c.q, c.v, c.get(), c.state.seen, deps);
+        var raw = c.get();
+        var r = Q().gradeShort(c.q, c.v, raw, c.state.seen, deps);
         c.lock();
-        return Object.assign(r, { q: c.q, v: c.v, score: r.earned });
+        return Object.assign(r, { q: c.q, v: c.v, score: r.earned, raw: raw });
       });
       var examRes = pCards.map(function (c) {
         var r = Q().gradeProblem(c.p, c.v, c.parts.map(function (x) { return safeGet(x.inp.get); }), c.parts.map(function (x) { return x.st.seen; }), deps);
@@ -355,7 +404,7 @@
       var rows = h('ol', { class: 'breakdown' });
       shortRes.forEach(function (r, i) {
         rows.appendChild(h('li', {}, [
-          h('p', { html: '<strong>Pregunta ' + (i + 1) + '</strong> · ' + fmtPts(r.earned) + ' / 1' + (r.withSolution ? ' · <span class="tag">con solución</span>' : '') + (r.correct ? '' : ' · respuesta correcta: ' + (r.q.type === 'choice' ? r.q.answer(r.v) : r.q.type === 'expr' ? exprTex(r.q.answer(r.v)) : fmtPts(r.q.answer(r.v)) + (r.q.unit ? ' ' + r.q.unit : ''))) }),
+          h('p', { html: '<strong>Pregunta ' + (i + 1) + '</strong> · ' + fmtPts(r.earned) + ' / 1' + (r.withSolution ? ' · <span class="tag">con solución</span>' : '') + (r.correct ? '' : ' · respuesta correcta: ' + correctText(r.q, r.v)) }),
           h('p', { class: 'muted', html: str(r.q.why, r.v) })
         ]));
       });
@@ -370,7 +419,11 @@
       out.appendChild(rows);
       render(out);
       out.scrollIntoView({ behavior: 'auto', block: 'start' });
-      Q().saveHistory('cb-exam-history', { date: new Date().toISOString(), score: Math.round(score.total), topics: (opts.kind ? opts.kind + ' · ' : '') + opts.topics.join(', ') });
+      Q().saveHistory('cb-exam-history', {
+        date: new Date().toISOString(), score: Math.round(score.total), topics: (opts.kind ? opts.kind + ' · ' : '') + opts.topics.join(', '),
+        detail: shortRes.map(function (r) { return shortDetail(r.q, r.v, r.raw, r.earned, r.withSolution); })
+          .concat(examRes.map(function (r) { return problemDetail(r.p, r.v, r); }))
+      });
       if (opts.onFinish) opts.onFinish();
     }
   }
@@ -454,8 +507,9 @@
       boxes.forEach(function (b) { b.cb.checked = b.bank && p.sessions.indexOf(b.n) >= 0; });
       state.preset = p.id;
       var have = boxes.filter(function (b) { return b.cb.checked; }).length;
-      availability.textContent = have
-        ? 'De ' + p.label + ' ya hay banco para ' + have + ' de ' + p.sessions.length + ' sesiones de ' + M[state.code].name + '; las demás llegan pronto.'
+      // Solo se avisa cuando falta algo: con el curso completo el mensaje no aporta.
+      availability.textContent = have === p.sessions.length ? ''
+        : have ? 'De ' + p.label + ' ya hay banco para ' + have + ' de ' + p.sessions.length + ' sesiones de ' + M[state.code].name + '; las demás llegan pronto.'
         : 'Todavía no hay preguntas de ' + M[state.code].name + ' para ' + p.label + '. Llegan pronto.';
       upd();
     }
@@ -599,7 +653,12 @@
       if (!list.length) return h('p', { class: 'muted' }, [title + ': todavía no hay intentos.']);
       return h('div', { class: 'history__block' }, [h('h3', {}, [title]), h('ul', { class: 'history__list' }, list.map(function (e) {
         var d = new Date(e.date);
-        return h('li', {}, [h('span', { class: 'mono' }, [isNaN(d) ? '' : d.toLocaleDateString('es-MX') + ' ' + d.toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' })]), h('strong', {}, [e.score + (title === 'Simulacros' ? ' / 100' : ' %')]), h('span', { class: 'muted' }, [e.topics || ''])]);
+        var sum = h('summary', { class: 'history__row' }, [h('span', { class: 'mono' }, [isNaN(d) ? '' : d.toLocaleDateString('es-MX') + ' ' + d.toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' })]), h('strong', {}, [e.score + (title === 'Simulacros' ? ' / 100' : ' %')]), h('span', { class: 'muted' }, [e.topics || '']), h('span', { class: 'history__open' }, ['Ver intento'])]);
+        var det = h('details', { class: 'history__item' }, [sum]);
+        det.addEventListener('toggle', function () {
+          if (det.open && !det.querySelector('.history__detail')) { var body = renderDetail(e.detail); det.appendChild(body); render(body); }
+        });
+        return h('li', {}, [det]);
       }))]);
     }
     historyNode.appendChild(table('Quizzes', quiz));

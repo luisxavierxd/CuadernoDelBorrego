@@ -61,6 +61,10 @@ function validSource(s) {
       for (const q of Q) {
         const at = `${where} ${q.id}`;
         const balanced = (t) => ((t || '').match(/(?<!\\)\$/g) || []).length % 2 === 0;
+        // Barras de LaTeX perdidas al escribir la plantilla: '\frac' en JS es un salto de página,
+        // '\sin' se vuelve 'sin'. Se detectan caracteres de control o comandos sin barra dentro de $…$.
+        const CMD = /(^|[^\\a-zA-Z])(sqrt|frac|dfrac|tfrac|left|right|cdot|int|displaystyle|infty|theta|sin|cos|tan|sec|csc|cot|ln|lim|times|neq|leq|geq|approx|circ|arcsin|arctan|arccos|quad|pm|text)(?![a-zA-Z])/;
+        const texOk = (t) => !t || (!/[\x00-\x08\x0b-\x1f]/.test(t) && !(t.match(/\$[^$]+\$/g) || []).some((m) => CMD.test(m)));
         ok(q.id && !ids.has(q.id), `${at}: id vacío o repetido`);
         ids.add(q.id);
         ok(Array.isArray(q.tags) && q.tags[0] === `${code}.S${NN}`, `${at}: la primera etiqueta debe ser ${code}.S${NN}`);
@@ -88,6 +92,7 @@ function validSource(s) {
           ok(typeof prompt === 'string' && prompt.length > 8 && !/undefined|NaN|Infinity/.test(prompt), `${vi}: prompt inválido`);
           ok(typeof why === 'string' && why.length > 8 && !/undefined|NaN/.test(why), `${vi}: falta why`);
           ok(balanced(prompt) && balanced(why), `${vi}: $ sin cerrar en enunciado o why`);
+          ok(texOk(prompt) && texOk(why), `${vi}: LaTeX con una barra perdida en enunciado o why`);
           if (i === 0) {
             const key = norm(prompt);
             ok(!byPrompt.has(key), `${at}: mismo enunciado que ${byPrompt.get(key)}`);
@@ -97,6 +102,7 @@ function validSource(s) {
             const opts = q.options(v), texts = opts.map((o) => o.text);
             ok(opts.length >= 3, `${vi}: pocas opciones`);
             ok(opts.every((o) => balanced(o.text) && (!o.say || balanced(o.say))), `${vi}: $ sin cerrar en una opción`);
+            ok(opts.every((o) => texOk(o.text) && texOk(o.say)), `${vi}: LaTeX con una barra perdida en una opción`);
             ok(new Set(texts).size === texts.length, `${vi}: opciones repetidas: ${texts.join(' | ')}`);
             ok(opts.filter((o) => o.correct).length === 1, `${vi}: debe haber exactamente una correcta`);
             const right = opts.find((o) => o.correct);

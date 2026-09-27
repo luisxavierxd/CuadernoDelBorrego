@@ -113,12 +113,12 @@
     C('k-normal', 'conceptos', 3, 'La recta normal a una curva en un punto es…', 'perpendicular a la tangente: pendiente $-1/y\'$', [['la misma tangente'], ['paralela a la tangente'], ['siempre vertical']], 'Pendientes perpendiculares multiplican $-1$.'),
 
     /* ---------- Extra ---------- */
-    C('k-5y', 'derivar', 1, '¿Cuánto vale $\dfrac{d}{dx}(5y)$?', '$5y\'$', [['$5$'], ['$0$'], ['$5x$']], 'Constante por $y(x)$.'),
-    N('p-recta', 'pendientes', 1, { m: [2, 6, 1], n: [2, 6, 1] }, function (v) { return 'Usa derivación implícita en $' + v.m + 'x + ' + v.n + 'y = 12$. ¿Cuánto vale $y\'$?'; }, function (v) { return -v.m / v.n; }, '$m + n\,y\' = 0$.', { tol: { abs: 0.01 }, where: function (v) { return v.m !== v.n; } }),
-    IM('i-y2-sin', 'tecnica', 2, { q: [1, 5, 1] }, function (v) { return ask('y^2 + \sin x = ' + v.q * v.q); }, function (v) { return { eq: 'y^2 + sin(x) = ' + v.q * v.q, x0: 0, y0: v.q }; }, function () { return '-cos(x)/(2y)'; }, '$2y\,y\' + \cos x = 0$.'),
+    C('k-5y', 'derivar', 1, '¿Cuánto vale $\\dfrac{d}{dx}(5y)$?', '$5y\'$', [['$5$'], ['$0$'], ['$5x$']], 'Constante por $y(x)$.'),
+    N('p-recta', 'pendientes', 1, { m: [2, 6, 1], n: [2, 6, 1] }, function (v) { return 'Usa derivación implícita en $' + v.m + 'x + ' + v.n + 'y = 12$. ¿Cuánto vale $y\'$?'; }, function (v) { return -v.m / v.n; }, '$m + n\\,y\' = 0$.', { tol: { abs: 0.01 }, where: function (v) { return v.m !== v.n; } }),
+    IM('i-y2-sin', 'tecnica', 2, { q: [1, 5, 1] }, function (v) { return ask('y^2 + \\sin x = ' + v.q * v.q); }, function (v) { return { eq: 'y^2 + sin(x) = ' + v.q * v.q, x0: 0, y0: v.q }; }, function () { return '-cos(x)/(2y)'; }, '$2y\\,y\' + \\cos x = 0$.'),
     C('k-signo', 'conceptos', 2, 'En el primer cuadrante de $x^2 + y^2 = r^2$, la pendiente de la tangente es…', 'negativa', [['positiva'], ['cero'], ['indefinida']], '$-x/y$ con $x, y > 0$.'),
     N('t-normal-hip', 'tangentes', 3, { c: [2, 12, 1] }, function (v) { return 'La recta normal a $xy = ' + v.c + '$ en $(1, ' + v.c + ')$ corta al eje $y$ en $(0, b_0)$. ¿Cuánto vale $b_0$?'; }, function (v) { return v.c - 1 / v.c; }, 'La tangente tiene pendiente $-c$; la normal, $1/c$.', { tol: { abs: 0.01 } }),
-    IM('i-exy', 'tecnica', 3, { m: [2, 9, 1] }, function (v) { return ask('e^{xy} = ' + v.m); }, function (v) { return { eq: 'e^(x*y) = ' + v.m, x0: 1, y0: Math.log(v.m) }; }, function () { return '-y/x'; }, '$e^{xy}(y + x\,y\') = 0$ y $e^{xy} \neq 0$.')
+    IM('i-exy', 'tecnica', 3, { m: [2, 9, 1] }, function (v) { return ask('e^{xy} = ' + v.m); }, function (v) { return { eq: 'e^(x*y) = ' + v.m, x0: 1, y0: Math.log(v.m) }; }, function () { return '-y/x'; }, '$e^{xy}(y + x\\,y\') = 0$ y $e^{xy} \\neq 0$.')
   ];
 
   K.register({

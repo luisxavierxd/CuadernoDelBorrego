@@ -113,10 +113,10 @@
     C('k-inv-pot', 'potencias', 2, '¿Cuál es la derivada de $\\dfrac{1}{(x^2 + 1)^3}$?', '$-\\dfrac{6x}{(x^2 + 1)^4}$', [['$-\\dfrac{3}{(x^2 + 1)^4}$'], ['$\\dfrac{1}{3(x^2 + 1)^2\\cdot 2x}$'], ['$-\\dfrac{6x}{(x^2 + 1)^2}$']], '$(x^2 + 1)^{-3}$: $-3(\\cdot)^{-4}\\cdot 2x$.'),
     C('k-signo', 'potencias', 2, '¿Cuál es la derivada de $(1 - x)^4$?', '$-4(1 - x)^3$', [['$4(1 - x)^3$', 'Falta el $-1$ de adentro.'], ['$-4x^3$'], ['$4(1 - x)^3(1 - x)$']], 'Adentro deriva a $-1$.'),
     /* ---------- Retos ---------- */
-    D('e-sin-ax', 'exp-log', 3, { a: [2, 5, 1] }, function (v) { return 'e^{\sin(' + v.a + 'x)}'; }, function (v) { return 'e^(sin(' + v.a + 'x))'; }, function (v) { return v.a + '*cos(' + v.a + 'x)*e^(sin(' + v.a + 'x))'; }, 'Tres capas: $e^u$, $\sin$, $ax$.'),
-    D('l-asinh', 'exp-log', 3, {}, function () { return '\ln\left(x + \sqrt{x^2 + 1}\right)'; }, function () { return 'ln(x + sqrt(x^2 + 1))'; }, function () { return '1/sqrt(x^2 + 1)'; }, 'Adentro deriva a $1 + \tfrac{x}{\sqrt{x^2 + 1}} = \tfrac{\sqrt{x^2 + 1} + x}{\sqrt{x^2 + 1}}$ y se cancela con $u$.'),
-    D('p-cociente', 'potencias', 3, {}, function () { return '\left(\frac{x + 1}{x - 1}\right)^2'; }, function () { return '((x + 1)/(x - 1))^2'; }, function () { return '-4(x + 1)/(x - 1)^3'; }, 'Cadena con cociente adentro: $2\cdot\tfrac{x + 1}{x - 1}\cdot\tfrac{-2}{(x - 1)^2}$.', { domain: [1.3, 3] }),
-    D('t-cos2-x2', 'trig', 3, {}, function () { return '\cos^2(x^2)'; }, function () { return 'cos(x^2)^2'; }, function () { return '-4x*cos(x^2)*sin(x^2)'; }, 'Tres capas: $u^2$, $\cos$, $x^2$.')
+    D('e-sin-ax', 'exp-log', 3, { a: [2, 5, 1] }, function (v) { return 'e^{\\sin(' + v.a + 'x)}'; }, function (v) { return 'e^(sin(' + v.a + 'x))'; }, function (v) { return v.a + '*cos(' + v.a + 'x)*e^(sin(' + v.a + 'x))'; }, 'Tres capas: $e^u$, $\\sin$, $ax$.'),
+    D('l-asinh', 'exp-log', 3, {}, function () { return '\\ln\\left(x + \\sqrt{x^2 + 1}\\right)'; }, function () { return 'ln(x + sqrt(x^2 + 1))'; }, function () { return '1/sqrt(x^2 + 1)'; }, 'Adentro deriva a $1 + \\tfrac{x}{\\sqrt{x^2 + 1}} = \\tfrac{\\sqrt{x^2 + 1} + x}{\\sqrt{x^2 + 1}}$ y se cancela con $u$.'),
+    D('p-cociente', 'potencias', 3, {}, function () { return '\\left(\\frac{x + 1}{x - 1}\\right)^2'; }, function () { return '((x + 1)/(x - 1))^2'; }, function () { return '-4(x + 1)/(x - 1)^3'; }, 'Cadena con cociente adentro: $2\\cdot\\tfrac{x + 1}{x - 1}\\cdot\\tfrac{-2}{(x - 1)^2}$.', { domain: [1.3, 3] }),
+    D('t-cos2-x2', 'trig', 3, {}, function () { return '\\cos^2(x^2)'; }, function () { return 'cos(x^2)^2'; }, function () { return '-4x*cos(x^2)*sin(x^2)'; }, 'Tres capas: $u^2$, $\\cos$, $x^2$.')
   ];
 
   K.register({

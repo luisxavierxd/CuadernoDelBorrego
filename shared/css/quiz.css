@@ -104,7 +104,15 @@
 .history h2 { font-size: 1.4rem; margin-bottom: var(--space-1); }
 .history h3 { font-size: 1.05rem; margin: var(--space-2) 0 var(--space-1); }
 .history__list { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
-.history__list li { display: flex; flex-wrap: wrap; gap: 4px 14px; padding: 8px 12px; background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); font-size: 0.9rem; }
+.history__list li { padding: 0; background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); font-size: 0.9rem; }
+.history__row { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 14px; padding: 8px 12px; cursor: pointer; list-style: none; }
+.history__row::-webkit-details-marker { display: none; }
+.history__open { margin-left: auto; font-weight: 600; color: var(--accent); }
+.history__item[open] .history__open { color: var(--text-muted); }
+.history__item[open] > .history__row { border-bottom: 1px solid var(--line); }
+.history__row:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+.history__detail { padding: 8px 12px 12px; }
+.history__detail .breakdown { margin: 0; }
 .quiz-page h1 { font-size: clamp(1.9rem, 4vw, 2.8rem); }
 .quiz-sheet { padding-top: var(--space-3); }
 .quiz-results[hidden], .clock[hidden] { display: none; }
@@ -119,6 +127,9 @@
 .launcher__cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: var(--space-2); }
 .launcher__options { display: flex; flex-wrap: wrap; align-items: flex-end; gap: var(--space-2); margin-bottom: var(--space-2); }
 .launcher__options .lab-field { width: 210px; }
+/* El menú de revisión lleva textos largos: se ensancha para no recortarlos. */
+.launcher__options .lab-field:has(select) { width: auto; min-width: 210px; max-width: 100%; }
+.launcher__options select.lab-input { width: auto; max-width: 100%; }
 .launcher__options > p { flex-basis: 100%; margin: 0; }
 .launcher__go { justify-content: space-between; }
 .launcher__stage > .verdict { margin-bottom: var(--space-2); }

@@ -1,0 +1,41 @@
+/* =====================================================================
+   Formularios: hoja de fórmulas por curso, legible en pantalla e imprimible.
+   ===================================================================== */
+.form-head { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: var(--space-2); margin-bottom: var(--space-3); }
+.form-head h1 { margin: 0; }
+.form-head .lead { margin: var(--space-1) 0 0; }
+.form-grid { columns: 2; column-gap: var(--space-4); }
+@media (max-width: 900px) { .form-grid { columns: 1; } }
+.form-sec { break-inside: avoid; margin: 0 0 var(--space-3); padding-bottom: var(--space-2); border-bottom: 1px dashed var(--line-strong); }
+.form-sec h2 { font-size: 1.15rem; margin: 0 0 6px; color: var(--accent); }
+.form-sessions { display: flex; flex-wrap: wrap; gap: 6px; margin: 0 0 var(--space-1); }
+.form-sess { font: 500 0.75rem/1.2 var(--font-mono); padding: 3px 8px; border: 1px solid var(--line-strong); border-radius: var(--radius); color: var(--text-muted); text-decoration: none; }
+a.form-sess:hover { border-color: var(--accent); color: var(--accent); }
+.form-sess.is-soon { border-style: dashed; }
+.form-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+.form-list li { min-width: 0; display: grid; gap: 2px; }
+.form-label { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; font-size: 0.82rem; font-weight: 600; color: var(--text-muted); }
+/* Cada fórmula en un solo renglón: si no cabe, se desplaza en pantalla en vez de partirse. */
+.form-tex .katex { white-space: nowrap; }
+.form-tex { overflow-x: auto; min-width: 0; max-width: 100%; flex: 0 1 auto; padding: 2px 0; }
+.form-courses { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: var(--space-3); margin-top: var(--space-3); }
+.form-card { display: grid; gap: 6px; padding: var(--space-3); border: 1px solid var(--line-strong); border-radius: var(--radius-card); background: var(--panel); text-decoration: none; color: var(--text); }
+a.form-card:hover { border-color: var(--accent); }
+.form-card.is-soon { border-style: dashed; color: var(--text-muted); }
+.form-card strong { font: 700 1.1rem/1.2 var(--font-display); }
+
+@media print {
+  @page { margin: 12mm; }
+  .site-header, .site-footer, .skip-link, .form-print, .form-sessions, .form-sess { display: none !important; }
+  body { background: none !important; }
+  .sheet { box-shadow: none !important; background-image: none !important; padding: 0 !important; }
+  .form-head { margin-bottom: 4mm; }
+  .form-head h1 { font-size: 16pt; }
+  .form-head .lead { display: none; }
+  .form-grid { columns: 2; column-gap: 8mm; font-size: 9pt; }
+  .form-sec { margin-bottom: 3mm; padding-bottom: 2mm; }
+  .form-sec h2 { font-size: 10.5pt; margin-bottom: 1mm; }
+  .form-list { gap: 1mm; }
+  .form-tex { overflow: visible; }
+  .form-label { font-size: 8pt; }
+}
