@@ -493,12 +493,12 @@
 
   /* ---------- S09 · Mesa con polea ---------- */
   D['table-pulley'] = function () {
-    var body = '<path class="axis" d="M40 170H420V330" stroke-width="2.5" fill="none"/><circle class="ref" cx="432" cy="170" r="14" fill="none" stroke-width="2.5"/>' +
-      box(230, 140, 70, 60) + '<path class="axis" d="M265 140H432M446 170V240" stroke-width="1.8" fill="none"/>' + box(446, 265, 46, 46, 0, 'box-ref') +
+    var body = '<path class="axis" d="M40 170H420V330" stroke-width="2.5" fill="none"/><path class="axis" d="M420 170L432 154" stroke-width="2"/><circle class="ref" cx="432" cy="154" r="14" fill="none" stroke-width="2.5"/>' +
+      box(230, 140, 70, 60) + '<path class="axis" d="M265 140H432M446 154V242" stroke-width="1.8" fill="none"/>' + box(446, 265, 46, 46, 0, 'box-ref') +
       text(230, 146, 'm₁', ' text-anchor="middle" font-size="16"') + text(446, 271, 'm₂', ' text-anchor="middle" font-size="16"') +
       force('ref', 270, 110, 0, 70, 'T') + force('trace', 190, 160, 180, 50, 'μm₁g') + force('ref', 485, 265, 90, 60, 'T') + force('error', 485, 265, 270, 80, 'm₂g') +
       text(560, 110, 'T − μm₁g = m₁a', ' text-anchor="middle" font-size="16"') + text(560, 136, 'm₂g − T = m₂a', ' text-anchor="middle" font-size="16"');
-    return svgBox('0 80 640 260', 'Un bloque sobre una mesa unido a una masa colgante por una cuerda que pasa por una polea.', body);
+    return svgBox('0 80 640 295', 'Un bloque sobre una mesa unido a una masa colgante por una cuerda que pasa por una polea.', body);
   };
 
   /* ---------- S10 · Ley de Hooke ---------- */
@@ -511,6 +511,37 @@
       force('ref', 410, 190, 0, 70, null) + text(450, 222, 'F aplicada', ' text-anchor="middle" font-size="16"') + force('error', 340, 140, 180, 80, null) + text(300, 128, 'F = −kx', ' text-anchor="middle" font-size="16"') +
       text(540, 118, 'el resorte jala', ' text-anchor="middle" font-size="16"') + text(540, 142, 'contra el estiramiento', ' text-anchor="middle" font-size="16"');
     return svgBox('0 100 640 200', 'Un resorte estirado una distancia x ejerce una fuerza −kx, opuesta al estiramiento.', body);
+  };
+
+  /* ---------- S10 · Resortes: colgar, serie y paralelo (explainer) ----------
+     state.show: 'free' | 'single' | 'series' | 'parallel'. */
+  function coil(x, y0, y1, w, n) {
+    var step = (y1 - y0) / (n + 1), d = 'M' + x + ' ' + y0 + 'L' + x + ' ' + (y0 + step / 2).toFixed(1);
+    for (var i = 0; i < n; i++) d += 'L' + (x + (i % 2 ? -w : w)) + ' ' + (y0 + step / 2 + step * (i + 0.5)).toFixed(1);
+    return '<path class="axis" fill="none" stroke-width="2" d="' + d + 'L' + x + ' ' + (y1 - step / 2).toFixed(1) + 'L' + x + ' ' + y1.toFixed(1) + '"/>';
+  }
+  D['springs-explainer'] = function (s) {
+    var show = (s && s.show) || 'free', top = 40, L = 100, x = 50, cx = 160, body = '<path class="axis" d="M80 ' + top + 'H240" stroke-width="4"/>';
+    var bottom = top + L;
+    if (show === 'free') body += coil(cx, top, bottom, 12, 10);
+    else if (show === 'single') { bottom = top + L + x; body += coil(cx, top, bottom, 12, 10); }
+    else if (show === 'series') {
+      var mid = top + L / 2 + x;
+      bottom = mid + L / 2 + x;
+      body += coil(cx, top, mid, 12, 6) + '<circle class="dot-ref" cx="' + cx + '" cy="' + mid + '" r="5"/>' + coil(cx, mid, bottom, 12, 6);
+    } else { bottom = top + L + x / 2; body += coil(cx - 30, top, bottom, 12, 10) + coil(cx + 30, top, bottom, 12, 10) + '<path class="axis" d="M' + (cx - 40) + ' ' + bottom + 'H' + (cx + 40) + '" stroke-width="3"/>'; }
+    if (show !== 'free') {
+      body += box(cx, bottom + 25, 56, 50) + text(cx, bottom + 31, 'm', ' text-anchor="middle" font-size="17"') + force('error', cx + 50, bottom + 25, 270, 45, 'mg');
+      body += seg('axis', 60, top + L, 270, top + L, 1.2, '5 6') + '<path class="ref" d="M260 ' + (top + L) + 'V' + bottom + '" stroke-width="3"/>' + text(270, (top + L + bottom) / 2 + 5, 'x', ' font-size="18"');
+    }
+    var cap = {
+      free: ['largo natural: no hace fuerza', 'F = −kx, con x medida', 'desde este largo'],
+      single: ['colgando en reposo: kx = mg', 'x = mg/k', 'así se mide k en el laboratorio'],
+      series: ['en serie, cada resorte', 'carga todo el peso:', 'x = mg/k₁ + mg/k₂', '1/k = 1/k₁ + 1/k₂ (más blando)'],
+      parallel: ['en paralelo se reparten', 'el peso:', 'k = k₁ + k₂ (más rígido)']
+    }[show];
+    cap.forEach(function (t, n) { body += text(320, 110 + 30 * n, t, ' font-size="17"'); });
+    return svgBox('0 20 640 340', 'Un resorte con su largo natural; luego colgando una masa, dos resortes en serie y dos en paralelo, con el estiramiento x.', body);
   };
 
   /* ---------- S10 · Fricción contra fuerza aplicada ---------- */

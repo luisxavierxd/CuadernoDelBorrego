@@ -171,14 +171,23 @@
 
     function drawCurve() {
       var R = r.get(), t = bank.get(), MU = mu.get(), b = banked(R, t, MU), a = t * RAD;
-      var g = el('g', { 'class': 'sketch' }), cx = 330, cy = 230;
-      el('path', { d: 'M' + (cx - 240 * Math.cos(a)) + ' ' + (cy + 40 + 240 * Math.sin(a)) + 'L' + (cx + 240 * Math.cos(a)) + ' ' + (cy + 40 - 240 * Math.sin(a)), 'class': 'axis', 'stroke-width': 3, fill: 'none' }, g);
-      el('rect', { x: cx - 45, y: cy - 20, width: 90, height: 55, rx: 8, 'class': 'box-aux', transform: 'rotate(' + (-t) + ' ' + cx + ' ' + (cy + 40) + ')' }, g);
-      vec(g, cx, cy, 270, 90, 'error', 'mg');
-      vec(g, cx, cy, 90 + t, 100, 'aux', 'N');
-      if (MU > 0) vec(g, cx, cy + 30, 180 + t, 60, 'trace', 'f (a v máx)');
-      vec(g, cx - 60, cy - 90, 180, 110, 'ref', 'hacia el centro');
-      el('text', { x: 40, y: 40, 'class': 'ann', 'font-size': 17 }, g).textContent = 'centro de la curva ←';
+      var g = el('g', { 'class': 'sketch' }), cx = 300, cy = 250;   // (cx, cy): punto de apoyo del auto en el camino
+      var ux = Math.cos(a), uy = -Math.sin(a);                           // dirección del camino hacia arriba del peralte
+      el('path', { d: 'M' + (cx - 230 * ux) + ' ' + (cy - 230 * uy) + 'L' + (cx + 230 * ux) + ' ' + (cy + 230 * uy), 'class': 'axis', 'stroke-width': 3, fill: 'none' }, g);
+      el('rect', { x: cx - 45, y: cy - 50, width: 90, height: 50, rx: 8, 'class': 'box-aux', transform: 'rotate(' + (-t) + ' ' + cx + ' ' + cy + ')' }, g);
+      var gx = cx - 25 * Math.sin(a), gy = cy - 25 * Math.cos(a);        // centro del auto
+      vec(g, gx, gy, 270, 80, 'error', null);
+      el('text', { x: gx + 12, y: gy + 80, 'class': 'ann', 'font-size': 16 }, g).textContent = 'mg';
+      vec(g, gx, gy, 90 + t, 100, 'aux', null);
+      el('text', { x: gx - 100 * Math.sin(a) + 12, y: gy - 100 * Math.cos(a) - 4, 'class': 'ann', 'font-size': 16 }, g).textContent = 'N';
+      if (MU > 0) {
+        var fx0 = cx - 50 * ux, fy0 = cy - 50 * uy;
+        vec(g, fx0, fy0, 180 + t, 60, 'trace', null);
+        el('text', { x: fx0 - 40 * ux, y: fy0 - 40 * uy + 26, 'class': 'ann', 'text-anchor': 'middle', 'font-size': 15 }, g).textContent = 'f (a v máx)';
+      }
+      vec(g, 200, 60, 180, 120, 'ref', null);
+      el('text', { x: 140, y: 44, 'class': 'ann', 'text-anchor': 'middle', 'font-size': 16 }, g).textContent = 'hacia el centro de la curva';
+      el('text', { x: 600, y: 44, 'class': 'ann', 'text-anchor': 'end', 'font-size': 16 }, g).textContent = 'peralte ' + t + '°';
       facts.innerHTML = '';
       [['v sin fricción √(rg tan θ)', UI.fmt(b.ideal, 4) + ' m/s'], ['v máxima', isFinite(b.max) ? UI.fmt(b.max, 4) + ' m/s' : 'sin límite'], ['v mínima', UI.fmt(b.min, 4) + ' m/s'],
         ['v máx. en curva plana √(μgr)', UI.fmt(flatCurve(R, MU), 4) + ' m/s']]

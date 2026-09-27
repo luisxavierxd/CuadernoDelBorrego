@@ -32,6 +32,27 @@
   function optimalAngle(mu) { return Math.atan(mu) * DEG; }
   function minForce(m, mu) { return mu * m * G / Math.sqrt(1 + mu * mu); }
   function hooke(k, x) { return k * x; }
+  // Resortes combinados: en serie las elongaciones se suman; en paralelo las fuerzas.
+  function series(k1, k2) { return k1 * k2 / (k1 + k2); }
+  function parallel(k1, k2) { return k1 + k2; }
+  // Masa colgada de uno o dos resortes: config 'single' | 'series' | 'parallel'.
+  function hang(m, k1, k2, config) {
+    var k = config === 'series' ? series(k1, k2) : config === 'parallel' ? parallel(k1, k2) : k1;
+    return { k: k, x: m * G / k, F: m * G };
+  }
+  function diagnoseHang(m, k1, k2, config, sx) {
+    if (!isFinite(sx)) return 'bad';
+    var real = hang(m, k1, k2, config).x;
+    if (close(sx, real)) return 'ok';
+    var alt = {
+      noG: m / hang(m, k1, k2, config).k,
+      single: config === 'single' ? NaN : m * G / k1,
+      swapped: config === 'series' ? hang(m, k1, k2, 'parallel').x : config === 'parallel' ? hang(m, k1, k2, 'series').x : NaN
+    };
+    var hit = 'bad';
+    Object.keys(alt).some(function (key) { if (isFinite(alt[key]) && close(sx, alt[key]) && !close(alt[key], real)) { hit = key; return true; } return false; });
+    return hit;
+  }
   function close(a, b, tol) { return Math.abs(a - b) <= (tol || 0.01) * Math.max(Math.abs(b), 0.05); }
   function diagnose(p, sN, sa) {
     var r = analyze(p), out = { N: 'bad', a: 'bad' }, mg = p.m * G;
@@ -49,7 +70,7 @@
     }
     return out;
   }
-  window.LabMath.friction = { G: G, normal: normal, analyze: analyze, forceToStart: forceToStart, optimalAngle: optimalAngle, minForce: minForce, hooke: hooke, diagnose: diagnose };
+  window.LabMath.friction = { G: G, normal: normal, analyze: analyze, forceToStart: forceToStart, optimalAngle: optimalAngle, minForce: minForce, hooke: hooke, series: series, parallel: parallel, hang: hang, diagnoseHang: diagnoseHang, diagnose: diagnose };
 
   /* ------------------------------ UI ------------------------------ */
   var NS = 'http://www.w3.org/2000/svg';
@@ -105,6 +126,10 @@
         svgF
       ])
     ]));
+    var panelF = mount.lastChild;
+    var labMode = UI.select({ label: '¿Qué quieres explorar?', options: ['Fricción con fuerza inclinada', 'Resorte colgado (uno, en serie o en paralelo)'] });
+    labMode.node.classList.add('lab-mode');
+    mount.insertBefore(labMode.node, panelF);
     mount.querySelector('form').addEventListener('submit', function (e) { e.preventDefault(); check(); });
     mode.input.value = s.mode === 'pull' ? '1' : '0';
     springCb.checked = !!s.spring;
@@ -183,6 +208,104 @@
     note.textContent = 'Ejemplo cargado: así respondió un compañero. ¿Ves el error? Mueve θ, cambia a "jala" y agrega el resorte.';
     check();
     document.addEventListener('cb:themechange', draw);
+
+    /* ---------------- Modo resorte colgado ---------------- */
+    var MSG_H = {
+      ok: ['Tu estiramiento coincide', ''],
+      noG: ['Usaste la masa en lugar del peso', 'La fuerza sobre el resorte es el peso, mg, en newtons: x = mg/k.'],
+      single: ['Usaste un solo resorte', 'Con dos resortes cambia la constante equivalente: en serie es menor que cada una; en paralelo es la suma.'],
+      swapped: ['Confundiste serie con paralelo', 'En serie (uno abajo del otro) cada resorte carga todo el peso y las elongaciones se suman. En paralelo (lado a lado) se reparten el peso.'],
+      bad: ['Tu estiramiento no coincide', 'Encuentra la k equivalente y usa x = mg/k.']
+    };
+    var hm = UI.slider({ label: 'Masa colgada m', min: 0.1, max: 5, step: 0.1, value: 1, unit: 'kg', fmt: function (v) { return v.toFixed(1); } }, hRefresh);
+    var hk1 = UI.slider({ label: 'Constante k₁', min: 20, max: 500, step: 10, value: 200, unit: 'N/m' }, hRefresh);
+    var hk2 = UI.slider({ label: 'Constante k₂', min: 20, max: 500, step: 10, value: 300, unit: 'N/m' }, hRefresh);
+    var hc = UI.select({ label: 'Arreglo', options: ['Un resorte (k₁)', 'Dos en serie (uno abajo del otro)', 'Dos en paralelo (lado a lado)'] });
+    var hx = UI.input({ label: 'Tu estiramiento total x (m)', type: 'number', step: 'any', inputmode: 'decimal', mono: false });
+    var hrun = UI.button('Comprobar', 'primary', hCheck);
+    var hnote = h('p', { class: 'lab-note' });
+    var hverdict = h('div', { class: 'verdict', hidden: true, role: 'status' });
+    var hfacts = h('dl', { class: 'lab-facts' });
+    var hsvg = UI.svg(640, 380, 'Masa colgada de uno o dos resortes, con su estiramiento');
+    var hplot = UI.svg(640, 220, 'Fuerza contra estiramiento del arreglo de resortes');
+    var hChecked = false;
+    var panelS = h('div', { class: 'lab-grid', hidden: true }, [
+      h('form', { class: 'lab-controls', novalidate: true }, [hc.node, hm.node, hk1.node, hk2.node, hx.node, h('div', { class: 'lab-buttons' }, [hrun]), hnote, hverdict, hfacts]),
+      h('figure', { class: 'lab-board' }, [
+        h('figcaption', { class: 'lab-board__title sheet__title' }, ['¿Cuánto se estira?']),
+        hsvg, hplot
+      ])
+    ]);
+    mount.appendChild(panelS);
+    panelS.querySelector('form').addEventListener('submit', function (e) { e.preventDefault(); hCheck(); });
+    hc.input.value = '1';
+    hc.input.addEventListener('change', function () { hk2.node.hidden = hc.input.value === '0'; hRefresh(); });
+    function hConfig() { return ['single', 'series', 'parallel'][+hc.input.value]; }
+    function hRefresh() { if (hChecked) hCheck(); else hDraw(); }
+    labMode.input.addEventListener('change', function () {
+      var spring = labMode.input.value === '1';
+      panelF.hidden = spring; panelS.hidden = !spring;
+      if (spring) hDraw(); else draw();
+    });
+
+    function coil(g, x, y0, y1, w, n, cls) {
+      var d = 'M' + x + ' ' + y0, step = (y1 - y0) / (n + 1);
+      d += 'L' + x + ' ' + (y0 + step / 2);
+      for (var i = 0; i < n; i++) d += 'L' + (x + (i % 2 ? -w : w)) + ' ' + (y0 + step / 2 + step * (i + 0.5));
+      d += 'L' + x + ' ' + (y1 - step / 2) + 'L' + x + ' ' + y1;
+      el('path', { d: d, 'class': cls || 'axis', 'stroke-width': 2, fill: 'none' }, g, hsvg);
+    }
+    function hDraw() {
+      var cfgName = hConfig(), m = hm.get(), k1 = hk1.get(), k2 = hk2.get(), r = hang(m, k1, k2, cfgName);
+      hsvg.innerHTML = '';
+      var g = el('g', { 'class': 'sketch' }, null, hsvg), top = 30, L0 = 120;
+      var stretch = Math.min(170, r.x * 1200);   // estiramiento exagerado para que se vea
+      el('path', { d: 'M200 ' + top + 'H440', 'class': 'axis', 'stroke-width': 4, fill: 'none' }, g, hsvg);
+      var bottom;
+      if (cfgName === 'parallel') {
+        coil(g, 290, top, top + L0 + stretch, 12, 10);
+        coil(g, 350, top, top + L0 + stretch, 12, 10);
+        el('path', { d: 'M280 ' + (top + L0 + stretch) + 'H360', 'class': 'axis', 'stroke-width': 3, fill: 'none' }, g, hsvg);
+        bottom = top + L0 + stretch;
+      } else if (cfgName === 'series') {
+        var s1 = stretch * r.k / k1, s2 = stretch * r.k / k2, mid = top + L0 / 2 + s1;
+        coil(g, 320, top, mid, 12, 6);
+        el('circle', { cx: 320, cy: mid, r: 5, 'class': 'dot-ref' }, g, hsvg);
+        coil(g, 320, mid, mid + L0 / 2 + s2, 12, 6);
+        bottom = mid + L0 / 2 + s2;
+      } else {
+        coil(g, 320, top, top + L0 + stretch, 12, 10);
+        bottom = top + L0 + stretch;
+      }
+      el('rect', { x: 290, y: bottom, width: 60, height: 50, rx: 5, 'class': 'box-aux' }, g, hsvg);
+      el('path', { d: 'M180 ' + (top + L0) + 'H460', 'class': 'axis', 'stroke-width': 1.2, 'stroke-dasharray': '5 6', fill: 'none' }, g, hsvg);
+      el('text', { x: 175, y: top + L0 + 5, 'class': 'ann', 'text-anchor': 'end', 'font-size': 15 }, g, hsvg).textContent = 'sin carga';
+      el('path', { d: 'M470 ' + (top + L0) + 'V' + bottom, 'class': 'ref', 'stroke-width': 2.5, fill: 'none' }, g, hsvg);
+      el('text', { x: 480, y: (top + L0 + bottom) / 2 + 5, 'class': 'ann', 'font-size': 16 }, g, hsvg).textContent = 'x = ' + UI.fmt(r.x, 3) + ' m';
+      el('text', { x: 320, y: bottom + 30, 'class': 'ann', 'text-anchor': 'middle', 'font-size': 15 }, g, hsvg).textContent = m.toFixed(1) + ' kg';
+      el('text', { x: 20, y: 360, 'class': 'ann', 'font-size': 14 }, g, hsvg).textContent = 'estiramiento dibujado a escala exagerada';
+      // Recta F = k x del arreglo y el punto de equilibrio (x, mg).
+      var xmax = Math.max(r.x * 1.6, 0.05), plot = window.LabPlot(hplot, { x: [0, xmax], y: [0, r.k * xmax * 1.05] });
+      plot.clear(); plot.grid(); plot.axes();
+      plot.line(function (x) { return r.k * x; }, 'ref', 3);
+      plot.point(r.x, r.F, 'dot-trace', 7);
+      plot.label(0, plot.yr[1], 'F (N) contra x (m): pendiente = k equivalente', 'start', 14, 8, 14);
+      hfacts.innerHTML = '';
+      [['k equivalente', UI.fmt(r.k, 4) + ' N/m'], ['peso mg', UI.fmt(r.F, 4) + ' N'], ['estiramiento total', UI.fmt(r.x, 4) + ' m']]
+        .forEach(function (x) { hfacts.appendChild(h('dt', {}, [x[0]])); hfacts.appendChild(h('dd', {}, [x[1]])); });
+    }
+    function hCheck() {
+      var k = diagnoseHang(hm.get(), hk1.get(), hk2.get(), hConfig(), parseFloat(hx.input.value)), msg = MSG_H[k];
+      UI.verdict(hverdict, k === 'ok' ? 'ok' : k === 'bad' ? 'bad' : 'warn', msg[0], msg[1]);
+      hChecked = true;
+      hDraw();
+    }
+    // Ejemplo cargado: un compañero sumó las constantes en serie (como si fuera paralelo).
+    hx.input.value = UI.fmt(hang(hm.get(), hk1.get(), hk2.get(), 'parallel').x, 4);
+    hnote.textContent = 'Ejemplo cargado: así respondió un compañero para dos resortes en serie. ¿Ves el error?';
+    hCheck();
+    if (cfg.mode === 'spring') { labMode.input.value = '1'; panelF.hidden = true; panelS.hidden = false; }
+    document.addEventListener('cb:themechange', function () { if (!panelS.hidden) hDraw(); });
     return Promise.resolve();
   };
 })();

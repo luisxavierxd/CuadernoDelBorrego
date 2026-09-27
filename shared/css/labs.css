@@ -157,3 +157,7 @@ math-field::part(menu-toggle), math-field::part(virtual-keyboard-toggle) { displ
 .fbd-row__name { display: flex; align-items: center; gap: 6px; min-height: 36px; cursor: pointer; }
 .fbd-row select { min-width: 0; }
 @media (max-width: 560px) { .fbd-row { grid-template-columns: 1fr; } }
+
+/* Labs con dos modos: selector arriba y un panel a la vez */
+.lab-mode { max-width: 420px; margin-bottom: var(--space-2); }
+.lab-grid[hidden] { display: none; }

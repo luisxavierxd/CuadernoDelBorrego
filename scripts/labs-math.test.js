@@ -573,6 +573,17 @@ function near(got, want, tol, msg) {
     eq(Fr.diagnose(p, NaN, (r.drive - 0.4 * r.N) / 10).a, 'usedMuS');
   });
 
+  test('resortes: serie, paralelo y masa colgada', () => {
+    near(Fr.series(200, 300), 120, 1e-12); near(Fr.parallel(200, 300), 500, 1e-12);
+    near(Fr.hang(2, 200, 300, 'single').x, 2 * 9.81 / 200, 1e-12);
+    const se = Fr.hang(2, 200, 300, 'series');
+    near(se.x, 2 * 9.81 / 200 + 2 * 9.81 / 300, 1e-12, 'en serie se suman las elongaciones');
+    near(Fr.hang(2, 200, 300, 'parallel').x * 500, 2 * 9.81, 1e-12);
+    eq(Fr.diagnoseHang(2, 200, 300, 'series', se.x), 'ok');
+    eq(Fr.diagnoseHang(2, 200, 300, 'series', Fr.hang(2, 200, 300, 'parallel').x), 'swapped');
+    eq(Fr.diagnoseHang(2, 200, 300, 'parallel', 2 * 9.81 / 200), 'single');
+    eq(Fr.diagnoseHang(2, 200, 300, 'single', 2 / 200), 'noG');
+  });
   /* ---------- incline ---------- */
   const In = LM.incline;
   test('plano: baja con fricción, se queda quieto y sube frenando', () => {

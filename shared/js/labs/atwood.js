@@ -143,10 +143,13 @@
       } else {
         var ty = 200, ex = 470;
         el('path', { d: 'M60 ' + ty + 'H' + ex + 'V380', 'class': 'axis', 'stroke-width': 2.5, fill: 'none' }, g);
-        el('circle', { cx: ex + 18, cy: ty - 18 + 18, r: 18, 'class': 'ref', fill: 'none', 'stroke-width': 2.5 }, g);
         var b1 = 30 + 4 * p.m1, x1 = 260 + d, b2 = 26 + 4 * p.m2, y2b = 290 + d;
+        // La cuerda sale a media altura del bloque y pasa por arriba de la polea.
+        var ry = ty - b1 / 2, pcy = ry + 18;
+        el('path', { d: 'M' + ex + ' ' + ty + 'L' + (ex + 18) + ' ' + pcy, 'class': 'axis', 'stroke-width': 2, fill: 'none' }, g);
+        el('circle', { cx: ex + 18, cy: pcy, r: 18, 'class': 'ref', fill: 'none', 'stroke-width': 2.5 }, g);
         el('rect', { x: x1 - b1 / 2, y: ty - b1, width: b1, height: b1, rx: 4, 'class': 'box-aux' }, g);
-        el('path', { d: 'M' + (x1 + b1 / 2) + ' ' + (ty - b1 / 2) + 'H' + (ex + 18) + 'M' + (ex + 36) + ' ' + ty + 'V' + (y2b - b2 / 2), 'class': 'axis', 'stroke-width': 1.8, fill: 'none' }, g);
+        el('path', { d: 'M' + (x1 + b1 / 2) + ' ' + ry + 'H' + (ex + 18) + 'M' + (ex + 36) + ' ' + pcy + 'V' + (y2b - b2 / 2), 'class': 'axis', 'stroke-width': 1.8, fill: 'none' }, g);
         el('rect', { x: ex + 36 - b2 / 2, y: y2b - b2 / 2, width: b2, height: b2, rx: 4, 'class': 'box-ref' }, g);
         el('text', { x: x1, y: ty - b1 / 2 + 5, 'class': 'ann', 'text-anchor': 'middle', 'font-size': 15 }, g).textContent = 'm₁';
         el('text', { x: ex + 36, y: y2b + 5, 'class': 'ann', 'text-anchor': 'middle', 'font-size': 15 }, g).textContent = 'm₂';

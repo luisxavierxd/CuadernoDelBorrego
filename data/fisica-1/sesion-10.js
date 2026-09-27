@@ -24,6 +24,8 @@
   }
 
   var e1 = { F0: 30, x0: 0.12, x: 0.2 }; e1.k = e1.F0 / e1.x0; e1.F = e1.k * e1.x;
+  var es = { m: 2, k1: 200, k2: 300 };
+  es.kS = es.k1 * es.k2 / (es.k1 + es.k2); es.kP = es.k1 + es.k2; es.xS = es.m * g / es.kS; es.xP = es.m * g / es.kP;
   var e2 = { m: 20, mus: 0.4, muk: 0.3, F1: 70, F2: 90 }; e2.N = e2.m * g; e2.fs = e2.mus * e2.N; e2.a2 = (e2.F2 - e2.muk * e2.N) / e2.m;
   var e3 = { m: 10, F: 80, th: 30, muk: 0.3 }; e3.push = box(e3.m, e3.F, e3.th, 'push', e3.muk); e3.pull = box(e3.m, e3.F, e3.th, 'pull', e3.muk);
   var e4 = { m: 10, mu: 0.5 }; e4.th = Math.atan(e4.mu) * DEG; e4.F = e4.mu * e4.m * g / Math.sqrt(1 + e4.mu * e4.mu); e4.F0 = e4.mu * e4.m * g;
@@ -35,7 +37,8 @@
     minutes: 180,
     quote: 'La fricción depende de qué tan fuerte se aprietan las superficies, y eso es la normal, no el peso.',
     badges: [
-      'Usar la ley de Hooke, $F = -kx$.',
+      'Usar la ley de Hooke, $F = -kx$, y medir $k$ colgando una masa.',
+      'Combinar resortes en serie y en paralelo.',
       'Distinguir fricción estática ($\\le \\mu_sN$) de cinética ($\\mu_kN$).',
       'Calcular la normal cuando empujas o jalas con ángulo.',
       'Decidir si un cuerpo se mueve y encontrar la fuerza mínima y el ángulo óptimo.'
@@ -60,6 +63,30 @@
         ],
         answer: '$k = ' + fx(e1.k) + '\\ \\text{N/m}$ y $F = ' + fx(e1.F) + '\\ \\text{N}$.',
         verify: { lab: 'call', mod: 'friction', fn: 'hooke', args: [e1.k, e1.x], value: e1.F }
+      },
+      {
+        type: 'explainer', heading: 'Colgar, en serie y en paralelo', short: 'Resortes combinados',
+        title: 'Un resorte, dos resortes',
+        intro: 'Colgar una masa es la forma más sencilla de medir $k$. Con dos resortes importa cómo los unes.',
+        diagram: 'springs-explainer',
+        steps: [
+          { text: 'Sin carga, el resorte tiene su largo natural y no hace fuerza. La deformación $x$ siempre se mide desde ese largo.', state: { show: 'free' } },
+          { text: 'Con una masa colgada en reposo, el resorte sostiene el peso: $kx = mg$. Midiendo $x$ se obtiene $k = mg/x$.', state: { show: 'single' } },
+          { text: '<strong>En serie</strong> (uno abajo del otro), cada resorte sostiene todo el peso y las elongaciones se suman: $\\frac{1}{k} = \\frac{1}{k_1} + \\frac{1}{k_2}$. El arreglo es más blando que cada resorte.', state: { show: 'series' } },
+          { text: '<strong>En paralelo</strong> (lado a lado, estirándose igual), se reparten el peso: $k = k_1 + k_2$. El arreglo es más rígido.', state: { show: 'parallel' } }
+        ]
+      },
+      {
+        type: 'example', heading: 'Dos resortes en serie y en paralelo',
+        problem: '<p>Tienes dos resortes de $k_1 = ' + es.k1 + '\\ \\text{N/m}$ y $k_2 = ' + es.k2 + '\\ \\text{N/m}$ y una masa de $' + es.m + '\\ \\text{kg}$. ¿Cuánto se estira el arreglo si los pones en serie? ¿Y en paralelo?</p>',
+        steps: [
+          { text: 'En serie, la constante equivalente es menor que las dos.', math: 'k_s = \\frac{k_1k_2}{k_1 + k_2} = \\frac{(200)(300)}{500} = ' + fx(es.kS) + '\\ \\text{N/m} \\qquad x_s = \\frac{mg}{k_s} = ' + fx(es.xS, 4) + '\\ \\text{m}' },
+          { text: 'Comprobación: cada uno se estira $mg/k_i$ y se suman: $0.0981 + 0.0654 = ' + fx(es.xS, 4) + '$ m.' },
+          { text: 'En paralelo, las constantes se suman.', math: 'k_p = k_1 + k_2 = ' + es.kP + '\\ \\text{N/m} \\qquad x_p = \\frac{mg}{k_p} = ' + fx(es.xP, 4) + '\\ \\text{m}' },
+          { text: 'El mismo par de resortes se estira unas cuatro veces más en serie que en paralelo.' }
+        ],
+        answer: 'En serie $x \\approx ' + fx(es.xS, 3) + '\\ \\text{m}$; en paralelo $x \\approx ' + fx(es.xP, 3) + '\\ \\text{m}$.',
+        verify: { lab: 'call', mod: 'friction', fn: 'hang', args: [es.m, es.k1, es.k2, 'series'], values: { k: es.kS, x: es.xS } }
       },
       {
         type: 'concept', heading: 'Fricción estática y cinética', short: 'Fricción',
@@ -132,12 +159,13 @@
 
     lab: {
       type: 'spring-friction', title: 'Fricción con ángulo y resorte',
-      intro: 'Mueve la fuerza, su ángulo y los coeficientes, cambia entre empujar y jalar, y agrega un resorte. El DCL y la gráfica de fricción cambian en vivo. Escribe tu $N$ y tu $a$: el lab detecta si usaste $N = mg$ con ángulo o $\\mu_s$ cuando ya desliza.',
+      intro: 'Tiene dos modos. En <strong>fricción</strong>, mueve la fuerza, su ángulo y los coeficientes, cambia entre empujar y jalar, y agrega un resorte. El DCL y la gráfica de fricción cambian en vivo. Escribe tu $N$ y tu $a$: el lab detecta si usaste $N = mg$ con ángulo o $\\mu_s$ cuando ya desliza. En <strong>resorte colgado</strong>, arma uno, dos en serie o dos en paralelo y predice el estiramiento.',
       cfg: { start: { m: 10, F: 80, th: 30, mode: 'push', mus: 0.4, muk: 0.3, spring: false, k: 200, x: 0.2 } }
     },
 
     formulas: [
       { label: 'Hooke', tex: 'F = -kx' },
+      { label: 'Serie y paralelo', tex: '\\tfrac{1}{k_s} = \\tfrac{1}{k_1} + \\tfrac{1}{k_2},\\ \\ k_p = k_1 + k_2' },
       { label: 'Estática', tex: 'f_s \\le \\mu_s N' },
       { label: 'Cinética', tex: 'f_k = \\mu_k N' },
       { label: 'Empujar hacia abajo', tex: 'N = mg + F\\sin\\theta' },
@@ -223,6 +251,33 @@
         oracle: { lab: 'value', value: function (v) { return v.F / v.x; } },
         hint: '$F = kx$.',
         solution: function (v) { return '$$k = \\frac{F}{x} = \\frac{' + v.F + '}{' + v.x + '} = ' + fx(v.F / v.x) + '\\ \\text{N/m}$$'; }
+      },
+      {
+        id: 'f1-s10-serie', title: 'Dos resortes en serie',
+        vars: { m: [0.2, 5, 0.1], k1: [50, 500, 25], k2: [50, 500, 25] },
+        prompt: function (v) { return '<p>Cuelgas una masa de $' + v.m + '\\ \\text{kg}$ de dos resortes en serie (uno abajo del otro) de $k_1 = ' + v.k1 + '$ y $k_2 = ' + v.k2 + '\\ \\text{N/m}$. ¿Cuánto se estira el arreglo?</p>'; },
+        check: 'numeric', unit: 'm',
+        answer: function (v) { return v.m * g * (1 / v.k1 + 1 / v.k2); },
+        mistakes: { parallel: function (v) { return v.m * g / (v.k1 + v.k2); } },
+        feedback: [{ when: 'parallel', say: 'Sumaste las constantes: eso es en paralelo. En serie se suman las elongaciones.' }],
+        oracle: { lab: 'call', mod: 'friction', fn: 'hang', field: 'x', args: function (v) { return [v.m, v.k1, v.k2, 'series']; } },
+        hint: 'Cada resorte sostiene todo el peso: $x_1 = mg/k_1$ y $x_2 = mg/k_2$.',
+        solution: function (v) { return '$$x = \\frac{mg}{k_1} + \\frac{mg}{k_2} = ' + fx(v.m * g / v.k1, 4) + ' + ' + fx(v.m * g / v.k2, 4) + ' = ' + fx(v.m * g * (1 / v.k1 + 1 / v.k2), 4) + '\\ \\text{m}$$'; }
+      },
+      {
+        id: 'f1-s10-paralelo', title: 'Dos resortes en paralelo',
+        vars: { m: [0.2, 5, 0.1], k1: [50, 500, 25], k2: [50, 500, 25] },
+        prompt: function (v) { return '<p>Una placa de $' + v.m + '\\ \\text{kg}$ cuelga de dos resortes lado a lado de $k_1 = ' + v.k1 + '$ y $k_2 = ' + v.k2 + '\\ \\text{N/m}$ y se estiran igual. ¿Cuánto se estiran?</p>'; },
+        check: 'numeric', unit: 'm',
+        answer: function (v) { return v.m * g / (v.k1 + v.k2); },
+        mistakes: { series: function (v) { return v.m * g * (1 / v.k1 + 1 / v.k2); }, single: function (v) { return v.m * g / v.k1; } },
+        feedback: [
+          { when: 'series', say: 'Eso sería en serie. En paralelo se reparten el peso: $k = k_1 + k_2$.' },
+          { when: 'single', say: 'Usaste solo un resorte; los dos sostienen la placa.' }
+        ],
+        oracle: { lab: 'call', mod: 'friction', fn: 'hang', field: 'x', args: function (v) { return [v.m, v.k1, v.k2, 'parallel']; } },
+        hint: '$(k_1 + k_2)x = mg$.',
+        solution: function (v) { return '$$x = \\frac{mg}{k_1 + k_2} = \\frac{' + fx(v.m * g) + '}{' + (v.k1 + v.k2) + '} = ' + fx(v.m * g / (v.k1 + v.k2), 4) + '\\ \\text{m}$$'; }
       },
       {
         id: 'f1-s10-concepto', title: 'Concepto: arrancar cuesta más',
