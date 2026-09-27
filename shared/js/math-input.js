@@ -17,10 +17,34 @@
     if (window.customElements && window.customElements.get('math-field')) return Promise.resolve(true);
     if (!loading) {
       loading = window.LabUI.loadScript(URL).then(function () {
-        return window.customElements.whenDefined('math-field').then(function () { return true; });
+        return window.customElements.whenDefined('math-field').then(function () { setupKeyboardClose(); return true; });
       });
     }
     return loading;
+  }
+
+  // Botón “Ocultar teclado”, fijo justo encima del teclado virtual mientras está abierto.
+  var closeBtn = null;
+  function setupKeyboardClose() {
+    var kb = window.mathVirtualKeyboard;
+    if (!kb || closeBtn) return;
+    closeBtn = document.createElement('button');
+    closeBtn.type = 'button';
+    closeBtn.className = 'kbd-close';
+    closeBtn.hidden = true;
+    closeBtn.innerHTML = '<span aria-hidden="true">⌄</span> Ocultar teclado';
+    closeBtn.addEventListener('mousedown', function (e) { e.preventDefault(); });
+    closeBtn.addEventListener('click', function () { kb.hide(); sync(); });
+    document.body.appendChild(closeBtn);
+    function sync() {
+      var h = kb.boundingRect ? kb.boundingRect.height : 0;
+      var open = kb.visible && h > 0;
+      closeBtn.hidden = !open;
+      if (open) closeBtn.style.bottom = (h + 8) + 'px';
+    }
+    kb.addEventListener('geometrychange', sync);
+    kb.addEventListener('virtual-keyboard-toggle', sync);
+    window.addEventListener('resize', sync);
   }
 
   // Paleta: [texto del botón, LaTeX a insertar, nombre accesible]
