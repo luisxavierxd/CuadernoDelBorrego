@@ -128,12 +128,26 @@
   }
 
   /* ---------- Contadores ---------- */
+  // Los bancos de preguntas se cargan aquí solo para contar cuántas hay.
+  function loadBanks(meta) {
+    var files = allSessions(meta).filter(function (s) { return s.bank; }).map(function (s) {
+      return '../data/' + meta.slug + '/bank/sesion-' + pad(s.n) + '.js';
+    });
+    return Promise.all(files.map(function (src) {
+      return new Promise(function (resolve) {
+        var sc = document.createElement('script');
+        sc.src = src; sc.onload = resolve; sc.onerror = resolve;
+        document.head.appendChild(sc);
+      });
+    }));
+  }
+
   function renderStats(meta, root) {
     var sessions = allSessions(meta);
     var labs = {};
     sessions.forEach(function (s) { if (s.lab) labs[s.lab] = true; });
     var bank = (window.CB_BANK && window.CB_BANK[meta.code]) || {};
-    var questions = Object.keys(bank).reduce(function (n, k) { return n + bank[k].length; }, 0);
+    var questions = Object.keys(bank).reduce(function (n, k) { return n + bank[k].questions.length; }, 0);
     var stats = [
       { value: meta.sessions, label: 'sesiones' },
       { value: Object.keys(labs).length, label: 'labs interactivos' },
@@ -205,7 +219,13 @@
     meta = meta || window.COURSE_META;
     if (!meta) return;
     var q = function (id) { return document.getElementById(id); };
-    if (q('course-stats')) renderStats(meta, q('course-stats'));
+    if (q('course-stats')) {
+      renderStats(meta, q('course-stats'));
+      loadBanks(meta).then(function () {
+        renderStats(meta, q('course-stats'));
+        if (window.CBAnim) window.CBAnim.counters(q('course-stats'));
+      });
+    }
     if (q('course-timeline')) renderTimeline(meta, q('course-timeline'));
     if (q('course-syllabus')) renderSyllabus(meta, q('course-syllabus'));
     if (q('course-next')) renderNext(meta, q('course-next'));

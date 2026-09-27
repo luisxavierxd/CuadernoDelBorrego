@@ -1,7 +1,8 @@
 /* =====================================================================
    Cálculo 1 · N1 — metadatos del curso (§3, §7.4).
    Lo leen la portada (course-home.js) y la plantilla de sesión.
-   ready: true cuando la sesión ya tiene su data/calculo-1/sesion-NN.js.
+   ready: true cuando la sesión ya tiene su data/calculo-1/sesion-NN.js;
+   bank: true cuando tiene banco de quiz en data/calculo-1/bank/sesion-NN.js.
    ===================================================================== */
 window.COURSE_META = {
   slug: 'calculo-1',
@@ -36,7 +37,7 @@ window.COURSE_META = {
       id: 'C', label: 'Integral',
       sessions: [
         { n: 9,  title: 'La integral y el Teorema Fundamental del Cálculo', temario: ['5.1', '5.2'], lab: 'riemann' },
-        { n: 10, title: 'Integrales directas y cambio de variable', temario: [], lab: 'antiderivative-check', ready: true },
+        { n: 10, title: 'Integrales directas y cambio de variable', temario: [], lab: 'antiderivative-check', ready: true, bank: true },
         { n: 11, title: 'Integración por partes', temario: ['5.6'], lab: 'antiderivative-check' },
         { n: 12, title: 'Sustitución trigonométrica', temario: ['5.6'], lab: 'antiderivative-check' },
         { n: 13, title: 'Fracciones parciales', temario: ['5.6'], lab: 'antiderivative-check' },
@@ -46,3 +47,6 @@ window.COURSE_META = {
     }
   ]
 };
+
+// Registro por código: el lanzador de quizzes carga las metas de ambos cursos.
+(window.CB_METAS = window.CB_METAS || {})[window.COURSE_META.code] = window.COURSE_META;

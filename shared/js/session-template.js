@@ -287,6 +287,19 @@
   function renderQuiz(data) {
     if (!data.quiz) return null;
     var tags = (data.quiz.tags || []).join(',');
+    var n = parseInt(data.number, 10);
+    // Con banco cargado, el quiz corre aquí mismo; si no, se invita al lanzador.
+    if (window.CBQuizUI && window.CB_BANK && window.CB_BANK[META.code] && window.CB_BANK[META.code]['S' + pad(n)]) {
+      var box = el('div', { class: 'session-quiz' });
+      setTimeout(function () {
+        window.CBQuizUI.sessionQuiz(box, { code: META.code, session: n, count: data.quiz.count, name: META.name, root: ROOT });
+      }, 0);
+      return section('sec-quiz', 'Quiz de la sesión', [
+        el('p', { class: 'reveal' }, [data.quiz.count + ' preguntas de esta sesión, distintas cada vez, con la explicación al responder. Al terminar ves tu semáforo por subtema.']),
+        el('div', { class: 'sheet quiz-sheet reveal' }, [box]),
+        el('p', { class: 'muted' }, [el('a', { href: ROOT + 'quiz/?curso=' + META.code + '&tags=' + encodeURIComponent(tags) }, ['Más opciones en el lanzador de quizzes y simulacros'])])
+      ]);
+    }
     return section('sec-quiz', 'Quiz de la sesión', [el('div', { class: 'card quiz-cta reveal' }, [
       el('p', {}, [data.quiz.count + ' preguntas cortas de esta sesión, con retroalimentación inmediata y tu semáforo por tema.']),
       el('a', { class: 'btn btn--primary', href: ROOT + 'quiz/?curso=' + META.code + '&tags=' + encodeURIComponent(tags) }, ['Hacer el quiz']),

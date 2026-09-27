@@ -1,7 +1,8 @@
 /* =====================================================================
    Física 1 · N1 — metadatos del curso (§3, §7.4; temario aprobado 2026-09-26).
    Lo leen la portada (course-home.js) y la plantilla de sesión.
-   ready: true cuando la sesión ya tiene su data/fisica-1/sesion-NN.js.
+   ready: true cuando la sesión ya tiene su data/fisica-1/sesion-NN.js;
+   bank: true cuando tiene banco de quiz en data/fisica-1/bank/sesion-NN.js.
    ===================================================================== */
 window.COURSE_META = {
   slug: 'fisica-1',
@@ -27,7 +28,7 @@ window.COURSE_META = {
       sessions: [
         { n: 4,  title: 'Posición, velocidad y aceleración como derivadas · MRU', lab: 'motion-graphs' },
         { n: 5,  title: 'MRUA · caída libre y tiro vertical', lab: 'kinematics-check' },
-        { n: 6,  title: 'Tiro parabólico', lab: 'projectile-check', ready: true },
+        { n: 6,  title: 'Tiro parabólico', lab: 'projectile-check', ready: true, bank: true },
         { n: 7,  title: 'Movimiento circular y relativo', lab: 'circular-vectors' }
       ]
     },
@@ -56,3 +57,6 @@ window.COURSE_META = {
     }
   ]
 };
+
+// Registro por código: el lanzador de quizzes carga las metas de ambos cursos.
+(window.CB_METAS = window.CB_METAS || {})[window.COURSE_META.code] = window.COURSE_META;

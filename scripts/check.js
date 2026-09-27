@@ -121,6 +121,9 @@ function checkCourse(course) {
   if (!fs.existsSync(path.join(ROOT, course, 'index.html'))) err(course, 'falta la portada index.html');
 
   for (const s of all) {
+    const bankFile = path.join(ROOT, 'data', course, 'bank', `sesion-${pad(s.n)}.js`);
+    if (s.bank && !fs.existsSync(bankFile)) err(where, `S${pad(s.n)} marcada bank pero falta ${rel(bankFile)}`);
+    if (!s.bank && fs.existsSync(bankFile)) warnings.push(`${rel(bankFile)} existe pero S${pad(s.n)} no está marcada bank en course-meta`);
     const data = path.join(ROOT, 'data', course, `sesion-${pad(s.n)}.js`);
     const exists = fs.existsSync(data);
     if (s.ready && !exists) err(where, `S${pad(s.n)} marcada ready pero falta ${rel(data)}`);

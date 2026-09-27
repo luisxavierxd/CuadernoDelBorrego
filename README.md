@@ -23,10 +23,14 @@ shared/js/labs/registry.js         window.Labs · window.LabMath · window.LabUI
 shared/js/labs/<tipo>.js           Un archivo por lab (antiderivative-check, projectile-check…)
 shared/js/diagrams/<curso>.js      Diagramas SVG: Diagrams[id](state)
 shared/js/exercises.js             Ejercicios parametrizados y su calificación
+shared/js/quiz/engine.js           Selección, calificación, semáforo, arrastre de error, simulacro
+shared/js/quiz/ui.js               Tarjetas, semáforo, quiz de práctica, simulacro y lanzador (/quiz/)
 data/courses.js                    Fuente única de cursos del hub
 data/quiz-presets.js               Atajos del ritmo sugerido (quiz y parciales)
 data/<curso>/course-meta.js        Bloques y sesiones (ready: true = sesión publicada)
 data/<curso>/sesion-NN.js          Contenido de cada sesión (window.SESSION_DATA)
+data/<curso>/bank/sesion-NN.js     Banco de preguntas de la sesión (bank: true en course-meta)
+data/<curso>/exam-problems.js      Problemas de examen con incisos encadenados
 reference/lab-antiderivada.html    Demo aprobada que se portó a antiderivative-check
 scripts/                           Validación en Node
 ```
@@ -41,6 +45,7 @@ npm run check                   # esquemas, links internos y externos, colores f
 npm run contrast                # WCAG AA de los tokens en ambos temas
 npm run test:labs               # LabMath (math.js 15.2.0 se descarga una vez a scripts/.cache)
 npm run test:examples           # ejemplos y ejercicios contra LabMath, en cientos de instancias
+npm run test:quiz               # motor de quizzes, bancos (≥ 100 por sesión) y problemas de examen
 npm run qa                      # Playwright: 360/1024/1440 px, ambos temas, reduced-motion, labs montados
 ```
 

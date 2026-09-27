@@ -17,6 +17,9 @@ if (!s) { console.error(`${course} no tiene la sesión ${NN}`); process.exit(1);
 const dataFile = path.join(ROOT, 'data', course, `sesion-${NN}.js`);
 if (!fs.existsSync(dataFile)) { console.error(`Falta ${path.relative(ROOT, dataFile)}`); process.exit(1); }
 const lab = loadData(dataFile).SESSION_DATA.lab;
+const bankFile = path.join(ROOT, 'data', course, 'bank', `sesion-${NN}.js`);
+const hasBank = !!s.bank && fs.existsSync(bankFile);
+if (s.bank && !hasBank) { console.error(`S${NN} dice bank: true pero falta ${path.relative(ROOT, bankFile)}`); process.exit(1); }
 const labFile = lab && fs.existsSync(path.join(ROOT, 'shared/js/labs', lab.type + '.js')) ? lab.type : null;
 
 const R = '../../../';
@@ -41,7 +44,8 @@ const html = `<!doctype html>
     <link rel="stylesheet" href="${R}shared/css/theme.css">
     <link rel="stylesheet" href="${R}shared/css/sesion.css">
     <link rel="stylesheet" href="${R}shared/css/labs.css">
-    <script defer src="${KATEX}katex.min.js"></script>
+${hasBank ? `    <link rel="stylesheet" href="${R}shared/css/quiz.css">
+` : ''}    <script defer src="${KATEX}katex.min.js"></script>
     <script defer src="${KATEX}contrib/auto-render.min.js"></script>
 </head>
 
@@ -57,7 +61,10 @@ const html = `<!doctype html>
     <script src="${R}shared/js/labs/registry.js"></script>
 ${labFile ? `    <script src="${R}shared/js/labs/${labFile}.js"></script>\n` : ''}    <script src="${R}shared/js/diagrams/${course}.js"></script>
     <script src="${R}shared/js/exercises.js"></script>
-    <script src="${R}data/${course}/course-meta.js"></script>
+${hasBank ? `    <script src="${R}shared/js/quiz/engine.js"></script>
+    <script src="${R}shared/js/quiz/ui.js"></script>
+    <script src="${R}data/${course}/bank/sesion-${NN}.js"></script>
+` : ''}    <script src="${R}data/${course}/course-meta.js"></script>
     <script src="${R}data/${course}/sesion-${NN}.js"></script>
     <script src="${R}shared/js/session-template.js"></script>
     <script>CBTemplate.render(window.SESSION_DATA);</script>

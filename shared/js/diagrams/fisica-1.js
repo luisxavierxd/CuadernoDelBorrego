@@ -91,4 +91,47 @@
     }
     return svg('Proyectil lanzado con rapidez v₀ y ángulo θ; se muestra su vector velocidad y sus componentes en el instante actual.', body);
   };
+
+  /* ---------- Problemas de examen ---------- */
+  function svgBox(vb, label, body) {
+    return '<svg viewBox="' + vb + '" role="img" aria-label="' + label + '"><g class="sketch">' + body + '</g></svg>';
+  }
+
+  // Balón y barda, con escala igual en x y en y.
+  D['exam-barda'] = function (v) {
+    var th = v.th * RAD, vx = v.v0 * Math.cos(th), vy = v.v0 * Math.sin(th);
+    var Tf = 2 * vy / G, Rr = vx * Tf, Hh = vy * vy / (2 * G);
+    var k = Math.min(540 / (Rr * 1.05), 220 / (Math.max(Hh, v.h) * 1.15));
+    var PX = function (x) { return 40 + x * k; }, PY = function (y) { return 270 - y * k; };
+    var d = '';
+    for (var i = 0; i <= 60; i++) { var t = Tf * i / 60; d += (i ? 'L' : 'M') + PX(vx * t).toFixed(1) + ' ' + PY(vy * t - G * t * t / 2).toFixed(1); }
+    var body =
+      '<path class="axis" d="M20 ' + PY(0) + 'H600" stroke-width="1.5"/>' +
+      '<path class="ref" d="' + d + '" fill="none" stroke-width="3" stroke-dasharray="1 9" stroke-linecap="round"/>' +
+      '<rect class="wall" x="' + (PX(v.D) - 4).toFixed(1) + '" y="' + PY(v.h).toFixed(1) + '" width="8" height="' + (v.h * k).toFixed(1) + '"/>' +
+      '<path class="axis" d="M' + PX(0) + ' ' + (PY(0) + 16) + 'H' + PX(v.D).toFixed(1) + '" stroke-width="1.2"/>' +
+      text((PX(0) + PX(v.D)) / 2, PY(0) + 34, v.D + ' m', ' text-anchor="middle" font-size="18"') +
+      text(PX(v.D) + 10, PY(v.h) + 16, v.h + ' m', ' font-size="18"') +
+      arrow('aux', PX(0), PY(0), 46 * Math.cos(th), -46 * Math.sin(th), 3) +
+      text(PX(0) + 50, PY(0) - 30, 'v₀ = ' + v.v0 + ' m/s', ' font-size="18"');
+    return svgBox('0 20 620 300', 'Balón lanzado desde el piso hacia una barda de ' + v.h + ' m que está a ' + v.D + ' m.', body);
+  };
+
+  // Canica que sale horizontalmente del borde de una mesa.
+  D['exam-mesa'] = function (v) {
+    var t = Math.sqrt(2 * v.h / G), xr = v.v0 * t;
+    var k = Math.min(360 / Math.max(xr, 0.5), 200 / v.h);
+    var X0 = 200, PX = function (x) { return X0 + x * k; }, PY = function (y) { return 270 - y * k; };
+    var d = '';
+    for (var i = 0; i <= 40; i++) { var ti = t * i / 40; d += (i ? 'L' : 'M') + PX(v.v0 * ti).toFixed(1) + ' ' + PY(v.h - G * ti * ti / 2).toFixed(1); }
+    var body =
+      '<path class="axis" d="M20 ' + PY(0) + 'H600" stroke-width="1.5"/>' +
+      '<path class="table" d="M' + (X0 - 150) + ' ' + PY(v.h).toFixed(1) + 'H' + X0 + 'V' + PY(0) + 'M' + (X0 - 130) + ' ' + PY(v.h).toFixed(1) + 'V' + PY(0) + '" fill="none" stroke-width="3"/>' +
+      '<path class="ref" d="' + d + '" fill="none" stroke-width="3" stroke-dasharray="1 9" stroke-linecap="round"/>' +
+      arrow('aux', X0, PY(v.h) - 8, 50, 0, 3) +
+      text(X0 + 56, PY(v.h) - 2, 'v₀', ' font-size="19"') +
+      text(X0 - 8, (PY(v.h) + PY(0)) / 2, 'h = ' + v.h + ' m', ' text-anchor="end" font-size="18"') +
+      '<circle class="dot-trace" cx="' + PX(xr).toFixed(1) + '" cy="' + PY(0) + '" r="5"/>';
+    return svgBox('0 20 620 300', 'Canica que sale horizontalmente del borde de una mesa de ' + v.h + ' m y cae describiendo media parábola.', body);
+  };
 })();

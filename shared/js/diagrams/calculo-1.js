@@ -76,4 +76,46 @@
     if (t > 0.15 && t < 0.85) body += text(X(0.9), Y(1.05), 'la base se estira: du = 2x·dx', ' font-size="18"');
     return svg('0 0 600 370', 'Área bajo f(x) = 2x cos(x²) entre 0 y 1.6 que se transforma en el área bajo cos(u) entre 0 y 2.56; el área neta es la misma.', body);
   };
+
+  /* ---------- Problemas de examen ---------- */
+  // Caudal r(t) = c t/(t² + 1): el área es el volumen; máximo en t = 1.
+  D['exam-caudal'] = function (s) {
+    var c = s.c || 4, T = s.T || 4;
+    var r = function (t) { return c * t / (t * t + 1); };
+    var X = function (t) { return 60 + t * 500 / T; };
+    var Y = function (y) { return 250 - y * 190 / (c / 2); };
+    var area = 'M' + X(0) + ' ' + Y(0) + path(r, 0, T, X, Y, 160).replace(/^M/, 'L') + 'L' + X(T) + ' ' + Y(0) + 'Z';
+    var body =
+      '<path class="area-fill" d="' + area + '"/>' +
+      '<path class="axis" d="M' + X(0) + ' ' + Y(0) + 'H' + (X(T) + 20) + 'M' + X(0) + ' ' + Y(0) + 'V' + (Y(c / 2) - 20) + '" stroke-width="1.5" fill="none"/>' +
+      '<path class="ref" d="' + path(r, 0, T, X, Y, 160) + '" fill="none" stroke-width="3.5" stroke-linecap="round"/>' +
+      '<path class="axis" d="M' + X(1) + ' ' + Y(c / 2) + 'V' + Y(0) + '" stroke-dasharray="4 6" stroke-width="1.2"/>' +
+      '<circle class="dot-ref" cx="' + X(1) + '" cy="' + Y(c / 2) + '" r="5"/>' +
+      text(X(1) + 10, Y(c / 2) - 10, 'máximo', ' font-size="18"') +
+      text(X(T), Y(0) + 24, 't = ' + T + ' min', ' text-anchor="end" font-size="18"') +
+      text(X(T * 0.55), Y(c / 8), 'V = área', ' text-anchor="middle" font-size="20"') +
+      text(X(0) + 8, Y(c / 2) - 22, 'r(t) en L/min', ' font-size="18"');
+    return svg('0 0 600 290', 'Gráfica del caudal r(t): sube hasta un máximo en t = 1 y luego baja; el área bajo la curva hasta t = ' + T + ' es el volumen.', body);
+  };
+
+  // Velocidad v(t) = k t cos(t²): positiva, se detiene en √(π/2) y regresa.
+  D['exam-velocidad'] = function (s) {
+    var k = s.k || 3, T = s.T || 1.8;
+    var v = function (t) { return k * t * Math.cos(t * t); };
+    var M = k * T;
+    var X = function (t) { return 60 + t * 500 / T; };
+    var Y = function (y) { return 145 - y * 110 / M; };
+    var ts = Math.sqrt(Math.PI / 2);
+    var fill = function (a, b) { return 'M' + X(a) + ' ' + Y(0) + path(v, a, b, X, Y, 80).replace(/^M/, 'L') + 'L' + X(b) + ' ' + Y(0) + 'Z'; };
+    var body =
+      '<path class="area-fill" d="' + fill(0, ts) + '"/>' +
+      '<path class="area-fill area-fill--neg" d="' + fill(ts, T) + '"/>' +
+      '<path class="axis" d="M' + X(0) + ' ' + Y(0) + 'H' + (X(T) + 20) + 'M' + X(0) + ' ' + Y(-M) + 'V' + Y(M) + '" stroke-width="1.5" fill="none"/>' +
+      '<path class="ref" d="' + path(v, 0, T, X, Y, 160) + '" fill="none" stroke-width="3.5" stroke-linecap="round"/>' +
+      '<circle class="dot-aux" cx="' + X(ts) + '" cy="' + Y(0) + '" r="5"/>' +
+      text(X(ts), Y(0) - 12, 'v = 0', ' text-anchor="middle" font-size="18"') +
+      text(X(T), Y(0) + 24, 't = ' + T + ' s', ' text-anchor="end" font-size="18"') +
+      text(X(0) + 8, Y(M) + 6, 'v(t) en m/s', ' font-size="18"');
+    return svg('0 0 600 290', 'Gráfica de la velocidad v(t): positiva hasta que se detiene en t = √(π/2); luego negativa, el robot regresa.', body);
+  };
 })();
