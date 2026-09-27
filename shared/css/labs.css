@@ -129,3 +129,29 @@ math-field::part(menu-toggle), math-field::part(virtual-keyboard-toggle) { displ
 .lab-table th, .lab-table td { text-align: left; padding: 6px 12px; border-bottom: 1px solid var(--line); font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
 .lab-table th { font-family: var(--font-body); font-weight: 600; color: var(--text-muted); }
 .lab-list { margin: 0; padding-left: 1.1rem; font-size: 0.9rem; display: grid; gap: 4px; }
+
+/* ===== Vista 3D del lab de sólidos (solo PC) ===== */
+.lab-stage--3d { aspect-ratio: 3 / 2; cursor: grab; }
+.lab-stage--3d:active { cursor: grabbing; }
+.lab-viewbar[hidden] { display: none; }
+.lab-viewbar .btn[aria-pressed="true"] { border-color: var(--accent); color: var(--accent); }
+
+/* ===== La gráfica acompaña al scroll =====
+   Misma técnica que el circuito del Portfolio: la columna de la gráfica ocupa
+   todo el alto de los controles y la gráfica es sticky dentro de ella, así se
+   queda a la vista mientras se mueven los controles.
+   PC: centrada en el espacio bajo el encabezado (--board-top lo calcula
+   LabUI.follow con la altura real de la gráfica; si no cabe, no se fija).
+   Móvil: la gráfica pasa arriba y se queda pegada bajo el encabezado con un
+   alto máximo; lo que no quepa (tablas) se desplaza dentro de ella. */
+@media (min-width: 961px) {
+  .lab-board.is-follow { position: sticky; top: var(--board-top, calc(var(--header-h) + 12px)); align-self: start; }
+}
+@media (max-width: 960px) {
+  .lab-grid > .lab-board {
+    order: -1; position: sticky; top: calc(var(--header-h) + 4px); z-index: 5;
+    max-height: 52vh; overflow-y: auto; overscroll-behavior: contain;
+    padding: 6px 0 8px; background: var(--panel); border-bottom: 1px solid var(--line-strong);
+  }
+  .lab-grid > .lab-board .lab-plot { max-height: 38vh; }
+}

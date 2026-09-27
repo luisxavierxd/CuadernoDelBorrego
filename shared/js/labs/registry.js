@@ -191,6 +191,25 @@
     return manimP;
   }
 
+  // La gráfica acompaña al scroll (técnica del circuito del Portfolio): en PC se fija
+  // centrada en el espacio bajo el encabezado mientras se bajan los controles. Si la
+  // gráfica es más alta que la ventana no se fija, para que nada quede inalcanzable.
+  // En móvil lo resuelve el CSS (se pega arriba con alto máximo).
+  function follow(node) {
+    var board = node.querySelector('.lab-grid > .lab-board');
+    if (!board) return;
+    function fit() {
+      var hh = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--header-h')) || 64;
+      var vh = window.innerHeight, h = board.offsetHeight, room = vh - hh - 24;
+      var ok = h > 0 && h <= room;
+      board.classList.toggle('is-follow', ok);
+      if (ok) board.style.setProperty('--board-top', Math.round(hh + (vh - hh - h) / 2) + 'px');
+    }
+    if ('ResizeObserver' in window) new ResizeObserver(fit).observe(board);
+    window.addEventListener('resize', fit);
+    fit();
+  }
+
   // Monta un lab y marca el nodo cuando está listo (lo revisa qa-browser.js).
   function mount(node, type, cfg) {
     var fn = window.Labs[type];
@@ -199,7 +218,9 @@
       node.setAttribute('data-lab-ready', 'missing');
       return;
     }
-    Promise.resolve(fn(node, cfg || {})).then(function () {
+    var ready = fn(node, cfg || {});
+    follow(node);                     // el lab ya armó su DOM; la gráfica acompaña al scroll
+    Promise.resolve(ready).then(function () {
       node.setAttribute('data-lab-ready', 'true');
     }, function (e) {
       console.error(e);
