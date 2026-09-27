@@ -24,9 +24,9 @@
       {
         type: 'concept', heading: 'Área con rectángulos', short: 'Sumas de Riemann',
         body: [
-          'Para aproximar el área bajo $f$ en $[a, b]$, parte el intervalo en $n$ tiras de ancho $\\Delta x = \\dfrac{b - a}{n}$ y pon un rectángulo en cada una.',
+          'Para aproximar el área bajo $f$ en $[a, b]$, parte el intervalo en $n$ tiras de ancho $\\Delta x = (b - a)/n$ y pon un rectángulo en cada una.',
           'La altura se toma en el extremo izquierdo, en el derecho o en el punto medio de cada tira: $$S_n = \\sum_{i=1}^{n} f(x_i^*)\\,\\Delta x.$$',
-          'Cuando $n \\to \\infty$, todas estas sumas se acercan al mismo número: la <strong>integral definida</strong> $\\displaystyle\\int_a^b f(x)\\,dx$.'
+          'Cuando $n \\to \\infty$, todas estas sumas se acercan al mismo número, la <strong>integral definida</strong>: $$\\int_a^b f(x)\\,dx = \\lim_{n\\to\\infty} S_n.$$'
         ]
       },
       {
@@ -45,7 +45,13 @@
         type: 'concept', heading: 'Área neta con signo', short: 'Área neta',
         body: [
           'Donde $f < 0$, los rectángulos tienen altura negativa: la integral <strong>resta</strong> esa área. Por eso $\\int_a^b f$ es un área <em>neta</em>.',
-          'Propiedades útiles: $\\displaystyle\\int_a^a f = 0$, $\\displaystyle\\int_b^a f = -\\int_a^b f$, $\\displaystyle\\int_a^b (f + g) = \\int_a^b f + \\int_a^b g$ y $\\displaystyle\\int_a^b f = \\int_a^c f + \\int_c^b f$.'
+          'Propiedades útiles:'
+        ],
+        list: [
+          'Sin ancho no hay área: $\\displaystyle\\int_a^a f = 0$.',
+          'Invertir los límites cambia el signo: $\\displaystyle\\int_b^a f = -\\int_a^b f$.',
+          'Se reparte en sumas: $\\displaystyle\\int_a^b (f + g) = \\int_a^b f + \\int_a^b g$.',
+          'Se parte por tramos: $\\displaystyle\\int_a^b f = \\int_a^c f + \\int_c^b f$.'
         ]
       },
       {
