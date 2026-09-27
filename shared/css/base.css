@@ -86,6 +86,7 @@ img, svg { max-width: 100%; }
 .btn--ghost { background: transparent; color: var(--text); border-color: var(--line-strong); }
 .btn--ghost:hover { border-color: var(--accent); color: var(--accent); }
 .btn--small { min-height: 36px; padding: 6px 12px; font-size: 0.85rem; }
+.btn:disabled, .btn[aria-disabled="true"] { opacity: 0.45; cursor: not-allowed; transform: none; pointer-events: none; }
 
 /* ===== Tarjetas: se separan con borde, no con sombra (§5.7) ===== */
 .card {

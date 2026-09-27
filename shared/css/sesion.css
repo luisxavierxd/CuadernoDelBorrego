@@ -79,7 +79,7 @@ a.dot:hover::before { background: var(--accent-soft); transform: scale(1.2); }
 
 .figure { margin: 0; padding: var(--space-3) var(--space-3) var(--space-2) calc(48px + var(--space-2)); }
 :root[data-theme="dark"] .figure { padding: var(--space-3); }
-.figure__svg svg { display: block; width: 100%; height: auto; overflow: visible; }
+.figure__svg svg { display: block; width: 100%; height: auto; overflow: hidden; }   /* nada se sale del pizarrón */
 .figure__cap { margin-top: var(--space-1); color: var(--text-muted); font-size: 0.9rem; }
 .figure__title { margin: 0 0 var(--space-1); font-size: 1.05rem; color: var(--text-muted); }
 .figure svg .ref, .figure svg .aux, .figure svg .trace, .figure svg .error, .figure svg .axis, .figure svg .student { fill: none; }

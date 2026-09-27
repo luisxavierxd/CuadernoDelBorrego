@@ -128,20 +128,21 @@
   // S01 · Razón de cambio promedio: pendiente de la secante entre dos instantes.
   D['rate-of-change'] = function () {
     var s = function (t) { return 0.35 * t * t + 0.4 * t; };
-    var X = function (t) { return 60 + t * 90; }, Y = function (y) { return 300 - y * 38; };
-    var a = 1.5, b = 4.5;
+    // s(5.4) ≈ 12.4: la escala vertical cabe completa en el recuadro
+    var X = function (t) { return 60 + t * 92; }, Y = function (y) { return 300 - y * 20; };
+    var a = 1.5, b = 4.5, m = (s(b) - s(a)) / (b - a);
     var body =
-      '<path class="axis" d="M' + X(0) + ' ' + Y(0) + 'H' + X(5.8) + 'M' + X(0) + ' ' + Y(0) + 'V' + Y(7.2) + '" stroke-width="1.5" fill="none"/>' +
+      '<path class="axis" d="M' + X(0) + ' ' + Y(0) + 'H' + X(5.9) + 'M' + X(0) + ' ' + Y(0) + 'V' + Y(13.5) + '" stroke-width="1.5" fill="none"/>' +
       '<path class="ref" d="' + path(s, 0, 5.4, X, Y) + '" fill="none" stroke-width="3.5" stroke-linecap="round"/>' +
-      '<path class="aux" d="M' + X(a - 0.6) + ' ' + Y(s(a) - 0.6 * (s(b) - s(a)) / (b - a)) + 'L' + X(b + 0.6) + ' ' + Y(s(b) + 0.6 * (s(b) - s(a)) / (b - a)) + '" stroke-width="3"/>' +
+      '<path class="aux" d="M' + X(a - 0.8) + ' ' + Y(s(a) - 0.8 * m) + 'L' + X(b + 0.7) + ' ' + Y(s(b) + 0.7 * m) + '" stroke-width="3"/>' +
       '<path class="axis" d="M' + X(a) + ' ' + Y(s(a)) + 'H' + X(b) + 'V' + Y(s(b)) + '" stroke-dasharray="5 6" stroke-width="1.5" fill="none"/>' +
       '<circle class="dot-ref" cx="' + X(a) + '" cy="' + Y(s(a)) + '" r="6"/><circle class="dot-ref" cx="' + X(b) + '" cy="' + Y(s(b)) + '" r="6"/>' +
       text((X(a) + X(b)) / 2, Y(s(a)) + 24, 'Δt', ' text-anchor="middle" font-size="20"') +
       text(X(b) + 10, (Y(s(a)) + Y(s(b))) / 2, 'Δs', ' font-size="20"') +
-      text(X(5.8), Y(0) + 24, 't (s)', ' text-anchor="end" font-size="18"') +
-      text(X(0) + 8, Y(7.2) + 4, 's (m)', ' font-size="18"') +
-      text(X(0.3), Y(6.3), 'rapidez media = Δs / Δt', ' font-size="20"') +
-      text(X(0.3), Y(5.5), '= pendiente de la secante', ' font-size="18"');
+      text(X(5.9), Y(0) + 24, 't (s)', ' text-anchor="end" font-size="18"') +
+      text(X(0) + 8, Y(13.5) + 4, 's (m)', ' font-size="18"') +
+      text(X(0.3), Y(11.4), 'rapidez media = Δs / Δt', ' font-size="20"') +
+      text(X(0.3), Y(10.1), '= pendiente de la secante', ' font-size="18"');
     return svg('0 0 600 330', 'Gráfica de posición contra tiempo con una recta secante entre dos instantes; el triángulo muestra Δt y Δs.', body);
   };
 
