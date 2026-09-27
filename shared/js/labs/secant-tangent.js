@@ -28,7 +28,11 @@
     var presets = cfg.presets || PRESETS;
     var math = null, fn = null, P = presets[cfg.start || 0];
 
-    var preset = UI.select({ label: 'Función', options: presets.map(function (p) { return p.name; }) });
+    var preset = UI.select({ label: 'Ejemplo', options: presets.map(function (p) { return p.name; }) });
+    var fIn = UI.mathField({ label: 'Función f(x)', hint: 'Escribe cualquier función; usa la paleta o el teclado ⌨.', onEnter: function () { compile(); draw(); } });
+    var xr = UI.rangeField(['x desde', 'x hasta'], P.x, function () { compile(); draw(); });
+    var run = UI.button('Graficar', 'primary', function () { compile(); draw(); });
+    var status = h('div', { class: 'verdict', hidden: true, role: 'status' });
     var aS = UI.slider({ label: 'Punto a', min: P.x[0] + 0.3, max: P.x[1] - 1.2, step: 0.05, value: P.a, fmt: function (v) { return UI.fmt(v, 3); } }, draw);
     // h en escala logarítmica: la barra va de 10⁰ a 10⁻³
     var hS = UI.slider({ label: 'Separación h', min: -3, max: 0, step: 0.05, value: 0, fmt: function (v) { return UI.fmt(Math.pow(10, v), 3); } }, draw);
@@ -37,7 +41,7 @@
     var readout = h('dl', { class: 'lab-facts' });
     var svg = UI.svg(640, 380, 'Gráfica de f con la recta secante y la tangente en x = a');
     mount.appendChild(h('div', { class: 'lab-grid' }, [
-      h('form', { class: 'lab-controls', novalidate: true }, [preset.node, aS.node, hS.node, note, readout]),
+      h('form', { class: 'lab-controls', novalidate: true }, [preset.node, fIn.node, xr.node, h('div', { class: 'lab-buttons' }, [run]), status, aS.node, hS.node, note, readout]),
       h('figure', { class: 'lab-board' }, [
         h('figcaption', { class: 'lab-board__title sheet__title' }, ['La secante se vuelve tangente']),
         svg,
@@ -49,13 +53,29 @@
         h('div', { class: 'lab-table-wrap' }, [tbl])
       ])
     ]));
-    preset.input.addEventListener('change', function () {
-      P = presets[+preset.input.value];
-      aS.input.min = P.x[0] + 0.3; aS.input.max = P.x[1] - 1.2; aS.set(P.a);
-      compile(); draw();
-    });
+    mount.querySelector('form').addEventListener('submit', function (e) { e.preventDefault(); compile(); draw(); });
+    preset.input.addEventListener('change', function () { load(+preset.input.value); compile(); draw(); });
+    function load(i) { var q = presets[i]; fIn.setMath(q.f); xr.set(q.x[0], q.x[1]); aS.set(q.a); }
+    load(cfg.start || 0);
 
-    function compile() { fn = window.LabMath.core.build(math, P.f).fn; }
+    // Lee la función y la ventana; el rango de y sale de la curva (percentiles 2–98).
+    function compile() {
+      if (!math) return;
+      var r = xr.get();
+      if (!(isFinite(r[0]) && isFinite(r[1]) && r[1] - r[0] > 0.5)) { UI.verdict(status, 'bad', 'Revisa la ventana de x', '“x desde” debe ser menor que “x hasta” (al menos 0.5 de ancho).'); return; }
+      var g;
+      var src = String(fIn.get() || '').trim();
+      if (!src) return;
+      try { g = window.LabMath.core.build(math, src).fn; } catch (e) { UI.verdict(status, 'bad', 'No pude leer la función', e.message); return; }
+      status.hidden = true;
+      fn = g;
+      var ys = [];
+      for (var i = 0; i <= 200; i++) ys.push(fn(r[0] + (r[1] - r[0]) * i / 200));
+      var span = r[1] - r[0], lo = r[0] + 0.05 * span, hi = Math.max(lo + 0.05 * span, r[1] - 1.05);
+      aS.input.min = lo; aS.input.max = hi; aS.input.step = 'any';
+      var a = aS.get(); aS.set(a >= lo && a <= hi ? a : (lo + hi) / 2);
+      P = { x: r, y: window.LabPlot.range(ys) };
+    }
 
     function draw() {
       if (!fn) return;
@@ -79,6 +99,6 @@
     }
 
     document.addEventListener('cb:themechange', draw);
-    return UI.loadMath().then(function (m) { math = m; compile(); draw(); });
+    return UI.loadMath().then(function (m) { math = m; compile(); draw(); setTimeout(function () { compile(); draw(); }, 400); });
   };
 })();

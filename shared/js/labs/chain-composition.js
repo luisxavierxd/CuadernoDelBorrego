@@ -51,8 +51,8 @@
       return { node: f.node, get: function () { return f.input.value; }, setMath: function (s) { f.input.value = s; } };
     }
     var preset = UI.select({ label: 'Función compuesta', options: presets.map(function (p) { return p.name; }) });
-    var gIn = field({ label: 'Capa de afuera g(u)', palette: 'none' });
-    var hIn = field({ label: 'Capa de adentro u = h(x)', palette: 'none' });
+    var gIn = field({ label: 'Capa de afuera g(u)' });
+    var hIn = field({ label: 'Capa de adentro u = h(x)' });
     var dIn = field({ label: 'Tu derivada de g(h(x))', onEnter: function () { check(); } });
     var xS = UI.slider({ label: 'Punto x₀', min: P.x[0], max: P.x[1], step: 0.05, value: P.x0, fmt: function (v) { return UI.fmt(v, 3); } }, function () { draw(); });
     var run = UI.button('Comprobar', 'primary', check);

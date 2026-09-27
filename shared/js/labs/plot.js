@@ -86,6 +86,7 @@
     }
     // Región cerrada con relleno: pts = [[x, y], ...] en unidades de la gráfica.
     function poly(pts, cls) {
+      if (!pts.every(function (q) { return isFinite(q[0]) && isFinite(q[1]); })) return api;
       var d = pts.map(function (p, i) { return (i ? 'L' : 'M') + X(p[0]).toFixed(1) + ' ' + Y(Math.max(yr[0] - 1e3, Math.min(yr[1] + 1e3, p[1]))).toFixed(1); }).join('') + 'Z';
       el('path', { d: d, class: cls, 'clip-path': 'url(#' + clipId + ')' });
       return api;

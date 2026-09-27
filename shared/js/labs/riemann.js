@@ -40,14 +40,18 @@
     var UI = window.LabUI, h = UI.h;
     var presets = cfg.presets || PRESETS;
     var math = null, fn = null, P = presets[cfg.start || 0];
-    var preset = UI.select({ label: 'Función e intervalo', options: presets.map(function (p) { return p.name; }) });
+    var preset = UI.select({ label: 'Ejemplo', options: presets.map(function (p) { return p.name; }) });
+    var fIn = UI.mathField({ label: 'Función f(x)', hint: 'Escribe cualquier función y sus límites; usa la paleta o el teclado ⌨.', onEnter: function () { compile(); draw(); } });
+    var ab = UI.rangeField(['a (desde)', 'b (hasta)'], [P.a, P.b], function () { compile(); draw(); });
+    var run = UI.button('Graficar', 'primary', function () { compile(); draw(); });
+    var status = h('div', { class: 'verdict', hidden: true, role: 'status' });
     var type = UI.select({ label: 'Tipo de suma', options: TYPES.map(function (t) { return t[1]; }) });
     var nS = UI.slider({ label: 'Número de rectángulos n', min: 1, max: 100, step: 1, value: cfg.n || 4 }, draw);
     var facts = h('dl', { class: 'lab-facts' });
     var tbl = h('table', { class: 'lab-table' });
     var svg = UI.svg(640, 380, 'Gráfica de f con los rectángulos de la suma de Riemann');
     mount.appendChild(h('div', { class: 'lab-grid' }, [
-      h('form', { class: 'lab-controls', novalidate: true }, [preset.node, type.node, nS.node, facts]),
+      h('form', { class: 'lab-controls', novalidate: true }, [preset.node, fIn.node, ab.node, h('div', { class: 'lab-buttons' }, [run]), status, type.node, nS.node, facts]),
       h('figure', { class: 'lab-board' }, [
         h('figcaption', { class: 'lab-board__title sheet__title' }, ['Más rectángulos, menos error']),
         svg,
@@ -60,10 +64,20 @@
       ])
     ]));
     mount.querySelector('form').addEventListener('submit', function (e) { e.preventDefault(); });
-    preset.input.addEventListener('change', function () { P = presets[+preset.input.value]; compile(); draw(); });
+    preset.input.addEventListener('change', function () { load(+preset.input.value); compile(); draw(); });
+    function load(i) { var q = presets[i]; fIn.setMath(q.f); ab.set(q.a, q.b); }
+    load(cfg.start || 0);
     type.input.addEventListener('change', draw);
 
-    function compile() { fn = window.LabMath.core.build(math, P.f).fn; }
+    function compile() {
+      if (!math) return;
+      var r = ab.get();
+      if (!(isFinite(r[0]) && isFinite(r[1]) && r[1] > r[0])) { UI.verdict(status, 'bad', 'Revisa los límites', 'a debe ser menor que b.'); return; }
+      var src = String(fIn.get() || '').trim();
+      if (!src) return;
+      try { fn = window.LabMath.core.build(math, src).fn; P = { a: r[0], b: r[1] }; status.hidden = true; }
+      catch (e) { UI.verdict(status, 'bad', 'No pude leer la función', e.message); }
+    }
     function kind() { return TYPES[+type.input.value][0]; }
 
     function draw() {
@@ -92,6 +106,6 @@
     }
 
     document.addEventListener('cb:themechange', draw);
-    return UI.loadMath().then(function (m) { math = m; compile(); draw(); });
+    return UI.loadMath().then(function (m) { math = m; compile(); draw(); setTimeout(function () { compile(); draw(); }, 400); });
   };
 })();

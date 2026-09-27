@@ -229,6 +229,25 @@ function near(got, want, tol, msg) {
     eq(r.crit.length, 0, 'críticos'); eq(r.infl.length, 0, 'inflexiones');
   });
 
+  test('extremos: una recta no tiene críticos ni inflexiones (f″ = 0 no es ruido)', () => {
+    for (const src of ['2x + 1', '-3x + 7', '0.001x', '1000x - 5']) {
+      const r = X.analyze(fnOf(src), -10, 10);
+      eq(r.crit.length, 0, src + ' críticos'); eq(r.infl.length, 0, src + ' inflexiones'); eq(r.flat2, true, src + ' flat2');
+    }
+  });
+  test('extremos: una constante se reporta como f′ = 0 en toda la ventana', () => {
+    const r = X.analyze(fnOf('5'), -3, 3);
+    eq(r.flat1, true); eq(r.crit.length, 0); eq(r.infl.length, 0);
+  });
+  test('extremos: una parábola no tiene inflexiones, aunque f″ sea constante', () => {
+    const r = X.analyze(fnOf('x^2 - 4x'), -5, 9);
+    eq(r.crit.length, 1); eq(r.crit[0].kind, 'min'); eq(r.infl.length, 0); eq(r.flat2, false);
+  });
+  test('extremos: sin x en [0, 20] da sus 6 inflexiones reales, no ruido', () => {
+    const r = X.analyze(fnOf('sin(x)'), 0.1, 20);
+    eq(r.infl.length, 6); r.infl.forEach((p, i) => near(p.x, Math.PI * (i + 1), 1e-3));
+  });
+
   /* ---------- optimize-slider ---------- */
   const O = LM.optimize;
   test('optimización: cada problema modelo cae en su óptimo exacto', () => {

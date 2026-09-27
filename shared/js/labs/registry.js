@@ -223,8 +223,27 @@
   }
   function renderMath(node) { if (window.CBMath) window.CBMath.render(node); }
 
+  // Campo de fórmula con el teclado matemático extendido (MathLive); sin él, una caja de texto.
+  function mathField(o) {
+    if (window.CBMathInput) return window.CBMathInput.create(o);
+    var f = input(o);
+    if (o.onEnter) f.input.addEventListener('keydown', function (e) { if (e.key === 'Enter') { e.preventDefault(); o.onEnter(); } });
+    return { node: f.node, get: function () { return f.input.value; }, setMath: function (s) { f.input.value = s; } };
+  }
+  // Dos números en fila (por ejemplo, la ventana de x o los límites a y b).
+  function rangeField(labels, values, onEnter) {
+    var A = input({ label: labels[0], type: 'number', step: 'any', inputmode: 'decimal', value: values[0], mono: false });
+    var B = input({ label: labels[1], type: 'number', step: 'any', inputmode: 'decimal', value: values[1], mono: false });
+    [A, B].forEach(function (f) { f.input.addEventListener('keydown', function (e) { if (e.key === 'Enter' && onEnter) { e.preventDefault(); onEnter(); } }); });
+    return {
+      node: h('div', { class: 'lab-row' }, [A.node, B.node]),
+      get: function () { return [parseFloat(A.input.value), parseFloat(B.input.value)]; },
+      set: function (a, b) { A.input.value = String(+a.toFixed(4)); B.input.value = String(+b.toFixed(4)); }
+    };
+  }
+
   window.LabUI = {
-    svg: svg, tex: tex, renderMath: renderMath,
+    svg: svg, tex: tex, renderMath: renderMath, mathField: mathField, rangeField: rangeField,
     h: h, id: id, fmt: fmt, input: input, slider: slider, select: select, button: button,
     verdict: verdict, color: color, onVisible: onVisible, loadScript: loadScript,
     loadMath: loadMath, loadManim: loadManim, mount: mount, LIBS: LIBS

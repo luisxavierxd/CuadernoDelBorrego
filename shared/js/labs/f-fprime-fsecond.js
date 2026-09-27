@@ -43,14 +43,28 @@
     if (l < 0 && r > 0) return 'min';
     return 'none';
   }
+  // Máximo de |g| en una malla: sirve para saber si g es prácticamente cero en toda la ventana.
+  function peak(g, a, b) {
+    var m = 0;
+    for (var i = 0; i <= 200; i++) { var y = g(a + (b - a) * i / 200); if (isFinite(y)) m = Math.max(m, Math.abs(y)); }
+    return m;
+  }
   function analyze(fn, a, b) {
-    var span = b - a;
-    var crit = roots(function (x) { return d1(fn, x); }, a, b).map(function (r) { return { x: r.x, y: fn(r.x), kind: classify(fn, r.x, span) }; });
-    var infl = roots(function (x) { return d2(fn, x); }, a, b).filter(function (r) {
+    var span = b - a, fr = peak(fn, a, b);
+    var g1 = function (x) { return d1(fn, x); }, g2 = function (x) { return d2(fn, x); };
+    // Umbrales escalados al tamaño de f: por debajo, f′ o f″ es cero y lo demás es ruido numérico
+    // (una recta tiene f″ = 0 en todas partes, no infinitas inflexiones).
+    var flat1 = peak(g1, a, b) < 1e-6 * (1 + fr / span);
+    var flat2 = peak(g2, a, b) < 1e-4 * (1 + fr / (span * span));
+    var crit = flat1 ? [] : roots(g1, a, b).map(function (r) { return { x: r.x, y: fn(r.x), kind: classify(fn, r.x, span) }; });
+    var infl = flat2 ? [] : roots(g2, a, b).filter(function (r) {
       var e = Math.max(2e-3, span * 3e-3);
       return !r.touch && d2(fn, r.x - e) * d2(fn, r.x + e) < 0;
     }).map(function (r) { return { x: r.x, y: fn(r.x) }; });
-    return { crit: crit.filter(function (c) { return isFinite(c.y); }), infl: infl.filter(function (c) { return isFinite(c.y); }) };
+    return {
+      crit: crit.filter(function (c) { return isFinite(c.y); }), infl: infl.filter(function (c) { return isFinite(c.y); }),
+      flat1: flat1, flat2: flat2
+    };
   }
   window.LabMath.extrema = { d1: d1, d2: d2, roots: roots, classify: classify, analyze: analyze };
 
@@ -68,14 +82,11 @@
   window.Labs['f-fprime-fsecond'] = function (mount, cfg) {
     var UI = window.LabUI, h = UI.h;
     var presets = cfg.presets || PRESETS;
-    var math = null, fn = null, info = null, P = presets[cfg.start || 0];
-    function field(o) {
-      if (window.CBMathInput) return window.CBMathInput.create(o);
-      var f = UI.input(o);
-      return { node: f.node, get: function () { return f.input.value; }, setMath: function (s) { f.input.value = s; } };
-    }
+    var math = null, fn = null, info = null, P = presets[cfg.start || 0], win = P.x.slice();
+    var MAX_ITEMS = 8;
     var preset = UI.select({ label: 'Ejemplo', options: presets.map(function (p) { return p.name; }) });
-    var fIn = field({ label: 'Función f(x)', palette: 'none', onEnter: function () { build(); } });
+    var fIn = UI.mathField({ label: 'Función f(x)', hint: 'Escribe cualquier función; usa la paleta o el teclado ⌨ para fracciones, raíces y funciones.', onEnter: function () { build(); } });
+    var xr = UI.rangeField(['x desde', 'x hasta'], P.x, function () { build(); });
     var run = UI.button('Graficar', 'primary', function () { build(); });
     var cur = UI.slider({ label: 'Cursor x', min: P.x[0], max: P.x[1], step: 0.01, value: (P.x[0] + P.x[1]) / 2, fmt: function (v) { return UI.fmt(v, 3); } }, draw);
     var status = h('div', { class: 'verdict', hidden: true, role: 'status' });
@@ -90,7 +101,7 @@
     var stack = h('div', { class: 'lab-stack' });
     svgs.forEach(function (s, i) { stack.appendChild(h('p', { class: 'lab-stack__label' }, [names[i]])); stack.appendChild(s); });
     mount.appendChild(h('div', { class: 'lab-grid' }, [
-      h('form', { class: 'lab-controls', novalidate: true }, [preset.node, fIn.node, h('div', { class: 'lab-buttons' }, [run]), status, cur.node, facts, list]),
+      h('form', { class: 'lab-controls', novalidate: true }, [preset.node, fIn.node, xr.node, h('div', { class: 'lab-buttons' }, [run]), status, cur.node, facts, list]),
       h('figure', { class: 'lab-board' }, [
         h('figcaption', { class: 'lab-board__title sheet__title' }, ['Tres gráficas, un mismo x']),
         stack,
@@ -108,15 +119,20 @@
     function load(i) {
       P = presets[i];
       fIn.setMath(P.f);
-      cur.input.min = P.x[0]; cur.input.max = P.x[1]; cur.set((P.x[0] + P.x[1]) / 2);
+      xr.set(P.x[0], P.x[1]);
     }
     load(cfg.start || 0);
 
     function build() {
       if (!math) return;
+      var r = xr.get();
+      if (!(isFinite(r[0]) && isFinite(r[1]) && r[1] > r[0])) { UI.verdict(status, 'bad', 'Revisa la ventana de x', '“x desde” debe ser menor que “x hasta”.'); return; }
+      win = r;
+      cur.input.min = win[0]; cur.input.max = win[1]; cur.input.step = 'any';
+      cur.set(cur.get() >= win[0] && cur.get() <= win[1] ? cur.get() : (win[0] + win[1]) / 2);
       try {
         fn = window.LabMath.core.build(math, fIn.get()).fn;
-        info = analyze(fn, P.x[0], P.x[1]);
+        info = analyze(fn, win[0], win[1]);
         status.hidden = true;
       } catch (e) {
         UI.verdict(status, 'bad', 'No pude leer la función', e.message);
@@ -124,15 +140,20 @@
       }
       list.innerHTML = '';
       if (info) {
-        info.crit.forEach(function (c) { list.appendChild(h('li', {}, [KIND[c.kind] + ' en x ≈ ' + UI.fmt(c.x, 3) + ' (f = ' + UI.fmt(c.y, 3) + ')'])); });
-        info.infl.forEach(function (c) { list.appendChild(h('li', {}, ['inflexión en x ≈ ' + UI.fmt(c.x, 3)])); });
-        if (!info.crit.length && !info.infl.length) list.appendChild(h('li', {}, ['Sin puntos críticos ni inflexiones en esta ventana.']));
+        var items = [];
+        if (info.flat1) items.push('f′ = 0 en toda la ventana: f es constante y cada punto es crítico, sin extremos que destacar.');
+        else info.crit.forEach(function (c) { items.push(KIND[c.kind] + ' en x ≈ ' + UI.fmt(c.x, 3) + ' (f = ' + UI.fmt(c.y, 3) + ')'); });
+        if (info.flat2 && !info.flat1) items.push('f″ = 0 en toda la ventana: la gráfica es una recta, sin concavidad ni inflexiones.');
+        else if (!info.flat2) info.infl.forEach(function (c) { items.push('inflexión en x ≈ ' + UI.fmt(c.x, 3)); });
+        if (!items.length) items.push('Sin puntos críticos ni inflexiones en esta ventana.');
+        items.slice(0, MAX_ITEMS).forEach(function (t) { list.appendChild(h('li', {}, [t])); });
+        if (items.length > MAX_ITEMS) list.appendChild(h('li', {}, ['… y ' + (items.length - MAX_ITEMS) + ' más. Achica la ventana de x para verlos.']));
       }
       draw();
     }
 
     function panel(svg, g, cls, marks) {
-      var x0 = P.x[0], x1 = P.x[1], ys = [];
+      var x0 = win[0], x1 = win[1], ys = [];
       for (var i = 0; i <= 160; i++) ys.push(g(x0 + (x1 - x0) * i / 160));
       var plot = window.LabPlot(svg, { x: [x0, x1], y: window.LabPlot.range(ys) });
       plot.clear(); plot.grid(); plot.axes();

@@ -195,7 +195,7 @@
       var f = UI.input(o);
       return { node: f.node, get: function () { return f.input.value; }, setMath: function (s) { f.input.value = s; } };
     }
-    var fIn = field({ label: 'Integrando f(x)', palette: 'none' });
+    var fIn = field({ label: 'Integrando f(x)' });
     var FIn = field({ label: 'Tu antiderivada F(x)', hint: 'Escribe como en papel: “/” hace una fracción y “^” un exponente. La constante C es opcional.', onEnter: function () { check(); } });
     var aIn = UI.input({ label: 'a', type: 'number', step: 'any', inputmode: 'decimal' });
     var bIn = UI.input({ label: 'b', type: 'number', step: 'any', inputmode: 'decimal' });

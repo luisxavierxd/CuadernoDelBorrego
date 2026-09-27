@@ -60,7 +60,7 @@
       return { node: f.node, get: function () { return f.input.value; }, setMath: function (s) { f.input.value = s; } };
     }
     var preset = UI.select({ label: 'Ejemplo', options: presets.map(function (p) { return p.name; }) });
-    var fIn = field({ label: 'Función f(x)', palette: 'none' });
+    var fIn = field({ label: 'Función f(x)' });
     var dIn = field({ label: 'Tu derivada f′(x)', hint: 'Escribe como en papel; usa la paleta para fracciones, raíces y funciones.', onEnter: function () { check(); } });
     var aS = UI.slider({ label: 'Punto para la tangente', min: P.x[0], max: P.x[1], step: 0.05, value: P.a, fmt: function (v) { return UI.fmt(v, 3); } }, function () { draw(); });
     var run = UI.button('Comprobar', 'primary', check);
