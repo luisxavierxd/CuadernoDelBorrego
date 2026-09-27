@@ -7,6 +7,7 @@ const fs = require('fs');
 const path = require('path');
 const http = require('http');
 const { chromium } = require('playwright');
+const cdn = require('./lib/cdn-cache');
 
 const ROOT = path.join(__dirname, '..');
 const MAX_PAGES = 2;
@@ -32,7 +33,9 @@ function serve() {
   let fail = 0;
   try {
     for (const c of courses) {
-      const page = await browser.newPage();
+      const ctx = await browser.newContext();
+      await cdn.attach(ctx);
+      const page = await ctx.newPage();
       await page.goto(base + '/formularios/' + c + '/');
       await page.waitForSelector('.form-grid .katex', { timeout: 30000 });
       await page.evaluate(() => document.fonts.ready);
@@ -50,7 +53,7 @@ function serve() {
       if (wide) bad.push(wide + ' fórmulas más anchas que su columna');
       if (bad.length) { fail++; console.log('✗ ' + c + ': ' + bad.join('; ')); }
       else console.log('✓ ' + c + ': carta, ' + pages + (pages === 1 ? ' página' : ' páginas'));
-      await page.close();
+      await ctx.close();
     }
   } finally {
     await browser.close();

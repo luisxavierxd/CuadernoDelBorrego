@@ -31,6 +31,7 @@
     var layer = null;
 
     function el(tag, attrs, parent, text) {
+      if (window.LabUI && !window.LabUI.svgOk(attrs)) return document.createElementNS(NS, tag);   // no se agrega: geometría inválida
       var n = document.createElementNS(NS, tag);
       for (var k in attrs) if (attrs[k] != null) n.setAttribute(k, attrs[k]);
       if (text != null) n.textContent = text;

@@ -7,6 +7,7 @@ const fs = require('fs');
 const path = require('path');
 const http = require('http');
 const { chromium } = require('playwright');
+const cdn = require('./lib/cdn-cache');
 
 const ROOT = path.join(__dirname, '..');
 const TYPES = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.css': 'text/css; charset=utf-8', '.svg': 'image/svg+xml' };
@@ -34,6 +35,7 @@ function ok(cond, msg) { if (cond) console.log('  ✓ ' + msg); else { fails++; 
     for (const width of [1280, 390]) {
       console.log('Ancho ' + width + ' px');
       const ctx = await browser.newContext({ viewport: { width, height: 900 }, reducedMotion: 'reduce' });
+      await cdn.attach(ctx);
       const page = await ctx.newPage();
       await page.clock.install();
       // Chromium de Playwright aborta la transición entre documentos (@view-transition) en
@@ -77,7 +79,9 @@ function ok(cond, msg) { if (cond) console.log('  ✓ ' + msg); else { fails++; 
 
       // 3. Revisión inmediata: contestar la primera de opción múltiple y revisarla.
       const choice = page.locator('.qcard:has(.exercise__options)').first();
+      let answered = false;
       if (await choice.count()) {
+        answered = true;
         await choice.locator('.exercise__option label').first().click();
         await choice.getByRole('button', { name: 'Revisar' }).click();
         ok(await choice.locator('.verdict:not([hidden])').count() === 1, 'revisar al contestar muestra el veredicto');
@@ -132,7 +136,12 @@ function ok(cond, msg) { if (cond) console.log('  ✓ ' + msg); else { fails++; 
       await link.click();
       await page.waitForURL(/\/quiz\/examen\/\?intento=/);
       await page.waitForSelector('.exam__results:not([hidden])');
-      ok(await page.locator('.exam__main .breakdown, .exam__main .history__detail').count() >= 1, 'la revisión muestra el detalle');
+      await page.waitForSelector('.exam__main .qcard', { timeout: 30000 });
+      ok(await page.locator('.exam__main .qcard').count() === 6, 'la revisión reconstruye las 6 preguntas con su formato');
+      ok(await page.locator('.exam__main .problem').count() === 1, 'la revisión reconstruye el problema (con su figura si tiene)');
+      const rmarks = await page.locator('.exam__main .qcard').evaluateAll((ns) => ns.map((n) => /is-(ok|partial|bad)/.test(n.className) && (n.classList.contains('is-ok') || !!n.querySelector('.qcard__right:not([hidden])'))));
+      ok(rmarks.every(Boolean), 'en la revisión cada pregunta está marcada con la respuesta correcta');
+      if (answered) ok(await page.locator('.exam__main .exercise__options input:checked').count() >= 1, 'la revisión muestra la opción que eligió');
       ok(await page.locator('.exam__topics-box .semaforo li').count() >= 1, 'la revisión muestra el semáforo');
 
       await page.evaluate(() => localStorage.clear());

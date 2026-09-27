@@ -263,7 +263,20 @@
     };
   }
 
+  // Geometría SVG válida: si un lab dibuja antes de que carguen math.js o MathLive, sus
+  // cálculos dan NaN y el navegador marca error. Los helpers de dibujo omiten esos elementos.
+  var GEOM = /^(x|y|x1|x2|y1|y2|cx|cy|r|rx|ry|width|height|d|points|transform)$/;
+  function svgOk(attrs) {
+    for (var k in attrs) {
+      if (!GEOM.test(k)) continue;
+      var v = attrs[k];
+      if (typeof v === 'number' ? !isFinite(v) : /NaN|Infinity/.test(String(v))) return false;
+    }
+    return true;
+  }
+
   window.LabUI = {
+    svgOk: svgOk,
     svg: svg, tex: tex, renderMath: renderMath, mathField: mathField, rangeField: rangeField,
     h: h, id: id, fmt: fmt, input: input, slider: slider, select: select, button: button,
     verdict: verdict, color: color, onVisible: onVisible, loadScript: loadScript,

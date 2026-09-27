@@ -26,6 +26,18 @@ function near(got, want, tol, msg) {
   const LM = win.LabMath;
   if (!LM) { console.log('✗ window.LabMath no existe'); process.exit(1); }
 
+  /* ---------- svgOk: los labs no dibujan geometría NaN mientras carga el cálculo ---------- */
+  test('LabUI.svgOk rechaza NaN o Infinity en la geometría y acepta lo demás', () => {
+    const ok = win.LabUI.svgOk;
+    eq(ok({ x1: 3, y1: 4, class: 'axis' }), true);
+    eq(ok({ d: 'M1 2L3 4' }), true);
+    eq(ok({ x1: NaN }), false, 'número NaN');
+    eq(ok({ d: 'M260.5 68LNaN 157' }), false, 'path con NaN');
+    eq(ok({ cx: Infinity }), false, 'Infinity');
+    eq(ok({ points: '1,2 NaN,3' }), false, 'points con NaN');
+    eq(ok({ 'aria-label': 'NaN' }), true, 'lo que no es geometría no se revisa');
+  });
+
   /* ---------- antiderivative (§8.2) ---------- */
   const A = LM.antiderivative;
   test('prep: ln, arctan, arcsin, arccos, + C y signo menos tipográfico', () => {

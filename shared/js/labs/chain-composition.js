@@ -112,6 +112,7 @@
         { name: 'y = g(u)', a: L.y0, b: y1, y: 270 }
       ];
       var E = function (tag, attrs, text) {
+        if (window.LabUI && !window.LabUI.svgOk(attrs)) return document.createElementNS('http://www.w3.org/2000/svg', tag);
         var n = document.createElementNS('http://www.w3.org/2000/svg', tag);
         for (var k in attrs) n.setAttribute(k, attrs[k]);
         if (text != null) n.textContent = text;

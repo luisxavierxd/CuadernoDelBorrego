@@ -154,6 +154,7 @@
     }
 
     function el(name, attrs, parent) {
+      if (window.LabUI && !window.LabUI.svgOk(attrs)) return document.createElementNS(NS, name);
       var n = document.createElementNS(NS, name);
       for (var k in attrs) n.setAttribute(k, attrs[k]);
       (parent || svg).appendChild(n);
@@ -223,7 +224,7 @@
         anim = anime({ targets: s, t: 1, duration: 1600, easing: 'linear', update: function () {
           var pt = real.getPointAtLength(len * s.t);
           real.style.strokeDashoffset = len * (1 - s.t);
-          ball.setAttribute('cx', pt.x); ball.setAttribute('cy', pt.y);
+          if (isFinite(pt.x) && isFinite(pt.y)) { ball.setAttribute('cx', pt.x); ball.setAttribute('cy', pt.y); }
         }, complete: function () { real.style.strokeDasharray = 'none'; } });
       }
     }

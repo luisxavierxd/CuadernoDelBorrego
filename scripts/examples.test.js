@@ -1,11 +1,14 @@
 #!/usr/bin/env node
 // Ejemplos y ejercicios de cada sesión (§7.3, §9, §11): las respuestas calculadas en los datos
 // deben coincidir con LabMath, y el motor de ejercicios debe calificarlas bien.
+// Una sesión que ya pasó no se revisa de nuevo mientras no cambien ella, los labs ni esta
+// prueba (caché en node_modules/.cache/cuaderno); `--all` o VALIDATE_ALL=1 revisa todo.
 'use strict';
 const fs = require('fs');
 const path = require('path');
 const { loadData } = require('./lib/load');
 const { loadMathjs } = require('./lib/vendor');
+const cache = require('./lib/cache');
 
 const ROOT = path.join(__dirname, '..');
 const LIBS = ['labs/registry', 'labs/antiderivative-check', 'labs/projectile-check', 'labs/secant-tangent', 'labs/derivative-check', 'labs/chain-composition', 'labs/implicit-tangent', 'labs/f-fprime-fsecond', 'labs/optimize-slider', 'labs/riemann', 'labs/area-between', 'labs/solid-revolution', 'exercises']
@@ -187,7 +190,15 @@ function checkExercise(where, ex, W, LM, math) {
 (async () => {
   const math = await loadMathjs();
   const files = sessionFiles();
+  const shared = LIBS.concat([__filename, path.join(__dirname, 'lib/load.js'), path.join(__dirname, 'lib/vendor.js'), path.join(ROOT, 'node_modules/mathjs/package.json')]);
+  const store = cache.store('examples');
+  let cached = 0;
   for (const file of files) {
+    const id = path.relative(ROOT, file).split(path.sep).join('/');
+    const key = cache.fingerprint(shared.concat([file]));
+    const hit = store.get(id, key);
+    if (hit) { cached++; pass += hit.n; console.log(`${id}: ${hit.n} comprobaciones · sin cambios`); continue; }
+    const failsBefore = fail;
     const W = loadData(LIBS, {});
     W.math = math;
     loadData(file, W);
@@ -197,9 +208,11 @@ function checkExercise(where, ex, W, LM, math) {
     (d.lesson || []).filter((b) => b.type === 'example').forEach((b, i) => checkExample(`${name} ejemplo ${i + 1}`, b, W.LabMath, math));
     (d.exercises || []).forEach((ex) => checkExercise(`${name} ${ex.id}`, ex, W, W.LabMath, math));
     console.log(`${name}: ${pass + fail - before} comprobaciones`);
+    if (fail === failsBefore) store.set(id, key, { n: pass + fail - before }); else store.drop(id);
   }
+  store.save();
   fails.slice(0, 40).forEach((f) => console.log('✗ ' + f));
   if (fails.length > 40) console.log(`… y ${fails.length - 40} más`);
-  console.log(`\nexamples.test.js: ${files.length} sesiones · ${pass} ok, ${fail} fallan.`);
+  console.log(`\nexamples.test.js: ${files.length} sesiones (${cached} sin cambios) · ${pass} ok, ${fail} fallan.`);
   process.exit(fail ? 1 : 0);
 })().catch((e) => { console.error(e); process.exit(1); });

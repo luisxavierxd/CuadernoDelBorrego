@@ -4,11 +4,14 @@
 // sin scroll horizontal y todos los labs montados.
 //   node scripts/qa-browser.js [--base http://127.0.0.1:8123] [--only fisica-1/sesiones]
 // Sin --base levanta un servidor estático propio en un puerto libre.
+// Rapidez: lo de CDN se sirve desde una caché en disco (scripts/lib/cdn-cache.js) y se revisan
+// QA_PAGES páginas a la vez (3 por omisión; cada una abre sus 7 combinaciones en paralelo).
 'use strict';
 const fs = require('fs');
 const path = require('path');
 const http = require('http');
 const { chromium } = require('playwright');
+const cdn = require('./lib/cdn-cache');
 
 const ROOT = path.join(__dirname, '..');
 const IGNORE = new Set(['.git', 'node_modules', 'docs', 'scripts', 'reference', '.claude', 'design-system', 'test-results']);
@@ -43,6 +46,7 @@ COMBOS.push({ width: 1440, theme: 'light', motion: 'no-preference' });
 
 async function checkPage(browser, base, url, c) {
   const ctx = await browser.newContext({ viewport: { width: c.width, height: 900 }, colorScheme: c.theme, reducedMotion: c.motion });
+  await cdn.attach(ctx);
   const page = await ctx.newPage();
   const problems = [];
   page.on('console', (m) => { if (m.type() === 'error') problems.push('consola: ' + m.text()); });
@@ -83,17 +87,24 @@ async function checkPage(browser, base, url, c) {
   if (!list.length) { console.error('Ninguna página coincide con --only ' + process.argv[o + 1]); process.exit(1); }
   const browser = await chromium.launch();
   let bad = 0, runs = 0;
-  for (const url of list) {
-    const results = await Promise.all(COMBOS.map((c) => checkPage(browser, base, url, c).then((p) => ({ c, p }))));
-    for (const { c, p } of results) {
-      runs++;
-      if (!p.length) continue;
-      bad++;
-      console.log(`✗ ${url} · ${c.width}px · ${c.theme} · ${c.motion}`);
-      [...new Set(p)].slice(0, 8).forEach((x) => console.log('    ' + x));
+  const queue = list.slice();
+  const lanes = Math.max(1, +process.env.QA_PAGES || 3);
+  async function lane() {
+    for (let url = queue.shift(); url; url = queue.shift()) {
+      const results = await Promise.all(COMBOS.map((c) => checkPage(browser, base, url, c).then((p) => ({ c, p }))));
+      const out = [];
+      for (const { c, p } of results) {
+        runs++;
+        if (!p.length) continue;
+        bad++;
+        out.push(`✗ ${url} · ${c.width}px · ${c.theme} · ${c.motion}`);
+        [...new Set(p)].slice(0, 8).forEach((x) => out.push('    ' + x));
+      }
+      out.push(`${results.every((r) => !r.p.length) ? '✓' : '✗'} ${url}`);
+      console.log(out.join('\n'));
     }
-    console.log(`${results.every((r) => !r.p.length) ? '✓' : '✗'} ${url}`);
   }
+  await Promise.all(Array.from({ length: Math.min(lanes, list.length) }, lane));
   await browser.close();
   if (server) server.close();
   console.log(`\nqa-browser.js: ${list.length} páginas × ${COMBOS.length} combinaciones · ${runs - bad}/${runs} sin problemas.`);
