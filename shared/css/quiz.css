@@ -103,3 +103,18 @@
 .quiz-page h1 { font-size: clamp(1.9rem, 4vw, 2.8rem); }
 .quiz-sheet { padding-top: var(--space-3); }
 .quiz-results[hidden], .clock[hidden] { display: none; }
+
+/* ===== Lanzador por pasos: curso → tipo → temas → opciones ===== */
+.launcher__step + .launcher__step { border-top: 1px dashed var(--line-strong); padding-top: var(--space-3); }
+.launcher__step-title { display: flex; align-items: center; gap: 10px; font-size: 1.15rem; margin: 0 0 var(--space-2); }
+.launcher__num {
+  display: inline-grid; place-items: center; width: 28px; height: 28px; border-radius: 50%;
+  background: var(--accent); color: var(--on-accent); font-size: 0.85rem;
+}
+.launcher__cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: var(--space-2); }
+.launcher__options { display: flex; flex-wrap: wrap; align-items: flex-end; gap: var(--space-2); margin-bottom: var(--space-2); }
+.launcher__options .lab-field { width: 210px; }
+.launcher__options > p { flex-basis: 100%; margin: 0; }
+.launcher__go { justify-content: space-between; }
+.launcher__stage > .verdict { margin-bottom: var(--space-2); }
+.launcher__step .lab-field__label { display: block; margin-top: var(--space-2); }

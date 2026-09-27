@@ -204,3 +204,23 @@ a.dot:hover::before { background: var(--accent-soft); transform: scale(1.2); }
 .rail-progress__track { height: 4px; border-radius: 2px; background: var(--line); overflow: hidden; }
 .rail-progress__fill { display: block; height: 100%; width: 0; background: var(--accent); }
 .side-rail--right .formulas dd .katex { font-size: 0.98em; }
+
+/* ===== Guía del instructor: el resumen se ve como botón ===== */
+.teacher-guide { border: 0; padding: 0; }
+.teacher-guide[open] { padding: var(--space-2) var(--space-3) var(--space-3); border: 1px dashed var(--line-strong); border-radius: var(--radius-card); }
+.teacher-note summary, .teacher-guide summary {
+  display: inline-flex; align-items: center; gap: 10px;
+  min-height: 44px; padding: 0 16px; list-style: none; cursor: pointer;
+  font: 600 0.92rem/1.2 var(--font-body); color: var(--text);
+  background: var(--panel); border: 1px solid var(--line-strong); border-radius: var(--radius);
+  transition: border-color 0.15s ease, color 0.15s ease;
+}
+.teacher-note summary::-webkit-details-marker, .teacher-guide summary::-webkit-details-marker { display: none; }
+.teacher-note summary::before, .teacher-guide summary::before {
+  content: ""; width: 7px; height: 7px; margin-right: 2px;
+  border-right: 2px solid currentColor; border-bottom: 2px solid currentColor;
+  transform: rotate(-45deg); transition: transform 0.15s ease;
+}
+.teacher-note[open] > summary::before, .teacher-guide[open] > summary::before { transform: rotate(45deg); }
+.teacher-note summary:hover, .teacher-guide summary:hover { border-color: var(--accent); color: var(--accent); }
+.teacher-note[open] > summary, .teacher-guide[open] > summary { margin-bottom: var(--space-1); }

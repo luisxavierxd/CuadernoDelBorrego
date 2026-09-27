@@ -62,3 +62,37 @@
 .verdict__state { font: 500 0.72rem/1 var(--font-mono); letter-spacing: 0.08em; text-transform: uppercase; }
 .verdict__title { font: 700 1rem/1.3 var(--font-display); }
 .verdict__note { margin: 0; color: var(--text); font-size: 0.92rem; }
+
+/* ===== Editor matemático (MathLive) y paleta estilo WebAssign ===== */
+.math-input__box math-field, .math-input__box .lab-input { display: block; width: 100%; }
+math-field.math-field {
+  min-height: 50px; padding: 8px 10px; font-size: 1.3rem;
+  color: var(--pen); background: var(--page);
+  border: 1px solid var(--line-strong); border-radius: var(--radius);
+  --caret-color: var(--accent);
+  --selection-background-color: var(--accent-soft);
+  --selection-color: var(--text);
+  --contains-highlight-background-color: var(--accent-soft);
+  --placeholder-color: var(--text-muted);
+  --primary-color: var(--accent);
+  --smart-fence-color: var(--text-muted);
+}
+math-field.math-field:focus-within { outline: 2px solid var(--focus); outline-offset: 1px; }
+math-field.math-field[read-only] { opacity: 0.85; }
+math-field::part(menu-toggle), math-field::part(virtual-keyboard-toggle) { display: none; }
+.math-palette { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 6px; }
+.math-palette[hidden] { display: none; }
+.math-palette__btn {
+  display: inline-flex; align-items: center; justify-content: center;
+  min-width: 42px; min-height: 40px; padding: 0 9px;
+  font: 500 0.95rem/1 var(--font-body); color: var(--text);
+  background: var(--panel); border: 1px solid var(--line-strong); border-radius: var(--radius);
+  cursor: pointer; transition: border-color 0.15s ease, color 0.15s ease;
+}
+.math-palette__btn:hover { border-color: var(--accent); color: var(--accent); }
+.math-palette__btn sup { font-size: 0.7em; line-height: 0; }
+.math-palette__kbd { margin-left: auto; font-size: 1.15rem; }
+.math-palette.is-locked .math-palette__btn { opacity: 0.45; pointer-events: none; }
+.mp-frac { display: inline-flex; flex-direction: column; align-items: center; font-size: 0.72em; line-height: 1.05; }
+.mp-frac i { font-style: normal; }
+.mp-frac i:first-child { border-bottom: 1px solid currentColor; padding: 0 2px; }

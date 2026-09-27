@@ -183,29 +183,28 @@
         get = function () { var c = fs.querySelector('input:checked'); return c ? c.value : ''; };
         return;
       }
-      var isExpr = ex.check === 'expr';
+      // Respuestas simbólicas: editor matemático estilo WebAssign (MathLive).
+      if (ex.check === 'expr' && window.CBMathInput) {
+        var mi = window.CBMathInput.create({
+          label: ex.integrand ? 'Tu antiderivada F(x)' : 'Tu respuesta',
+          hint: ex.integrand ? 'Escribe como en papel: la barra “/” hace una fracción y “^” un exponente. La constante C es opcional.' : 'Escribe como en papel; usa la paleta para fracciones, raíces y funciones.',
+          onEnter: check
+        });
+        answer.appendChild(mi.node);
+        get = mi.get;
+        return;
+      }
       var inp = h('input', {
-        id: inputId, type: 'text', class: 'lab-input' + (isExpr ? ' lab-input--mono' : ' lab-input--num'),
-        inputmode: isExpr ? null : 'decimal', spellcheck: 'false', autocomplete: 'off',
+        id: inputId, type: 'text', class: 'lab-input lab-input--num',
+        inputmode: 'decimal', spellcheck: 'false', autocomplete: 'off',
         'aria-describedby': inputId + '-help'
       });
-      var preview = isExpr ? h('div', { class: 'exercise__preview', 'aria-hidden': 'true' }) : null;
       answer.appendChild(h('div', { class: 'lab-field' }, [
-        h('label', { for: inputId, class: 'lab-field__label' }, [isExpr ? 'Tu respuesta' : 'Tu resultado']),
+        h('label', { for: inputId, class: 'lab-field__label' }, ['Tu resultado']),
         h('div', { class: 'exercise__inputrow' }, [inp, ex.unit ? h('span', { class: 'exercise__unit' }, [ex.unit]) : null]),
-        h('p', { id: inputId + '-help', class: 'lab-field__hint', html: isExpr
-          ? (ex.integrand ? 'Escribe F(x); la constante C es opcional. Ej.: <code>x^3/3</code>, <code>e^(2x)/2</code>, <code>sin(x^2)</code>, <code>ln(x)</code>.' : 'Usa <code>x</code>, <code>^</code>, <code>sqrt()</code>, <code>sin()</code>…')
-          : 'Usa punto decimal' + (ex.tol && ex.tol.abs != null ? '.' : '; se acepta ±1 %.') }),
-        preview
+        h('p', { id: inputId + '-help', class: 'lab-field__hint', html: 'Usa punto decimal' + (ex.tol && ex.tol.abs != null ? '.' : '; se acepta ±1 %.') })
       ]));
       inp.addEventListener('keydown', function (e) { if (e.key === 'Enter') { e.preventDefault(); check(); } });
-      if (preview) {
-        inp.addEventListener('input', function () {
-          preview.textContent = '';
-          if (!math || !window.katex || !inp.value.trim()) return;
-          try { window.katex.render(math.parse(window.LabMath.antiderivative.prep(inp.value)).toTex({ implicit: 'hide' }), preview, { throwOnError: false }); } catch (e) {}
-        });
-      }
       get = function () { return inp.value; };
     }
 
@@ -227,7 +226,9 @@
     }
 
     function check() {
-      var r = grade(ex, v, get(), { math: math });
+      var input;
+      try { input = get(); } catch (e) { UI.verdict(verdict, 'bad', e.message, 'Completa los espacios del editor y vuelve a revisar.'); return; }
+      var r = grade(ex, v, input, { math: math });
       if (r.kind === 'invalid') { UI.verdict(verdict, 'bad', r.say || 'Revisa tu respuesta.', null); return; }
       attempts++;
       btnSol.disabled = false;

@@ -88,7 +88,17 @@
     var th = UI.slider({ label: 'Ángulo θ', min: 5, max: 85, step: 1, value: start.theta, unit: '°' }, update);
     var mode = UI.select({ label: '¿Qué vas a comprobar?', options: ['Mi alcance R', 'Mi trayectoria y(x)'] });
     var rIn = UI.input({ label: 'Tu alcance R (m)', type: 'number', step: 'any', inputmode: 'decimal' });
-    var yIn = UI.input({ label: 'Tu y(x)', hint: 'Usa <code>x</code>, <code>tan(35 deg)</code>, <code>cos(35 deg)^2</code>, <code>9.81</code>. Ejemplo: <code>x*tan(35 deg) - 9.81*x^2/(2*18^2*cos(35 deg)^2)</code>' });
+    // y(x) con el editor matemático (paleta de física, con el botón de grados).
+    function field(o) {
+      if (window.CBMathInput) return window.CBMathInput.create(o);
+      var f = UI.input(o);
+      return { node: f.node, get: function () { return f.input.value; }, setLatex: function (t) { f.input.value = window.CBLatex ? window.CBLatex.toMath(t) : t; }, latex: function () { return f.input.value; } };
+    }
+    var yIn = field({ label: 'Tu y(x)', palette: 'fisica', hint: 'Escribe como en papel; el botón ° pone grados. La y(x) de ejemplo usa los valores de los deslizadores.', onEnter: function () { check(); } });
+    var exampleTex = null;
+    function yExample(p) {
+      return 'x\\tan\\left(' + p.theta + '^{\\circ}\\right)-\\frac{9.81x^2}{2\\cdot' + p.v0 + '^2\\cos^2\\left(' + p.theta + '^{\\circ}\\right)}';
+    }
     var run = UI.button('Comprobar', 'primary', check);
     var note = h('p', { class: 'lab-note' });
     var verdict = h('div', { class: 'verdict', hidden: true, role: 'status' });
@@ -129,7 +139,7 @@
       mode.input.value = start.mode === 'y' ? '1' : '0';
       var sample = start.answer != null ? start.answer : rangeMistakes(p).usedSinTheta;
       rIn.input.value = UI.fmt(sample, 4);
-      yIn.input.value = 'x*tan(' + p.theta + ' deg) - 9.81*x^2/(2*' + p.v0 + '^2*cos(' + p.theta + ' deg)^2)';
+      exampleTex = yExample(p); yIn.setLatex(exampleTex);
       note.textContent = 'Ejemplo cargado: así respondió un compañero. ¿Ves el error? Cambia los valores y escribe el tuyo.';
       syncMode();
     }
@@ -137,8 +147,8 @@
     function update() {
       // Al mover v₀ o θ, la y(x) de ejemplo se ajusta a los nuevos valores.
       var p = params();
-      if (mode.input.value === '1' && /tan\(\d+(\.\d+)? deg\)/.test(yIn.input.value)) {
-        yIn.input.value = 'x*tan(' + p.theta + ' deg) - 9.81*x^2/(2*' + p.v0 + '^2*cos(' + p.theta + ' deg)^2)';
+      if (mode.input.value === '1' && exampleTex !== null && yIn.latex() === exampleTex) {
+        exampleTex = yExample(p); yIn.setLatex(exampleTex);
       }
       draw(null, false);
     }
@@ -223,7 +233,7 @@
       if (mode.input.value === '1') {
         if (!math) return;
         try {
-          var r = compareY(math, yIn.input.value, p);
+          var r = compareY(math, yIn.get(), p);
           UI.verdict(verdict, r.ok ? 'ok' : 'bad', r.ok ? 'Tu y(x) coincide con la real' : 'Tu y(x) se separa de la real',
             r.ok ? 'Error máximo: ' + (r.maxErr * 100).toFixed(2) + ' % de la altura máxima.'
                  : 'Error máximo: ' + (isFinite(r.maxErr) ? (r.maxErr * 100).toFixed(0) + ' %' : 'no se pudo evaluar') + ' de la altura máxima. Revisa tan θ y el cos² θ del denominador.');

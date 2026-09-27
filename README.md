@@ -23,6 +23,8 @@ shared/js/labs/registry.js         window.Labs · window.LabMath · window.LabUI
 shared/js/labs/<tipo>.js           Un archivo por lab (antiderivative-check, projectile-check…)
 shared/js/diagrams/<curso>.js      Diagramas SVG: Diagrams[id](state)
 shared/js/exercises.js             Ejercicios parametrizados y su calificación
+shared/js/math-input.js            Editor de fórmulas estilo WebAssign (MathLive + paleta de símbolos)
+shared/js/latex-to-math.js         LaTeX del editor → sintaxis de math.js
 shared/js/quiz/engine.js           Selección, calificación, semáforo, arrastre de error, simulacro
 shared/js/quiz/ui.js               Tarjetas, semáforo, quiz de práctica, simulacro y lanzador (/quiz/)
 data/courses.js                    Fuente única de cursos del hub

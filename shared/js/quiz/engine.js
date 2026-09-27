@@ -135,9 +135,13 @@
     list.forEach(function (r) { e += r.earned; t += r.total; });
     return t ? e / t : 0;
   }
+  // 40/60 si hay de las dos partes; si un examen personalizado solo trae una, esa vale 100.
   function simulacroScore(shortResults, examResults) {
-    var s = WEIGHTS.short * frac(shortResults), x = WEIGHTS.exam * frac(examResults);
-    return { short: s, exam: x, total: s + x };
+    var ws = WEIGHTS.short, wx = WEIGHTS.exam;
+    if (!examResults.length) { ws = 100; wx = 0; }
+    else if (!shortResults.length) { ws = 0; wx = 100; }
+    var s = ws * frac(shortResults), x = wx * frac(examResults);
+    return { short: s, exam: x, total: s + x, weights: { short: ws, exam: wx } };
   }
 
   function suggestedMinutes(presetId) { return presetId === 'final' ? 120 : 90; }

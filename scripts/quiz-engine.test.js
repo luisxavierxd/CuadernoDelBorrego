@@ -120,6 +120,12 @@ function rng(seed) { return () => { seed = (seed * 16807) % 2147483647; return (
     near(h.total, 40 * 0.25 + 60 * 0.75, 1e-12);
     near(Q.WEIGHTS.short + Q.WEIGHTS.exam, 100, 0);
   });
+  test('examen personalizado con una sola parte: esa vale 100', () => {
+    const a = Q.simulacroScore([{ earned: 3, total: 4 }], []);
+    near(a.total, 75, 1e-12); eq(a.weights.short, 100);
+    const b = Q.simulacroScore([], [{ earned: 6, total: 12 }]);
+    near(b.total, 50, 1e-12); eq(b.weights.exam, 100);
+  });
   test('reloj sugerido: 90 min parcial, 120 min final', () => {
     eq(Q.suggestedMinutes('parcial-2'), 90); eq(Q.suggestedMinutes('final'), 120); eq(Q.suggestedMinutes(null), 90);
   });

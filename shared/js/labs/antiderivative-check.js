@@ -186,9 +186,14 @@
     var math = null, M = null, scene = null, last = null, gen = 0, running = Promise.resolve();
 
     var preset = UI.select({ label: 'Ejercicio', options: presets.map(function (p) { return p.name; }) });
-    var fIn = UI.input({ label: 'Integrando f(x)' });
-    var given = h('div', { class: 'lab-given', 'aria-live': 'polite' });
-    var FIn = UI.input({ label: 'Tu antiderivada F(x)', hint: 'Sintaxis: <code>x^3</code>, <code>2x</code>, <code>sin(x)</code>, <code>e^(2x)</code>, <code>ln(x)</code>, <code>sqrt(x)</code>, <code>atan(x)</code>. La constante C es opcional.' });
+    // Editor matemático si está disponible; si no, campo de texto con la misma API.
+    function field(o) {
+      if (window.CBMathInput) return window.CBMathInput.create(o);
+      var f = UI.input(o);
+      return { node: f.node, get: function () { return f.input.value; }, setMath: function (s) { f.input.value = s; } };
+    }
+    var fIn = field({ label: 'Integrando f(x)' });
+    var FIn = field({ label: 'Tu antiderivada F(x)', hint: 'Escribe como en papel: “/” hace una fracción y “^” un exponente. La constante C es opcional.', onEnter: function () { check(); } });
     var aIn = UI.input({ label: 'a', type: 'number', step: 'any', inputmode: 'decimal' });
     var bIn = UI.input({ label: 'b', type: 'number', step: 'any', inputmode: 'decimal' });
     var run = UI.button('Verificar y animar', 'primary', check);
@@ -206,7 +211,7 @@
 
     mount.appendChild(h('div', { class: 'lab-grid' }, [
       h('form', { class: 'lab-controls', novalidate: true }, [
-        preset.node, fIn.node, given, FIn.node,
+        preset.node, fIn.node, FIn.node,
         h('div', { class: 'lab-row' }, [aIn.node, bIn.node]),
         h('div', { class: 'lab-buttons' }, [run, replay]),
         verdict, facts
@@ -218,20 +223,11 @@
     ]));
     mount.querySelector('form').addEventListener('submit', function (e) { e.preventDefault(); check(); });
 
-    function showGiven() {
-      given.textContent = '';
-      var tex = null;
-      try { if (math) tex = math.parse(prep(fIn.input.value)).toTex({ implicit: 'hide', parenthesis: 'auto' }); } catch (e) {}
-      if (tex && window.katex) window.katex.render('\\int \\left(' + tex + '\\right)\\,dx', given, { throwOnError: false });
-      else given.textContent = '∫ ' + fIn.input.value + ' dx';
-    }
     function load(i) {
       var p = presets[i];
-      fIn.input.value = p.f; FIn.input.value = p.F; aIn.input.value = p.a; bIn.input.value = p.b;
-      showGiven();
+      fIn.setMath(p.f); FIn.setMath(p.F); aIn.input.value = p.a; bIn.input.value = p.b;
     }
     preset.input.addEventListener('change', function () { load(+preset.input.value); check(); });
-    fIn.input.addEventListener('input', showGiven);
     load(cfg.start || 0);
 
     function check() {
@@ -239,7 +235,7 @@
       var a = parseFloat(aIn.input.value), b = parseFloat(bIn.input.value);
       try {
         if (!(b > a)) throw new Error('El intervalo necesita a < b.');
-        var r = verify(math, fIn.input.value, FIn.input.value, a, b);
+        var r = verify(math, fIn.get(), FIn.get(), a, b);
         var msg = message(r);
         UI.verdict(verdict, r.kind, msg.title, msg.note);
         facts.hidden = false;
@@ -351,7 +347,9 @@
     return new Promise(function (resolve) {
       UI.onVisible(mount, function () {
         UI.loadMath().then(function (m) {
-          math = m; showGiven(); check();
+          math = m;
+          // El editor tarda un momento en pintar el ejemplo; se revisa cuando ya tiene valor.
+          setTimeout(check, 400);
           status.textContent = 'Cargando motor de animación…';
           resolve();
           return UI.loadManim();

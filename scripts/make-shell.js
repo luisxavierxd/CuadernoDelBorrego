@@ -60,6 +60,8 @@ ${hasBank ? `    <link rel="stylesheet" href="${R}shared/css/quiz.css">
     <script src="${R}shared/js/math-render.js"></script>
     <script src="${R}shared/js/labs/registry.js"></script>
 ${labFile ? `    <script src="${R}shared/js/labs/${labFile}.js"></script>\n` : ''}    <script src="${R}shared/js/diagrams/${course}.js"></script>
+    <script src="${R}shared/js/latex-to-math.js"></script>
+    <script src="${R}shared/js/math-input.js"></script>
     <script src="${R}shared/js/exercises.js"></script>
 ${hasBank ? `    <script src="${R}shared/js/quiz/engine.js"></script>
     <script src="${R}shared/js/quiz/ui.js"></script>

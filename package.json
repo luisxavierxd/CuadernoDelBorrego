@@ -6,11 +6,11 @@
   "scripts": {
     "check": "node scripts/check.js",
     "contrast": "node scripts/contrast.js",
-    "test:labs": "node scripts/labs-math.test.js",
+    "test:labs": "node scripts/labs-math.test.js && node scripts/latex.test.js",
     "test:examples": "node scripts/examples.test.js",
     "test:quiz": "node scripts/quiz-engine.test.js && node scripts/quiz-bank.test.js && node scripts/exam.test.js",
     "qa": "node scripts/qa-browser.js",
-    "validate": "node scripts/check.js && node scripts/contrast.js && node scripts/labs-math.test.js && node scripts/examples.test.js && node scripts/quiz-engine.test.js && node scripts/quiz-bank.test.js && node scripts/exam.test.js && node scripts/qa-browser.js"
+    "validate": "node scripts/check.js && node scripts/contrast.js && node scripts/labs-math.test.js && node scripts/latex.test.js && node scripts/examples.test.js && node scripts/quiz-engine.test.js && node scripts/quiz-bank.test.js && node scripts/exam.test.js && node scripts/qa-browser.js"
   },
   "devDependencies": {
     "mathjs": "15.2.0",
