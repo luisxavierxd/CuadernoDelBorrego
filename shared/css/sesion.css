@@ -234,6 +234,7 @@ a.dot:hover::before { background: var(--accent-soft); transform: scale(1.2); }
 .box-aux { fill: var(--plot-aux); fill-opacity: 0.22; stroke: var(--plot-aux); stroke-width: 2; }
 .box-ref { fill: var(--plot-ref); fill-opacity: 0.22; stroke: var(--plot-ref); stroke-width: 2; }
 .box-err { fill: var(--plot-error); fill-opacity: 0.22; stroke: var(--plot-error); stroke-width: 2; }
+.box-trace { fill: var(--plot-trace); fill-opacity: 0.22; stroke: var(--plot-trace); stroke-width: 2; }
 .dot-error { fill: var(--plot-error); }
 /* Las fórmulas largas hacen scroll dentro de su caja, no en toda la página */
 .concept > *, .explainer > *, .example, .exercise, .qcard { min-width: 0; }

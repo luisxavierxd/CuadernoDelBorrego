@@ -13,7 +13,7 @@ const cache = require('./lib/cache');
 const ROOT = path.join(__dirname, '..');
 const LIBS = ['labs/registry', 'labs/antiderivative-check', 'labs/projectile-check', 'labs/secant-tangent', 'labs/derivative-check', 'labs/chain-composition', 'labs/implicit-tangent', 'labs/f-fprime-fsecond', 'labs/optimize-slider', 'labs/riemann', 'labs/area-between', 'labs/solid-revolution',
   'labs/units', 'labs/vector-sum', 'labs/dot-cross', 'labs/motion-graphs', 'labs/kinematics-check', 'labs/circular-vectors',
-  'labs/fbd-builder', 'labs/atwood', 'labs/spring-friction', 'labs/incline', 'exercises']
+  'labs/fbd-builder', 'labs/atwood', 'labs/spring-friction', 'labs/incline', 'labs/work-area', 'labs/energy-bars', 'labs/particle-equilibrium', 'labs/beam-equilibrium', 'exercises']
   .map((n) => path.join(ROOT, 'shared/js', n + '.js'));
 const N_FAST = 200, N_EXPR = 50;
 

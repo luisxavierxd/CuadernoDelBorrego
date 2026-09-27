@@ -9,7 +9,7 @@ const { loadMathjs } = require('./lib/vendor');
 const ROOT = path.join(__dirname, '..');
 const LABS = ['registry', 'antiderivative-check', 'projectile-check', 'secant-tangent', 'derivative-check', 'chain-composition', 'implicit-tangent', 'f-fprime-fsecond', 'optimize-slider', 'riemann', 'area-between', 'solid-revolution',
   'units', 'vector-sum', 'dot-cross', 'motion-graphs', 'kinematics-check', 'circular-vectors',
-  'fbd-builder', 'atwood', 'spring-friction', 'incline']
+  'fbd-builder', 'atwood', 'spring-friction', 'incline', 'work-area', 'energy-bars', 'particle-equilibrium', 'beam-equilibrium']
   .map((n) => path.join(ROOT, 'shared/js/labs', n + '.js'));
 
 let pass = 0, fail = 0;

@@ -729,4 +729,189 @@
       seg('axis', 560, top, 560, bot, 1.2) + text(570, (top + bot) / 2 + 30, v.w + ' m', ' font-size="16"');
     return svgBox('0 30 620 ' + (bot - 30 + 30).toFixed(0), 'Una lancha cruza un río de ' + v.w + ' m apuntando a la otra orilla mientras la corriente la arrastra.', body);
   };
+
+  /* =================== Bloque D · Trabajo y energía (S12–S13) =================== */
+  /* ---------- S12 · Trabajo con ángulo (explainer) ----------
+     state.th: ángulo entre la fuerza y el desplazamiento (0–180). */
+  D['work-angle'] = function (s) {
+    var th = num(s, 'th', 30), cx = 200, cy = 220, F = 120, c = Math.cos(th * RAD);
+    var body = '<path class="axis" d="M40 260H440" stroke-width="2"/>' + box(cx, cy, 80, 80) +
+      force('ref', cx + 40, cy - 10, th, F, 'F') +
+      seg('ref', cx + 40, cy - 10, cx + 40 + F * c, cy - 10, 3, '6 5') + text(c >= 0 ? cx + 50 + F * c : cx + 40 + F * c - 50, cy - 18, 'F cos θ', ' text-anchor="' + (c >= 0 ? 'start' : 'end') + '" font-size="15"') +
+      arc(cx + 40, cy - 10, 36, 0, th) + text(cx + 86, cy - 22, 'θ', ' font-size="17"') +
+      arrow('aux', 120, 290, 180, 0, 3) + text(210, 316, 'desplazamiento d', ' text-anchor="middle" font-size="16"');
+    var sign = Math.abs(c) < 0.02 ? 'W = 0: la fuerza no trabaja' : c > 0 ? 'W > 0: la fuerza ayuda' : 'W < 0: la fuerza frena';
+    body += text(545, 150, 'W = F d cos θ', ' text-anchor="middle" font-size="19"') + text(545, 184, 'θ = ' + Math.round(th) + '°', ' text-anchor="middle" font-size="17"') +
+      text(545, 216, sign, ' text-anchor="middle" font-size="16"') + text(545, 244, 'solo cuenta la parte', ' text-anchor="middle" font-size="14"') + text(545, 264, 'a lo largo de d', ' text-anchor="middle" font-size="14"');
+    return svgBox('0 70 640 260', 'Una caja se desplaza una distancia d mientras una fuerza F forma un ángulo θ con el desplazamiento; solo la componente F cos θ hace trabajo.', body);
+  };
+
+  /* ---------- S12 · Trabajo como área (explainer) ----------
+     state.show: 'const' | 'spring' | 'var'. */
+  D['work-area-explainer'] = function (s) {
+    var show = (s && s.show) || 'const', x0 = 80, y0 = 290, W = 380, H = 170;
+    var body = arrow('axis', x0, y0, W + 40, 0, 1.3) + arrow('axis', x0, y0, 0, -H - 30, 1.3) + text(x0 + W + 48, y0 + 6, 'x', ' font-size="17"') + text(x0 - 8, y0 - H - 36, 'F', ' font-size="17"');
+    var path, cap, fill;
+    if (show === 'const') {
+      fill = 'M' + x0 + ' ' + y0 + 'V' + (y0 - 110) + 'H' + (x0 + 300) + 'V' + y0 + 'Z'; path = 'M' + x0 + ' ' + (y0 - 110) + 'H' + (x0 + 300);
+      cap = ['fuerza constante:', 'el área es un rectángulo', 'W = F·d'];
+    } else if (show === 'spring') {
+      fill = 'M' + x0 + ' ' + y0 + 'L' + (x0 + 300) + ' ' + (y0 - 160) + 'V' + y0 + 'Z'; path = 'M' + x0 + ' ' + y0 + 'L' + (x0 + 340) + ' ' + (y0 - 181);
+      cap = ['resorte: F = kx crece', 'el área es un triángulo', 'W = ½ k x²'];
+      body += text(x0 + 300, y0 + 22, 'x', ' text-anchor="middle" font-size="16"') + text(x0 + 312, y0 - 160, 'kx', ' font-size="16"');
+    } else {
+      var pts = [], fpts = 'M' + x0 + ' ' + y0;
+      for (var i = 0; i <= 40; i++) { var u = i / 40, px = x0 + 340 * u, py = y0 - 40 - 130 * u * u; pts.push(px.toFixed(1) + ' ' + py.toFixed(1)); if (u <= 300 / 340 + 1e-9) fpts += 'L' + px.toFixed(1) + ' ' + py.toFixed(1); }
+      path = 'M' + pts.join('L'); fill = fpts + 'L' + (x0 + 300) + ' ' + y0 + 'Z';
+      cap = ['fuerza que cambia:', 'el área bajo la curva', 'W = ∫ F dx'];
+    }
+    body += '<path class="area-fill" d="' + fill + '"/>' + '<path class="ref" d="' + path + '" stroke-width="3.5" fill="none"/>' +
+      seg('axis', x0 + 300, y0, x0 + 300, y0 - 190, 1.2, '4 5');
+    cap.forEach(function (t, n) { body += text(545, 150 + 30 * n, t, ' text-anchor="middle" font-size="17"'); });
+    return svgBox('0 90 640 230', 'Gráfica de fuerza contra posición: el trabajo es el área bajo la curva, un rectángulo si F es constante y un triángulo en un resorte.', body);
+  };
+
+  /* ---------- S13 · Conservación de la energía (explainer) ----------
+     state.u ∈ [0, 1]: posición del carrito en la rampa (0 arriba, 1 abajo). */
+  D['energy-explainer'] = function (s) {
+    var u = clamp01(num(s, 'u', 0)), x0 = 50, x1 = 330, base = 290, h = 190;
+    var d = '';
+    for (var i = 0; i <= 30; i++) { var q = i / 30; d += (i ? 'L' : 'M') + (x0 + (x1 - x0) * q).toFixed(1) + ' ' + (base - h * (1 - q) * (1 - q)).toFixed(1); }
+    var y = h * (1 - u) * (1 - u), frac = y / h, cx = x0 + (x1 - x0) * u, cy = base - y - 13;
+    var body = '<path class="axis" d="' + d + 'H400" stroke-width="3" fill="none"/>' + box(cx, cy, 30, 20) +
+      seg('axis', 30, base - h, 30, base, 1.2) + text(24, base - h / 2, 'h', ' text-anchor="end" font-size="17"');
+    var bx = 440, bw = 50, bh = 170, bb = 290;
+    body += '<rect class="box-ref" x="' + bx + '" y="' + (bb - bh * frac).toFixed(1) + '" width="' + bw + '" height="' + Math.max(bh * frac, 0.5).toFixed(1) + '"/>' +
+      '<rect class="box-aux" x="' + (bx + 80) + '" y="' + (bb - bh * (1 - frac)).toFixed(1) + '" width="' + bw + '" height="' + Math.max(bh * (1 - frac), 0.5).toFixed(1) + '"/>' +
+      seg('axis', bx - 10, bb - bh, bx + 140, bb - bh, 1.2, '5 5') + text(bx + 25, bb + 22, 'U = mgy', ' text-anchor="middle" font-size="15"') + text(bx + 105, bb + 22, 'K = ½mv²', ' text-anchor="middle" font-size="15"') +
+      text(bx + 65, bb - bh - 10, 'E = mgh (fija)', ' text-anchor="middle" font-size="15"');
+    var cap = u < 0.02 ? 'arriba: toda es potencial' : u > 0.98 ? 'abajo: toda es cinética, v = √(2gh)' : Math.abs(frac - 0.5) < 0.04 ? 'a media altura: K = U' : 'U se convierte en K';
+    body += text(200, 110, cap, ' text-anchor="middle" font-size="17"');
+    return svgBox('0 85 640 235', 'Un carrito baja por una rampa sin fricción: la energía potencial se convierte en cinética y la suma no cambia.', body);
+  };
+
+  /* ---------- S13 · Rampa, tramo áspero y resorte ---------- */
+  D['energy-track'] = function () {
+    var body = '<path class="axis" d="M40 110Q120 290 200 290H600" stroke-width="3" fill="none"/>' + box(60, 128, 30, 20) +
+      seg('axis', 26, 110, 26, 290, 1.2) + text(20, 205, 'h', ' text-anchor="end" font-size="17"');
+    var hatch = '';
+    for (var j = 250; j < 420; j += 12) hatch += 'M' + j + ' 292l-8 10';
+    body += '<path class="error" d="' + hatch + '" stroke-width="1.5" fill="none"/>' + text(335, 325, 'tramo áspero: pierde μₖmgd', ' text-anchor="middle" font-size="15"') +
+      '<path class="axis" d="M600 230V290" stroke-width="5"/>' + '<path class="axis" d="M600 270L590 262L580 278L570 262L560 278L550 262L540 270" stroke-width="2" fill="none"/>' + text(570, 250, 'k', ' text-anchor="middle" font-size="16"') +
+      text(420, 140, 'mgh − μₖmgd = ½kx²', ' text-anchor="middle" font-size="18"') + text(420, 170, 'lo perdido se va en calor', ' text-anchor="middle" font-size="15"');
+    return svgBox('0 90 640 250', 'Un carrito baja por una rampa lisa, cruza un tramo áspero y comprime un resorte.', body);
+  };
+
+  /* =================== Bloque E · Estática (S14–S15) =================== */
+  /* ---------- S14 · Nudo con dos cables (explainer) ----------
+     state.step ∈ [0, 3]: situación · DCL · componentes · polígono. */
+  D['knot-explainer'] = function (s) {
+    var k = num(s, 'step', 0), a = 35, b = 60, K = [180, 200], ceil = 70, dy = K[1] - ceil;
+    var A = [K[0] - dy / Math.tan(a * RAD), ceil], B = [K[0] + dy / Math.tan(b * RAD), ceil];
+    var body = '<path class="axis" d="M20 ' + ceil + 'H340" stroke-width="4"/>' +
+      '<path class="axis" d="M' + A[0].toFixed(1) + ' ' + ceil + 'L' + K[0] + ' ' + K[1] + 'L' + B[0].toFixed(1) + ' ' + ceil + 'M' + K[0] + ' ' + K[1] + 'V260" stroke-width="2" fill="none"/>' +
+      box(K[0], 282, 50, 44, 0, 'box-ref') + text(K[0], 288, 'm', ' text-anchor="middle" font-size="16"') +
+      arc(A[0], ceil, 40, 360 - a, 360) + text(A[0] + 46, ceil + 22, 'θ₁', ' font-size="15"') + arc(B[0], ceil, 40, 180, 180 + b) + text(B[0] - 50, ceil + 28, 'θ₂', ' font-size="15"');
+    var N = [470, 200];
+    body += fade('<circle class="dot-ref" cx="' + N[0] + '" cy="' + N[1] + '" r="5"/>' + force('aux', N[0], N[1], 180 - a, 90, 'T₁') + force('ref', N[0], N[1], b, 105, 'T₂') + force('error', N[0], N[1], 270, 80, 'mg'), clamp01(k));
+    body += fade(seg('aux', N[0], N[1], N[0] - 90 * Math.cos(a * RAD), N[1], 2, '5 5') + seg('ref', N[0], N[1], N[0] + 105 * Math.cos(b * RAD), N[1], 2, '5 5'), clamp01(k - 1));
+    var cap = ['un peso cuelga de dos cables', 'cuerpo libre del nudo: tres fuerzas', 'ΣFx = 0: T₁ cos θ₁ = T₂ cos θ₂', 'ΣFy = 0: T₁ sin θ₁ + T₂ sin θ₂ = mg'];
+    body += text(470, 335, cap[Math.max(0, Math.min(3, Math.round(k)))], ' text-anchor="middle" font-size="16"');
+    return svgBox('0 50 640 300', 'Un peso cuelga de un nudo sostenido por dos cables con ángulos distintos; a la derecha, el diagrama de cuerpo libre del nudo.', body);
+  };
+
+  /* ---------- S14 · Cable casi horizontal ---------- */
+  D['sag-cable'] = function () {
+    var body = '<path class="axis" d="M40 110V170M600 110V170" stroke-width="5"/>' +
+      '<path class="axis" d="M40 130L320 160L600 130" stroke-width="2" fill="none"/>' + box(320, 190, 40, 36, 0, 'box-ref') +
+      arc(40, 130, 60, 354, 360) + text(110, 128, 'θ pequeño', ' font-size="15"') +
+      text(320, 250, 'T = mg / (2 sin θ)', ' text-anchor="middle" font-size="18"') + text(320, 278, 'si θ → 0, la tensión se dispara', ' text-anchor="middle" font-size="15"');
+    return svgBox('0 90 640 200', 'Una masa cuelga del centro de un cable casi horizontal: con un ángulo pequeño la tensión es mucho mayor que el peso.', body);
+  };
+
+  /* ---------- S15 · Torque (explainer) ----------
+     state.th: ángulo entre el brazo r y la fuerza F. */
+  D['torque-explainer'] = function (s) {
+    var th = num(s, 'th', 90), P = [90, 230], L = 240, E = [P[0] + L, P[1]];
+    var body = '<path class="axis" d="M' + P[0] + ' ' + P[1] + 'H' + E[0] + '" stroke-width="8" stroke-linecap="round"/>' + '<circle class="dot-ref" cx="' + P[0] + '" cy="' + P[1] + '" r="7"/>' +
+      text(P[0], P[1] + 30, 'pivote', ' text-anchor="middle" font-size="15"') + text(P[0] + L / 2, P[1] + 30, 'r', ' text-anchor="middle" font-size="17"') +
+      force('ref', E[0], E[1], th, 100, 'F') + arc(E[0], E[1], 30, 0, th) + text(E[0] + 44 * Math.cos(th * RAD / 2) + 4, E[1] - 44 * Math.sin(th * RAD / 2) + 10, 'θ', ' font-size="16"') +
+      seg('ref', E[0], E[1], E[0], E[1] - 100 * Math.sin(th * RAD), 2, '5 5');
+    body += text(540, 150, 'τ = r F sin θ', ' text-anchor="middle" font-size="19"') + text(540, 182, 'θ = ' + Math.round(th) + '°', ' text-anchor="middle" font-size="17"') +
+      text(540, 214, 'solo gira la parte', ' text-anchor="middle" font-size="15"') + text(540, 236, 'perpendicular al brazo', ' text-anchor="middle" font-size="15"');
+    return svgBox('0 90 640 190', 'Una barra con pivote en un extremo y una fuerza F en el otro con ángulo θ: el torque es r F sin θ.', body);
+  };
+
+  /* ---------- S15 · Balancín ---------- */
+  D['seesaw'] = function () {
+    var body = '<path class="axis" d="M80 200H560" stroke-width="8" stroke-linecap="round"/>' + '<path class="axis" d="M320 204l-22 40h44z" stroke-width="2" fill="none"/>' +
+      box(130, 175, 44, 44) + box(470, 170, 54, 54, 0, 'box-ref') + force('error', 130, 200, 270, 60, 'F₁') + force('error', 470, 200, 270, 80, 'F₂') +
+      seg('axis', 130, 270, 320, 270, 1.3) + seg('axis', 320, 270, 470, 270, 1.3) + text(225, 290, 'x₁', ' text-anchor="middle" font-size="16"') + text(395, 290, 'x₂', ' text-anchor="middle" font-size="16"') +
+      text(320, 130, 'F₁ x₁ = F₂ x₂', ' text-anchor="middle" font-size="19"');
+    return svgBox('0 110 640 195', 'Un balancín con un peso chico lejos del pivote y uno grande cerca: se equilibran cuando F₁x₁ = F₂x₂.', body);
+  };
+
+  /* ---------- S15 · Viga con dos apoyos (explainer) ----------
+     state.step ∈ [0, 3]: situación · DCL · torques respecto a A · suma de fuerzas. */
+  D['beam-explainer'] = function (s) {
+    var k = num(s, 'step', 0), X = function (x) { return 60 + 80 * x; }, Y = 200;
+    var body = '<rect class="box-base" x="' + X(0) + '" y="' + (Y - 8) + '" width="480" height="16" rx="3"/>' +
+      '<path class="axis" d="M' + X(1) + ' ' + (Y + 8) + 'l-16 26h32zM' + X(5) + ' ' + (Y + 8) + 'l-16 26h32z" stroke-width="2" fill="none"/>' +
+      text(X(1), Y + 52, 'A', ' text-anchor="middle" font-size="16"') + text(X(5), Y + 52, 'B', ' text-anchor="middle" font-size="16"') +
+      force('error', X(2), Y - 70, 270, 60, null) + text(X(2), Y - 80, '300 N', ' text-anchor="middle" font-size="15"') +
+      force('error', X(4.5), Y - 90, 270, 80, null) + text(X(4.5) + 10, Y - 84, '500 N', ' text-anchor="start" font-size="15"');
+    body += fade(force('aux', X(3), Y - 50, 270, 42, null) + text(X(3) + 8, Y - 56, 'Mg', ' font-size="15"') +
+      force('ref', X(1) - 30, Y + 90, 90, 70, null) + force('ref', X(5) + 30, Y + 90, 90, 70, null) + text(X(1) - 38, Y + 80, 'RA', ' text-anchor="end" font-size="15"') + text(X(5) + 38, Y + 80, 'RB', ' font-size="15"'), clamp01(k));
+    body += fade(seg('axis', X(1), Y + 66, X(2), Y + 66, 1.3) + seg('axis', X(1), Y + 76, X(4.5), Y + 76, 1.3) + seg('axis', X(1), Y + 86, X(5), Y + 86, 1.3) + text(X(2) + 6, Y + 70, '1 m', ' font-size="12"') + text(X(4.5) + 6, Y + 80, '3.5 m', ' font-size="12"') + text(X(5) + 6, Y + 96, '4 m', ' font-size="12"'), clamp01(k - 1));
+    var cap = ['una viga sobre dos apoyos con dos cargas', 'cuerpo libre: cargas, peso propio en el centro y dos reacciones', 'torques respecto a A: RA no aparece; despeja RB', 'ΣF = 0: RA = (suma de cargas) − RB'];
+    body += text(320, 80, cap[Math.max(0, Math.min(3, Math.round(k)))], ' text-anchor="middle" font-size="16"');
+    return svgBox('0 55 640 255', 'Una viga sobre dos apoyos A y B con dos cargas; su diagrama de cuerpo libre y los brazos medidos desde A.', body);
+  };
+
+  /* ---------- S15 · Viga con cable (pluma) ---------- */
+  D['boom-cable'] = function () {
+    var th = 30, P = [80, 260], L = 340, E = [P[0] + L, P[1]], top = [P[0], P[1] - L * Math.tan(th * RAD)];
+    var body = '<path class="axis" d="M' + P[0] + ' ' + (top[1] - 10).toFixed(1) + 'V' + (P[1] + 30) + '" stroke-width="6"/>' +
+      '<path class="axis" d="M' + P[0] + ' ' + P[1] + 'H' + E[0] + '" stroke-width="8" stroke-linecap="round"/>' +
+      '<path class="axis" d="M' + P[0] + ' ' + top[1].toFixed(1) + 'L' + E[0] + ' ' + E[1] + '" stroke-width="2"/>' +
+      arc(E[0], E[1], 50, 180 - th, 180) + text(E[0] - 70, E[1] - 12, 'θ', ' font-size="16"') +
+      box(E[0], E[1] + 40, 40, 36, 0, 'box-ref') + '<path class="axis" d="M' + E[0] + ' ' + E[1] + 'V' + (E[1] + 22) + '" stroke-width="1.8"/>' +
+      '<circle class="dot-ref" cx="' + P[0] + '" cy="' + P[1] + '" r="6"/>' + text(P[0] + 10, P[1] + 30, 'bisagra', ' font-size="15"') +
+      text(250, top[1] + 10, 'torques en la bisagra:', ' font-size="16"') + text(250, top[1] + 36, 'T L sin θ = W L + Mg L/2', ' font-size="16"');
+    return svgBox('0 ' + Math.floor(top[1] - 30) + ' 640 ' + Math.ceil(P[1] - top[1] + 110), 'Una viga horizontal con bisagra en la pared, sostenida por un cable inclinado y con una carga colgada en la punta.', body);
+  };
+
+  /* ---------- Problemas de examen · bloques D–E ---------- */
+  // Carrito que baja por una rampa, cruza un tramo áspero y choca con un resorte.
+  D['exam-rampa-resorte'] = function (v) {
+    var body = '<path class="axis" d="M40 110Q120 290 200 290H600" stroke-width="3" fill="none"/>' + box(60, 128, 30, 20) +
+      seg('axis', 26, 110, 26, 290, 1.2) + text(18, 205, 'h = ' + v.h + ' m', ' text-anchor="end" font-size="15"');
+    var hatch = '';
+    for (var j = 250; j < 420; j += 12) hatch += 'M' + j + ' 292l-8 10';
+    body += '<path class="error" d="' + hatch + '" stroke-width="1.5" fill="none"/>' + text(335, 325, v.d + ' m, μₖ = ' + v.mu, ' text-anchor="middle" font-size="15"') +
+      '<path class="axis" d="M600 230V290" stroke-width="5"/>' + '<path class="axis" d="M600 270L590 262L580 278L570 262L560 278L550 262L540 270" stroke-width="2" fill="none"/>' + text(590, 215, 'k = ' + v.k + ' N/m', ' text-anchor="end" font-size="14"');
+    return svgBox('-70 90 710 250', 'Un carrito de ' + v.m + ' kg se suelta desde ' + v.h + ' m, cruza un tramo áspero de ' + v.d + ' m y comprime un resorte.', body);
+  };
+  // Peso colgado de dos cables.
+  D['exam-cables'] = function (v) {
+    var a = v.a, b = v.b, K = [320, 190], ceil = 50, dy = K[1] - ceil;
+    var A = [K[0] - dy / Math.tan(a * RAD), ceil], B = [K[0] + dy / Math.tan(b * RAD), ceil];
+    var body = '<path class="axis" d="M' + Math.min(A[0] - 20, 60).toFixed(1) + ' ' + ceil + 'H' + Math.max(B[0] + 20, 580).toFixed(1) + '" stroke-width="4"/>' +
+      '<path class="axis" d="M' + A[0].toFixed(1) + ' ' + ceil + 'L' + K[0] + ' ' + K[1] + 'L' + B[0].toFixed(1) + ' ' + ceil + 'M' + K[0] + ' ' + K[1] + 'V240" stroke-width="2" fill="none"/>' +
+      box(K[0], 262, 60, 44, 0, 'box-ref') + text(K[0], 268, v.m + ' kg', ' text-anchor="middle" font-size="15"') +
+      arc(A[0], ceil, 44, 360 - a, 360) + text(A[0] + 50, ceil + 24, a + '°', ' font-size="15"') + arc(B[0], ceil, 44, 180, 180 + b) + text(B[0] - 54, ceil + 30, b + '°', ' text-anchor="end" font-size="15"');
+    return svgBox('0 30 640 260', 'Una masa de ' + v.m + ' kg cuelga de dos cables que forman ' + a + ' y ' + b + ' grados con el techo.', body);
+  };
+  // Viga con dos apoyos y una carga.
+  D['exam-viga'] = function (v) {
+    var X = function (x) { return 60 + 520 * x / v.L; }, Y = 170;
+    var body = '<rect class="box-base" x="60" y="' + (Y - 8) + '" width="520" height="16" rx="3"/>' +
+      '<path class="axis" d="M' + X(v.a).toFixed(1) + ' ' + (Y + 8) + 'l-16 26h32zM' + X(v.b).toFixed(1) + ' ' + (Y + 8) + 'l-16 26h32z" stroke-width="2" fill="none"/>' +
+      text(X(v.a), Y + 52, 'A', ' text-anchor="middle" font-size="15"') + text(X(v.b), Y + 52, 'B', ' text-anchor="middle" font-size="15"') +
+      force('error', X(v.x), Y - 80, 270, 70, null) + text(X(v.x), Y - 88, v.F + ' N', ' text-anchor="middle" font-size="15"');
+    var marks = [0, v.a, v.x, v.b, v.L].filter(function (x, i, arr) { return arr.indexOf(x) === i; }).sort(function (p, q) { return p - q; });
+    marks.forEach(function (x) { body += seg('axis', X(x), Y + 62, X(x), Y + 72, 1.3) + text(X(x), Y + 90, x + ' m', ' text-anchor="middle" font-size="13"'); });
+    body += seg('axis', 60, Y + 67, 580, Y + 67, 1.2);
+    return svgBox('0 55 640 225', 'Una viga de ' + v.L + ' m y ' + v.M + ' kg sobre apoyos en ' + v.a + ' y ' + v.b + ' m, con una carga de ' + v.F + ' N en ' + v.x + ' m.', body);
+  };
 })();

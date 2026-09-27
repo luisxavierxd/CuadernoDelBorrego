@@ -44,15 +44,15 @@ window.COURSE_META = {
     {
       id: 'D', label: 'Trabajo y energía',
       sessions: [
-        { n: 12, tag: 'Trabajo y energía', title: 'Trabajo, energía cinética y teorema trabajo-energía', lab: 'work-area' },
-        { n: 13, tag: 'Conservación de energía', title: 'Energía potencial (gravitacional y elástica) y conservación de la energía, con y sin fricción', short: 'Energía potencial y conservación', lab: 'energy-bars' }
+        { n: 12, tag: 'Trabajo y energía', title: 'Trabajo, energía cinética y teorema trabajo-energía', lab: 'work-area', ready: true, bank: true },
+        { n: 13, tag: 'Conservación de energía', title: 'Energía potencial (gravitacional y elástica) y conservación de la energía, con y sin fricción', short: 'Energía potencial y conservación', lab: 'energy-bars', ready: true, bank: true }
       ]
     },
     {
       id: 'E', label: 'Estática',
       sessions: [
-        { n: 14, tag: 'Equilibrio de partícula', title: 'Equilibrio de la partícula: fuerzas, tensiones en cables y resortes', short: 'Equilibrio de la partícula', lab: 'particle-equilibrium' },
-        { n: 15, tag: 'Cuerpo rígido', title: 'Torque y equilibrio del cuerpo rígido: vigas y reacciones en apoyos', short: 'Torque y equilibrio del cuerpo rígido', lab: 'beam-equilibrium' }
+        { n: 14, tag: 'Equilibrio de partícula', title: 'Equilibrio de la partícula: fuerzas, tensiones en cables y resortes', short: 'Equilibrio de la partícula', lab: 'particle-equilibrium', ready: true, bank: true },
+        { n: 15, tag: 'Cuerpo rígido', title: 'Torque y equilibrio del cuerpo rígido: vigas y reacciones en apoyos', short: 'Torque y equilibrio del cuerpo rígido', lab: 'beam-equilibrium', ready: true, bank: true }
       ]
     }
   ]

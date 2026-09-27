@@ -2,7 +2,7 @@
    Problemas de examen · Física 1 (§10.3). Propios y parametrizados.
    part.answer(v, prev): prev son las respuestas DEL ALUMNO en los incisos
    anteriores, para dar crédito por arrastre de error. g = 9.81 m/s².
-   Bloque A (S01–S03): 6 problemas. Bloque B (S04–S07): 7. Bloque C (S08–S11): 6.
+   Bloque A (S01–S03): 6 problemas. Bloque B (S04–S07): 7. Bloque C (S08–S11): 6. Bloque D (S12–S13): 6. Bloque E (S14–S15): 6.
    ===================================================================== */
 (function () {
   var ex = (window.CB_EXAMS = window.CB_EXAMS || {});
@@ -549,6 +549,299 @@
           prompt: function (v) { return 'Con tu aceleración, ¿qué rapidez tienen cuando se han movido $' + v.d + '$ m?'; },
           answer: function (v, prev) { return Math.sqrt(2 * Math.abs(prev[1]) * v.d); },
           solution: function (v) { var a = (v.m2 - v.m1 * sn(v.th)) * g / (v.m1 + v.m2); return '$v = \\sqrt{2ad} = ' + fx(Math.sqrt(2 * a * v.d), 3) + '$ m/s.'; } }
+      ]
+    }
+  ]);
+
+  /* ================= Bloques D–E · Energía y estática (lote 3 de F4) ================= */
+  function tn(t) { return Math.tan(t * RAD); }
+
+  ex.f1 = ex.f1.concat([
+    {
+      id: 'f1-ex-trineo', tags: ['f1.S10', 'f1.S12', 'f1.S13'], block: 'D', title: 'La caja jalada: de la fricción a la rapidez',
+      vars: { m: [5, 30, 1], F: [40, 160, 10], th: [15, 40, 5], muk: [0.1, 0.4, 0.05], d: [2, 12, 1] },
+      where: function (v) { var N = v.m * g - v.F * sn(v.th); return N > 10 && v.F * cs(v.th) - v.muk * N > 5; },
+      statement: function (v) { return '<p>Jalas desde el reposo una caja de $' + v.m + '$ kg con una cuerda de $' + v.F + '$ N a $' + v.th + '^\\circ$ sobre la horizontal, a lo largo de $' + v.d + '$ m de piso con $\\mu_k = ' + v.muk + '$.</p>'; },
+      diagram: { id: 'exam-jalon', state: function (v) { return v; } },
+      parts: [
+        { label: 'a', type: 'numeric', points: 2, unit: 'N',
+          prompt: function () { return '¿Cuánto vale la normal?'; },
+          answer: function (v) { return v.m * g - v.F * sn(v.th); },
+          solution: function (v) { return '$N = mg - F\\sin\\theta = ' + fx(v.m * g - v.F * sn(v.th)) + '$ N.'; } },
+        { label: 'b', type: 'numeric', points: 2, unit: 'N',
+          prompt: function () { return 'Con tu normal, ¿cuánto vale la fricción cinética?'; },
+          answer: function (v, prev) { return v.muk * prev[0]; },
+          solution: function (v) { return '$f_k = \\mu_kN = ' + fx(v.muk * (v.m * g - v.F * sn(v.th))) + '$ N.'; } },
+        { label: 'c', type: 'numeric', points: 2, unit: 'J',
+          prompt: function (v) { return 'Con tu fricción, ¿cuánto trabajo neto se hace sobre la caja en los $' + v.d + '$ m?'; },
+          answer: function (v, prev) { return (v.F * cs(v.th) - prev[1]) * v.d; },
+          solution: function (v) { var f = v.muk * (v.m * g - v.F * sn(v.th)); return '$W = (F\\cos\\theta - f_k)d = (' + fx(v.F * cs(v.th)) + ' - ' + fx(f) + ')(' + v.d + ') = ' + fx((v.F * cs(v.th) - f) * v.d) + '$ J. La normal y el peso no trabajan.'; } },
+        { label: 'd', type: 'numeric', points: 2, unit: 'm/s',
+          prompt: function () { return 'Con tu trabajo neto, ¿qué rapidez tiene al final?'; },
+          answer: function (v, prev) { return Math.sqrt(2 * Math.abs(prev[2]) / v.m); },
+          solution: function (v) { var W = (v.F * cs(v.th) - v.muk * (v.m * g - v.F * sn(v.th))) * v.d; return '$\\tfrac{1}{2}mv^2 = W$: $v = \\sqrt{2W/m} = ' + fx(Math.sqrt(2 * W / v.m), 3) + '$ m/s.'; } },
+        { label: 'e', type: 'numeric', points: 2, unit: 'J',
+          prompt: function () { return 'Con tu fricción, ¿cuánta energía se convirtió en calor?'; },
+          answer: function (v, prev) { return prev[1] * v.d; },
+          solution: function (v) { return '$f_kd = ' + fx(v.muk * (v.m * g - v.F * sn(v.th)) * v.d) + '$ J.'; } }
+      ]
+    },
+    {
+      id: 'f1-ex-rampa-resorte', tags: ['f1.S13'], block: 'D', title: 'Rampa, tramo áspero y resorte',
+      vars: { m: [0.5, 4, 0.5], h: [1, 4, 0.5], mu: [0.1, 0.4, 0.05], d: [0.5, 2, 0.5], k: [200, 1500, 100] },
+      where: function (v) { return v.h - v.mu * v.d > 0.4; },
+      statement: function (v) { return '<p>Un carrito de $' + v.m + '$ kg se suelta desde $' + v.h + '$ m en una rampa lisa, cruza un tramo horizontal de $' + v.d + '$ m con $\\mu_k = ' + v.mu + '$ y choca con un resorte de $k = ' + v.k + '$ N/m.</p>'; },
+      diagram: { id: 'exam-rampa-resorte', state: function (v) { return v; } },
+      parts: [
+        { label: 'a', type: 'numeric', points: 2, unit: 'm/s',
+          prompt: function () { return '¿Con qué rapidez llega al pie de la rampa?'; },
+          answer: function (v) { return Math.sqrt(2 * g * v.h); },
+          solution: function (v) { return '$v = \\sqrt{2gh} = ' + fx(Math.sqrt(2 * g * v.h), 3) + '$ m/s.'; } },
+        { label: 'b', type: 'numeric', points: 2, unit: 'J',
+          prompt: function () { return '¿Cuánta energía pierde en el tramo áspero?'; },
+          answer: function (v) { return v.mu * v.m * g * v.d; },
+          solution: function (v) { return '$\\mu_k mgd = ' + fx(v.mu * v.m * g * v.d, 3) + '$ J.'; } },
+        { label: 'c', type: 'numeric', points: 3, unit: 'm/s',
+          prompt: function () { return 'Con tus resultados de a) y b), ¿con qué rapidez llega al resorte?'; },
+          answer: function (v, prev) { return Math.sqrt(Math.abs(prev[0] * prev[0] - 2 * prev[1] / v.m)); },
+          solution: function (v) { return '$\\tfrac{1}{2}mv^2 = \\tfrac{1}{2}mv_a^2 - \\mu_kmgd$: $v = ' + fx(Math.sqrt(2 * g * (v.h - v.mu * v.d)), 3) + '$ m/s.'; } },
+        { label: 'd', type: 'numeric', points: 3, unit: 'm',
+          prompt: function () { return 'Con tu rapidez de c), ¿cuánto comprime el resorte?'; },
+          answer: function (v, prev) { return prev[2] * Math.sqrt(v.m / v.k); },
+          solution: function (v) { var u = Math.sqrt(2 * g * (v.h - v.mu * v.d)); return '$\\tfrac{1}{2}kx^2 = \\tfrac{1}{2}mv^2$: $x = v\\sqrt{m/k} = ' + fx(u * Math.sqrt(v.m / v.k), 4) + '$ m.'; } }
+      ]
+    },
+    {
+      id: 'f1-ex-montacargas', tags: ['f1.S12'], block: 'D', title: 'El motor del montacargas',
+      vars: { m: [100, 800, 50], h: [3, 25, 1], t: [5, 40, 1], e: [60, 90, 5] },
+      statement: function (v) { return '<p>Un montacargas sube $' + v.m + '$ kg a velocidad constante una altura de $' + v.h + '$ m en $' + v.t + '$ s. Su motor tiene una eficiencia del $' + v.e + '\\,\\%$.</p>'; },
+      parts: [
+        { label: 'a', type: 'numeric', points: 2, unit: 'J',
+          prompt: function () { return '¿Cuánto trabajo hace el motor sobre la carga?'; },
+          answer: function (v) { return v.m * g * v.h; },
+          solution: function (v) { return '$W = mgh = ' + fx(v.m * g * v.h) + '$ J.'; } },
+        { label: 'b', type: 'numeric', points: 2, unit: 'W',
+          prompt: function () { return 'Con tu trabajo, ¿qué potencia útil entrega?'; },
+          answer: function (v, prev) { return prev[0] / v.t; },
+          solution: function (v) { return '$P = W/t = ' + fx(v.m * g * v.h / v.t) + '$ W.'; } },
+        { label: 'c', type: 'numeric', points: 3, unit: 'W',
+          prompt: function () { return 'Con tu potencia útil, ¿qué potencia eléctrica consume?'; },
+          answer: function (v, prev) { return prev[1] / (v.e / 100); },
+          solution: function (v) { return '$P_{elec} = P/\\eta = ' + fx(v.m * g * v.h / v.t / (v.e / 100)) + '$ W.'; } },
+        { label: 'd', type: 'numeric', points: 3, unit: 'm/s',
+          prompt: function () { return 'Con tu potencia útil, ¿a qué velocidad sube la carga? (Usa $P = Fv$.)'; },
+          answer: function (v, prev) { return prev[1] / (v.m * g); },
+          solution: function (v) { return '$v = P/(mg) = ' + fx(v.h / v.t, 3) + '$ m/s (igual a $h/t$).'; } }
+      ]
+    },
+    {
+      id: 'f1-ex-frenado-energia', tags: ['f1.S12'], block: 'D', title: 'Frenar con energía',
+      vars: { m: [600, 2000, 100], kmh: [30, 110, 10], mu: [0.4, 0.9, 0.05] },
+      statement: function (v) { return '<p>Un auto de $' + v.m + '$ kg va a $' + v.kmh + '$ km/h y frena con las llantas derrapando sobre un pavimento con $\\mu_k = ' + v.mu + '$.</p>'; },
+      parts: [
+        { label: 'a', type: 'numeric', points: 2, unit: 'J',
+          prompt: function () { return '¿Cuánta energía cinética tiene antes de frenar?'; },
+          answer: function (v) { return 0.5 * v.m * Math.pow(v.kmh / 3.6, 2); },
+          solution: function (v) { return '$v = ' + fx(v.kmh / 3.6, 3) + '$ m/s y $K = \\tfrac{1}{2}mv^2 = ' + fx(0.5 * v.m * Math.pow(v.kmh / 3.6, 2)) + '$ J.'; } },
+        { label: 'b', type: 'numeric', points: 2, unit: 'N',
+          prompt: function () { return '¿Qué fuerza de fricción actúa?'; },
+          answer: function (v) { return v.mu * v.m * g; },
+          solution: function (v) { return '$f = \\mu_kmg = ' + fx(v.mu * v.m * g) + '$ N.'; } },
+        { label: 'c', type: 'numeric', points: 3, unit: 'm',
+          prompt: function () { return 'Con tus resultados de a) y b), ¿qué distancia recorre hasta detenerse?'; },
+          answer: function (v, prev) { return prev[0] / prev[1]; },
+          solution: function (v) { return '$fd = K$: $d = ' + fx(Math.pow(v.kmh / 3.6, 2) / (2 * v.mu * g), 3) + '$ m.'; } },
+        { label: 'd', type: 'numeric', points: 3, unit: 'm',
+          prompt: function () { return 'Con tu distancia de c), ¿en qué distancia frenaría si fuera al doble de rapidez?'; },
+          answer: function (v, prev) { return 4 * prev[2]; },
+          solution: function (v) { return 'La distancia va con $v^2$: $4d = ' + fx(4 * Math.pow(v.kmh / 3.6, 2) / (2 * v.mu * g), 3) + '$ m.'; } }
+      ]
+    },
+    {
+      id: 'f1-ex-pendulo', tags: ['f1.S11', 'f1.S13'], block: 'D', title: 'El péndulo que se suelta',
+      vars: { m: [0.2, 3, 0.1], L: [0.5, 2.5, 0.1], th: [20, 80, 5] },
+      where: function (v) { return v.th !== 60; },
+      statement: function (v) { return '<p>Un péndulo de $' + v.L + '$ m con una masa de $' + v.m + '$ kg se suelta desde el reposo con la cuerda a $' + v.th + '^\\circ$ de la vertical.</p>'; },
+      parts: [
+        { label: 'a', type: 'numeric', points: 2, unit: 'm',
+          prompt: function () { return '¿Cuánto baja la masa hasta el punto más bajo?'; },
+          answer: function (v) { return v.L * (1 - cs(v.th)); },
+          solution: function (v) { return '$h = L(1 - \\cos\\theta) = ' + fx(v.L * (1 - cs(v.th)), 4) + '$ m.'; } },
+        { label: 'b', type: 'numeric', points: 3, unit: 'm/s',
+          prompt: function () { return 'Con tu altura, ¿qué rapidez tiene en el punto más bajo?'; },
+          answer: function (v, prev) { return Math.sqrt(2 * g * Math.abs(prev[0])); },
+          solution: function (v) { return '$v = \\sqrt{2gh} = ' + fx(Math.sqrt(2 * g * v.L * (1 - cs(v.th))), 3) + '$ m/s.'; } },
+        { label: 'c', type: 'numeric', points: 3, unit: 'N',
+          prompt: function () { return 'Con tu rapidez, ¿qué tensión tiene la cuerda en el punto más bajo?'; },
+          answer: function (v, prev) { return v.m * g + v.m * prev[1] * prev[1] / v.L; },
+          solution: function (v) { return 'Al centro: $T - mg = mv^2/L$, así que $T = ' + fx(v.m * g * (3 - 2 * cs(v.th))) + '$ N.'; } },
+        { label: 'd', type: 'numeric', points: 2, unit: 'm/s',
+          prompt: function () { return 'Con tu rapidez de b), ¿qué rapidez tiene cuando la cuerda pasa por la mitad del ángulo inicial? (Usa energía.)'; },
+          answer: function (v, prev) { return Math.sqrt(Math.abs(prev[1] * prev[1] - 2 * g * v.L * (1 - cs(v.th / 2)))); },
+          solution: function (v) { return '$v^2 = 2gL(\\cos(\\theta/2) - \\cos\\theta)$: $v = ' + fx(Math.sqrt(2 * g * v.L * (cs(v.th / 2) - cs(v.th))), 3) + '$ m/s.'; } }
+      ]
+    },
+    {
+      id: 'f1-ex-lanzador', tags: ['f1.S13'], block: 'D', title: 'El lanzador de resorte',
+      vars: { k: [200, 1500, 50], x: [3, 15, 1], m: [20, 200, 10] },
+      where: function (v) { var H = 0.5 * v.k * Math.pow(v.x / 100, 2) / (v.m / 1000 * g); return H > 0.3 && H < 60; },
+      statement: function (v) { return '<p>Un lanzador de juguete tiene un resorte de $k = ' + v.k + '$ N/m que se comprime $' + v.x + '$ cm y dispara verticalmente una pelota de $' + v.m + '$ g. Desprecia la altura que sube mientras el resorte se expande.</p>'; },
+      parts: [
+        { label: 'a', type: 'numeric', points: 2, unit: 'J',
+          prompt: function () { return '¿Cuánta energía guarda el resorte comprimido?'; },
+          answer: function (v) { return 0.5 * v.k * Math.pow(v.x / 100, 2); },
+          solution: function (v) { return '$U = \\tfrac{1}{2}kx^2 = ' + fx(0.5 * v.k * Math.pow(v.x / 100, 2), 4) + '$ J.'; } },
+        { label: 'b', type: 'numeric', points: 3, unit: 'm/s',
+          prompt: function () { return 'Con tu energía, ¿con qué rapidez sale la pelota?'; },
+          answer: function (v, prev) { return Math.sqrt(2 * Math.abs(prev[0]) / (v.m / 1000)); },
+          solution: function (v) { return '$v = \\sqrt{2U/m} = ' + fx((v.x / 100) * Math.sqrt(v.k / (v.m / 1000)), 3) + '$ m/s.'; } },
+        { label: 'c', type: 'numeric', points: 3, unit: 'm',
+          prompt: function () { return 'Con tu rapidez, ¿qué altura máxima alcanza?'; },
+          answer: function (v, prev) { return prev[1] * prev[1] / (2 * g); },
+          solution: function (v) { return '$H = v^2/(2g) = ' + fx(0.5 * v.k * Math.pow(v.x / 100, 2) / (v.m / 1000 * g), 3) + '$ m.'; } },
+        { label: 'd', type: 'numeric', points: 2, unit: 'm/s',
+          prompt: function () { return 'Con tu rapidez de b), ¿qué rapidez lleva a la mitad de la altura máxima?'; },
+          answer: function (v, prev) { return prev[1] / Math.SQRT2; },
+          solution: function (v) { return 'A $H/2$ queda la mitad de la energía cinética: $v/\\sqrt 2 = ' + fx((v.x / 100) * Math.sqrt(v.k / (v.m / 1000)) / Math.SQRT2, 3) + '$ m/s.'; } }
+      ]
+    },
+
+    /* ----------------------------- Bloque E · Estática ----------------------------- */
+    {
+      id: 'f1-ex-cables', tags: ['f1.S14'], block: 'E', title: 'El peso colgado de dos cables',
+      vars: { m: [2, 40, 1], a: [20, 70, 5], b: [20, 70, 5] },
+      where: function (v) { return v.a !== v.b && v.a + v.b !== 90; },
+      statement: function (v) { return '<p>Una masa de $' + v.m + '$ kg cuelga de un nudo sostenido por dos cables que forman $' + v.a + '^\\circ$ (izquierdo) y $' + v.b + '^\\circ$ (derecho) con el techo.</p>'; },
+      diagram: { id: 'exam-cables', state: function (v) { return v; } },
+      parts: [
+        { label: 'a', type: 'numeric', points: 2, unit: 'N',
+          prompt: function () { return '¿Cuánto vale el peso que sostiene el nudo?'; },
+          answer: function (v) { return v.m * g; },
+          solution: function (v) { return '$mg = ' + fx(v.m * g) + '$ N.'; } },
+        { label: 'b', type: 'numeric', points: 3, unit: 'N',
+          prompt: function () { return 'Con tu peso, ¿qué tensión tiene el cable izquierdo?'; },
+          answer: function (v, prev) { return prev[0] * cs(v.b) / sn(v.a + v.b); },
+          solution: function (v) { return '$T_1 = \\frac{mg\\cos\\theta_2}{\\sin(\\theta_1 + \\theta_2)} = ' + fx(v.m * g * cs(v.b) / sn(v.a + v.b)) + '$ N.'; } },
+        { label: 'c', type: 'numeric', points: 3, unit: 'N',
+          prompt: function () { return 'Con tu $T_1$ y $\\Sigma F_x = 0$, ¿qué tensión tiene el cable derecho?'; },
+          answer: function (v, prev) { return prev[1] * cs(v.a) / cs(v.b); },
+          solution: function (v) { return '$T_2 = T_1\\cos\\theta_1/\\cos\\theta_2 = ' + fx(v.m * g * cs(v.a) / sn(v.a + v.b)) + '$ N.'; } },
+        { label: 'd', type: 'numeric', points: 2, unit: 'N',
+          prompt: function () { return 'Con tus tensiones, ¿cuánto suman sus componentes verticales? (Comprobación.)'; },
+          answer: function (v, prev) { return prev[1] * sn(v.a) + prev[2] * sn(v.b); },
+          solution: function (v) { return 'Debe dar el peso: $' + fx(v.m * g) + '$ N.'; } }
+      ]
+    },
+    {
+      id: 'f1-ex-letrero', tags: ['f1.S14'], block: 'E', title: 'El letrero con cable horizontal',
+      vars: { m: [2, 50, 1], th: [20, 70, 5] },
+      where: function (v) { return v.th !== 45; },
+      statement: function (v) { return '<p>Un letrero de $' + v.m + '$ kg cuelga de un nudo. Un cable va horizontal a la pared y otro sube al techo formando $' + v.th + '^\\circ$ con la horizontal.</p>'; },
+      parts: [
+        { label: 'a', type: 'numeric', points: 3, unit: 'N',
+          prompt: function () { return '¿Qué tensión tiene el cable inclinado?'; },
+          answer: function (v) { return v.m * g / sn(v.th); },
+          solution: function (v) { return 'Solo él sostiene el peso: $T\\sin\\theta = mg$, $T = ' + fx(v.m * g / sn(v.th)) + '$ N.'; } },
+        { label: 'b', type: 'numeric', points: 3, unit: 'N',
+          prompt: function () { return 'Con tu tensión, ¿qué tensión tiene el cable horizontal?'; },
+          answer: function (v, prev) { return prev[0] * cs(v.th); },
+          solution: function (v) { return '$T_h = T\\cos\\theta = ' + fx(v.m * g / tn(v.th)) + '$ N.'; } },
+        { label: 'c', type: 'numeric', points: 2, unit: 'N',
+          prompt: function () { return 'Con tu resultado de b), si cuelgas el doble de masa, ¿qué tensión tendría el cable horizontal?'; },
+          answer: function (v, prev) { return 2 * prev[1]; },
+          solution: function (v) { return 'Todo escala con la masa: $' + fx(2 * v.m * g / tn(v.th)) + '$ N.'; } }
+      ]
+    },
+    {
+      id: 'f1-ex-viga', tags: ['f1.S15'], block: 'E', title: 'La viga sobre dos apoyos',
+      vars: { L: [4, 10, 1], M: [10, 80, 5], a: [0, 1.5, 0.5], db: [0, 1.5, 0.5], F: [200, 1500, 50], p: [20, 80, 5] },
+      where: function (v) { return v.p !== 50; },
+      statement: function (v) { var b = v.L - v.db, x = Number((v.a + (b - v.a) * v.p / 100).toFixed(2)); return '<p>Una viga uniforme de $' + v.L + '$ m y $' + v.M + '$ kg descansa en apoyos $A$ ($x = ' + v.a + '$ m) y $B$ ($x = ' + b + '$ m). Lleva una carga de $' + v.F + '$ N en $x = ' + x + '$ m.</p>'; },
+      diagram: { id: 'exam-viga', state: function (v) { return { L: v.L, M: v.M, a: v.a, b: v.L - v.db, F: v.F, x: Number((v.a + (v.L - v.db - v.a) * v.p / 100).toFixed(2)) }; } },
+      parts: [
+        { label: 'a', type: 'numeric', points: 2, unit: 'N',
+          prompt: function () { return '¿Cuánto pesa la viga?'; },
+          answer: function (v) { return v.M * g; },
+          solution: function (v) { return '$Mg = ' + fx(v.M * g) + '$ N, en su centro ($x = ' + (v.L / 2) + '$ m).'; } },
+        { label: 'b', type: 'numeric', points: 4, unit: 'N',
+          prompt: function () { return 'Con tu peso de la viga y torques respecto a $A$, ¿cuánto vale $R_B$?'; },
+          answer: function (v, prev) { var b = v.L - v.db, x = Number((v.a + (b - v.a) * v.p / 100).toFixed(2)); return (v.F * (x - v.a) + prev[0] * (v.L / 2 - v.a)) / (b - v.a); },
+          solution: function (v) { var b = v.L - v.db, x = Number((v.a + (b - v.a) * v.p / 100).toFixed(2)); return '$R_B = \\frac{F(x - a) + Mg(L/2 - a)}{b - a} = ' + fx((v.F * (x - v.a) + v.M * g * (v.L / 2 - v.a)) / (b - v.a)) + '$ N.'; } },
+        { label: 'c', type: 'numeric', points: 4, unit: 'N',
+          prompt: function () { return 'Con tus resultados, ¿cuánto vale $R_A$?'; },
+          answer: function (v, prev) { return v.F + prev[0] - prev[1]; },
+          solution: function (v) { var b = v.L - v.db, x = Number((v.a + (b - v.a) * v.p / 100).toFixed(2)), RB = (v.F * (x - v.a) + v.M * g * (v.L / 2 - v.a)) / (b - v.a); return '$R_A = F + Mg - R_B = ' + fx(v.F + v.M * g - RB) + '$ N.'; } }
+      ]
+    },
+    {
+      id: 'f1-ex-pluma', tags: ['f1.S15'], block: 'E', title: 'La pluma con cable',
+      vars: { L: [1, 4, 0.5], M: [5, 60, 5], W: [100, 1500, 50], th: [20, 60, 5] },
+      where: function (v) { return v.th !== 45; },
+      statement: function (v) { return '<p>Una viga uniforme horizontal de $' + v.L + '$ m y $' + v.M + '$ kg tiene bisagra en la pared. Un cable atado a su punta sube a la pared formando $' + v.th + '^\\circ$ con la viga, y de la punta cuelga una carga de $' + v.W + '$ N.</p>'; },
+      parts: [
+        { label: 'a', type: 'numeric', points: 2, unit: 'N·m',
+          prompt: function () { return '¿Qué torque total producen la carga y el peso de la viga respecto a la bisagra?'; },
+          answer: function (v) { return v.W * v.L + v.M * g * v.L / 2; },
+          solution: function (v) { return '$WL + Mg\\,L/2 = ' + fx(v.W * v.L + v.M * g * v.L / 2) + '$ N·m.'; } },
+        { label: 'b', type: 'numeric', points: 3, unit: 'N',
+          prompt: function () { return 'Con tu torque, ¿qué tensión tiene el cable?'; },
+          answer: function (v, prev) { return prev[0] / (v.L * sn(v.th)); },
+          solution: function (v) { return '$TL\\sin\\theta = \\tau$: $T = ' + fx((v.W + v.M * g / 2) / sn(v.th)) + '$ N.'; } },
+        { label: 'c', type: 'numeric', points: 2, unit: 'N',
+          prompt: function () { return 'Con tu tensión, ¿qué fuerza horizontal hace la bisagra?'; },
+          answer: function (v, prev) { return prev[1] * cs(v.th); },
+          solution: function (v) { return '$H = T\\cos\\theta = ' + fx((v.W + v.M * g / 2) / tn(v.th)) + '$ N.'; } },
+        { label: 'd', type: 'numeric', points: 3, unit: 'N',
+          prompt: function () { return 'Con tu tensión, ¿qué fuerza vertical hace la bisagra?'; },
+          answer: function (v, prev) { return v.W + v.M * g - prev[1] * sn(v.th); },
+          solution: function (v) { return '$V = W + Mg - T\\sin\\theta = ' + fx(v.M * g / 2) + '$ N.'; } }
+      ]
+    },
+    {
+      id: 'f1-ex-balancin', tags: ['f1.S15'], block: 'E', title: 'El balancín',
+      vars: { m1: [15, 60, 5], x1: [0.5, 2.5, 0.25], m2: [20, 90, 5], M: [5, 30, 5] },
+      where: function (v) { return v.m1 !== v.m2 && v.m1 * v.x1 / v.m2 < 2.5; },
+      statement: function (v) { return '<p>Un balancín uniforme de $' + v.M + '$ kg tiene el pivote en su centro. Una niña de $' + v.m1 + '$ kg se sienta a $' + v.x1 + '$ m del pivote y su hermano, de $' + v.m2 + '$ kg, se sienta del otro lado.</p>'; },
+      parts: [
+        { label: 'a', type: 'numeric', points: 2, unit: 'N·m',
+          prompt: function () { return '¿Qué torque produce el peso de la niña respecto al pivote?'; },
+          answer: function (v) { return v.m1 * g * v.x1; },
+          solution: function (v) { return '$\\tau = m_1gx_1 = ' + fx(v.m1 * g * v.x1) + '$ N·m.'; } },
+        { label: 'b', type: 'numeric', points: 3, unit: 'm',
+          prompt: function () { return 'Con tu torque, ¿a qué distancia del pivote debe sentarse el hermano para equilibrar?'; },
+          answer: function (v, prev) { return prev[0] / (v.m2 * g); },
+          solution: function (v) { return '$x_2 = \\tau/(m_2g) = ' + fx(v.m1 * v.x1 / v.m2, 3) + '$ m. El peso del balancín está en el pivote: no hace torque.'; } },
+        { label: 'c', type: 'numeric', points: 2, unit: 'N',
+          prompt: function () { return '¿Con qué fuerza empuja el pivote hacia arriba?'; },
+          answer: function (v) { return (v.m1 + v.m2 + v.M) * g; },
+          solution: function (v) { return '$\\Sigma F = 0$: $(m_1 + m_2 + M)g = ' + fx((v.m1 + v.m2 + v.M) * g) + '$ N.'; } },
+        { label: 'd', type: 'numeric', points: 3, unit: 'm',
+          prompt: function () { return 'Con tu resultado de b), si la niña se recorre $0.5$ m más lejos del pivote, ¿cuánto debe alejarse el hermano?'; },
+          answer: function (v, prev) { return prev[1] * 0.5 / v.x1; },
+          solution: function (v) { return 'La distancia del hermano es proporcional a la de la niña: $\\Delta x_2 = 0.5\\,m_1/m_2 = ' + fx(0.5 * v.m1 / v.m2, 3) + '$ m.'; } }
+      ]
+    },
+    {
+      id: 'f1-ex-escalera', tags: ['f1.S15'], block: 'E', title: 'La escalera contra la pared',
+      vars: { L: [2, 6, 0.5], m: [8, 25, 1], Mp: [50, 90, 5], p: [30, 90, 10], th: [55, 75, 5] },
+      statement: function (v) { return '<p>Una escalera uniforme de $' + v.L + '$ m y $' + v.m + '$ kg se apoya en una pared lisa formando $' + v.th + '^\\circ$ con el piso. Una persona de $' + v.Mp + '$ kg está parada al $' + v.p + '\\,\\%$ de su largo, medido desde el piso.</p>'; },
+      parts: [
+        { label: 'a', type: 'numeric', points: 3, unit: 'N·m',
+          prompt: function () { return '¿Qué torque producen los pesos (escalera y persona) respecto al pie de la escalera?'; },
+          answer: function (v) { return (v.m * g * v.L / 2 + v.Mp * g * v.L * v.p / 100) * cs(v.th); },
+          solution: function (v) { return 'Brazos horizontales: $(mg\\,L/2 + Mg\\,pL)\\cos\\theta = ' + fx((v.m * g * v.L / 2 + v.Mp * g * v.L * v.p / 100) * cs(v.th)) + '$ N·m.'; } },
+        { label: 'b', type: 'numeric', points: 3, unit: 'N',
+          prompt: function () { return 'Con tu torque, ¿qué fuerza horizontal hace la pared?'; },
+          answer: function (v, prev) { return prev[0] / (v.L * sn(v.th)); },
+          solution: function (v) { return '$N_pL\\sin\\theta = \\tau$: $N_p = ' + fx((v.m * g / 2 + v.Mp * g * v.p / 100) / tn(v.th)) + '$ N.'; } },
+        { label: 'c', type: 'numeric', points: 2, unit: 'N',
+          prompt: function () { return '¿Cuánto vale la normal del piso?'; },
+          answer: function (v) { return (v.m + v.Mp) * g; },
+          solution: function (v) { return 'La pared lisa no sostiene nada vertical: $N = (m + M)g = ' + fx((v.m + v.Mp) * g) + '$ N.'; } },
+        { label: 'd', type: 'numeric', points: 2,
+          prompt: function () { return 'Con tus resultados de b) y c), ¿qué coeficiente de fricción estática mínimo necesita el piso?'; },
+          answer: function (v, prev) { return prev[1] / prev[2]; }, tol: { abs: 0.005 },
+          solution: function (v) { return '$\\mu_s = N_p/N = ' + fx((v.m / 2 + v.Mp * v.p / 100) / tn(v.th) / (v.m + v.Mp), 3) + '$.'; } }
       ]
     }
   ]);
