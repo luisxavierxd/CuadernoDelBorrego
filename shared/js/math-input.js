@@ -103,6 +103,7 @@
     });
     palette.appendChild(kbd);
 
+    if (opts.palette === 'none') palette.hidden = true;
     var box = h('div', { class: 'math-input__box' }, [mf]);
     var node = h('div', { class: 'lab-field math-input' }, [
       h('label', { for: id, class: 'lab-field__label' }, [opts.label || 'Tu respuesta']),

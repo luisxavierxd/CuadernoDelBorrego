@@ -7,7 +7,7 @@ const { loadData } = require('./lib/load');
 const { loadMathjs } = require('./lib/vendor');
 
 const ROOT = path.join(__dirname, '..');
-const LABS = ['registry', 'antiderivative-check', 'projectile-check']
+const LABS = ['registry', 'antiderivative-check', 'projectile-check', 'secant-tangent', 'derivative-check', 'chain-composition', 'implicit-tangent']
   .map((n) => path.join(ROOT, 'shared/js/labs', n + '.js'));
 
 let pass = 0, fail = 0;
@@ -118,6 +118,80 @@ function near(got, want, tol, msg) {
     const r2 = P.compareY(math, 'x*tan(50 deg) - 9.81*x^2/(2*20^2*cos(50 deg))', p);
     eq(r2.ok, false, 'incorrecta');
     if (!(r2.samples.length > 20)) throw new Error('faltan muestras para graficar');
+  });
+
+  /* ---------- core ---------- */
+  test('prep: 0x no es hexadecimal', () => {
+    near(LM.core.build(math, '3x^2 + 0x').fn(2), 12, 1e-12);
+    near(LM.core.build(math, '10x + 0x^2 + 5').fn(1), 15, 1e-12);
+  });
+  test('core.build evalúa con varias variables', () => {
+    const f = LM.core.build(math, 'x^2 + y', ['x', 'y']);
+    eq(f.fn(3, 1), 10);
+    if (!isNaN(LM.core.build(math, 'ln(x)', ['x']).fn(-1))) throw new Error('ln(-1) debe dar NaN');
+  });
+
+  /* ---------- derivative-check (§8.3) ---------- */
+  const D = LM.derivative;
+  [
+    ['x^3', '3x^2', 'correct'], ['x*sin(x)', 'sin(x) + x*cos(x)', 'correct'], ['e^(2x)', '2e^(2x)', 'correct'],
+    ['sin(x)', '-cos(x)', 'sign'], ['sin(x)', 'sin(x)', 'mismatch'], ['cos(x)', 'sin(x)', 'sign'], ['e^(2x)', 'e^(2x)', 'factor'],
+    ['x^2', '2', 'mismatch'], ['x*sin(x)', 'cos(x)', 'mismatch'], ['(x^2+1)/x', '1 - 1/x^2', 'correct']
+  ].forEach(([f, d, want]) => test(`derivative: d/dx ${f} con ${d} → ${want}`, () => {
+    const r = D.verify(math, f, d, 0.3, 2.5);
+    eq(r.reason, want);
+    if (want === 'factor') near(r.k, 0.5, 1e-9, 'factor');
+  }));
+  test('derivative: dominio', () => { eq(D.verify(math, 'ln(x)', '1/x', -3, -1).reason, 'domain'); });
+  test('derivative: la derivada real simplificada', () => {
+    const t = D.trueDerivative(math, 'x^3 + 2x');
+    near(LM.core.build(math, t, ['x']).fn(2), 14, 1e-12);
+  });
+
+  /* ---------- secant-tangent ---------- */
+  const SE = LM.secant, sq = (x) => x * x;
+  test('secante de x² en a = 1', () => {
+    near(SE.slope(sq, 1, 1), 3, 1e-12); near(SE.slope(sq, 1, 0.1), 2.1, 1e-12);
+    near(SE.tangentSlope(sq, 1), 2, 1e-6);
+    const t = SE.table(sq, 1, [1, 0.5, 0.1]);
+    eq(t.length, 3); near(t[1].m, 2.5, 1e-12);
+    const L = SE.tangentLine(sq, 1); near(L.m, 2, 1e-6); near(L.y(3), 5, 1e-5);
+  });
+
+  /* ---------- chain-composition ---------- */
+  const CH = LM.chain;
+  test('cadena: composición g(h(x))', () => {
+    const src = CH.compose(math, 'sin(u)', 'x^2');
+    near(LM.core.build(math, src, ['x']).fn(1.3), Math.sin(1.69), 1e-12);
+  });
+  test('cadena: capas en x0 = 1', () => {
+    const L = CH.layers(math, 'sin(u)', 'x^2', 1);
+    near(L.u0, 1, 1e-12); near(L.hPrime, 2, 1e-9); near(L.gPrime, Math.cos(1), 1e-9); near(L.product, 2 * Math.cos(1), 1e-9);
+  });
+  test('cadena: verificar la derivada del alumno', () => {
+    eq(CH.verify(math, 'sin(u)', 'x^2', '2x*cos(x^2)', 0.2, 2).reason, 'correct');
+    eq(CH.verify(math, 'sin(u)', 'x^2', 'cos(x^2)', 0.2, 2).reason, 'mismatch');
+    eq(CH.verify(math, 'e^u', '3x', 'e^(3x)', 0.2, 2).reason, 'factor');
+  });
+
+  /* ---------- implicit-tangent ---------- */
+  const IM = LM.implicit;
+  test('implícita: pendiente en el círculo', () => {
+    const F = IM.build(math, 'x^2 + y^2 = 25');
+    near(F(3, 4), 0, 1e-12);
+    near(IM.slope(F, 3, 4), -0.75, 1e-6);
+  });
+  test('implícita: puntos sobre la curva cerca del punto', () => {
+    const F = IM.build(math, 'x^2 + y^2 = 25');
+    const pts = IM.pointsNear(F, 3, 4, 12);
+    if (pts.length < 6) throw new Error('pocos puntos: ' + pts.length);
+    pts.forEach((p) => near(F(p.x, p.y), 0, 1e-8));
+  });
+  test('implícita: verificar dy/dx del alumno', () => {
+    eq(IM.verify(math, 'x^2 + y^2 = 25', '-x/y', 3, 4).reason, 'correct');
+    eq(IM.verify(math, 'x^2 + y^2 = 25', 'x/y', 3, 4).reason, 'sign');
+    eq(IM.verify(math, 'x^2 + y^2 = 25', '-y/x', 3, 4).reason, 'mismatch');
+    eq(IM.verify(math, 'x^3 + y^3 = 6x*y', '(2y - x^2)/(y^2 - 2x)', 3, 3).reason, 'correct');
   });
 
   console.log(`\nlabs-math.test.js: ${pass} ok, ${fail} fallan.`);

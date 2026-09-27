@@ -21,6 +21,9 @@ const bankFile = path.join(ROOT, 'data', course, 'bank', `sesion-${NN}.js`);
 const hasBank = !!s.bank && fs.existsSync(bankFile);
 if (s.bank && !hasBank) { console.error(`S${NN} dice bank: true pero falta ${path.relative(ROOT, bankFile)}`); process.exit(1); }
 const labFile = lab && fs.existsSync(path.join(ROOT, 'shared/js/labs', lab.type + '.js')) ? lab.type : null;
+// Matemática que los ejercicios y quizzes usan aunque el lab de la sesión sea otro.
+const MATH_MODULES = { 'calculo-1': ['derivative-check', 'implicit-tangent'], 'fisica-1': [] };
+const extraLabs = (MATH_MODULES[course] || []).filter((m) => m !== labFile);
 
 const R = '../../../';
 const KATEX = 'https://cdn.jsdelivr.net/npm/katex@0.16.47/dist/';
@@ -59,7 +62,8 @@ ${hasBank ? `    <link rel="stylesheet" href="${R}shared/css/quiz.css">
     <script src="${R}shared/js/animations.js"></script>
     <script src="${R}shared/js/math-render.js"></script>
     <script src="${R}shared/js/labs/registry.js"></script>
-${labFile ? `    <script src="${R}shared/js/labs/${labFile}.js"></script>\n` : ''}    <script src="${R}shared/js/diagrams/${course}.js"></script>
+    <script src="${R}shared/js/labs/plot.js"></script>
+${labFile ? `    <script src="${R}shared/js/labs/${labFile}.js"></script>\n` : ''}${extraLabs.map((m) => `    <script src="${R}shared/js/labs/${m}.js"></script>\n`).join('')}    <script src="${R}shared/js/diagrams/${course}.js"></script>
     <script src="${R}shared/js/latex-to-math.js"></script>
     <script src="${R}shared/js/math-input.js"></script>
     <script src="${R}shared/js/exercises.js"></script>

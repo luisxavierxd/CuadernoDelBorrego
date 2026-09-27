@@ -8,7 +8,7 @@ const { loadData } = require('./lib/load');
 const { loadMathjs } = require('./lib/vendor');
 
 const ROOT = path.join(__dirname, '..');
-const LIBS = ['labs/registry', 'labs/antiderivative-check', 'labs/projectile-check', 'exercises']
+const LIBS = ['labs/registry', 'labs/antiderivative-check', 'labs/projectile-check', 'labs/secant-tangent', 'labs/derivative-check', 'labs/chain-composition', 'labs/implicit-tangent', 'exercises']
   .map((n) => path.join(ROOT, 'shared/js', n + '.js'));
 const N_FAST = 200, N_EXPR = 50;
 
@@ -48,6 +48,22 @@ function checkExample(where, b, LM, math) {
   } else if (v.lab === 'projectile') {
     const f = LM.projectile.flight(v.p);
     for (const k of Object.keys(v.values)) ok(relClose(v.values[k], f[k], 1e-9), `${where}: ${k} = ${v.values[k]} y LabMath da ${f[k]}`);
+  } else if (v.lab === 'derivative') {
+    const r = LM.derivative.verify(math, v.f, v.d, v.a != null ? v.a : 0.3, v.b != null ? v.b : 2.2);
+    ok(r.reason === 'correct', `${where}: d/dx ${v.f} ≠ ${v.d} (${r.reason})`);
+  } else if (v.lab === 'derivative-at') {
+    const want = LM.secant.tangentSlope(LM.core.build(math, v.f).fn, v.a);
+    ok(relClose(v.value, want, 1e-6), `${where}: f′(${v.a}) = ${v.value} y numéricamente da ${want}`);
+  } else if (v.lab === 'tangent') {
+    const L = LM.secant.tangentLine(LM.core.build(math, v.f).fn, v.a);
+    ok(relClose(v.m, L.m, 1e-6) && relClose(v.b, L.b, 1e-6), `${where}: tangente y = ${v.m}x + ${v.b}; numérica ${L.m}x + ${L.b}`);
+  } else if (v.lab === 'secant') {
+    const want = LM.secant.slope(LM.core.build(math, v.f).fn, v.a, v.h);
+    ok(relClose(v.value, want, 1e-9), `${where}: pendiente secante ${v.value} ≠ ${want}`);
+  } else if (v.lab === 'implicit') {
+    const r = LM.implicit.verify(math, v.eq, v.d, v.x0, v.y0);
+    ok(r.reason === 'correct', `${where}: dy/dx de ${v.eq} ≠ ${v.d} (${r.reason})`);
+    if (v.slope != null) ok(relClose(v.slope, r.trueSlope, 1e-6), `${where}: pendiente ${v.slope} ≠ ${r.trueSlope}`);
   } else ok(false, `${where}: verify.lab desconocido ${v.lab}`);
 }
 
@@ -99,6 +115,17 @@ function checkExercise(where, ex, W, LM, math) {
       if (o && o.lab === 'projectile') {
         const want = LM.projectile.flight(o.p(v))[o.field];
         ok(relClose(ans, want, 1e-9), `${at}: respuesta ${ans} y LabMath da ${want}`);
+      } else if (o && o.lab === 'derivative-at') {
+        const want = LM.secant.tangentSlope(LM.core.build(math, o.f(v)).fn, o.a(v));
+        ok(relClose(ans, want, 1e-6), `${at}: respuesta ${ans} y f′ numérica da ${want}`);
+      } else if (o && o.lab === 'implicit-slope') {
+        const F = LM.implicit.build(math, o.eq(v));
+        const want = LM.implicit.slope(F, o.x0(v), o.y0(v));
+        ok(Math.abs(F(o.x0(v), o.y0(v))) < 1e-9, `${at}: el punto no está sobre la curva`);
+        ok(relClose(ans, want, 1e-6), `${at}: respuesta ${ans} y −F_x/F_y da ${want}`);
+      } else if (o && o.lab === 'value') {
+        const want = o.value(v);
+        ok(relClose(ans, want, 1e-9), `${at}: respuesta ${ans} y el cálculo independiente da ${want}`);
       } else if (o && o.lab === 'integral') {
         const f = LM.antiderivative.build(math, o.f(v)).fn;
         const want = LM.antiderivative.simpson(f, o.a(v), o.b(v), 400);

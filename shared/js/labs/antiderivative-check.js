@@ -14,9 +14,12 @@
   /* ------------------------- Matemática pura ------------------------- */
   function prep(s) {
     return String(s)
-      .replace(/\bln\s*\(/g, 'log(').replace(/\barctan\s*\(/g, 'atan(')
-      .replace(/\barcsin\s*\(/g, 'asin(').replace(/\barccos\s*\(/g, 'acos(')
-      .replace(/\+\s*C\b/g, '').replace(/−/g, '-');
+      // (^|no-letra) en lugar de \b: “2ln(x)” también es ln
+      .replace(/(^|[^a-zA-Z])ln\s*\(/g, '$1log(').replace(/(^|[^a-zA-Z])arctan\s*\(/g, '$1atan(')
+      .replace(/(^|[^a-zA-Z])arcsin\s*\(/g, '$1asin(').replace(/(^|[^a-zA-Z])arccos\s*\(/g, '$1acos(')
+      .replace(/\+\s*C\b/g, '').replace(/−/g, '-')
+      // math.js lee 0x, 0b y 0o como prefijos hexadecimal, binario y octal: “0x” debe ser 0·x
+      .replace(/(^|[^\w.])0([a-zA-Z])/g, '$10*$2');
   }
 
   function toNum(v) { return typeof v === 'number' ? v : NaN; }
@@ -192,7 +195,7 @@
       var f = UI.input(o);
       return { node: f.node, get: function () { return f.input.value; }, setMath: function (s) { f.input.value = s; } };
     }
-    var fIn = field({ label: 'Integrando f(x)' });
+    var fIn = field({ label: 'Integrando f(x)', palette: 'none' });
     var FIn = field({ label: 'Tu antiderivada F(x)', hint: 'Escribe como en papel: “/” hace una fracción y “^” un exponente. La constante C es opcional.', onEnter: function () { check(); } });
     var aIn = UI.input({ label: 'a', type: 'number', step: 'any', inputmode: 'decimal' });
     var bIn = UI.input({ label: 'b', type: 'number', step: 'any', inputmode: 'decimal' });

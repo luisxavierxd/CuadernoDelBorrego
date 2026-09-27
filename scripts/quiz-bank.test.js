@@ -10,7 +10,7 @@ const { loadData } = require('./lib/load');
 const { loadMathjs } = require('./lib/vendor');
 
 const ROOT = path.join(__dirname, '..');
-const LIBS = ['labs/registry', 'labs/antiderivative-check', 'labs/projectile-check', 'exercises', 'quiz/engine'].map((n) => path.join(ROOT, 'shared/js', n + '.js'));
+const LIBS = ['labs/registry', 'labs/antiderivative-check', 'labs/projectile-check', 'labs/secant-tangent', 'labs/derivative-check', 'labs/chain-composition', 'labs/implicit-tangent', 'exercises', 'quiz/engine'].map((n) => path.join(ROOT, 'shared/js', n + '.js'));
 const N = 200, N_EXPR = 40, N_DUP = 20;
 const MIN = 100, MIX = { 1: 30, 2: 50, 3: 20 }, MIX_TOL = 6, MIN_CONCEPT = 30, MIN_PER_SUB = 5;
 

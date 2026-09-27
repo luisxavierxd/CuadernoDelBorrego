@@ -12,6 +12,61 @@
   window.Labs = window.Labs || {};
   window.LabMath = window.LabMath || {};
 
+  /* ---------- Matemática común de los labs (pura; math.js se inyecta) ---------- */
+  function prep(s) {
+    return String(s)
+      // (^|no-letra) en lugar de \b: “2ln(x)” también es ln
+      .replace(/(^|[^a-zA-Z])ln\s*\(/g, '$1log(').replace(/(^|[^a-zA-Z])arctan\s*\(/g, '$1atan(')
+      .replace(/(^|[^a-zA-Z])arcsin\s*\(/g, '$1asin(').replace(/(^|[^a-zA-Z])arccos\s*\(/g, '$1acos(')
+      .replace(/\+\s*C\b/g, '').replace(/−/g, '-')
+      // math.js lee 0x, 0b y 0o como prefijos hexadecimal, binario y octal: “0x” debe ser 0·x
+      .replace(/(^|[^\w.])0([a-zA-Z])/g, '$10*$2');
+  }
+  // Compila una expresión con las variables dadas: fn(x) o fn(x, y). Fuera de dominio → NaN.
+  function build(math, src, vars) {
+    vars = vars || ['x'];
+    var node = math.parse(prep(src));
+    var code = node.compile();
+    return {
+      node: node,
+      fn: function () {
+        var scope = {};
+        for (var i = 0; i < vars.length; i++) scope[vars[i]] = arguments[i];
+        try { var v = code.evaluate(scope); return typeof v === 'number' ? v : NaN; } catch (e) { return NaN; }
+      }
+    };
+  }
+  // Compara valores [real, del alumno]: correcto, signo invertido, factor constante o distinto.
+  // Mismo criterio que la demo aprobada: error relativo |s − t| / (1 + |t|) < 1e-6.
+  function compareValues(pairs, minValid) {
+    var ok = pairs.filter(function (p) { return isFinite(p[0]) && isFinite(p[1]); });
+    var maxErr = 0, ratios = [];
+    ok.forEach(function (p) {
+      maxErr = Math.max(maxErr, Math.abs(p[1] - p[0]) / (1 + Math.abs(p[0])));
+      if (Math.abs(p[0]) > 1e-6) ratios.push(p[1] / p[0]);
+    });
+    var need = minValid || 10;
+    var r = { kind: 'bad', reason: 'mismatch', k: null, maxErr: maxErr, valid: ok.length };
+    if (ok.length < need) { r.reason = 'domain'; return r; }
+    if (maxErr < 1e-6) { r.kind = 'ok'; r.reason = 'correct'; return r; }
+    if (ratios.length >= need) {
+      var mean = ratios.reduce(function (s, x) { return s + x; }, 0) / ratios.length;
+      var spread = Math.max.apply(null, ratios.map(function (x) { return Math.abs(x - mean); }));
+      if (spread < 1e-6 * Math.max(1, Math.abs(mean))) {
+        r.kind = 'warn'; r.k = mean;
+        r.reason = Math.abs(mean + 1) < 1e-6 ? 'sign' : 'factor';
+      }
+    }
+    return r;
+  }
+  function compare(tFn, sFn, a, b, n) {
+    n = n || 60;
+    var pairs = [];
+    for (var i = 0; i < n; i++) { var x = a + (b - a) * (i + 0.5) / n; pairs.push([tFn(x), sFn(x)]); }
+    return compareValues(pairs);
+  }
+  window.LabMath.core = { prep: prep, build: build, compare: compare, compareValues: compareValues };
+
   var LIBS = {
     math: 'https://cdn.jsdelivr.net/npm/mathjs@15.2.0/lib/browser/math.js',
     manim: 'https://cdn.jsdelivr.net/npm/manim-web@0.3.24/dist/manim-web.browser.js'
@@ -152,7 +207,24 @@
     });
   }
 
+  // Lienzo SVG accesible para los labs.
+  function svg(w, hgt, label) {
+    var n = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+    n.setAttribute('viewBox', '0 0 ' + w + ' ' + hgt);
+    n.setAttribute('class', 'lab-stage lab-plot');
+    n.setAttribute('role', 'img');
+    n.setAttribute('aria-label', label || 'Gráfica');
+    return n;
+  }
+
+  function tex(math, expr) {
+    try { return '$' + math.parse(window.LabMath.core.prep(expr)).toTex({ implicit: 'hide', parenthesis: 'auto' }) + '$'; }
+    catch (e) { return expr; }
+  }
+  function renderMath(node) { if (window.CBMath) window.CBMath.render(node); }
+
   window.LabUI = {
+    svg: svg, tex: tex, renderMath: renderMath,
     h: h, id: id, fmt: fmt, input: input, slider: slider, select: select, button: button,
     verdict: verdict, color: color, onVisible: onVisible, loadScript: loadScript,
     loadMath: loadMath, loadManim: loadManim, mount: mount, LIBS: LIBS

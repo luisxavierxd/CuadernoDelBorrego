@@ -96,6 +96,28 @@
       if (!String(input || '').trim()) return { kind: 'invalid', say: 'Escribe una expresión.' };
       var dom = ex.domain || [0.2, 2.2];
       try {
+        // La respuesta es la derivada de derivativeOf(v): se compara con math.derivative.
+        if (ex.derivativeOf) {
+          var rd = LM.derivative.verify(math, ex.derivativeOf(v), input, dom[0], dom[1]);
+          if (rd.reason === 'correct') return { kind: 'ok' };
+          for (var dm in (ex.mistakes || {})) {
+            if (sameExpr(math, input, ex.mistakes[dm](v), dom, false)) return { kind: 'warn', key: dm, say: sayFor(ex, dm, v) };
+          }
+          if (rd.reason === 'sign') return { kind: 'warn', key: 'sign', say: sayFor(ex, 'sign', v) || 'Casi: tu signo está invertido.' };
+          if (rd.reason === 'factor') return { kind: 'warn', key: 'factor', say: sayFor(ex, 'factor', v) || 'Casi: tu derivada sale ' + (+rd.k.toPrecision(4)) + ' veces la real. ¿Te faltó la derivada de adentro?' };
+          if (rd.reason === 'domain') return { kind: 'invalid', say: 'No pude evaluar tu expresión; revisa paréntesis y dominio.' };
+          return { kind: 'bad' };
+        }
+        // dy/dx implícita en x y y: se compara con −F_x/F_y sobre la curva cerca del punto.
+        if (ex.implicit) {
+          var im = ex.implicit(v);
+          var ri = LM.implicit.verify(math, im.eq, input, im.x0, im.y0);
+          if (ri.reason === 'correct') return { kind: 'ok' };
+          if (ri.reason === 'sign') return { kind: 'warn', key: 'sign', say: sayFor(ex, 'sign', v) || 'Casi: tu signo está invertido; revisa el despeje de y′.' };
+          if (ri.reason === 'factor') return { kind: 'warn', key: 'factor', say: sayFor(ex, 'factor', v) || 'Casi: te sobra un factor constante.' };
+          if (ri.reason === 'domain') return { kind: 'invalid', say: 'No pude evaluar tu expresión cerca del punto.' };
+          return { kind: 'bad' };
+        }
         if (ex.integrand) {
           var r = LM.antiderivative.verify(math, ex.integrand(v), input, dom[0], dom[1]);
           if (r.reason === 'correct') return { kind: 'ok' };
