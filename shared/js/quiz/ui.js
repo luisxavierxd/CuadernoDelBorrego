@@ -79,10 +79,10 @@
   }
 
   // Confirmación dentro de la página (sin diálogos del navegador).
-  function confirmInline(host, text, onYes) {
+  function confirmInline(host, text, onYes, yesLabel) {
     if (host.querySelector('.confirm')) return;
     var box = h('div', { class: 'confirm', role: 'alertdialog', 'aria-label': 'Confirmar' }, [h('p', {}, [text])]);
-    var yes = window.LabUI.button('Ver solución', 'primary', function () { box.remove(); onYes(); });
+    var yes = window.LabUI.button(yesLabel || 'Ver solución', 'primary', function () { box.remove(); onYes(); });
     var no = window.LabUI.button('Cancelar', 'ghost', function () { box.remove(); });
     box.appendChild(h('div', { class: 'lab-buttons' }, [yes, no]));
     host.appendChild(box);
@@ -129,9 +129,27 @@
         confirmInline(buttons, 'Ver la solución te deja máximo el 30 % de esta pregunta.', function () {
           state.seen = true; sol.disabled = true; why.hidden = false;
           card.classList.add('is-seen');
+          if (rev) rev.disabled = true;
           render(why);
         });
       });
+      // Examen con revisión inmediata: se califica al contestar; ver el porqué después
+      // de contestar no descuenta (solo "Ver solución" antes de contestar lo hace).
+      var rev = mode === 'exam-review' ? window.LabUI.button('Revisar', 'primary', function () {
+        var input;
+        try { input = inp.get(); } catch (e) { window.LabUI.verdict(verdict, 'bad', e.message, null); return; }
+        var r = Q().grade(q, v, input, { math: window.math });
+        if (r.kind === 'invalid') { window.LabUI.verdict(verdict, 'bad', r.say || 'Escribe tu respuesta.', null); return; }
+        state.reviewed = true;
+        inp.lock(); rev.disabled = true; sol.disabled = true;
+        window.LabUI.verdict(verdict, r.kind, VERDICT_TITLE[r.kind], r.say || null);
+        why.hidden = false;
+        render(card);
+      }) : null;
+      if (rev) {
+        buttons.appendChild(rev);
+        if (inp.input) inp.input.addEventListener('keydown', function (e) { if (e.key === 'Enter') { e.preventDefault(); rev.click(); } });
+      }
       buttons.appendChild(sol);
     }
     return { node: card, state: state, get: function () { return safeGet(inp.get); }, lock: inp.lock, q: q, v: v };
@@ -233,25 +251,43 @@
     return { node: node, stop: function () { clearInterval(timer); } };
   }
 
-  function problemCard(p, v, n) {
-    var parts = p.parts.map(function (part, i) {
+  function problemCard(p, v, n, review) {
+    var parts = [];
+    p.parts.forEach(function (part, i) {
       var inp = answerInput(part.type || 'numeric', null, v, part.unit);
       var sol = h('div', { class: 'qcard__why', hidden: true });
-      var st = { seen: false };
+      var verdict = h('div', { class: 'verdict', hidden: true, role: 'status' });
+      var st = { seen: false, reviewed: false };
       var btns = h('div', { class: 'lab-buttons' });
       var b = window.LabUI.button('Ver solución', 'ghost', function () {
         confirmInline(btns, 'Ver la solución te deja máximo el 30 % de este inciso.', function () {
-          st.seen = true; b.disabled = true;
+          st.seen = true; b.disabled = true; if (rev) rev.disabled = true;
           sol.hidden = false; sol.innerHTML = '<strong>Solución.</strong> ' + part.solution(v);
           render(sol);
         });
       });
+      // Revisión inmediata por inciso: se califica con las respuestas del alumno en los
+      // incisos anteriores, así el arrastre de error cuenta igual que al final.
+      var rev = review ? window.LabUI.button('Revisar inciso', 'primary', function () {
+        var answers = parts.map(function (x) { return String(safeGet(x.inp.get)).trim(); });
+        if (!answers[i]) { window.LabUI.verdict(verdict, 'bad', 'Escribe tu resultado.', null); return; }
+        var missing = answers.slice(0, i).some(function (a) { return !a; });
+        if (missing) { window.LabUI.verdict(verdict, 'warn', 'Contesta primero los incisos anteriores.', 'Este inciso usa sus resultados.'); return; }
+        var r = Q().gradeProblem(p, v, answers, parts.map(function (x) { return x.st.seen; }), { math: window.math }).parts[i];
+        st.reviewed = true; inp.lock(); rev.disabled = true; b.disabled = true;
+        var full = r.correct;
+        window.LabUI.verdict(verdict, full ? 'ok' : 'bad', full ? 'Correcto' : 'No coincide',
+          full && r.carried ? 'Con tu resultado del inciso anterior, este inciso está bien: cuenta completo (arrastre de error).' : null);
+        sol.hidden = false; sol.innerHTML = '<strong>Solución.</strong> ' + part.solution(v);
+        render(verdict.parentNode);
+      }) : null;
+      if (rev) btns.appendChild(rev);
       btns.appendChild(b);
       var node = h('li', { class: 'part' }, [
         h('p', { class: 'part__prompt', html: '<strong>' + part.label + ')</strong> ' + part.prompt(v) + ' <span class="part__pts mono">(' + part.points + ' pts)</span>' }),
-        inp.node, btns, sol
+        inp.node, btns, verdict, sol
       ]);
-      return { node: node, inp: inp, st: st };
+      parts.push({ node: node, inp: inp, st: st });
     });
     var diagram = p.diagram && window.Diagrams && window.Diagrams[p.diagram.id]
       ? h('figure', { class: 'figure sheet problem__figure', html: window.Diagrams[p.diagram.id](p.diagram.state(v)) }) : null;
@@ -275,13 +311,15 @@
     var out = h('div', { class: 'quiz-results', hidden: true });
     root.appendChild(h('div', { class: 'sim-run' }, [
       ck && ck.node,
-      h('p', { class: 'muted' }, ['No hay revisión hasta que termines. “Ver solución” está disponible en cualquier momento, pero deja máximo el 30 % de esa pregunta o inciso.']),
+      h('p', { class: 'muted' }, [opts.review
+        ? 'Revisión inmediata: al contestar cada pregunta o inciso, pulsa “Revisar” y verás si está bien y por qué, sin descuento. “Ver solución” antes de contestar deja máximo el 30 %.'
+        : 'No hay revisión hasta que termines. “Ver solución” está disponible en cualquier momento, pero deja máximo el 30 % de esa pregunta o inciso.']),
       questions.length ? h('h3', { class: 'sim-run__title' }, ['Preguntas cortas · ' + (both ? '40' : '100') + ' %']) : null, qBox,
       problems.length ? h('h3', { class: 'sim-run__title' }, ['Problemas · ' + (both ? '60' : '100') + ' %']) : null, pBox,
       h('div', { class: 'lab-buttons quiz-actions' }, [finish]), out
     ]));
-    var qCards = questions.map(function (q, i) { var c = questionCard(q, window.CBExercises.instance(q), i + 1, 'exam'); qBox.appendChild(c.node); return c; });
-    var pCards = problems.map(function (p, i) { var c = problemCard(p, window.CBExercises.instance(p), i + 1); pBox.appendChild(c.node); return c; });
+    var qCards = questions.map(function (q, i) { var c = questionCard(q, window.CBExercises.instance(q), i + 1, opts.review ? 'exam-review' : 'exam'); qBox.appendChild(c.node); return c; });
+    var pCards = problems.map(function (p, i) { var c = problemCard(p, window.CBExercises.instance(p), i + 1, !!opts.review); pBox.appendChild(c.node); return c; });
     render(root);
 
     function done() {
@@ -405,7 +443,9 @@
             var cb = h('input', { type: 'checkbox', id: id, disabled: !s.bank });
             cb.addEventListener('change', function () { state.preset = null; upd(); });
             boxes.push({ cb: cb, code: state.code, n: s.n, bank: !!s.bank });
-            return h('label', { class: 'sess-chip' + (s.bank ? '' : ' is-soon'), for: id, title: s.title + (s.bank ? '' : ' · banco en preparación') }, [cb, h('span', {}, ['S' + pad(s.n)])]);
+            return h('label', { class: 'sess-chip' + (s.bank ? '' : ' is-soon'), for: id, title: s.title + (s.bank ? '' : ' · banco en preparación') }, [
+              cb, h('span', { class: 'sess-chip__n mono' }, ['S' + pad(s.n)]), s.tag ? h('span', { class: 'sess-chip__tag' }, [s.tag]) : null
+            ]);
           }))
         ]));
       });
@@ -434,7 +474,7 @@
     var cQ = numField('Preguntas cortas', 0, 30, 6);
     var cP = numField('Problemas de examen', 0, 3, 1);
     var cMin = numField('Reloj', 0, 240, 30, 'min · 0 = sin reloj');
-    var cFeed = window.LabUI.select({ label: 'Revisión', options: ['Al terminar', 'Inmediata (solo preguntas cortas)'] });
+    var cFeed = window.LabUI.select({ label: 'Revisión', options: ['Al terminar el examen completo', 'Al contestar cada pregunta o inciso'] });
     cFeed.input.addEventListener('change', upd);
     function drawOptions() {
       options.innerHTML = '';
@@ -451,7 +491,6 @@
       if (!n) msg = 'Elige al menos una sesión o un atajo.';
       else msg = n + (n === 1 ? ' sesión elegida' : ' sesiones elegidas');
       if (state.kind === 'custom') {
-        if (cP.get() > 0) { cFeed.input.value = '0'; cFeed.input.disabled = true; } else cFeed.input.disabled = false;
         if (n && cQ.get() + cP.get() === 0) msg = 'Pide al menos una pregunta o un problema.';
       }
       summary.textContent = msg;
@@ -503,7 +542,8 @@
         var pool = Q().pool(window.CB_BANK, [{ code: code, sessions: sel.map(function (b) { return b.n; }) }]);
         var tags = sel.map(function (b) { return code + '.S' + pad(b.n); });
         var probs = needExams ? Q().eligibleProblems((window.CB_EXAMS || {})[code], tags) : [];
-        var topics = sel.map(function (b) { return meta.name + ' S' + pad(b.n); });
+        var tagOf = {}; sessionsOf(meta).forEach(function (s) { tagOf[s.n] = s.tag; });
+        var topics = sel.map(function (b) { return meta.name + ' S' + pad(b.n) + (tagOf[b.n] ? ' · ' + tagOf[b.n] : ''); });
         var common = { topics: topics, root: '../', onFinish: showBack };
         if (state.kind === 'quiz') {
           form.hidden = true;
@@ -528,11 +568,7 @@
           var run = h('div', {});
           if (note.length) stage.appendChild(h('p', { class: 'verdict verdict--warn' }, ['Con estas sesiones ' + note.join(' y ') + '; el examen usa las que hay.']));
           stage.appendChild(run);
-          if (cFeed.input.value === '1' && !ps.length) {
-            runPractice(run, qs, Object.assign({ minutes: cMin.get(), tagFilter: function (t) { return t.split('.').length === 2 || sel.length === 1; }, again: go }, common));
-          } else {
-            runSimulacro(run, qs, ps, Object.assign({ minutes: cMin.get(), clockLabel: 'Reloj', finishLabel: 'Terminar examen', kind: 'Personalizado' }, common));
-          }
+          runSimulacro(run, qs, ps, Object.assign({ minutes: cMin.get(), clockLabel: 'Reloj', finishLabel: 'Terminar examen', kind: 'Personalizado', review: cFeed.input.value === '1' }, common));
         }
         stage.scrollIntoView({ block: 'start' });
       }, function (e) {
@@ -568,6 +604,20 @@
     }
     historyNode.appendChild(table('Quizzes', quiz));
     historyNode.appendChild(table('Simulacros', exam));
+    if (quiz.length || exam.length) {
+      var bar = h('div', { class: 'lab-buttons history__actions' });
+      var clear = window.LabUI.button('Borrar historial', 'ghost', function () {
+        confirmInline(bar, 'Se borrarán los quizzes y simulacros guardados en este navegador. No se puede deshacer.', function () {
+          Q().clearHistory('cb-quiz-history');
+          Q().clearHistory('cb-exam-history');
+          refreshHistory();
+          var msg = historyNode.querySelector('h2');
+          if (msg) { msg.setAttribute('tabindex', '-1'); msg.focus(); }
+        }, 'Sí, borrar');
+      });
+      bar.appendChild(clear);
+      historyNode.appendChild(bar);
+    }
   }
 
   window.CBQuizUI = { semaforo: semaforo, questionCard: questionCard, runPractice: runPractice, sessionQuiz: sessionQuiz, runSimulacro: runSimulacro, launcher: launcher };

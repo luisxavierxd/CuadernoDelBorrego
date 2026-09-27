@@ -175,11 +175,15 @@
     } catch (e) { /* sin historial: el sitio funciona igual */ }
   }
 
+  function clearHistory(key) {
+    try { window.localStorage.removeItem(key); } catch (e) { /* sin almacenamiento: no hay nada que borrar */ }
+  }
+
   window.CBQuiz = {
     STATE_LABEL: STATE_LABEL, WEIGHTS: WEIGHTS, SOLUTION_KEEPS: SOLUTION_KEEPS,
     state: state, pool: pool, pick: pick, grade: grade, gradeShort: gradeShort,
     scoreByTag: scoreByTag, gradeProblem: gradeProblem, simulacroScore: simulacroScore,
     suggestedMinutes: suggestedMinutes, eligibleProblems: eligibleProblems, composeSimulacro: composeSimulacro,
-    loadHistory: loadHistory, saveHistory: saveHistory, subtopic: subtopic
+    loadHistory: loadHistory, saveHistory: saveHistory, clearHistory: clearHistory, subtopic: subtopic
   };
 })();

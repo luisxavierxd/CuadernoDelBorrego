@@ -96,6 +96,24 @@ let pass = 0, fail = 0;
     try { L.toMath(bad); fail++; console.log(`✗ "${bad}" debería marcar que falta algo`); }
     catch (e) { pass++; }
   }
+
+  // Limpieza de fórmulas al dibujar (math-render.js · CBMath.tidy): coeficientes 1, signos dobles y términos 0.
+  const R = loadData(path.join(ROOT, 'shared/js/math-render.js'), {}).CBMath;
+  const TIDY = [
+    ['h(t) = 1t^2 + 3t', 'h(t) = t^2 + 3t'], ['f(x) = x^3 - 1x', 'f(x) = x^3 - x'], ['r(t) = 1t(4 - t)', 'r(t) = t(4 - t)'],
+    ['s(t) = 1t^2 + 0t', 's(t) = t^2'], [String.raw`\dfrac{1x + 1}{x + 2}`, String.raw`\dfrac{x + 1}{x + 2}`], ['f(x) = -1x + 1', 'f(x) = -x + 1'],
+    ['x^2 + -1x + 1', 'x^2 - x + 1'], [String.raw`x\,(5 + 1\ln x)`, String.raw`x\,(5 + \ln x)`], ['1x^2 + -6x', 'x^2 - 6x'], ['3 - -2', '3 + 2'],
+    ['x^{1}', 'x'], [String.raw`\sin(1x)`, String.raw`\sin(x)`],
+    // lo que NO debe cambiar
+    [String.raw`\dfrac{1}{x}`, String.raw`\dfrac{1}{x}`], ['10x + 1', '10x + 1'], ['x_1 + 1', 'x_1 + 1'], ['f(1) = 1', 'f(1) = 1'],
+    [String.raw`\int_1^{e} \ln x`, String.raw`\int_1^{e} \ln x`], ['0.1x', '0.1x'], ['x^{1/3}', 'x^{1/3}'], ['1.5x', '1.5x'],
+    [String.raw`\int 1\,dx`, String.raw`\int 1\,dx`], ['(1)(2)', '(1)(2)'], ['y = 0.5x + 0', 'y = 0.5x + 0'], ['a_{1}x', 'a_{1}x']
+  ];
+  for (const [src, want] of TIDY) {
+    const got = R.tidy(src);
+    if (got === want) pass++;
+    else { fail++; console.log(`✗ tidy ${JSON.stringify(src)} → ${JSON.stringify(got)} (esperaba ${JSON.stringify(want)})`); }
+  }
   console.log(`\nlatex.test.js: ${pass} ok, ${fail} fallan.`);
   process.exit(fail ? 1 : 0);
 })().catch((e) => { console.error(e); process.exit(1); });

@@ -80,12 +80,17 @@
 .launcher__course { border: 1px solid var(--line); border-radius: var(--radius-card); padding: var(--space-2); margin: 0; min-width: 0; }
 .launcher__course legend { font: 700 1rem/1.2 var(--font-display); padding: 0 6px; }
 .launcher__group + .launcher__group { margin-top: var(--space-1); }
-.launcher__sessions { display: flex; flex-wrap: wrap; gap: 6px; }
+.launcher__sessions { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 6px; }
+/* Ficha de sesión: casilla, número y dos palabras de qué trae (nadie recuerda qué es S07). */
 .sess-chip {
-  display: inline-flex; align-items: center; gap: 6px; min-height: 40px; padding: 0 10px;
+  display: grid; grid-template-columns: auto 1fr; grid-template-rows: auto auto; column-gap: 8px; row-gap: 2px;
+  align-items: center; min-height: 44px; padding: 6px 10px;
   border: 1px solid var(--line-strong); border-radius: var(--radius); cursor: pointer;
-  font: 500 0.85rem/1 var(--font-mono);
 }
+.sess-chip input { grid-row: 1 / span 2; }
+.sess-chip__n { font: 500 0.8rem/1 var(--font-mono); }
+.sess-chip__tag { font: 500 0.82rem/1.2 var(--font-body); color: inherit; }
+.history__actions { margin-top: var(--space-2); }
 .sess-chip:has(input:checked) { border-color: var(--accent); background: var(--accent-soft); color: var(--accent); }
 .sess-chip input { accent-color: var(--accent); }
 .sess-chip.is-soon { border-style: dashed; color: var(--text-muted); cursor: not-allowed; }
