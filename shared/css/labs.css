@@ -142,16 +142,11 @@ math-field::part(menu-toggle), math-field::part(virtual-keyboard-toggle) { displ
    queda a la vista mientras se mueven los controles.
    PC: centrada en el espacio bajo el encabezado (--board-top lo calcula
    LabUI.follow con la altura real de la gráfica; si no cabe, no se fija).
-   Móvil: la gráfica pasa arriba y se queda pegada bajo el encabezado con un
-   alto máximo; lo que no quepa (tablas) se desplaza dentro de ella. */
+   Móvil: la gráfica va arriba y los controles abajo, sin fijarse ni desplazarse
+   (fijarla en teléfono estorbaba más de lo que ayudaba). */
 @media (min-width: 961px) {
   .lab-board.is-follow { position: sticky; top: var(--board-top, calc(var(--header-h) + 12px)); align-self: start; }
 }
 @media (max-width: 960px) {
-  .lab-grid > .lab-board {
-    order: -1; position: sticky; top: calc(var(--header-h) + 4px); z-index: 5;
-    max-height: 52vh; overflow-y: auto; overscroll-behavior: contain;
-    padding: 6px 0 8px; background: var(--panel); border-bottom: 1px solid var(--line-strong);
-  }
-  .lab-grid > .lab-board .lab-plot { max-height: 38vh; }
+  .lab-grid > .lab-board { order: -1; }
 }

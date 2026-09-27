@@ -198,7 +198,10 @@
   function follow(node) {
     var board = node.querySelector('.lab-grid > .lab-board');
     if (!board) return;
+    var desk = window.matchMedia ? window.matchMedia('(min-width: 961px)') : { matches: true };
     function fit() {
+      // Solo en PC: en móvil la gráfica va arriba, quieta.
+      if (!desk.matches) { board.classList.remove('is-follow'); return; }
       var hh = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--header-h')) || 64;
       var vh = window.innerHeight, h = board.offsetHeight, room = vh - hh - 24;
       var ok = h > 0 && h <= room;

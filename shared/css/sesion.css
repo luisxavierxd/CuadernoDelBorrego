@@ -44,6 +44,11 @@ a.dot:hover::before { background: var(--accent-soft); transform: scale(1.2); }
   background: var(--panel); border: 1px solid var(--line-strong); border-radius: var(--radius-card);
   padding: var(--space-2);
 }
+/* En teléfono el botón no queda en la orilla derecha: el panel se saldría por la izquierda.
+   El header tiene backdrop-filter, así que "fixed" se mide contra él (todo el ancho, arriba). */
+@media (max-width: 640px) {
+  .session-menu__panel { position: fixed; left: 12px; right: 12px; top: calc(var(--header-h) + 6px); width: auto; max-height: calc(100vh - var(--header-h) - 24px); }
+}
 .session-menu__group + .session-menu__group { margin-top: var(--space-2); }
 .session-menu__panel ul { list-style: none; margin: 0; padding: 0; }
 .session-menu__panel li a, .session-menu__panel li span { display: block; padding: 8px 6px; font-size: 0.9rem; color: var(--text); text-decoration: none; border-radius: var(--radius); }
