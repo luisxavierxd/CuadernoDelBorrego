@@ -2,7 +2,7 @@
    Problemas de examen · Física 1 (§10.3). Propios y parametrizados.
    part.answer(v, prev): prev son las respuestas DEL ALUMNO en los incisos
    anteriores, para dar crédito por arrastre de error. g = 9.81 m/s².
-   Bloque A (S01–S03): 6 problemas. Bloque B (S04–S07): 7 problemas.
+   Bloque A (S01–S03): 6 problemas. Bloque B (S04–S07): 7. Bloque C (S08–S11): 6.
    ===================================================================== */
 (function () {
   var ex = (window.CB_EXAMS = window.CB_EXAMS || {});
@@ -395,4 +395,162 @@
       ]
     }
   ]);
+
+  /* ======================= Bloque C · Dinámica (lote 2 de F4) ======================= */
+  function sn(t) { return Math.sin(t * RAD); }
+  function cs(t) { return Math.cos(t * RAD); }
+
+  ex.f1 = ex.f1.concat([
+    {
+      id: 'f1-ex-jalon', tags: ['f1.S10'], block: 'C', title: 'La caja jalada con ángulo',
+      vars: { m: [5, 30, 1], F: [30, 150, 10], th: [15, 45, 5], muk: [0.1, 0.5, 0.05], t: [2, 6, 1] },
+      where: function (v) { var N0 = v.m * g - v.F * sn(v.th); return N0 > 10 && (v.F * cs(v.th) - v.muk * N0) / v.m > 0.5; },
+      statement: function (v) { return '<p>Jalas una caja de $' + v.m + '$ kg con una cuerda de $' + v.F + '$ N que forma $' + v.th + '^\\circ$ con la horizontal. La caja ya desliza y $\\mu_k = ' + v.muk + '$.</p>'; },
+      diagram: { id: 'exam-jalon', state: function (v) { return v; } },
+      parts: [
+        { label: 'a', type: 'numeric', points: 3, unit: 'N',
+          prompt: function () { return '¿Cuánto vale la normal?'; },
+          answer: function (v) { return v.m * g - v.F * sn(v.th); },
+          solution: function (v) { return '$N = mg - F\\sin\\theta = ' + fx(v.m * g) + ' - ' + v.F + '\\sin ' + v.th + '^\\circ = ' + fx(v.m * g - v.F * sn(v.th)) + '$ N.'; } },
+        { label: 'b', type: 'numeric', points: 2, unit: 'N',
+          prompt: function () { return 'Con tu normal de a), ¿cuánto vale la fricción?'; },
+          answer: function (v, prev) { return v.muk * prev[0]; },
+          solution: function (v) { return '$f_k = \\mu_kN = ' + fx(v.muk * (v.m * g - v.F * sn(v.th))) + '$ N.'; } },
+        { label: 'c', type: 'numeric', points: 3, unit: 'm/s²',
+          prompt: function () { return 'Con tu fricción de b), ¿qué aceleración tiene la caja?'; },
+          answer: function (v, prev) { return (v.F * cs(v.th) - prev[1]) / v.m; },
+          solution: function (v) { var f = v.muk * (v.m * g - v.F * sn(v.th)); return '$a = \\frac{F\\cos\\theta - f_k}{m} = \\frac{' + fx(v.F * cs(v.th)) + ' - ' + fx(f) + '}{' + v.m + '} = ' + fx((v.F * cs(v.th) - f) / v.m, 3) + '$ m/s².'; } },
+        { label: 'd', type: 'numeric', points: 2, unit: 'm/s',
+          prompt: function (v) { return 'Si partió del reposo, con tu aceleración de c), ¿qué rapidez tiene a los $' + v.t + '$ s?'; },
+          answer: function (v, prev) { return prev[2] * v.t; },
+          solution: function (v) { var a = (v.F * cs(v.th) - v.muk * (v.m * g - v.F * sn(v.th))) / v.m; return '$v = at = ' + fx(a * v.t, 3) + '$ m/s.'; } }
+      ]
+    },
+    {
+      id: 'f1-ex-atwood', tags: ['f1.S09'], block: 'C', title: 'La máquina de Atwood',
+      vars: { m1: [1, 8, 0.5], m2: [1.5, 10, 0.5], h: [0.5, 3, 0.5] },
+      where: function (v) { return v.m2 - v.m1 >= 1; },
+      statement: function (v) { return '<p>Una máquina de Atwood tiene masas de $' + v.m1 + '$ kg y $' + v.m2 + '$ kg, parte del reposo y la masa de $' + v.m2 + '$ kg baja $' + v.h + '$ m hasta el piso.</p>'; },
+      diagram: { id: 'exam-atwood', state: function (v) { return v; } },
+      parts: [
+        { label: 'a', type: 'numeric', points: 3, unit: 'm/s²',
+          prompt: function () { return '¿Qué aceleración tienen las masas?'; },
+          answer: function (v) { return (v.m2 - v.m1) * g / (v.m1 + v.m2); },
+          solution: function (v) { return '$a = \\frac{(m_2 - m_1)g}{m_1 + m_2} = ' + fx((v.m2 - v.m1) * g / (v.m1 + v.m2), 3) + '$ m/s².'; } },
+        { label: 'b', type: 'numeric', points: 2, unit: 'N',
+          prompt: function () { return 'Con tu aceleración de a), ¿cuánto vale la tensión?'; },
+          answer: function (v, prev) { return v.m1 * (g + prev[0]); },
+          solution: function (v) { var a = (v.m2 - v.m1) * g / (v.m1 + v.m2); return '$T = m_1(g + a) = ' + fx(v.m1 * (g + a)) + '$ N.'; } },
+        { label: 'c', type: 'numeric', points: 3, unit: 's',
+          prompt: function () { return 'Con tu aceleración, ¿cuánto tarda la masa pesada en llegar al piso?'; },
+          answer: function (v, prev) { return Math.sqrt(2 * v.h / prev[0]); },
+          solution: function (v) { var a = (v.m2 - v.m1) * g / (v.m1 + v.m2); return '$t = \\sqrt{2h/a} = ' + fx(Math.sqrt(2 * v.h / a), 3) + '$ s.'; } },
+        { label: 'd', type: 'numeric', points: 2, unit: 'm/s',
+          prompt: function () { return 'Con tus resultados de a) y c), ¿con qué rapidez llega al piso?'; },
+          answer: function (v, prev) { return prev[0] * prev[2]; },
+          solution: function (v) { var a = (v.m2 - v.m1) * g / (v.m1 + v.m2); return '$v = at = ' + fx(Math.sqrt(2 * a * v.h), 3) + '$ m/s.'; } }
+      ]
+    },
+    {
+      id: 'f1-ex-plano', tags: ['f1.S11'], block: 'C', title: 'El bloque que resbala',
+      vars: { m: [2, 20, 1], th: [30, 55, 5], mus: [0.2, 0.5, 0.05], muk: [0.1, 0.4, 0.05], L: [1, 8, 0.5] },
+      where: function (v) { return Math.tan(v.th * RAD) > v.mus + 0.05 && v.muk < v.mus && sn(v.th) - v.muk * cs(v.th) > 0.15; },
+      statement: function (v) { return '<p>Un bloque de $' + v.m + '$ kg se suelta en lo alto de una rampa de $' + v.th + '^\\circ$ y $' + v.L + '$ m de largo ($\\mu_s = ' + v.mus + '$, $\\mu_k = ' + v.muk + '$). Como $\\tan\\theta > \\mu_s$, resbala.</p>'; },
+      diagram: { id: 'exam-plano', state: function (v) { return v; } },
+      parts: [
+        { label: 'a', type: 'numeric', points: 2, unit: 'N',
+          prompt: function () { return '¿Cuánto vale la normal?'; },
+          answer: function (v) { return v.m * g * cs(v.th); },
+          solution: function (v) { return '$N = mg\\cos\\theta = ' + fx(v.m * g * cs(v.th)) + '$ N.'; } },
+        { label: 'b', type: 'numeric', points: 2, unit: 'N',
+          prompt: function () { return 'Con tu normal de a), ¿cuánto vale la fricción mientras baja?'; },
+          answer: function (v, prev) { return v.muk * prev[0]; },
+          solution: function (v) { return '$f_k = \\mu_kN = ' + fx(v.muk * v.m * g * cs(v.th)) + '$ N.'; } },
+        { label: 'c', type: 'numeric', points: 3, unit: 'm/s²',
+          prompt: function () { return 'Con tu fricción de b), ¿qué aceleración tiene plano abajo?'; },
+          answer: function (v, prev) { return (v.m * g * sn(v.th) - prev[1]) / v.m; },
+          solution: function (v) { return '$a = \\frac{mg\\sin\\theta - f_k}{m} = ' + fx(g * (sn(v.th) - v.muk * cs(v.th)), 3) + '$ m/s².'; } },
+        { label: 'd', type: 'numeric', points: 2, unit: 's',
+          prompt: function () { return 'Con tu aceleración de c), ¿cuánto tarda en llegar abajo?'; },
+          answer: function (v, prev) { return Math.sqrt(2 * v.L / prev[2]); },
+          solution: function (v) { var a = g * (sn(v.th) - v.muk * cs(v.th)); return '$t = \\sqrt{2L/a} = ' + fx(Math.sqrt(2 * v.L / a), 3) + '$ s.'; } },
+        { label: 'e', type: 'numeric', points: 2, unit: 'm/s',
+          prompt: function () { return 'Con tus resultados de c) y d), ¿con qué rapidez llega abajo?'; },
+          answer: function (v, prev) { return prev[2] * prev[3]; },
+          solution: function (v) { var a = g * (sn(v.th) - v.muk * cs(v.th)); return '$v = at = ' + fx(Math.sqrt(2 * a * v.L), 3) + '$ m/s.'; } }
+      ]
+    },
+    {
+      id: 'f1-ex-elevador', tags: ['f1.S08'], block: 'C', title: 'La báscula en el elevador',
+      vars: { m: [40, 100, 5], a1: [0.5, 3, 0.5], a2: [0.5, 3, 0.5] },
+      statement: function (v) { return '<p>Una persona de $' + v.m + '$ kg está parada sobre una báscula en un elevador. Al arrancar hacia arriba, el elevador acelera a $' + v.a1 + '$ m/s²; al llegar a su piso frena con $' + v.a2 + '$ m/s² (aceleración hacia abajo).</p>'; },
+      parts: [
+        { label: 'a', type: 'numeric', points: 3, unit: 'N',
+          prompt: function () { return '¿Cuánto vale la normal mientras arranca?'; },
+          answer: function (v) { return v.m * (g + v.a1); },
+          solution: function (v) { return '$N = m(g + a_1) = ' + fx(v.m * (g + v.a1), 1) + '$ N.'; } },
+        { label: 'b', type: 'numeric', points: 2, unit: 'kg',
+          prompt: function () { return 'La báscula está calibrada en kg (marca $N/g$). Con tu normal de a), ¿qué marca al arrancar?'; },
+          answer: function (v, prev) { return prev[0] / g; },
+          solution: function (v) { return '$' + fx(v.m * (g + v.a1), 1) + '/9.81 = ' + fx(v.m * (g + v.a1) / g, 2) + '$ kg.'; } },
+        { label: 'c', type: 'numeric', points: 3, unit: 'N',
+          prompt: function () { return '¿Cuánto vale la normal mientras frena?'; },
+          answer: function (v) { return v.m * (g - v.a2); },
+          solution: function (v) { return 'Frenar al subir es acelerar hacia abajo: $N = m(g - a_2) = ' + fx(v.m * (g - v.a2), 1) + '$ N.'; } },
+        { label: 'd', type: 'numeric', points: 2, unit: 'N',
+          prompt: function () { return 'Con tus resultados de a) y c), ¿cuánto cambia la normal entre el arranque y el frenado?'; },
+          answer: function (v, prev) { return prev[0] - prev[2]; },
+          solution: function (v) { return '$' + fx(v.m * (g + v.a1), 1) + ' - ' + fx(v.m * (g - v.a2), 1) + ' = ' + fx(v.m * (v.a1 + v.a2), 1) + '$ N.'; } }
+      ]
+    },
+    {
+      id: 'f1-ex-curva', tags: ['f1.S11'], block: 'C', title: '¿Derrapa en la curva?',
+      vars: { m: [600, 2000, 100], r: [20, 150, 10], mus: [0.3, 0.9, 0.05], v: [8, 30, 1] },
+      where: function (v) { return Math.abs(v.mus * g * v.r - v.v * v.v) > 0.05 * v.v * v.v; },
+      statement: function (v) { return '<p>Un auto de $' + v.m + '$ kg toma una curva plana de $' + v.r + '$ m de radio a $' + v.v + '$ m/s. El coeficiente de fricción estática entre llantas y pavimento es $' + v.mus + '$.</p>'; },
+      parts: [
+        { label: 'a', type: 'numeric', points: 3, unit: 'N',
+          prompt: function () { return '¿Qué fuerza hacia el centro necesita el auto para dar la vuelta?'; },
+          answer: function (v) { return v.m * v.v * v.v / v.r; },
+          solution: function (v) { return '$F = mv^2/r = ' + fx(v.m * v.v * v.v / v.r, 0) + '$ N.'; } },
+        { label: 'b', type: 'numeric', points: 2, unit: 'N',
+          prompt: function () { return '¿Cuál es la fricción estática máxima que puede dar el pavimento?'; },
+          answer: function (v) { return v.mus * v.m * g; },
+          solution: function (v) { return '$f_{s,máx} = \\mu_s mg = ' + fx(v.mus * v.m * g, 0) + '$ N.'; } },
+        { label: 'c', type: 'numeric', points: 2, unit: 'N', tol: { abs: 20 },
+          prompt: function () { return 'Con tus resultados de a) y b), ¿cuánta fricción le sobra? (Negativo si derrapa.)'; },
+          answer: function (v, prev) { return prev[1] - prev[0]; },
+          solution: function (v) { var s = v.mus * v.m * g - v.m * v.v * v.v / v.r; return '$' + fx(v.mus * v.m * g, 0) + ' - ' + fx(v.m * v.v * v.v / v.r, 0) + ' = ' + fx(s, 0) + '$ N: ' + (s > 0 ? 'no derrapa.' : 'derrapa.'); } },
+        { label: 'd', type: 'numeric', points: 3, unit: 'm/s',
+          prompt: function () { return 'Con tu fricción máxima de b), ¿cuál es la velocidad máxima para esa curva?'; },
+          answer: function (v, prev) { return Math.sqrt(prev[1] * v.r / v.m); },
+          solution: function (v) { return '$v_{máx} = \\sqrt{f_{s,máx}\\,r/m} = \\sqrt{\\mu_s gr} = ' + fx(Math.sqrt(v.mus * g * v.r), 2) + '$ m/s.'; } }
+      ]
+    },
+    {
+      id: 'f1-ex-rampa-polea', tags: ['f1.S09', 'f1.S11'], block: 'C', title: 'Rampa con polea',
+      vars: { m1: [1, 10, 0.5], m2: [1, 10, 0.5], th: [15, 45, 5], d: [0.5, 3, 0.5] },
+      where: function (v) { return (v.m2 - v.m1 * sn(v.th)) * g / (v.m1 + v.m2) > 0.8; },
+      statement: function (v) { return '<p>Un bloque de $' + v.m1 + '$ kg está sobre un plano liso de $' + v.th + '^\\circ$, unido por una cuerda que pasa por una polea en lo alto a una masa de $' + v.m2 + '$ kg que cuelga. El sistema parte del reposo y la masa colgante baja.</p>'; },
+      parts: [
+        { label: 'a', type: 'numeric', points: 2, unit: 'N',
+          prompt: function () { return '¿Cuánto vale la componente del peso del bloque a lo largo del plano?'; },
+          answer: function (v) { return v.m1 * g * sn(v.th); },
+          solution: function (v) { return '$m_1g\\sin\\theta = ' + fx(v.m1 * g * sn(v.th)) + '$ N.'; } },
+        { label: 'b', type: 'numeric', points: 3, unit: 'm/s²',
+          prompt: function () { return 'Con tu resultado de a), ¿qué aceleración tiene el sistema?'; },
+          answer: function (v, prev) { return (v.m2 * g - prev[0]) / (v.m1 + v.m2); },
+          solution: function (v) { return '$a = \\frac{m_2g - m_1g\\sin\\theta}{m_1 + m_2} = ' + fx((v.m2 - v.m1 * sn(v.th)) * g / (v.m1 + v.m2), 3) + '$ m/s².'; } },
+        { label: 'c', type: 'numeric', points: 2, unit: 'N',
+          prompt: function () { return 'Con tu aceleración de b), ¿cuánto vale la tensión?'; },
+          answer: function (v, prev) { return v.m2 * (g - prev[1]); },
+          solution: function (v) { var a = (v.m2 - v.m1 * sn(v.th)) * g / (v.m1 + v.m2); return '$T = m_2(g - a) = ' + fx(v.m2 * (g - a)) + '$ N.'; } },
+        { label: 'd', type: 'numeric', points: 3, unit: 'm/s',
+          prompt: function (v) { return 'Con tu aceleración, ¿qué rapidez tienen cuando se han movido $' + v.d + '$ m?'; },
+          answer: function (v, prev) { return Math.sqrt(2 * Math.abs(prev[1]) * v.d); },
+          solution: function (v) { var a = (v.m2 - v.m1 * sn(v.th)) * g / (v.m1 + v.m2); return '$v = \\sqrt{2ad} = ' + fx(Math.sqrt(2 * a * v.d), 3) + '$ m/s.'; } }
+      ]
+    }
+  ]);
+
 })();

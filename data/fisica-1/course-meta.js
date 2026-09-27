@@ -35,10 +35,10 @@ window.COURSE_META = {
     {
       id: 'C', label: 'Dinámica',
       sessions: [
-        { n: 8,  tag: 'Leyes de Newton', title: 'Leyes de Newton y diagrama de cuerpo libre', lab: 'fbd-builder' },
-        { n: 9,  tag: 'Tensiones y poleas', title: 'Tensiones y poleas', lab: 'atwood' },
-        { n: 10, tag: 'Resortes y fricción', title: 'Resortes (ley de Hooke) y fricción', lab: 'spring-friction' },
-        { n: 11, tag: 'Planos inclinados', title: 'Planos inclinados y dinámica circular', lab: 'incline' }
+        { n: 8,  tag: 'Leyes de Newton', title: 'Leyes de Newton y diagrama de cuerpo libre', lab: 'fbd-builder', ready: true, bank: true },
+        { n: 9,  tag: 'Tensiones y poleas', title: 'Tensiones y poleas', lab: 'atwood', ready: true, bank: true },
+        { n: 10, tag: 'Resortes y fricción', title: 'Resortes (ley de Hooke) y fricción', lab: 'spring-friction', ready: true, bank: true },
+        { n: 11, tag: 'Planos inclinados', title: 'Planos inclinados y dinámica circular', lab: 'incline', ready: true, bank: true }
       ]
     },
     {

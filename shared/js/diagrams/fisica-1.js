@@ -426,6 +426,186 @@
     return svgBox('0 96 640 220', 'Una lancha apunta perpendicular a la orilla; la corriente la arrastra, así que su velocidad respecto a la orilla es la suma de su velocidad respecto al agua y la del agua.', body);
   };
 
+  /* =================== Bloque C · Dinámica (S08–S11) =================== */
+  function box(cx, cy, w, h, rot, cls) {
+    return '<rect class="' + (cls || 'box-aux') + '" x="' + (cx - w / 2).toFixed(1) + '" y="' + (cy - h / 2).toFixed(1) + '" width="' + w + '" height="' + h + '" rx="5"' +
+      (rot ? ' transform="rotate(' + (-rot) + ' ' + cx.toFixed(1) + ' ' + cy.toFixed(1) + ')"' : '') + '/>';
+  }
+  // Flecha por ángulo (grados, antihorario desde +x) y longitud, con etiqueta en la punta.
+  function force(cls, x, y, ang, len, label, dash) {
+    var a = ang * RAD, dx = len * Math.cos(a), dy = -len * Math.sin(a);
+    var out = dash ? '<path class="' + cls + '" fill="none" stroke-width="2" stroke-dasharray="' + dash + '" d="M' + x.toFixed(1) + ' ' + y.toFixed(1) + 'l' + dx.toFixed(1) + ' ' + dy.toFixed(1) + '"/>' : arrow(cls, x, y, dx, dy, 3.2);
+    return out + (label ? text(x + dx + 18 * Math.cos(a), y + dy - 18 * Math.sin(a) + 6, label, ' text-anchor="middle" font-size="17"') : '');
+  }
+
+  /* ---------- S08 · Cómo armar un DCL (explainer) ----------
+     state.step ∈ [0, 4]: situación · peso · normal · tensión · fricción y ejes. */
+  D['fbd-explainer'] = function (s) {
+    var k = num(s, 'step', 0), cx = 250, cy = 250, th = 30;
+    var body = '<path class="axis" d="M40 290H460" stroke-width="2"/>' + box(cx, cy, 80, 80) +
+      fade('<path class="axis" d="M' + (cx + 40) + ' ' + (cy - 10) + 'L' + (cx + 40 + 150 * Math.cos(th * RAD)).toFixed(1) + ' ' + (cy - 10 - 150 * Math.sin(th * RAD)).toFixed(1) + '" stroke-width="2"/>' , 1 - clamp01(k)) +
+      fade('<circle class="axis" cx="' + cx + '" cy="' + cy + '" r="70" fill="none" stroke-width="1.5" stroke-dasharray="4 6"/>', clamp01(k));
+    body += fade(force('error', cx, cy, 270, 70, 'mg'), clamp01(k));
+    body += fade(force('aux', cx - 18, cy, 90, 75, 'N'), clamp01(k - 1));
+    body += fade(force('ref', cx, cy, th, 110, 'T'), clamp01(k - 2));
+    body += fade(force('trace', cx - 40, cy + 30, 180, 70, 'f'), clamp01(k - 3)) +
+      fade(arrow('axis', 500, 270, 80, 0, 1.4) + arrow('axis', 500, 270, 0, -80, 1.4) + text(588, 276, 'x', ' font-size="16"') + text(496, 180, 'y', ' font-size="16"'), clamp01(k - 3));
+    var cap = ['la situación: una caja jalada por una cuerda', 'aísla la caja: dibújala sola; el peso siempre va', 'cada superficie que toca empuja: normal', 'cada cuerda jala: tensión, a lo largo de la cuerda', 'si hay fricción, contra el movimiento; y los ejes'];
+    body += text(320, 122, cap[Math.max(0, Math.min(4, Math.round(k)))], ' text-anchor="middle" font-size="16"');
+    return svgBox('0 100 640 250', 'Construcción de un diagrama de cuerpo libre para una caja jalada por una cuerda inclinada: peso, normal, tensión y fricción.', body);
+  };
+
+  /* ---------- S08 · Tercera ley ---------- */
+  D['newton3'] = function () {
+    var body = '<path class="axis" d="M40 270H600" stroke-width="2"/>' + box(380, 230, 90, 80) +
+      '<circle class="dot-trace" cx="240" cy="160" r="14"/><path class="axis" d="M240 174V230M240 230L220 270M240 230L260 270M240 190L330 205" stroke-width="3" fill="none"/>' +
+      arrow('ref', 335, 215, 70, 0, 3.5) + text(390, 172, 'F persona→caja', ' text-anchor="middle" font-size="16"') +
+      arrow('error', 325, 240, -70, 0, 3.5) + text(290, 296, 'F caja→persona', ' text-anchor="middle" font-size="16"') +
+      text(550, 180, 'mismo tamaño,', ' text-anchor="middle" font-size="17"') + text(550, 204, 'sentidos opuestos,', ' text-anchor="middle" font-size="17"') +
+      text(550, 228, 'cuerpos distintos', ' text-anchor="middle" font-size="17"');
+    return svgBox('0 120 640 190', 'Una persona empuja una caja: la caja empuja a la persona con una fuerza igual y opuesta. Actúan sobre cuerpos distintos, así que no se cancelan.', body);
+  };
+
+  /* ---------- S08 · Elevador que acelera ---------- */
+  D['elevator'] = function () {
+    var body = '<rect class="axis" x="180" y="110" width="170" height="200" fill="none" stroke-width="2"/>' + '<path class="axis" d="M265 20V110" stroke-width="2"/>' +
+      box(265, 250, 50, 80) + force('error', 265, 250, 270, 70, 'mg') + force('aux', 245, 250, 90, 100, 'N') +
+      arrow('ref', 400, 250, 0, -70, 3) + text(412, 200, 'a', ' font-size="18"') +
+      text(520, 170, 'N − mg = ma', ' text-anchor="middle" font-size="18"') + text(520, 200, 'N = m(g + a)', ' text-anchor="middle" font-size="18"') +
+      text(520, 232, 'la báscula marca N,', ' text-anchor="middle" font-size="16"') + text(520, 254, 'el "peso aparente"', ' text-anchor="middle" font-size="16"');
+    return svgBox('0 10 640 310', 'Una persona dentro de un elevador que acelera hacia arriba: la normal es mayor que su peso.', body);
+  };
+
+  /* ---------- S09 · Máquina de Atwood (explainer) ----------
+     state.step ∈ [0, 3]: sistema · DCL de m₁ · DCL de m₂ · ecuaciones. */
+  D['atwood-explainer'] = function (s) {
+    var k = num(s, 'step', 0), px = 170, py = 70, R = 34;
+    var body = '<path class="axis" d="M110 20H230M' + px + ' 20V' + py + '" stroke-width="2" fill="none"/><circle class="ref" cx="' + px + '" cy="' + py + '" r="' + R + '" fill="none" stroke-width="2.5"/>' +
+      '<path class="axis" d="M' + (px - R) + ' ' + py + 'V200M' + (px + R) + ' ' + py + 'V250" stroke-width="1.8" fill="none"/>' +
+      box(px - R, 220, 40, 40) + box(px + R, 275, 50, 50, 0, 'box-ref') + text(px - R, 226, 'm₁', ' text-anchor="middle" font-size="16"') + text(px + R, 281, 'm₂', ' text-anchor="middle" font-size="16"');
+    body += fade(force('ref', 330, 200, 90, 70, 'T') + force('error', 330, 200, 270, 50, 'm₁g') + arrow('aux', 380, 210, 0, -40, 2.5) + text(392, 190, 'a', ' font-size="16"') +
+      text(330, 84, 'm₁ sube:', ' text-anchor="middle" font-size="16"') + text(330, 332, 'T − m₁g = m₁a', ' text-anchor="middle" font-size="17"'), clamp01(k));
+    body += fade(force('ref', 490, 200, 90, 70, 'T') + force('error', 490, 200, 270, 80, 'm₂g') + arrow('aux', 540, 190, 0, 40, 2.5) + text(552, 222, 'a', ' font-size="16"') +
+      text(490, 84, 'm₂ baja:', ' text-anchor="middle" font-size="16"') + text(490, 332, 'm₂g − T = m₂a', ' text-anchor="middle" font-size="17"'), clamp01(k - 1));
+    body += fade('<rect class="box-ref" x="250" y="346" width="370" height="46" rx="8"/>' + text(435, 376, 'suma: a = (m₂ − m₁)g / (m₁ + m₂)', ' text-anchor="middle" font-size="17"'), clamp01(k - 2));
+    return svgBox('0 10 640 385', 'Máquina de Atwood: dos masas unidas por una cuerda sobre una polea. Diagrama de cada masa y la ecuación que resulta al sumarlas.', body);
+  };
+
+  /* ---------- S09 · Mesa con polea ---------- */
+  D['table-pulley'] = function () {
+    var body = '<path class="axis" d="M40 170H420V330" stroke-width="2.5" fill="none"/><circle class="ref" cx="432" cy="170" r="14" fill="none" stroke-width="2.5"/>' +
+      box(230, 140, 70, 60) + '<path class="axis" d="M265 140H432M446 170V240" stroke-width="1.8" fill="none"/>' + box(446, 265, 46, 46, 0, 'box-ref') +
+      text(230, 146, 'm₁', ' text-anchor="middle" font-size="16"') + text(446, 271, 'm₂', ' text-anchor="middle" font-size="16"') +
+      force('ref', 270, 110, 0, 70, 'T') + force('trace', 190, 160, 180, 50, 'μm₁g') + force('ref', 485, 265, 90, 60, 'T') + force('error', 485, 265, 270, 80, 'm₂g') +
+      text(560, 110, 'T − μm₁g = m₁a', ' text-anchor="middle" font-size="16"') + text(560, 136, 'm₂g − T = m₂a', ' text-anchor="middle" font-size="16"');
+    return svgBox('0 80 640 260', 'Un bloque sobre una mesa unido a una masa colgante por una cuerda que pasa por una polea.', body);
+  };
+
+  /* ---------- S10 · Ley de Hooke ---------- */
+  D['hooke'] = function () {
+    var d = 'M70 190';
+    for (var i = 0; i < 12; i++) d += 'L' + (90 + i * 20) + ' ' + (190 + (i % 2 ? 14 : -14));
+    var body = '<path class="axis" d="M60 140V240" stroke-width="5"/><path class="axis" d="' + d + 'L340 190" stroke-width="2" fill="none"/>' + box(375, 190, 70, 70) +
+      seg('axis', 300, 250, 300, 270, 1.4) + seg('axis', 340, 250, 340, 270, 1.4) + seg('axis', 300, 262, 340, 262, 1.4) + text(320, 288, 'x', ' text-anchor="middle" font-size="17"') +
+      text(300, 245, 'reposo', ' text-anchor="middle" font-size="13"') +
+      force('ref', 410, 190, 0, 70, null) + text(450, 222, 'F aplicada', ' text-anchor="middle" font-size="16"') + force('error', 340, 140, 180, 80, null) + text(300, 128, 'F = −kx', ' text-anchor="middle" font-size="16"') +
+      text(540, 118, 'el resorte jala', ' text-anchor="middle" font-size="16"') + text(540, 142, 'contra el estiramiento', ' text-anchor="middle" font-size="16"');
+    return svgBox('0 100 640 200', 'Un resorte estirado una distancia x ejerce una fuerza −kx, opuesta al estiramiento.', body);
+  };
+
+  /* ---------- S10 · Fricción contra fuerza aplicada ---------- */
+  D['friction-graph'] = function () {
+    var body = arrow('axis', 80, 280, 460, 0, 1.3) + arrow('axis', 80, 280, 0, -170, 1.3) +
+      text(548, 286, 'F', ' font-size="17"') + text(66, 120, 'f', ' font-size="17"') +
+      '<path class="trace" d="M80 280L300 150" stroke-width="3" fill="none"/><path class="trace" d="M300 150L300 190L520 190" stroke-width="3" fill="none" stroke-dasharray="1 0"/>' +
+      seg('axis', 80, 150, 300, 150, 1.2, '4 5') + seg('axis', 80, 190, 300, 190, 1.2, '4 5') + text(72, 155, 'μₛN', ' text-anchor="end" font-size="15"') + text(72, 195, 'μₖN', ' text-anchor="end" font-size="15"') +
+      text(210, 262, 'no se mueve: f = F', ' text-anchor="middle" font-size="15"') + text(420, 175, 'desliza: f = μₖN', ' text-anchor="middle" font-size="15"');
+    return svgBox('0 100 640 200', 'La fricción estática crece igual que la fuerza aplicada hasta μsN; cuando la caja arranca, baja a la cinética μkN y se queda constante.', body);
+  };
+
+  /* ---------- S10 · Empujar o jalar con ángulo (explainer) ----------
+     state.th: ángulo de la fuerza; state.mode: 'pull' | 'push'. */
+  D['angle-push-pull'] = function (s) {
+    var th = num(s, 'th', 30), pull = (s && s.mode) !== 'push', cx = 230, cy = 210, mg = 100, F = 70;
+    var N = mg + (pull ? -1 : 1) * F * Math.sin(th * RAD);
+    var body = '<path class="axis" d="M40 250H440" stroke-width="2"/>' + box(cx, cy, 80, 80) + force('error', cx, cy, 270, mg * 0.8, 'mg') + force('aux', cx - 20, cy, 90, N * 0.8, 'N');
+    body += pull ? force('ref', cx + 40, cy - 20, th, F * 1.2, 'F') : force('ref', cx - 40 - F * 1.2 * Math.cos(th * RAD), cy - 40 - F * 1.2 * Math.sin(th * RAD), 360 - th, F * 1.2, null) + text(cx - 52 - F * 1.2 * Math.cos(th * RAD), cy - 48 - F * 1.2 * Math.sin(th * RAD), 'F', ' text-anchor="end" font-size="17"');
+    body += text(540, 150, pull ? 'jalar hacia arriba:' : 'empujar hacia abajo:', ' text-anchor="middle" font-size="18"') +
+      text(540, 180, pull ? 'N = mg − F sin θ' : 'N = mg + F sin θ', ' text-anchor="middle" font-size="19"') +
+      text(540, 214, 'θ = ' + Math.round(th) + '°', ' text-anchor="middle" font-size="17"') +
+      text(540, 244, pull ? 'menos normal, menos fricción' : 'más normal, más fricción', ' text-anchor="middle" font-size="16"');
+    return svgBox('0 70 640 200', 'Caja con una fuerza inclinada: al jalar hacia arriba la normal disminuye; al empujar hacia abajo aumenta.', body);
+  };
+
+  /* ---------- S11 · Descomponer el peso en un plano (explainer) ----------
+     state.step ∈ [0, 4]: plano · peso · componentes · normal · fricción. */
+  D['incline-explainer'] = function (s) {
+    var k = num(s, 'step', 0), t = 30, a = t * RAD, x0 = 60, y0 = 300, L = 380;
+    var bx = x0 + 0.55 * L * Math.cos(a), by = y0 - 0.55 * L * Math.sin(a), cx = bx - 28 * Math.sin(a), cy = by - 28 * Math.cos(a);
+    var body = '<path class="axis" d="M' + x0 + ' ' + y0 + 'L' + (x0 + L * Math.cos(a)).toFixed(1) + ' ' + y0 + 'L' + (x0 + L * Math.cos(a)).toFixed(1) + ' ' + (y0 - L * Math.sin(a)).toFixed(1) + 'Z" stroke-width="2" fill="none"/>' +
+      arc(x0, y0, 50, 0, t) + text(x0 + 60, y0 - 10, 'θ', ' font-size="18"') + box(cx, cy, 56, 56, t);
+    body += fade(force('error', cx, cy, 270, 110, 'mg'), clamp01(k));
+    body += fade(force('error', cx, cy, 180 + t, 55, 'mg sin θ', '6 5') + force('error', cx, cy, 270 + t, 95, 'mg cos θ', '6 5'), clamp01(k - 1));
+    body += fade(force('aux', cx, cy, 90 + t, 95, 'N'), clamp01(k - 2));
+    body += fade(force('trace', cx, cy, t, 45, 'f'), clamp01(k - 3));
+    var cap = ['un bloque sobre un plano de ángulo θ', 'el peso apunta vertical, no contra el plano', 'componentes: mg sin θ a lo largo, mg cos θ contra el plano', 'N equilibra mg cos θ: N = mg cos θ', 'si baja, la fricción apunta plano arriba: μN'];
+    body += text(380, 62, cap[Math.max(0, Math.min(4, Math.round(k)))], ' text-anchor="middle" font-size="16"');
+    return svgBox('0 40 640 280', 'Bloque sobre un plano inclinado: el peso se descompone en mg sin θ a lo largo del plano y mg cos θ perpendicular; la normal equilibra la parte perpendicular.', body);
+  };
+
+  /* ---------- S11 · Curva peraltada ---------- */
+  D['banked-curve'] = function () {
+    var t = 18, a = t * RAD, cx = 300, cy = 210;
+    var body = '<path class="axis" d="M' + (cx - 170 * Math.cos(a)).toFixed(1) + ' ' + (cy + 40 + 170 * Math.sin(a)).toFixed(1) + 'L' + (cx + 170 * Math.cos(a)).toFixed(1) + ' ' + (cy + 40 - 170 * Math.sin(a)).toFixed(1) + '" stroke-width="3"/>' +
+      box(cx, cy + 12, 90, 50, t) + force('error', cx, cy, 270, 80, 'mg') + force('aux', cx, cy, 90 + t, 100, 'N') + force('aux', cx, cy - 95, 180, 100 * Math.sin(a), null, '6 5') + text(cx - 40, cy - 88, 'N sin θ', ' text-anchor="end" font-size="15"') +
+      arrow('ref', 150, 110, -100, 0, 3) + text(100, 96, 'al centro', ' text-anchor="middle" font-size="16"') +
+      text(545, 110, 'sin fricción:', ' text-anchor="middle" font-size="17"') + text(545, 136, 'N sin θ = mv²/r', ' text-anchor="middle" font-size="17"') +
+      text(545, 162, 'N cos θ = mg', ' text-anchor="middle" font-size="17"') + text(545, 190, 'v = √(rg tan θ)', ' text-anchor="middle" font-size="18"');
+    return svgBox('0 70 640 250', 'Corte de una curva peraltada: la componente horizontal de la normal empuja al auto hacia el centro de la curva.', body);
+  };
+
+  /* ---------- S11 · Bloque en un plano unido a una masa colgante ---------- */
+  D['incline-pulley'] = function () {
+    var t = 30, a = t * RAD, x0 = 60, y0 = 300, L = 360, tx = x0 + L * Math.cos(a), ty = y0 - L * Math.sin(a);
+    var bx = x0 + 0.5 * L * Math.cos(a), by = y0 - 0.5 * L * Math.sin(a), cx = bx - 25 * Math.sin(a), cy = by - 25 * Math.cos(a);
+    var body = '<path class="axis" d="M' + x0 + ' ' + y0 + 'L' + tx.toFixed(1) + ' ' + y0 + 'L' + tx.toFixed(1) + ' ' + ty.toFixed(1) + 'Z" stroke-width="2" fill="none"/>' +
+      '<circle class="ref" cx="' + (tx + 8).toFixed(1) + '" cy="' + (ty - 8).toFixed(1) + '" r="12" fill="none" stroke-width="2.5"/>' + box(cx, cy, 50, 50, t) +
+      '<path class="axis" d="M' + (cx + 25 * Math.cos(a)).toFixed(1) + ' ' + (cy - 25 * Math.sin(a)).toFixed(1) + 'L' + (tx - 2).toFixed(1) + ' ' + (ty - 18).toFixed(1) + 'M' + (tx + 20).toFixed(1) + ' ' + (ty - 8).toFixed(1) + 'V' + (ty + 90).toFixed(1) + '" stroke-width="1.8" fill="none"/>' +
+      box(tx + 20, ty + 110, 40, 40, 0, 'box-ref') + text(cx, cy + 5, 'm₁', ' text-anchor="middle" font-size="15"') + text(tx + 20, ty + 116, 'm₂', ' text-anchor="middle" font-size="15"') +
+      text(530, 110, 'm₂g − T = m₂a', ' text-anchor="middle" font-size="16"') + text(530, 136, 'T − m₁g sin θ − f = m₁a', ' text-anchor="middle" font-size="16"');
+    return svgBox('0 70 640 250', 'Un bloque sobre un plano inclinado unido por una cuerda, que pasa por una polea en lo alto, a una masa que cuelga.', body);
+  };
+
+  // Caja jalada con una cuerda inclinada (problemas de examen).
+  D['exam-jalon'] = function (v) {
+    var cx = 250, cy = 210, th = v.th;
+    var body = '<path class="axis" d="M40 250H600" stroke-width="2"/>' + box(cx, cy, 80, 80) +
+      '<path class="axis" d="M' + (cx + 40) + ' ' + (cy - 20) + 'L' + (cx + 40 + 170 * Math.cos(th * RAD)).toFixed(1) + ' ' + (cy - 20 - 170 * Math.sin(th * RAD)).toFixed(1) + '" stroke-width="2"/>' +
+      arc(cx + 40, cy - 20, 50, 0, th) + text(cx + 100, cy - 26, 'θ = ' + th + '°', ' font-size="16"') +
+      text(cx, cy + 6, v.m + ' kg', ' text-anchor="middle" font-size="16"') + text(cx + 40 + 175 * Math.cos(th * RAD), cy - 30 - 170 * Math.sin(th * RAD), 'F = ' + v.F + ' N', ' font-size="16"');
+    return svgBox('0 60 640 210', 'Una caja de ' + v.m + ' kg jalada con una cuerda que forma ' + th + ' grados con la horizontal.', body);
+  };
+
+  // Máquina de Atwood con valores (problemas de examen).
+  D['exam-atwood'] = function (v) {
+    var px = 310, py = 60, R = 36;
+    var body = '<path class="axis" d="M240 15H380M' + px + ' 15V' + py + '" stroke-width="2" fill="none"/><circle class="ref" cx="' + px + '" cy="' + py + '" r="' + R + '" fill="none" stroke-width="2.5"/>' +
+      '<path class="axis" d="M' + (px - R) + ' ' + py + 'V180M' + (px + R) + ' ' + py + 'V210" stroke-width="1.8" fill="none"/>' +
+      box(px - R, 205, 50, 50) + box(px + R, 240, 56, 56, 0, 'box-ref') +
+      text(px - R, 211, v.m1 + ' kg', ' text-anchor="middle" font-size="14"') + text(px + R, 246, v.m2 + ' kg', ' text-anchor="middle" font-size="14"');
+    return svgBox('0 0 620 290', 'Máquina de Atwood con masas de ' + v.m1 + ' y ' + v.m2 + ' kg.', body);
+  };
+
+  // Bloque en un plano inclinado (problemas de examen).
+  D['exam-plano'] = function (v) {
+    var t = v.th, a = t * RAD, x0 = 60, y0 = 290, L = 440;
+    var bx = x0 + 0.6 * L * Math.cos(a), by = y0 - 0.6 * L * Math.sin(a), cx = bx - 28 * Math.sin(a), cy = by - 28 * Math.cos(a);
+    var body = '<path class="axis" d="M' + x0 + ' ' + y0 + 'L' + (x0 + L * Math.cos(a)).toFixed(1) + ' ' + y0 + 'L' + (x0 + L * Math.cos(a)).toFixed(1) + ' ' + (y0 - L * Math.sin(a)).toFixed(1) + 'Z" stroke-width="2" fill="none"/>' +
+      arc(x0, y0, 55, 0, t) + text(x0 + 66, y0 - 10, t + '°', ' font-size="16"') + box(cx, cy, 56, 56, t) +
+      text(cx, cy + 5, v.m + ' kg', ' text-anchor="middle" font-size="14"');
+    return svgBox('0 ' + Math.floor(y0 - L * Math.sin(a) - 30) + ' 620 ' + Math.ceil(L * Math.sin(a) + 50), 'Un bloque de ' + v.m + ' kg sobre un plano inclinado ' + t + ' grados.', body);
+  };
+
   /* ---------- Problemas de examen ---------- */
 
   // Balón y barda, con escala igual en x y en y.

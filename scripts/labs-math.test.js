@@ -8,7 +8,8 @@ const { loadMathjs } = require('./lib/vendor');
 
 const ROOT = path.join(__dirname, '..');
 const LABS = ['registry', 'antiderivative-check', 'projectile-check', 'secant-tangent', 'derivative-check', 'chain-composition', 'implicit-tangent', 'f-fprime-fsecond', 'optimize-slider', 'riemann', 'area-between', 'solid-revolution',
-  'units', 'vector-sum', 'dot-cross', 'motion-graphs', 'kinematics-check', 'circular-vectors']
+  'units', 'vector-sum', 'dot-cross', 'motion-graphs', 'kinematics-check', 'circular-vectors',
+  'fbd-builder', 'atwood', 'spring-friction', 'incline']
   .map((n) => path.join(ROOT, 'shared/js/labs', n + '.js'));
 
 let pass = 0, fail = 0;
@@ -491,6 +492,117 @@ function near(got, want, tol, msg) {
     const r = Re.river({ vb: 4, vc: 3, w: 80 }); near(r.t, 20, 1e-12); near(r.drift, 60, 1e-12); near(r.speed, 5, 1e-12);
     const s = Re.riverStraight({ vb: 5, vc: 3, w: 80 }); near(s.speed, 4, 1e-12); near(s.t, 20, 1e-12); near(s.alpha, Math.asin(0.6) * 180 / Math.PI, 1e-9);
     if (!isNaN(Re.riverStraight({ vb: 2, vc: 3, w: 80 }).t)) throw new Error('si la corriente es más rápida no puede cruzar recto');
+  });
+  /* ---------- fbd-builder ---------- */
+  const Fo = LM.forces;
+  test('fuerzas: normal y aceleración de cada situación', () => {
+    const g = 9.81;
+    near(Fo.scene('empuje', { m: 8, F: 30 }).a, 30 / 8, 1e-12);
+    const j = Fo.scene('jalon', { m: 10, F: 50, th: 30, mu: 0.3 });
+    near(j.N, 10 * g - 25, 1e-9); near(j.a, (50 * Math.cos(Math.PI / 6) - 0.3 * j.N) / 10, 1e-9);
+    near(Fo.scene('empujeAbajo', { m: 10, F: 60, th: 30, mu: 0.25 }).N, 10 * g + 30, 1e-9);
+    near(Fo.scene('elevador', { m: 60, acc: 2 }).N, 60 * (g + 2), 1e-9);
+    near(Fo.scene('rampa', { m: 5, inc: 25 }).N, 5 * g * Math.cos(25 * Math.PI / 180), 1e-9);
+  });
+  test('fuerzas: en reposo la suma de fuerzas es cero; con movimiento es ma', () => {
+    near(Fo.net('rampa', { m: 5, inc: 25 }).mag, 0, 1e-9);
+    near(Fo.net('lampara', { m: 4 }).mag, 0, 1e-9);
+    const n = Fo.net('jalon', { m: 10, F: 50, th: 30, mu: 0.3 });
+    near(n.y, 0, 1e-9); near(n.x, 10 * Fo.scene('jalon', { m: 10, F: 50, th: 30, mu: 0.3 }).a, 1e-9);
+    near(Fo.net('elevador', { m: 60, acc: 2 }).y, 120, 1e-9);
+  });
+  test('fuerzas: diagnóstico del DCL', () => {
+    const r = Fo.checkFBD('jalon', {}, { peso: 'down', normal: 'up', tension: 'angUp', movimiento: 'right' });
+    eq(JSON.stringify(r.missing), JSON.stringify(['friccion'])); eq(JSON.stringify(r.extra), JSON.stringify(['movimiento'])); eq(r.ok, false);
+    eq(Fo.checkFBD('jalon', {}, { peso: 'down', normal: 'up', tension: 'angUp', friccion: 'left' }).ok, true);
+    eq(Fo.checkFBD('empuje', {}, { peso: 'down', normal: 'perp', aplicada: 'right' }).ok, true, 'en piso plano, perpendicular = arriba');
+    eq(JSON.stringify(Fo.checkFBD('rampa', {}, { peso: 'down', normal: 'up', friccion: 'alongUp' }).wrongDir), JSON.stringify(['normal']));
+    eq(Fo.diagnoseN('jalon', {}, 10 * 9.81), 'usedMg');
+    eq(Fo.diagnoseN('jalon', {}, 10 * 9.81 + 25), 'wrongSign');
+    eq(Fo.diagnoseN('jalon', {}, 10 * 9.81 - 25), 'ok');
+  });
+
+  /* ---------- atwood ---------- */
+  const At = LM.atwood;
+  test('atwood: aceleración, tensión y casos límite', () => {
+    const r = At.atwood(3, 5); near(r.a, 2 * 9.81 / 8, 1e-12); near(r.T, 30 * 9.81 / 8, 1e-12);
+    near(At.atwood(4, 4).a, 0, 1e-12); near(At.atwood(4, 4).T, 4 * 9.81, 1e-12);
+    near(5 * 9.81 - r.T, 5 * r.a, 1e-9, 'ΣF en m₂'); near(r.T - 3 * 9.81, 3 * r.a, 1e-9, 'ΣF en m₁');
+  });
+  test('atwood: mesa con polea, con y sin fricción', () => {
+    const t = At.table(4, 2, 0); near(t.a, 2 * 9.81 / 6, 1e-12); near(t.T, 4 * t.a, 1e-12);
+    const f = At.table(4, 2, 0.25); near(f.a, (2 - 1) * 9.81 / 6, 1e-12); near(f.T, 4 * (f.a + 0.25 * 9.81), 1e-12);
+    eq(At.table(4, 1, 0.5).moves, false); near(At.table(4, 1, 0.5).T, 9.81, 1e-12);
+    const tr = At.train([2, 3, 5], 40); near(tr.a, 4, 1e-12); near(tr.T, 32, 1e-12);
+  });
+  test('atwood: diagnóstico', () => {
+    const p = { m1: 3, m2: 5, mu: 0 }, s = At.atwood(3, 5);
+    eq(At.diagnose('atwood', p, s.a, s.T).a, 'ok'); eq(At.diagnose('atwood', p, s.a, s.T).T, 'ok');
+    eq(At.diagnose('atwood', p, s.a, 5 * 9.81).T, 'weight');
+    eq(At.diagnose('atwood', p, 2 * 9.81 / 5, s.T).a, 'oneMass');
+    eq(At.diagnose('table', { m1: 4, m2: 2, mu: 0.25 }, 2 * 9.81 / 6, 0).a, 'noFriction');
+  });
+
+  /* ---------- spring-friction ---------- */
+  const Fr = LM.friction;
+  test('fricción: normal al empujar y al jalar con ángulo', () => {
+    near(Fr.normal(10, 60, 30, 'push'), 98.1 + 30, 1e-9); near(Fr.normal(10, 60, 30, 'pull'), 98.1 - 30, 1e-9); near(Fr.normal(10, 60, 30, 'horizontal'), 98.1, 1e-9);
+  });
+  test('fricción: ¿se mueve? estática contra cinética y resorte', () => {
+    const still = Fr.analyze({ m: 10, F: 30, th: 0, mode: 'horizontal', mus: 0.5, muk: 0.3 });
+    eq(still.moves, false); near(still.f, 30, 1e-12); eq(still.a, 0);
+    const go = Fr.analyze({ m: 10, F: 60, th: 0, mode: 'horizontal', mus: 0.5, muk: 0.3 });
+    eq(go.moves, true); near(go.a, (60 - 0.3 * 98.1) / 10, 1e-9);
+    const sp = Fr.analyze({ m: 2, F: 0, th: 0, mode: 'horizontal', mus: 0.4, muk: 0.3, k: 300, x: 0.1 });
+    eq(sp.moves, true); near(sp.a, (30 - 0.3 * 2 * 9.81) / 2, 1e-9);
+  });
+  test('fricción: fuerza para arrancar y ángulo óptimo', () => {
+    near(Fr.forceToStart(10, 0.5, 0, 'pull'), 0.5 * 98.1, 1e-9);
+    const th = Fr.optimalAngle(0.5), fm = Fr.minForce(10, 0.5);
+    near(Fr.forceToStart(10, 0.5, th, 'pull'), fm, 1e-9);
+    if (!(Fr.forceToStart(10, 0.5, th + 5, 'pull') > fm && Fr.forceToStart(10, 0.5, th - 5, 'pull') > fm)) throw new Error('el óptimo no es mínimo');
+    if (!(Fr.forceToStart(10, 0.5, 30, 'push') > Fr.forceToStart(10, 0.5, 30, 'pull'))) throw new Error('empujar hacia abajo cuesta más');
+    near(Fr.hooke(200, 0.15), 30, 1e-12);
+  });
+  test('fricción: diagnóstico de N = mg y de μₛ', () => {
+    const p = { m: 10, F: 80, th: 30, mode: 'push', mus: 0.4, muk: 0.3 }, r = Fr.analyze(p);
+    eq(Fr.diagnose(p, r.N, r.a).N, 'ok'); eq(Fr.diagnose(p, r.N, r.a).a, 'ok');
+    eq(Fr.diagnose(p, 98.1, NaN).N, 'usedMg');
+    eq(Fr.diagnose(p, 98.1 - 40, NaN).N, 'wrongSign');
+    eq(Fr.diagnose(p, NaN, (r.drive - 0.3 * 98.1) / 10).a, 'usedMg');
+    eq(Fr.diagnose(p, NaN, (r.drive - 0.4 * r.N) / 10).a, 'usedMuS');
+  });
+
+  /* ---------- incline ---------- */
+  const In = LM.incline;
+  test('plano: baja con fricción, se queda quieto y sube frenando', () => {
+    const g = 9.81, s30 = 0.5, c30 = Math.cos(Math.PI / 6);
+    near(In.slope({ m: 5, th: 30, mus: 0.4, muk: 0.3, motion: 'rest' }).a, -g * (s30 - 0.3 * c30), 1e-9);
+    eq(In.slope({ m: 5, th: 20, mus: 0.4, muk: 0.3, motion: 'rest' }).dir, 'rest');
+    near(In.slope({ m: 5, th: 30, mus: 0.4, muk: 0.3, motion: 'up' }).a, -g * (s30 + 0.3 * c30), 1e-9);
+    near(In.critical(0.5), Math.atan(0.5) * 180 / Math.PI, 1e-12);
+    eq(In.slope({ m: 5, th: In.critical(0.4) - 0.5, mus: 0.4, muk: 0.3, motion: 'rest' }).dir, 'rest');
+  });
+  test('plano: fuerza paralela contra fuerza horizontal', () => {
+    const g = 9.81, t = 30 * Math.PI / 180;
+    const par = In.slope({ m: 5, th: 30, mus: 0.2, muk: 0.2, motion: 'rest', F: 60, Fmode: 'parallel' });
+    near(par.N, 5 * g * Math.cos(t), 1e-9); near(par.a, (60 - 5 * g * Math.sin(t) - 0.2 * par.N) / 5, 1e-9);
+    const hor = In.slope({ m: 5, th: 30, mus: 0.2, muk: 0.2, motion: 'rest', F: 60, Fmode: 'horizontal' });
+    near(hor.N, 5 * g * Math.cos(t) + 60 * Math.sin(t), 1e-9); near(hor.a, (60 * Math.cos(t) - 5 * g * Math.sin(t) - 0.2 * hor.N) / 5, 1e-9);
+  });
+  test('plano: dos bloques con polea y curvas', () => {
+    const r = In.twoBlocks(4, 3, 30, 0); near(r.a, (3 - 2) * 9.81 / 7, 1e-12); near(r.T, 3 * (9.81 - r.a), 1e-12);
+    eq(In.twoBlocks(4, 2, 30, 0.1).a, 0, 'fricción suficiente');
+    near(In.flatCurve(50, 0.8), Math.sqrt(0.8 * 9.81 * 50), 1e-12);
+    const b = In.banked(60, 15, 0); near(b.ideal, Math.sqrt(60 * 9.81 * Math.tan(15 * Math.PI / 180)), 1e-12); near(b.max, b.ideal, 1e-9);
+    const bf = In.banked(60, 15, 0.3); if (!(bf.max > bf.ideal && bf.min < bf.ideal)) throw new Error('fricción amplía el rango');
+  });
+  test('plano: diagnóstico de errores', () => {
+    const p = { m: 5, th: 30, mus: 0.4, muk: 0.3, motion: 'rest' }, a = Math.abs(In.slope(p).a);
+    eq(In.diagnoseA(p, a), 'ok'); eq(In.diagnoseA(p, 9.81 * 0.5), 'noFriction');
+    eq(In.diagnoseA(p, Math.abs(In.slope(Object.assign({}, p, { th: 60 })).a)), 'swapped');
+    eq(In.diagnoseA(p, 9.81 * (0.5 + 0.3 * Math.cos(Math.PI / 6))), 'frictionWrongSide');
+    eq(In.diagnoseV(60, 15, 0.3, In.banked(60, 15, 0.3).max), 'ok'); eq(In.diagnoseV(60, 15, 0.3, In.banked(60, 15, 0.3).ideal), 'ideal');
   });
   console.log(`\nlabs-math.test.js: ${pass} ok, ${fail} fallan.`);
   process.exit(fail ? 1 : 0);

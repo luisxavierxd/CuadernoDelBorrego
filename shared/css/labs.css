@@ -150,3 +150,10 @@ math-field::part(menu-toggle), math-field::part(virtual-keyboard-toggle) { displ
 @media (max-width: 960px) {
   .lab-grid > .lab-board { order: -1; }
 }
+
+/* fbd-builder: lista de fuerzas con su dirección */
+.fbd-forces { border: 1px solid var(--line); border-radius: var(--radius); padding: var(--space-1) var(--space-2); margin: 0; display: grid; gap: 6px; }
+.fbd-row { display: grid; grid-template-columns: minmax(9rem, auto) 1fr; gap: 8px; align-items: center; }
+.fbd-row__name { display: flex; align-items: center; gap: 6px; min-height: 36px; cursor: pointer; }
+.fbd-row select { min-width: 0; }
+@media (max-width: 560px) { .fbd-row { grid-template-columns: 1fr; } }
