@@ -18,10 +18,10 @@
           { tex: '1 + \\cot^2 x = \\csc^2 x', check: { eq: ['1 + cot(x)^2', 'csc(x)^2'] } },
           { tex: '\\sin 2x = 2\\sin x\\cos x', check: { eq: ['sin(2x)', '2*sin(x)*cos(x)'] } },
           { tex: '\\cos 2x = \\cos^2 x - \\sin^2 x = 1 - 2\\sin^2 x', check: { eq: ['cos(2x)', '1 - 2*sin(x)^2'] } },
-          { tex: '\\sin^2 x = \\tfrac{1 - \\cos 2x}{2}', check: { eq: ['sin(x)^2', '(1 - cos(2x))/2'] } },
-          { tex: '\\cos^2 x = \\tfrac{1 + \\cos 2x}{2}', check: { eq: ['cos(x)^2', '(1 + cos(2x))/2'] } },
+          { tex: '\\sin^2 x = \\dfrac{1 - \\cos 2x}{2}', check: { eq: ['sin(x)^2', '(1 - cos(2x))/2'] } },
+          { tex: '\\cos^2 x = \\dfrac{1 + \\cos 2x}{2}', check: { eq: ['cos(x)^2', '(1 + cos(2x))/2'] } },
           { tex: '\\ln(ab) = \\ln a + \\ln b', check: { eq: ['ln(3x)', 'ln(3) + ln(x)'] } },
-          { tex: '\\ln\\tfrac{a}{b} = \\ln a - \\ln b', check: { eq: ['ln(x/3)', 'ln(x) - ln(3)'] } },
+          { tex: '\\ln\\dfrac{a}{b} = \\ln a - \\ln b', check: { eq: ['ln(x/3)', 'ln(x) - ln(3)'] } },
           { tex: '\\ln a^n = n\\ln a', check: { eq: ['ln(x^5)', '5*ln(x)'] } },
           { tex: 'e^{\\ln x} = x,\\quad \\ln e^x = x', check: { eq: ['e^(ln(x))', 'x'] } }
         ]

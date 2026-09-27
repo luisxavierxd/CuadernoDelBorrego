@@ -35,6 +35,7 @@ function ok(cond, msg) { if (cond) console.log('  ✓ ' + msg); else { fails++; 
       console.log('Ancho ' + width + ' px');
       const ctx = await browser.newContext({ viewport: { width, height: 900 }, reducedMotion: 'reduce' });
       const page = await ctx.newPage();
+      await page.clock.install();
       // Chromium de Playwright aborta la transición entre documentos (@view-transition) en
       // cualquier clic que navega y lo reporta como error de página; no viene del sitio.
       page.on('pageerror', (e) => { if (!/ViewTransition opt-in disabled/.test(e.message)) errors.push(width + ' ' + e.message + ' @ ' + page.url()); });
@@ -46,12 +47,13 @@ function ok(cond, msg) { if (cond) console.log('  ✓ ' + msg); else { fails++; 
       const fields = page.locator('.launcher__options input[type=number]');
       await fields.nth(0).fill('6');
       await fields.nth(1).fill('1');
-      await fields.nth(2).fill('0');
+      await fields.nth(2).fill('10');
       await page.locator('.launcher__options select').selectOption('1');
       await page.getByRole('button', { name: 'Empezar' }).click();
       await page.waitForURL(/\/quiz\/examen\/$/);
       await page.waitForSelector('.qcard', { timeout: 30000 });
-      ok(await page.locator('.exam__side .exam__topics li').count() === 2, 'la barra lateral lista los 2 temas');
+      ok(await page.locator('.exam__topics-box .exam__topics li').count() === 2, 'el temario lista los 2 temas');
+      ok(await page.locator('.exam__side > .clock').evaluate((n) => n === n.parentNode.firstElementChild), 'el reloj va hasta arriba de su caja');
       ok(await page.locator('.qcard').count() === 6, '6 preguntas cortas');
       ok(await page.locator('.problem').count() === 1, '1 problema');
 
@@ -83,6 +85,19 @@ function ok(cond, msg) { if (cond) console.log('  ✓ ' + msg); else { fails++; 
         if (bad) ok(await choice.locator('.qcard__right:not([hidden])').count() === 1, 'si falla, muestra la respuesta correcta');
       }
 
+      // 3b. Avisos del reloj (10 min): a los 5 minutos restantes y a un cuarto (2.5 min).
+      await page.clock.runFor(5 * 60 * 1000);
+      ok(/Quedan 5 minutos/.test(await page.locator('.time-toast').textContent().catch(() => '')), 'aviso arriba: quedan 5 minutos');
+      await page.clock.runFor(150 * 1000);
+      ok(/un cuarto/.test(await page.locator('.time-toast').textContent().catch(() => '')), 'aviso arriba: queda un cuarto del tiempo');
+      await page.locator('.time-toast__close').click();
+      ok(await page.locator('.time-toast').count() === 0, 'el aviso se cierra');
+      // Apagar el reloj pide confirmación.
+      await page.locator('.clock').getByRole('button', { name: 'Apagar reloj' }).click();
+      ok(await page.locator('.clock .confirm').count() === 1, 'apagar el reloj pide confirmación');
+      await page.locator('.clock .confirm').getByRole('button', { name: 'Cancelar', exact: true }).click();
+      ok(!(await page.locator('.clock').evaluate((n) => n.classList.contains('is-off'))), 'cancelar deja el reloj encendido');
+
       // 4. Salir pide confirmación; Cancelar mantiene el intento.
       await page.locator('.exam__actions').getByRole('button', { name: 'Salir' }).click();
       ok(await page.locator('.exam__actions .confirm').count() === 1, 'Salir pide confirmación');
@@ -93,7 +108,8 @@ function ok(cond, msg) { if (cond) console.log('  ✓ ' + msg); else { fails++; 
       await page.locator('.exam__end .confirm').getByRole('button', { name: 'Entregar', exact: true }).click();
       await page.waitForSelector('.exam__results:not([hidden])');
       ok(await page.locator('.exam__score strong').count() === 1, 'resultado arriba');
-      ok(await page.locator('.exam__sem .semaforo li').count() >= 1, 'semáforo en la barra lateral');
+      ok(await page.locator('.exam__topics-box .semaforo li').count() >= 1, 'el semáforo reemplaza al temario');
+      ok(await page.locator('.exam__topics-box .exam__topics').count() === 0, 'ya no está el temario');
       const marks = await page.locator('.qcard').evaluateAll((ns) => ns.map((n) => ({
         marked: /is-(ok|partial|bad)/.test(n.className), right: !!n.querySelector('.qcard__right:not([hidden])'), ok: n.classList.contains('is-ok')
       })));
@@ -117,7 +133,7 @@ function ok(cond, msg) { if (cond) console.log('  ✓ ' + msg); else { fails++; 
       await page.waitForURL(/\/quiz\/examen\/\?intento=/);
       await page.waitForSelector('.exam__results:not([hidden])');
       ok(await page.locator('.exam__main .breakdown, .exam__main .history__detail').count() >= 1, 'la revisión muestra el detalle');
-      ok(await page.locator('.exam__sem .semaforo li').count() >= 1, 'la revisión muestra el semáforo');
+      ok(await page.locator('.exam__topics-box .semaforo li').count() >= 1, 'la revisión muestra el semáforo');
 
       await page.evaluate(() => localStorage.clear());
       await ctx.close();

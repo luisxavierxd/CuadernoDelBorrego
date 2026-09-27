@@ -30,7 +30,7 @@
         // Etiqueta arriba (y la sesión, si la sección abarca varias); la fórmula abajo, sin partirse.
         var own = it.s && !(sec.sessions && sec.sessions.length === 1) ? link(it.s) : null;
         var sub = it.label || own ? h('div', { class: 'form-label' }, [it.label || null, own]) : null;
-        return h('li', {}, [sub, h('div', { class: 'form-tex', html: '$' + it.tex + '$' })]);
+        return h('li', {}, [sub, h('div', { class: 'form-tex', html: '$\\displaystyle ' + it.tex + '$' })]);
       }));
       var sess = sec.sessions && sec.sessions.length ? h('p', { class: 'form-sessions' }, sec.sessions.map(link)) : null;
       grid.appendChild(h('section', { class: 'form-sec' }, [h('h2', {}, [sec.title]), sess, list]));

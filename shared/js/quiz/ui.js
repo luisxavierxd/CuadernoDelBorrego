@@ -296,6 +296,18 @@
     return box;
   }
 
+  var toastNode = null, toastTimer = null;
+  function toast(text) {
+    clearTimeout(toastTimer);
+    if (toastNode) { toastNode.remove(); toastNode = null; }
+    if (!text) return;
+    var close = h('button', { type: 'button', class: 'time-toast__close', 'aria-label': 'Cerrar aviso' }, ['×']);
+    toastNode = h('div', { class: 'time-toast', role: 'alert' }, [h('span', { class: 'time-toast__icon', 'aria-hidden': 'true' }, ['⏱']), h('span', {}, [text]), close]);
+    close.addEventListener('click', function () { toast(null); });
+    document.body.appendChild(toastNode);
+    toastTimer = setTimeout(function () { toast(null); }, 12000);
+  }
+
   /* ---------- Simulacro de examen (§10.4) ---------- */
   function clock(minutes, label) {
     var left = minutes * 60, timer = null, paused = false;
@@ -305,7 +317,10 @@
       paused = !paused; pause.textContent = paused ? 'Reanudar' : 'Pausar';
     });
     var off = window.LabUI.button('Apagar reloj', 'ghost', function () {
-      clearInterval(timer); node.classList.add('is-off'); out.textContent = 'sin reloj'; pause.disabled = true; off.disabled = true; note.textContent = '';
+      confirmInline(node, '¿Apagar el reloj? Ya no verás el tiempo ni los avisos.', function () {
+        clearInterval(timer); node.classList.add('is-off'); out.textContent = 'sin reloj'; pause.disabled = true; off.disabled = true; note.textContent = '';
+        toast(null);
+      }, 'Sí, apagar');
     });
     var node = h('div', { class: 'clock', role: 'timer', 'aria-label': 'Reloj sugerido' }, [
       h('span', { class: 'clock__label' }, [label || 'Reloj sugerido']), out, note, pause, off
@@ -313,11 +328,25 @@
     function show() {
       var m = Math.floor(Math.abs(left) / 60), s = Math.abs(left) % 60;
       out.textContent = (left < 0 ? '+' : '') + m + ':' + pad(s);
-      if (left <= 0) { node.classList.add('is-over'); note.textContent = 'Se acabó el tiempo sugerido; puedes seguir.'; }
+      if (left <= 0) { node.classList.add('is-over'); note.textContent = 'Se acabó el tiempo; puedes seguir.'; }
+    }
+    // Avisos: a la mitad, a un cuarto y a 5 minutos (sin repetir los que caen casi juntos).
+    var marks = [[minutes * 30, 'Queda la mitad del tiempo'], [minutes * 15, 'Queda un cuarto del tiempo'], [300, '']]
+      .filter(function (m) { return m[0] >= 60 && m[0] < minutes * 60; })
+      .sort(function (a, b) { return b[0] - a[0]; })
+      .filter(function (m, i, arr) { return !arr[i + 1] || m[0] - arr[i + 1][0] >= 90; });
+    function remaining(sec) { var m = Math.round(sec / 60); return m === 1 ? 'queda 1 minuto' : 'quedan ' + m + ' minutos'; }
+    function tick() {
+      if (paused) return;
+      left--; show();
+      marks.forEach(function (m) {
+        if (left === m[0]) toast(m[1] ? m[1] + ': ' + remaining(left) + '.' : remaining(left).replace(/^q/, 'Q') + '.');
+      });
+      if (left === 0) toast('Se acabó el tiempo. Puedes seguir y entregar cuando termines.');
     }
     show();
-    timer = setInterval(function () { if (!paused) { left--; show(); } }, 1000);
-    return { node: node, stop: function () { clearInterval(timer); } };
+    timer = setInterval(tick, 1000);
+    return { node: node, stop: function () { clearInterval(timer); toast(null); } };
   }
 
   function problemCard(p, v, n, review) {
@@ -692,17 +721,20 @@
 
   function examLayout(root, title, sub) {
     var main = h('div', { class: 'exam__main' });
-    var side = h('aside', { class: 'exam__side', 'aria-label': 'Temas y avance' });
+    var side = h('aside', { class: 'exam__side', 'aria-label': 'Reloj y avance' });
+    var topics = h('section', { class: 'exam__topics-box', 'aria-label': 'Temas del examen' });
     var head = h('header', { class: 'exam__head' }, [h('p', { class: 'crumb' }, [h('a', { href: '../' }, ['Practicar'])]), h('h1', {}, [title]), sub ? h('p', { class: 'muted' }, [sub]) : null]);
     var results = h('section', { class: 'exam__results', hidden: true, 'aria-live': 'polite' });
-    root.appendChild(h('div', { class: 'exam' }, [h('div', { class: 'exam__col' }, [head, results, main]), side]));
-    return { main: main, side: side, results: results, head: head };
+    root.appendChild(h('div', { class: 'exam' }, [h('div', { class: 'exam__col' }, [head, results, topics, main]), side]));
+    return { main: main, side: side, results: results, head: head, topics: topics };
   }
-  function sideTopics(side, meta, sessions) {
-    side.appendChild(h('h2', { class: 'exam__side-title' }, ['Temas']));
-    side.appendChild(h('ul', { class: 'exam__topics' }, sessions.map(function (n) {
+  // Temario en viñetas, como las fórmulas clave de las sesiones; al entregar lo reemplaza el semáforo.
+  function topicList(box, meta, sessions) {
+    box.innerHTML = '';
+    box.appendChild(h('p', { class: 'exam__label' }, ['Temas del examen']));
+    box.appendChild(h('ul', { class: 'exam__topics' }, sessions.map(function (n) {
       var s = sessionsOf(meta).filter(function (x) { return x.n === n; })[0] || {};
-      return h('li', {}, [h('span', { class: 'mono' }, ['S' + pad(n)]), ' ', s.tag || s.title || '']);
+      return h('li', {}, [h('span', { class: 'mono' }, ['S' + pad(n)]), ' · ', s.tag || s.short || s.title || '']);
     })));
   }
 
@@ -726,12 +758,10 @@
       confirmInline(actions, '¿Salir del examen? Este intento se cancela y no se guarda.', function () { finished = true; window.location.href = '../'; }, 'Sí, salir');
     });
     var actions = h('div', { class: 'lab-buttons exam__actions' }, [finish, leave]);
-    sideTopics(L.side, meta, plan.sessions);
+    topicList(L.topics, meta, plan.sessions);
     if (ck) L.side.appendChild(ck.node);
     L.side.appendChild(progress);
     L.side.appendChild(actions);
-    var sem = h('div', { class: 'exam__sem' });
-    L.side.appendChild(sem);
 
     var qBox = h('div', { class: 'quiz-list' }), pBox = h('div', { class: 'quiz-list' });
     if (questions.length) L.main.appendChild(h('h2', { class: 'sim-run__title' }, ['Preguntas' + (plan.kind === 'quiz' ? '' : ' cortas · ' + (both ? '40' : '100') + ' %')]));
@@ -809,16 +839,16 @@
     }
   }
 
-  // Encabezado de resultados (arriba, como en Canvas) y semáforo en la barra lateral.
+  // Encabezado de resultados (arriba, como en Canvas) y semáforo en lugar del temario.
   function showResults(L, entry, meta) {
     L.results.hidden = false;
     L.results.innerHTML = '';
     L.results.appendChild(h('p', { class: 'exam__score' }, [h('strong', {}, [entry.score + (entry.kind === 'quiz' ? ' %' : ' / 100')]), entry.line ? h('span', { class: 'muted' }, [' · ' + entry.line]) : null]));
     L.results.appendChild(h('p', { class: 'muted' }, ['Cada pregunta quedó marcada con la respuesta correcta y el porqué. Este intento se guardó en tu historial.']));
-    var sem = L.side.querySelector('.exam__sem') || L.side.appendChild(h('div', { class: 'exam__sem' }));
-    sem.innerHTML = '';
-    sem.appendChild(h('h2', { class: 'exam__side-title' }, ['Semáforo por tema']));
-    sem.appendChild(semaforo(entry.scores || {}, { filter: function (t) { return t.split('.').length === 2; }, root: '../../' }));
+    L.topics.innerHTML = '';
+    L.topics.setAttribute('aria-label', 'Semáforo por tema');
+    L.topics.appendChild(h('p', { class: 'exam__label' }, ['Semáforo por tema']));
+    L.topics.appendChild(semaforo(entry.scores || {}, { filter: function (t) { return t.split('.').length === 2; }, root: '../../' }));
   }
 
   // Revisión de un intento guardado: misma página, solo lectura.
@@ -832,8 +862,6 @@
     var meta = metas()[entry.code] || { name: '', groups: [] };
     var d = new Date(entry.date);
     var L = examLayout(root, 'Revisión · ' + (KIND_NAME[entry.kind] || 'Intento'), isNaN(d) ? '' : d.toLocaleDateString('es-MX') + ' ' + d.toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' }));
-    if (entry.sessions && meta.groups.length) sideTopics(L.side, meta, entry.sessions);
-    L.side.appendChild(h('div', { class: 'exam__sem' }));
     L.side.appendChild(h('div', { class: 'lab-buttons exam__actions' }, [h('a', { class: 'btn btn--primary', href: '../' }, ['Volver al lanzador'])]));
     showResults(L, entry, meta);
     L.main.appendChild(renderDetail(entry.detail));
@@ -884,5 +912,5 @@
     }
   }
 
-  window.CBQuizUI = { semaforo: semaforo, questionCard: questionCard, runPractice: runPractice, sessionQuiz: sessionQuiz, runSimulacro: runSimulacro, launcher: launcher, examPage: examPage };
+  window.CBQuizUI = { semaforo: semaforo, questionCard: questionCard, runPractice: runPractice, sessionQuiz: sessionQuiz, runSimulacro: runSimulacro, launcher: launcher, examPage: examPage, clock: clock };
 })();

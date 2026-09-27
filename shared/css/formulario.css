@@ -25,17 +25,26 @@ a.form-card:hover { border-color: var(--accent); }
 .form-card strong { font: 700 1.1rem/1.2 var(--font-display); }
 
 @media print {
-  @page { margin: 12mm; }
+  /* Hoja carta (8.5 × 11 in), el tamaño que se usa en México. */
+  @page { size: letter; margin: 11mm 12mm; }
   .site-header, .site-footer, .skip-link, .form-print, .form-sessions, .form-sess { display: none !important; }
   body { background: none !important; }
+  /* Si se imprime durante la animación de entrada (anime.js pone estilos en línea), todo sale final. */
+  [data-intro], [data-intro] *, .reveal, .form-grid, .form-sec { opacity: 1 !important; transform: none !important; animation: none !important; transition: none !important; }
   .sheet { box-shadow: none !important; background-image: none !important; padding: 0 !important; }
   .form-head { margin-bottom: 4mm; }
   .form-head h1 { font-size: 16pt; }
   .form-head .lead { display: none; }
-  .form-grid { columns: 2; column-gap: 8mm; font-size: 9pt; }
-  .form-sec { margin-bottom: 3mm; padding-bottom: 2mm; }
-  .form-sec h2 { font-size: 10.5pt; margin-bottom: 1mm; }
-  .form-list { gap: 1mm; }
+  .form-grid { columns: 2; column-gap: 8mm; font-size: 8.4pt; }
+  /* Las secciones siguen en la otra columna para no dejar huecos; nunca se parte una fórmula
+     ni se separa el título de la sección (ni la etiqueta) de lo que sigue. */
+  .form-sec { break-inside: auto; margin-bottom: 3mm; padding-bottom: 2mm; }
+  .form-sec h2 { font-size: 10.5pt; margin-bottom: 1mm; break-after: avoid; break-inside: avoid; }
+  /* Chromium ignora break-after en columnas: el título reserva 18 mm para no quedar solo al fondo. */
+  .form-sec h2::after { content: ''; display: block; height: 18mm; margin-bottom: -18mm; }
+  .form-list { gap: 1.1mm; }
+  .form-tex { padding: 0; }
+  .form-list li { break-inside: avoid; }
   .form-tex { overflow: visible; }
   .form-label { font-size: 8pt; }
 }

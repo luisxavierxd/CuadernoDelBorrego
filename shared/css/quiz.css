@@ -147,32 +147,32 @@ a.history__link .history__row { cursor: pointer; }
 a.history__link:hover .history__open { text-decoration: underline; }
 a.history__link:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; border-radius: var(--radius); }
 
-/* ===== Página del examen: preguntas a la izquierda, temas y avance a la derecha ===== */
-.exam { display: grid; grid-template-columns: minmax(0, 1fr) 280px; gap: var(--space-4); align-items: start; }
+/* ===== Página del examen: preguntas a la izquierda; reloj y avance en su caja a la derecha ===== */
+.exam { display: grid; grid-template-columns: minmax(0, 1fr) 260px; gap: var(--space-4); align-items: start; }
 .exam__col { display: grid; gap: var(--space-3); min-width: 0; }
 .exam__head h1 { font-size: clamp(1.5rem, 3vw, 2.1rem); margin: 0; }
 .exam__head .muted { margin: var(--space-1) 0 0; }
 .exam__main { display: grid; gap: var(--space-3); min-width: 0; }
 .exam__side {
-  position: sticky; top: calc(var(--header-h) + 12px); align-self: start;
-  display: grid; gap: var(--space-2); padding: var(--space-3);
+  position: sticky; top: calc(var(--header-h) + 12px); align-self: start; z-index: 6;
+  display: grid; gap: var(--space-2); padding: var(--space-2);
   background: var(--panel); border: 1px solid var(--line-strong); border-radius: var(--radius-card);
-  max-height: calc(100vh - var(--header-h) - 24px); overflow-y: auto;
 }
-.exam__side .clock { position: static; margin: 0; }
-.exam__side-title { font-size: 1rem; margin: 0; }
-.exam__topics { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; font-size: 0.88rem; }
-.exam__topics .mono { color: var(--accent); }
+.exam__side .clock { position: static; margin: 0; padding: 0 0 var(--space-2); border: 0; border-bottom: 1px solid var(--line); border-radius: 0; background: none; }
+.exam__side .clock .confirm { margin-top: var(--space-1); }
 .exam__progress { margin: 0; font-size: 0.85rem; color: var(--text-muted); }
 .exam__actions { margin: 0; }
 .exam__actions .confirm { flex-basis: 100%; }
 .exam__end { justify-content: flex-end; }
-.exam__sem:empty { display: none; }
-/* En la barra angosta: nombre y barra a lo ancho; debajo, porcentaje, estado y enlace. */
-.exam__sem .semaforo__row { grid-template-columns: auto 1fr; gap: 6px 10px; }
-.exam__sem .semaforo__name, .exam__sem .semaforo__bar { grid-column: 1 / -1; }
-.exam__sem .semaforo__name { font-size: 0.85rem; }
-.exam__sem .semaforo__row a { grid-column: 1 / -1; }
+
+/* Temario en viñetas (como las fórmulas clave); al entregar lo reemplaza el semáforo. */
+.exam__label { margin: 0 0 6px; font: 500 0.72rem/1 var(--font-mono); letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-muted); }
+.exam__topics { margin: 0; padding-left: 1.2rem; display: flex; flex-wrap: wrap; gap: 2px var(--space-5); font-size: 0.9rem; color: var(--text-muted); }
+.exam__topics li { padding-right: var(--space-1); }
+.exam__topics .mono { color: var(--accent); }
+.exam__topics-box { padding-bottom: var(--space-2); border-bottom: 1px dashed var(--line-strong); }
+.exam__topics-box .semaforo { margin-top: 4px; }
+
 .exam__results {
   padding: var(--space-3); border: 1px solid var(--line-strong); border-left: 4px solid var(--accent);
   border-radius: var(--radius-card); background: var(--panel); display: grid; gap: var(--space-1);
@@ -183,11 +183,34 @@ a.history__link:focus-visible { outline: 2px solid var(--focus); outline-offset:
 .exam-empty { display: grid; gap: var(--space-2); max-width: 40rem; }
 .exam-empty h1 { font-size: 1.6rem; margin: 0; }
 .exam-empty p { margin: 0; }
+
+/* Aviso de tiempo: arriba, bajo el header. */
+.time-toast {
+  position: fixed; z-index: 60; top: calc(var(--header-h) + 10px); left: 50%; transform: translateX(-50%);
+  width: min(560px, calc(100vw - 24px)); display: flex; align-items: center; gap: var(--space-2);
+  padding: 12px 14px; border: 1px solid var(--warn); border-left-width: 5px; border-radius: var(--radius-card);
+  background: var(--warn-bg); color: var(--text); font-weight: 600; box-shadow: var(--shadow-panel);
+}
+.time-toast > span:nth-child(2) { flex: 1; }
+.time-toast__icon { color: var(--warn); font-size: 1.1rem; }
+.time-toast__close { background: none; border: 0; color: var(--text); font-size: 1.3rem; line-height: 1; cursor: pointer; min-width: 32px; min-height: 32px; border-radius: var(--radius); }
+.time-toast__close:focus-visible { outline: 2px solid var(--focus); }
+@media (prefers-reduced-motion: no-preference) {
+  .time-toast { animation: toast-in 220ms ease-out; }
+  @keyframes toast-in { from { opacity: 0; transform: translate(-50%, -8px); } to { opacity: 1; transform: translate(-50%, 0); } }
+}
+
 @media (max-width: 960px) {
-  .exam { grid-template-columns: minmax(0, 1fr); }
-  /* En móvil: título, resultado (al entregar), luego temas, reloj y semáforo, y las preguntas. */
+  .exam { grid-template-columns: minmax(0, 1fr); gap: var(--space-3); }
+  /* En móvil: título, resultado, la caja del reloj (fija arriba al bajar), temario y preguntas. */
   .exam__col { display: contents; }
-  .exam__head { order: -3; }
-  .exam__results { order: -2; }
-  .exam__side { order: -1; position: static; max-height: none; }
+  .exam__head { order: -4; }
+  .exam__results { order: -3; }
+  .exam__side { order: -2; top: calc(var(--header-h) + 4px); grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 6px var(--space-2); padding: 8px 10px; }
+  .exam__topics-box { order: -1; }
+  .exam__side .clock { grid-column: 1 / -1; padding-bottom: 6px; }
+  .exam__side .clock__label { display: none; }
+  .exam__side .clock .btn { padding: 4px 10px; min-height: 36px; }
+  /* El aviso va sobre el header para no tapar la caja del reloj. */
+  .time-toast { top: 6px; padding: 8px 10px; font-size: 0.88rem; }
 }

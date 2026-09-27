@@ -104,6 +104,8 @@
       try { L = layers(math, gIn.get(), hIn.get(), xS.get()); } catch (e) { return; }
       var x0 = xS.get(), dx = 0.25;
       var u1 = L.h(x0 + dx), y1 = L.g(u1);
+      // Mientras los campos de MathLive cargan, las capas pueden dar NaN: no se dibuja nada roto.
+      if (![x0, u1, y1, L.u0, L.y0, L.hPrime, L.gPrime].every(isFinite)) return;
       var rows = [
         { name: 'x', a: x0, b: x0 + dx, y: 60 },
         { name: 'u = h(x)', a: L.u0, b: u1, y: 165 },
