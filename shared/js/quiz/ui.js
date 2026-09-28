@@ -74,7 +74,7 @@
     var node = h('div', { class: 'lab-field' }, [
       h('label', { for: id, class: 'lab-field__label' }, [isExpr ? (q && q.integrand ? 'Tu antiderivada F(x)' : 'Tu respuesta') : 'Tu resultado']),
       h('div', { class: 'exercise__inputrow' }, [inp, unit ? h('span', { class: 'exercise__unit' }, [unit]) : null]),
-      h('p', { class: 'lab-field__hint', html: isExpr ? (q && q.integrand ? 'La constante C es opcional. Ej.:' : 'Ej.:') + ' <code>x^3/3</code>, <code>e^(2x)/2</code>, <code>ln(x)</code>.' : 'Usa punto decimal; se acepta ±1 %.' })
+      h('p', { class: 'lab-field__hint', html: isExpr ? (q && q.integrand ? 'La constante C es opcional. Ej.:' : 'Ej.:') + ' <code>x^3/3</code>, <code>e^(2x)/2</code>, <code>ln(x)</code>.' : 'Usa punto decimal y redondea a 2 decimales (si es muy chico, escríbelo como <code>8.3e-5</code>).' })
     ]);
     return { node: node, input: inp, get: function () { return inp.value; }, lock: function () { inp.readOnly = true; }, set: function (val) { inp.value = val == null ? '' : val; } };
   }

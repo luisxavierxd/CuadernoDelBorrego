@@ -10,6 +10,12 @@
   var FN = '(?:[a-zA-Z]|\\\\(?:sin|cos|tan|sec|csc|cot|ln|log|sqrt|arcsin|arccos|arctan|pi)\\b|\\()';
   var ONE = new RegExp('(^|[\\s(\\[{=+\\-,])1\\s*(?=' + FN + ')', 'g');   // 1x → x · -1x → -x
   var ZERO_TERM = new RegExp('\\s*[+\\-]\\s*0\\s*(?:\\\\,)?\\s*(?:[a-zA-Z]|\\\\[a-zA-Z]+)(?:\\^\\{?[\\d.]+\\}?)?(?![\\w.])', 'g'); // + 0t → (nada)
+  // Un ^1 después de un subíndice (\int_0^1, x_0^{1}) o de \int, \sum… es un límite, no un exponente.
+  function dropPowerOne(m, off, str) {
+    var before = str.slice(Math.max(0, off - 24), off);
+    if (/_(\{[^{}]*\}|\\?[A-Za-z0-9]+)$/.test(before) || /\\(int|iint|oint|sum|prod|lim|bigcup|bigcap)$/.test(before)) return m;
+    return '';
+  }
   function tidy(s) {
     var prev;
     do {
@@ -19,8 +25,7 @@
         .replace(/-\s*-\s*/g, '+ ')           // - -3 → + 3
         .replace(/-\s*\+\s*/g, '- ')          // - +3 → - 3
         .replace(ZERO_TERM, '')               // + 0t, - 0x^2
-        .replace(/\^\{1\}/g, '')              // x^{1} → x
-        .replace(/\^1(?![\d.])/g, '')         // x^1 → x
+        .replace(/\^\{1\}|\^1(?![\d.])/g, dropPowerOne)   // x^1, x^{1} → x (pero no \int_0^1)
         .replace(ONE, '$1');                  // 1x → x
     } while (s !== prev);
     return s;

@@ -45,10 +45,16 @@
     return NaN;
   }
 
+  // Se pide redondear a 2 decimales: además de la tolerancia, vale una respuesta a una centésima
+  // o menos (0.567 escrito como 0.57 o 0.56). Solo si el resultado es de 0.1 o más: los muy chicos
+  // (8.3e-5 m³/s) se escriben con más cifras y siguen con ±1 %. Desde 1 el ±1 % ya es mayor.
+  var ROUND2 = 0.01 + 1e-9;
   function withinTol(val, ans, tol) {
     tol = tol || { rel: 0.01 };
-    if (tol.abs != null) return Math.abs(val - ans) <= tol.abs;
-    return Math.abs(val - ans) <= tol.rel * Math.max(Math.abs(ans), 1e-9);
+    var d = Math.abs(val - ans);
+    if (Math.abs(ans) >= 0.1 && d <= ROUND2) return true;
+    if (tol.abs != null) return d <= tol.abs;
+    return d <= tol.rel * Math.max(Math.abs(ans), 1e-9);
   }
 
   function sayFor(ex, key, v) {
@@ -224,7 +230,7 @@
       answer.appendChild(h('div', { class: 'lab-field' }, [
         h('label', { for: inputId, class: 'lab-field__label' }, ['Tu resultado']),
         h('div', { class: 'exercise__inputrow' }, [inp, ex.unit ? h('span', { class: 'exercise__unit' }, [ex.unit]) : null]),
-        h('p', { id: inputId + '-help', class: 'lab-field__hint', html: 'Usa punto decimal' + (ex.tol && ex.tol.abs != null ? '.' : '; se acepta ±1 %.') })
+        h('p', { id: inputId + '-help', class: 'lab-field__hint', html: 'Usa punto decimal y redondea a 2 decimales (si es muy chico, escríbelo como <code>8.3e-5</code>).' })
       ]));
       inp.addEventListener('keydown', function (e) { if (e.key === 'Enter') { e.preventDefault(); check(); } });
       get = function () { return inp.value; };

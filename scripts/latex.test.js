@@ -107,7 +107,12 @@ let pass = 0, fail = 0;
     // lo que NO debe cambiar
     [String.raw`\dfrac{1}{x}`, String.raw`\dfrac{1}{x}`], ['10x + 1', '10x + 1'], ['x_1 + 1', 'x_1 + 1'], ['f(1) = 1', 'f(1) = 1'],
     [String.raw`\int_1^{e} \ln x`, String.raw`\int_1^{e} \ln x`], ['0.1x', '0.1x'], ['x^{1/3}', 'x^{1/3}'], ['1.5x', '1.5x'],
-    [String.raw`\int 1\,dx`, String.raw`\int 1\,dx`], ['(1)(2)', '(1)(2)'], ['y = 0.5x + 0', 'y = 0.5x + 0'], ['a_{1}x', 'a_{1}x']
+    [String.raw`\int 1\,dx`, String.raw`\int 1\,dx`], ['(1)(2)', '(1)(2)'], ['y = 0.5x + 0', 'y = 0.5x + 0'], ['a_{1}x', 'a_{1}x'],
+    // límites superiores iguales a 1: no son exponentes
+    [String.raw`\displaystyle\int_0^1 \frac{x + 1}{x^2 + 1}\,dx`, String.raw`\displaystyle\int_0^1 \frac{x + 1}{x^2 + 1}\,dx`],
+    [String.raw`\int_{0}^{1} x\,dx`, String.raw`\int_{0}^{1} x\,dx`], [String.raw`\int_a^1 f`, String.raw`\int_a^1 f`],
+    [String.raw`\sum_{i=1}^{1} i`, String.raw`\sum_{i=1}^{1} i`], [String.raw`\int^1 f`, String.raw`\int^1 f`],
+    [String.raw`\Big|_0^1`, String.raw`\Big|_0^1`], ['x^1 + y^{1}', 'x + y']
   ];
   for (const [src, want] of TIDY) {
     const got = R.tidy(src);
