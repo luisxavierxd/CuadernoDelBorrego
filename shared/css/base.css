@@ -23,6 +23,9 @@ body {
   text-rendering: optimizeLegibility;
   overflow-x: hidden;
 }
+/* Pie siempre abajo: en páginas cortas el contenido estira y el footer no flota a media pantalla. */
+body { display: flex; flex-direction: column; }
+body > main { flex: 1 0 auto; }
 
 h1, h2, h3, h4 {
   font-family: var(--font-display);

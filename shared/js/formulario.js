@@ -1,6 +1,9 @@
 /* =====================================================================
    Formulario de un curso (data/<curso>/formulario.js) en una hoja
    imprimible. Cada sección enlaza a las sesiones donde se explica.
+   "Elegir temas" arma un formulario a la medida: solo las sesiones
+   marcadas (o un atajo de parcial). La selección viaja en la URL
+   (?s=6-10, &b=0 sin los básicos) para compartirla o imprimirla.
    Al imprimir se usa siempre el tema claro (cuaderno) y se regresa después.
    ===================================================================== */
 (function () {
@@ -15,28 +18,129 @@
   }
   function pad(n) { return (n < 10 ? '0' : '') + n; }
 
+  // "1-3,6,9-10" ⇄ [1, 2, 3, 6, 9, 10]
+  function parseList(s) {
+    var out = [];
+    String(s || '').split(',').forEach(function (part) {
+      var m = part.trim().match(/^(\d+)(?:-(\d+))?$/);
+      if (!m) return;
+      for (var i = +m[1]; i <= +(m[2] || m[1]); i++) if (out.indexOf(i) < 0) out.push(i);
+    });
+    return out.sort(function (a, b) { return a - b; });
+  }
+  function listToString(list) {
+    var out = [], i = 0;
+    while (i < list.length) {
+      var j = i;
+      while (j + 1 < list.length && list[j + 1] === list[j] + 1) j++;
+      out.push(j > i ? list[i] + '-' + list[j] : String(list[i]));
+      i = j + 1;
+    }
+    return out.join(',');
+  }
+  function rangeLabel(list) {
+    return listToString(list).split(',').map(function (p) { return p.split('-').map(function (n) { return 'S' + pad(+n); }).join('–'); }).join(', ');
+  }
+
   function render(root, F, meta, base) {
-    var tag = {};
-    meta.groups.forEach(function (g) { g.sessions.forEach(function (s) { tag[s.n] = s; }); });
+    var tag = {}, all = [];
+    meta.groups.forEach(function (g) { g.sessions.forEach(function (s) { tag[s.n] = s; all.push(s.n); }); });
+    var hasBasics = F.sections.some(function (sec) { return !(sec.sessions && sec.sessions.length); });
+    var params = new URLSearchParams(location.search);
+    var picked = params.get('s') ? parseList(params.get('s')).filter(function (n) { return tag[n]; }) : all.slice();
+    if (!picked.length) picked = all.slice();
+    var basics = params.get('b') !== '0';
+
     function link(n) {
       var s = tag[n];
       if (!s) return null;
       var label = 'S' + pad(n) + (s.tag ? ' · ' + s.tag : '');
       return s.ready ? h('a', { class: 'form-sess', href: base + meta.slug + '/sesiones/sesion-' + pad(n) + '/' }, [label]) : h('span', { class: 'form-sess is-soon' }, [label]);
     }
+    function isAll() { return picked.length === all.length && (basics || !hasBasics); }
+
+    /* ---------- Selector de temas (solo en pantalla) ---------- */
+    var boxes = {}, basicsBox = null;
+    var presets = ((window.QUIZ_PRESETS && window.QUIZ_PRESETS.presets) || []).filter(function (p) { return p.kind === 'exam' && p.id !== 'final'; });
+    var summary = h('span', { class: 'form-pick__summary mono' });
+    var pick = h('details', { class: 'form-pick' }, [
+      h('summary', {}, [h('strong', {}, ['Elegir temas']), summary]),
+      h('div', { class: 'form-pick__body' }, [
+        h('div', { class: 'form-pick__presets' }, [shortcut('Todo el curso', all)].concat(presets.map(function (p) {
+          return shortcut(p.label + ' · S' + pad(p.sessions[0]) + '–S' + pad(p.sessions[p.sessions.length - 1]), p.sessions);
+        })).concat(meta.groups.map(function (g) {
+          return shortcut('Bloque ' + g.id, g.sessions.map(function (s) { return s.n; }));
+        }))),
+        hasBasics ? h('label', { class: 'form-pick__basics' }, [basicsBox = h('input', { type: 'checkbox' }), ' Incluir los básicos (álgebra, trigonometría y otras fórmulas generales)']) : null
+      ].concat(meta.groups.map(function (g) {
+        return h('div', { class: 'form-pick__group' }, [
+          h('p', { class: 'crumb' }, ['Bloque ' + g.id + ' · ' + g.label]),
+          h('div', { class: 'form-pick__sessions' }, g.sessions.map(function (s) {
+            var cb = boxes[s.n] = h('input', { type: 'checkbox' });
+            cb.addEventListener('change', fromBoxes);
+            return h('label', { class: 'sess-chip', title: s.title }, [cb, h('span', { class: 'sess-chip__n mono' }, ['S' + pad(s.n)]), s.tag ? h('span', { class: 'sess-chip__tag' }, [s.tag]) : null]);
+          }))
+        ]);
+      })))
+    ]);
+    if (basicsBox) basicsBox.addEventListener('change', fromBoxes);
+    function shortcut(label, list) {
+      var b = h('button', { type: 'button', class: 'btn btn--ghost btn--small' }, [label]);
+      b.addEventListener('click', function () { picked = list.filter(function (n) { return tag[n]; }); update(); });
+      return b;
+    }
+    function fromBoxes() {
+      var next = all.filter(function (n) { return boxes[n].checked; });
+      if (basicsBox) basics = basicsBox.checked;
+      if (!next.length && !basics) { boxes[picked[0] || all[0]].checked = true; return; }   // nunca una hoja vacía
+      picked = next;
+      update();
+    }
+
+    var scope = h('p', { class: 'form-scope mono' });
     var grid = h('div', { class: 'form-grid' });
-    F.sections.forEach(function (sec) {
-      var list = h('ul', { class: 'form-list' }, sec.items.map(function (it) {
-        // Etiqueta arriba (y la sesión, si la sección abarca varias); la fórmula abajo, sin partirse.
-        var own = it.s && !(sec.sessions && sec.sessions.length === 1) ? link(it.s) : null;
-        var sub = it.label || own ? h('div', { class: 'form-label' }, [it.label || null, own]) : null;
-        return h('li', {}, [sub, h('div', { class: 'form-tex', html: '$\\displaystyle ' + it.tex + '$' })]);
-      }));
-      var sess = sec.sessions && sec.sessions.length ? h('p', { class: 'form-sessions' }, sec.sessions.map(link)) : null;
-      grid.appendChild(h('section', { class: 'form-sec' }, [h('h2', {}, [sec.title]), sess, list]));
-    });
+    root.appendChild(pick);
+    root.appendChild(scope);
     root.appendChild(grid);
-    if (window.CBMath) window.CBMath.render(root);
+
+    function draw() {
+      grid.innerHTML = '';
+      var on = {};
+      picked.forEach(function (n) { on[n] = true; });
+      F.sections.forEach(function (sec) {
+        var secSess = sec.sessions || [];
+        if (secSess.length ? !secSess.some(function (n) { return on[n]; }) : !basics) return;
+        var items = sec.items.filter(function (it) { return it.s == null || on[it.s]; });
+        if (!items.length) return;
+        var list = h('ul', { class: 'form-list' }, items.map(function (it) {
+          // Etiqueta arriba (y la sesión, si la sección abarca varias); la fórmula abajo, sin partirse.
+          var own = it.s && !(secSess.length === 1) ? link(it.s) : null;
+          var sub = it.label || own ? h('div', { class: 'form-label' }, [it.label || null, own]) : null;
+          return h('li', {}, [sub, h('div', { class: 'form-tex', html: '$\\displaystyle ' + it.tex + '$' })]);
+        }));
+        var shown = secSess.filter(function (n) { return on[n]; });
+        var sess = shown.length ? h('p', { class: 'form-sessions' }, shown.map(link)) : null;
+        grid.appendChild(h('section', { class: 'form-sec' }, [h('h2', {}, [sec.title]), sess, list]));
+      });
+      if (window.CBMath) window.CBMath.render(grid);
+    }
+    function update() {
+      all.forEach(function (n) { boxes[n].checked = picked.indexOf(n) >= 0; });
+      if (basicsBox) basicsBox.checked = basics;
+      var label = picked.length === all.length ? 'todo el curso' : picked.length ? rangeLabel(picked) : 'solo básicos';
+      summary.textContent = isAll() ? 'todo el curso' : label + (hasBasics && !basics ? ' · sin básicos' : '');
+      // En la hoja (y en papel) queda escrito qué temas trae cuando no es el curso completo.
+      scope.textContent = isAll() ? '' : 'Temas: ' + label + (hasBasics ? (basics ? ' · con básicos' : ' · sin básicos') : '');
+      scope.hidden = isAll();
+      var q = new URLSearchParams(location.search);
+      if (picked.length === all.length) q.delete('s'); else q.set('s', listToString(picked));
+      if (hasBasics && !basics) q.set('b', '0'); else q.delete('b');
+      var qs = q.toString();
+      try { history.replaceState(null, '', location.pathname + (qs ? '?' + qs : '') + location.hash); } catch (e) { /* file:// */ }
+      draw();
+    }
+    if (!isAll()) pick.open = true;
+    update();
   }
 
   // Imprimir siempre en tema claro: el pizarrón gasta tinta y se lee peor en papel.
@@ -54,5 +158,5 @@
     if (saved) document.documentElement.setAttribute('data-theme', saved);
   });
 
-  window.CBFormulario = { render: render };
+  window.CBFormulario = { render: render, parseList: parseList, listToString: listToString };
 })();

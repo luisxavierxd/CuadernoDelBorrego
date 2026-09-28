@@ -23,11 +23,39 @@ a.form-sess:hover { border-color: var(--accent); color: var(--accent); }
 a.form-card:hover { border-color: var(--accent); }
 .form-card.is-soon { border-style: dashed; color: var(--text-muted); }
 .form-card strong { font: 700 1.1rem/1.2 var(--font-display); }
+/* Las páginas de formularios son cortas: aire arriba y abajo de la hoja. */
+.form-page { padding: var(--space-5) 0 var(--space-6); }
+.form-subject + .form-subject { margin-top: var(--space-4); }
+.form-subject h2 { font-size: 1.3rem; margin: var(--space-4) 0 0; }
+
+/* Elegir temas: un formulario a la medida del parcial. */
+.form-pick { border: 1px solid var(--line-strong); border-radius: var(--radius-card); margin: 0 0 var(--space-3); background: var(--panel); }
+.form-pick > summary { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 12px; padding: 12px var(--space-2); cursor: pointer; min-height: 44px; }
+.form-pick > summary strong { font: 700 1rem/1.2 var(--font-display); }
+.form-pick__summary { font-size: 0.8rem; color: var(--text-muted); }
+.form-pick__body { display: grid; gap: var(--space-2); padding: 0 var(--space-2) var(--space-2); }
+.form-pick__presets { display: flex; flex-wrap: wrap; gap: 6px; }
+.form-pick__basics { display: flex; align-items: center; gap: 8px; font-size: 0.9rem; }
+.form-pick__basics input { accent-color: var(--accent); width: 18px; height: 18px; }
+.form-pick__group .crumb { margin: 0 0 6px; }
+.form-pick__sessions { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 6px; }
+.form-pick .sess-chip {
+  display: grid; grid-template-columns: auto 1fr; grid-template-rows: auto auto; column-gap: 8px; row-gap: 2px;
+  align-items: center; min-height: 44px; padding: 6px 10px;
+  border: 1px solid var(--line-strong); border-radius: var(--radius); cursor: pointer;
+}
+.form-pick .sess-chip input { grid-row: 1 / span 2; accent-color: var(--accent); }
+.form-pick .sess-chip__n { font: 500 0.8rem/1 var(--font-mono); }
+.form-pick .sess-chip__tag { font: 500 0.82rem/1.2 var(--font-body); }
+.form-pick .sess-chip:has(input:checked) { border-color: var(--accent); background: var(--accent-soft); color: var(--accent); }
+.form-scope { margin: 0 0 var(--space-2); font-size: 0.8rem; color: var(--text-muted); }
 
 @media print {
   /* Hoja carta (8.5 × 11 in), el tamaño que se usa en México. */
   @page { size: letter; margin: 11mm 12mm; }
-  .site-header, .site-footer, .skip-link, .form-print, .form-sessions, .form-sess { display: none !important; }
+  .site-header, .site-footer, .skip-link, .form-print, .form-pick, .form-sessions, .form-sess { display: none !important; }
+  .form-page { padding: 0 !important; }
+  .form-scope { margin: 0 0 2mm; font-size: 8pt; }
   body { background: none !important; }
   /* Si se imprime durante la animación de entrada (anime.js pone estilos en línea), todo sale final. */
   [data-intro], [data-intro] *, .reveal, .form-grid, .form-sec { opacity: 1 !important; transform: none !important; animation: none !important; transition: none !important; }
@@ -48,3 +76,6 @@ a.form-card:hover { border-color: var(--accent); }
   .form-tex { overflow: visible; }
   .form-label { font-size: 8pt; }
 }
+.form-subject[data-subject="mat"] { --accent: var(--mat-accent); --accent-soft: var(--mat-soft); }
+.form-subject[data-subject="fis"] { --accent: var(--fis-accent); --accent-soft: var(--fis-soft); }
+.form-subject h2 { color: var(--accent); }

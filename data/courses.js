@@ -13,6 +13,7 @@
                'soon' -> tarjeta "Próximamente", sin foco
        url:    solo para 'live' (relativa a la raíz del sitio)
        sessions: número de sesiones (informativo)
+       formulario: true si ya tiene formularios/<url>/ (lo lee formularios/)
    ===================================================================== */
 window.COURSES = [
   {
@@ -21,7 +22,7 @@ window.COURSES = [
     blurb: 'De la derivada a las ecuaciones diferenciales, con gráficas que se mueven contigo.',
     levels: [
       {
-        level: 'N1', tone: 'mat-accent', status: 'live', url: 'calculo-1/', sessions: 15,
+        level: 'N1', tone: 'mat-accent', status: 'live', url: 'calculo-1/', sessions: 15, formulario: true,
         title: 'Cálculo 1: diferencial e integral',
         blurb: 'Derivadas, optimización, técnicas de integración y sus aplicaciones.'
       },
@@ -43,7 +44,7 @@ window.COURSES = [
     blurb: 'De los vectores al electromagnetismo, con labs que comparan tu respuesta contra la simulación.',
     levels: [
       {
-        level: 'N1', tone: 'fis-accent', status: 'live', url: 'fisica-1/', sessions: 15,
+        level: 'N1', tone: 'fis-accent', status: 'live', url: 'fisica-1/', sessions: 15, formulario: true,
         title: 'Física 1: cinemática, dinámica, energía y estática',
         blurb: 'Vectores, tiro parabólico, leyes de Newton, trabajo y energía, y equilibrio.'
       },
