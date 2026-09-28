@@ -239,3 +239,9 @@ a.dot:hover::before { background: var(--accent-soft); transform: scale(1.2); }
 /* Las fórmulas largas hacen scroll dentro de su caja, no en toda la página */
 .concept > *, .explainer > *, .example, .exercise, .qcard { min-width: 0; }
 .katex-display { max-width: 100%; }
+/* Celulares angostos: sesiones, tema y menú deben caber junto al nombre del curso. */
+@media (max-width: 380px) {
+  .session-header .container { gap: 8px; }
+  .session-header .site-menu-btn, .session-header .theme-toggle { min-width: 40px; margin-left: 0; padding: 0 8px; }
+  .session-menu summary { padding: 0 8px; }
+}

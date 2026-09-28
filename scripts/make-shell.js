@@ -59,6 +59,7 @@ ${hasBank ? `    <link rel="stylesheet" href="${R}shared/css/quiz.css">
 
     <script src="https://cdn.jsdelivr.net/npm/animejs@3.2.1/lib/anime.min.js"></script>
     <script src="${R}shared/js/theme.js"></script>
+    <script src="${R}shared/js/site-menu.js"></script>
     <script src="${R}shared/js/sketch-filters.js"></script>
     <script src="${R}shared/js/animations.js"></script>
     <script src="${R}shared/js/math-render.js"></script>

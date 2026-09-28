@@ -118,7 +118,14 @@ a.form-card:hover { border-color: var(--accent); }
   .form-list { gap: 0.5mm; }
   .form-tex__part { padding: 0.08em 0.2em 0.08em 0; }
   .form-tex { row-gap: 0; }
-  .form-list li { break-inside: avoid; }
+  /* Firefox parte grid y flex entre hojas: en papel, bloques y piezas inline-block, que no se cortan. */
+  .form-list { display: block; }
+  .form-list li { display: block; margin-bottom: 1mm; break-inside: avoid; page-break-inside: avoid; }
+  .form-label { display: block; }
+  .form-label .form-sess { display: none; }
+  .form-tex { display: block; }
+  .form-tex__part { display: inline-block; margin-right: 1.1em; vertical-align: baseline; break-inside: avoid; }
+  .form-sec h2 { page-break-after: avoid; }
   .form-tex__part { overflow: visible; }
   .form-label { font-size: 8pt; }
 }
