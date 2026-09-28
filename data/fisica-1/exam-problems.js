@@ -115,7 +115,7 @@
       vars: { d1: [20, 80, 5], a1: [10, 70, 10], d2: [20, 80, 5], a2: [100, 170, 10] },
       where: function (v) { var x = cx(v.d1, v.a1) + cx(v.d2, v.a2), y = cy(v.d1, v.a1) + cy(v.d2, v.a2); return Math.abs(x) >= 5 && Math.abs(y) >= 5 && Math.abs(x) >= 0.35 * Math.hypot(x, y); },
       statement: function (v) { return '<p>Un dron vuela $' + v.d1 + '$ m en la dirección $' + v.a1 + '^\\circ$ (medida desde el este, antihorario) y luego $' + v.d2 + '$ m en la dirección $' + v.a2 + '^\\circ$. Toma el este como $+x$ y el norte como $+y$.</p>'; },
-      diagram: { id: 'exam-dron', state: function (v) { return v; } },
+      diagram: { id: 'exam-dron-vuelo', state: function (v) { return v; } },
       parts: [
         { label: 'a', type: 'numeric', points: 2, unit: 'm', tol: ABS,
           prompt: function () { return '¿Cuánto vale la componente $x$ de su desplazamiento total?'; },
@@ -162,6 +162,7 @@
     },
     {
       id: 'f1-ex-trabajo-vec', tags: ['f1.S03'], block: 'A', title: 'Trabajo con vectores',
+      diagram: { id: 'exam-vectors', state: function (v) { return { d3: true, vecs: [[v.fx, v.fy, v.fz, 'F', 'ref'], [v.dx, v.dy, v.dz, 'd', 'aux']], label: 'La fuerza y el desplazamiento en tres dimensiones.' }; } },
       vars: { fx: [-9, 9, 1], fy: [-9, 9, 1], fz: [-9, 9, 1], dx: [1, 9, 1], dy: [-9, 9, 1], dz: [-9, 9, 1] },
       where: function (v) {
         var d = v.fx * v.dx + v.fy * v.dy + v.fz * v.dz, mf = Math.hypot(v.fx, v.fy, v.fz), md = Math.hypot(v.dx, v.dy, v.dz);
@@ -192,6 +193,7 @@
     },
     {
       id: 'f1-ex-llave', tags: ['f1.S03'], block: 'A', title: 'Torque sobre un tornillo',
+      diagram: { id: 'exam-vectors', state: function (v) { return { chain: true, vecs: [[v.x, v.y, 0, 'r (cm)', 'aux', 110], [v.fx, v.fy, 0, 'F (N)', 'ref', 80]], label: 'El vector de posición y la fuerza aplicada en su punta.' }; } },
       vars: { x: [-6, 6, 1], y: [-6, 6, 1], fx: [-9, 9, 1], fy: [-9, 9, 1] },
       where: function (v) { return v.x * v.y * v.fx * v.fy !== 0 && Math.abs(v.x * v.fy - v.y * v.fx) >= 3; },
       statement: function (v) { return '<p>Sobre una placa que gira alrededor del origen se aplica $\\vec{F} = ' + v3([v.fx, v.fy, 0]) + '$ N en el punto $\\vec{r} = ' + v3([v.x, v.y, 0]) + '$ cm. Trabaja en N·cm.</p>'; },
@@ -216,6 +218,7 @@
     },
     {
       id: 'f1-ex-viaje', tags: ['f1.S01', 'f1.S02'], block: 'A', title: 'Un viaje en línea recta',
+      diagram: { id: 'exam-vectors', state: function (v) { return { vecs: [[Math.cos(v.th * Math.PI / 180), Math.sin(v.th * Math.PI / 180), 0, 'desplazamiento', 'ref']], label: 'El desplazamiento a ' + v.th + ' grados al norte del este.' }; } },
       vars: { vk: [36, 108, 6], tm: [2, 15, 1], th: [10, 80, 5] },
       statement: function (v) { return '<p>Un robot de exploración avanza a $' + v.vk + '$ km/h constantes durante $' + v.tm + '$ minutos, en línea recta a $' + v.th + '^\\circ$ al norte del este.</p>'; },
       parts: [
@@ -239,6 +242,7 @@
     },
     {
       id: 'f1-ex-panel', tags: ['f1.S03'], block: 'A', title: 'La normal de un panel solar',
+      diagram: { id: 'exam-vectors', state: function (v) { return { d3: true, vecs: [[v.a1, v.a2, v.a3, 'A', 'ref'], [v.b1, v.b2, v.b3, 'B', 'aux']], label: 'Los dos bordes del panel en tres dimensiones.' }; } },
       vars: { a1: [-5, 5, 1], a2: [-5, 5, 1], a3: [-5, 5, 1], b1: [-5, 5, 1], b2: [-5, 5, 1], b3: [-5, 5, 1] },
       where: function (v) { var c = cross([v.a1, v.a2, v.a3], [v.b1, v.b2, v.b3]); return v.a1 * v.a2 * v.a3 * v.b1 * v.b2 * v.b3 !== 0 && Math.abs(c[0]) >= 0.35 * Math.hypot(c[0], c[1], c[2]) && c[1] !== 0 && Math.abs(c[2]) >= 2; },
       statement: function (v) { return '<p>Dos bordes de un panel solar son $\\vec{A} = ' + v3([v.a1, v.a2, v.a3]) + '$ m y $\\vec{B} = ' + v3([v.b1, v.b2, v.b3]) + '$ m. El vector $\\vec{A}\\times\\vec{B}$ es perpendicular al panel.</p>'; },
@@ -269,6 +273,7 @@
     /* ---------------- Bloque B · Cinemática ---------------- */
     {
       id: 'f1-ex-rampa', tags: ['f1.S04'], block: 'B', title: 'La pelota en la rampa',
+      diagram: { id: 'exam-fn', state: function (v) { var x = function (t) { return v.x0 + v.b * t - v.c * t * t; }, tt = v.b / (2 * v.c); return { x: [0, tt * 2.2], fns: [{ f: x }], pts: [{ x: tt, y: x(tt), label: 'se regresa' }], xlab: 't (s)', ylab: 'x (m)', label: 'La posición sube, se detiene y regresa.' }; } },
       vars: { x0: [0, 10, 1], b: [4, 16, 2], c: [0.5, 2, 0.5], T: [3, 20, 1] },
       where: function (v) { return v.T > v.b / (2 * v.c) + 0.5 && v.T < v.b / v.c; },
       statement: function (v) { return '<p>Una pelota rueda cuesta arriba por una rampa larga con $x(t) = ' + v.x0 + ' + ' + v.b + 't - ' + v.c + 't^2$ (m y s), hasta que se regresa.</p>'; },
@@ -293,6 +298,7 @@
     },
     {
       id: 'f1-ex-frenado', tags: ['f1.S01', 'f1.S05'], block: 'B', title: '¿Alcanza a frenar?',
+      diagram: { id: 'exam-road', state: function (v) { return { span: v.D * 1.15, cars: [{ x: v.D * 0.07, label: v.vk + ' km/h' }], marks: [{ x: v.D, label: 'obstáculo' }], dims: [{ a: 0, b: v.D, label: v.D + ' m' }], label: 'Un auto a ' + v.vk + ' km/h y un obstáculo a ' + v.D + ' m.' }; } },
       vars: { vk: [36, 126, 6], tr: [0.5, 1.5, 0.1], a: [4, 9, 0.5], D: [30, 150, 5] },
       where: function (v) { var s = v.vk / 3.6; return Math.abs(v.D - (s * v.tr + s * s / (2 * v.a))) > 1; },
       statement: function (v) { return '<p>Una conductora va a $' + v.vk + '$ km/h y ve un obstáculo a $' + v.D + '$ m. Tarda $' + v.tr + '$ s en reaccionar y luego frena con una desaceleración constante de $' + v.a + '$ m/s².</p>'; },
@@ -374,6 +380,7 @@
     },
     {
       id: 'f1-ex-centrifuga', tags: ['f1.S07'], block: 'B', title: 'La centrífuga del laboratorio',
+      diagram: { id: 'exam-rotor', state: function (v) { return { r: v.r, rpm: v.rpm, what: 'la muestra en el borde' }; } },
       vars: { rpm: [300, 3000, 100], r: [0.05, 0.2, 0.01] },
       statement: function (v) { return '<p>Una centrífuga gira a $' + v.rpm + '$ rpm y la muestra está a $' + v.r + '$ m del eje.</p>'; },
       parts: [
@@ -483,6 +490,7 @@
     },
     {
       id: 'f1-ex-elevador', tags: ['f1.S08'], block: 'C', title: 'La báscula en el elevador',
+      diagram: { id: 'elevator', state: function () { return {}; } },
       vars: { m: [40, 100, 5], a1: [0.5, 3, 0.5], a2: [0.5, 3, 0.5] },
       statement: function (v) { return '<p>Una persona de $' + v.m + '$ kg está parada sobre una báscula en un elevador. Al arrancar hacia arriba, el elevador acelera a $' + v.a1 + '$ m/s²; al llegar a su piso frena con $' + v.a2 + '$ m/s² (aceleración hacia abajo).</p>'; },
       parts: [
@@ -506,6 +514,7 @@
     },
     {
       id: 'f1-ex-curva', tags: ['f1.S11'], block: 'C', title: '¿Derrapa en la curva?',
+      diagram: { id: 'exam-curve-top', state: function (v) { return { r: v.r }; } },
       vars: { m: [600, 2000, 100], r: [20, 150, 10], mus: [0.3, 0.9, 0.05], v: [8, 30, 1] },
       where: function (v) { return Math.abs(v.mus * g * v.r - v.v * v.v) > 0.05 * v.v * v.v; },
       statement: function (v) { return '<p>Un auto de $' + v.m + '$ kg toma una curva plana de $' + v.r + '$ m de radio a $' + v.v + '$ m/s. El coeficiente de fricción estática entre llantas y pavimento es $' + v.mus + '$.</p>'; },
@@ -530,6 +539,7 @@
     },
     {
       id: 'f1-ex-rampa-polea', tags: ['f1.S09', 'f1.S11'], block: 'C', title: 'Rampa con polea',
+      diagram: { id: 'incline-pulley', state: function () { return {}; } },
       vars: { m1: [1, 10, 0.5], m2: [1, 10, 0.5], th: [15, 45, 5], d: [0.5, 3, 0.5] },
       where: function (v) { return (v.m2 - v.m1 * sn(v.th)) * g / (v.m1 + v.m2) > 0.8; },
       statement: function (v) { return '<p>Un bloque de $' + v.m1 + '$ kg está sobre un plano liso de $' + v.th + '^\\circ$, unido por una cuerda que pasa por una polea en lo alto a una masa de $' + v.m2 + '$ kg que cuelga. El sistema parte del reposo y la masa colgante baja.</p>'; },
@@ -614,6 +624,7 @@
     },
     {
       id: 'f1-ex-montacargas', tags: ['f1.S12'], block: 'D', title: 'El motor del montacargas',
+      diagram: { id: 'exam-lift', state: function (v) { return { m: v.m, h: v.h }; } },
       vars: { m: [100, 800, 50], h: [3, 25, 1], t: [5, 40, 1], e: [60, 90, 5] },
       statement: function (v) { return '<p>Un montacargas sube $' + v.m + '$ kg a velocidad constante una altura de $' + v.h + '$ m en $' + v.t + '$ s. Su motor tiene una eficiencia del $' + v.e + '\\,\\%$.</p>'; },
       parts: [
@@ -637,6 +648,7 @@
     },
     {
       id: 'f1-ex-frenado-energia', tags: ['f1.S12'], block: 'D', title: 'Frenar con energía',
+      diagram: { id: 'exam-road', state: function (v) { return { span: 100, cars: [{ x: 12, label: v.kmh + ' km/h' }], dims: [{ a: 12, b: 80, label: 'distancia de frenado' }], label: 'Un auto que frena derrapando.' }; } },
       vars: { m: [600, 2000, 100], kmh: [30, 110, 10], mu: [0.4, 0.9, 0.05] },
       statement: function (v) { return '<p>Un auto de $' + v.m + '$ kg va a $' + v.kmh + '$ km/h y frena con las llantas derrapando sobre un pavimento con $\\mu_k = ' + v.mu + '$.</p>'; },
       parts: [
@@ -660,6 +672,7 @@
     },
     {
       id: 'f1-ex-pendulo', tags: ['f1.S11', 'f1.S13'], block: 'D', title: 'El péndulo que se suelta',
+      diagram: { id: 'exam-pendulum', state: function (v) { return { L: v.L, th: v.th }; } },
       vars: { m: [0.2, 3, 0.1], L: [0.5, 2.5, 0.1], th: [20, 80, 5] },
       where: function (v) { return v.th !== 60; },
       statement: function (v) { return '<p>Un péndulo de $' + v.L + '$ m con una masa de $' + v.m + '$ kg se suelta desde el reposo con la cuerda a $' + v.th + '^\\circ$ de la vertical.</p>'; },
@@ -684,6 +697,7 @@
     },
     {
       id: 'f1-ex-lanzador', tags: ['f1.S13'], block: 'D', title: 'El lanzador de resorte',
+      diagram: { id: 'exam-launcher', state: function (v) { return { k: v.k, x: v.x }; } },
       vars: { k: [200, 1500, 50], x: [3, 15, 1], m: [20, 200, 10] },
       where: function (v) { var H = 0.5 * v.k * Math.pow(v.x / 100, 2) / (v.m / 1000 * g); return H > 0.3 && H < 60; },
       statement: function (v) { return '<p>Un lanzador de juguete tiene un resorte de $k = ' + v.k + '$ N/m que se comprime $' + v.x + '$ cm y dispara verticalmente una pelota de $' + v.m + '$ g. Desprecia la altura que sube mientras el resorte se expande.</p>'; },
@@ -735,6 +749,7 @@
     },
     {
       id: 'f1-ex-letrero', tags: ['f1.S14'], block: 'E', title: 'El letrero con cable horizontal',
+      diagram: { id: 'exam-sign', state: function (v) { return { m: v.m, th: v.th }; } },
       vars: { m: [2, 50, 1], th: [20, 70, 5] },
       where: function (v) { return v.th !== 45; },
       statement: function (v) { return '<p>Un letrero de $' + v.m + '$ kg cuelga de un nudo. Un cable va horizontal a la pared y otro sube al techo formando $' + v.th + '^\\circ$ con la horizontal.</p>'; },
@@ -776,6 +791,7 @@
     },
     {
       id: 'f1-ex-pluma', tags: ['f1.S15'], block: 'E', title: 'La pluma con cable',
+      diagram: { id: 'boom-cable', state: function () { return {}; } },
       vars: { L: [1, 4, 0.5], M: [5, 60, 5], W: [100, 1500, 50], th: [20, 60, 5] },
       where: function (v) { return v.th !== 45; },
       statement: function (v) { return '<p>Una viga uniforme horizontal de $' + v.L + '$ m y $' + v.M + '$ kg tiene bisagra en la pared. Un cable atado a su punta sube a la pared formando $' + v.th + '^\\circ$ con la viga, y de la punta cuelga una carga de $' + v.W + '$ N.</p>'; },
@@ -800,6 +816,7 @@
     },
     {
       id: 'f1-ex-balancin', tags: ['f1.S15'], block: 'E', title: 'El balancín',
+      diagram: { id: 'seesaw', state: function () { return {}; } },
       vars: { m1: [15, 60, 5], x1: [0.5, 2.5, 0.25], m2: [20, 90, 5], M: [5, 30, 5] },
       where: function (v) { return v.m1 !== v.m2 && v.m1 * v.x1 / v.m2 < 2.5; },
       statement: function (v) { return '<p>Un balancín uniforme de $' + v.M + '$ kg tiene el pivote en su centro. Una niña de $' + v.m1 + '$ kg se sienta a $' + v.x1 + '$ m del pivote y su hermano, de $' + v.m2 + '$ kg, se sienta del otro lado.</p>'; },
@@ -824,6 +841,7 @@
     },
     {
       id: 'f1-ex-escalera', tags: ['f1.S15'], block: 'E', title: 'La escalera contra la pared',
+      diagram: { id: 'exam-ladder', state: function (v) { return { L: v.L, th: v.th, person: v.p / 100, xlab: '', ylab: '' }; } },
       vars: { L: [2, 6, 0.5], m: [8, 25, 1], Mp: [50, 90, 5], p: [30, 90, 10], th: [55, 75, 5] },
       statement: function (v) { return '<p>Una escalera uniforme de $' + v.L + '$ m y $' + v.m + '$ kg se apoya en una pared lisa formando $' + v.th + '^\\circ$ con el piso. Una persona de $' + v.Mp + '$ kg está parada al $' + v.p + '\\,\\%$ de su largo, medido desde el piso.</p>'; },
       parts: [
@@ -852,6 +870,7 @@
     /* ---------- S01 · Unidades ---------- */
     {
       id: 'f1-ex-conversion-velocidad', tags: ['f1.S01'], block: 'A', title: 'De km/h a metros por segundo',
+      diagram: { id: 'exam-road', state: function (v) { return { span: 100, cars: [{ x: 15, label: v.v + ' km/h' }], label: 'Un auto a ' + v.v + ' km/h.' }; } },
       vars: { v: [36, 144, 18], t: [2, 20, 2], D: [5, 50, 5] },
       statement: function (v) { return '<p>Un auto viaja a velocidad constante de ' + v.v + ' km/h.</p>'; },
       parts: [
@@ -871,6 +890,7 @@
     },
     {
       id: 'f1-ex-densidad', tags: ['f1.S01'], block: 'A', title: 'La densidad de un bloque',
+      diagram: { id: 'exam-block3d', state: function (v) { return { a: v.a, b: v.b, c: v.c, m: v.m }; } },
       vars: { a: [2, 10, 1], b: [2, 10, 1], c: [2, 10, 1], m: [50, 900, 50] },
       statement: function (v) { return '<p>Un bloque mide ' + v.a + ' cm × ' + v.b + ' cm × ' + v.c + ' cm y tiene una masa de ' + v.m + ' g.</p>'; },
       parts: [
@@ -891,6 +911,7 @@
     /* ---------- S04 · Derivadas y MRU ---------- */
     {
       id: 'f1-ex-posicion-polinomio', tags: ['f1.S04'], block: 'B', title: 'Posición con un polinomio',
+      diagram: { id: 'exam-fn', state: function (v) { var x = function (t) { return v.c3 * t * t * t - v.c2 * t * t + v.c1 * t; }; return { x: [0, v.T + 1.5], fns: [{ f: x }], tangent: { f: x, x0: v.T, len: 0.6 }, xlab: 't (s)', ylab: 'x (m)', label: 'La posición del carrito y su tangente en el instante pedido.' }; } },
       vars: { c3: [1, 3, 1], c2: [2, 9, 1], c1: [1, 10, 1], T: [1, 4, 1] },
       where: function (v) { return Math.abs(3 * v.c3 * v.T * v.T - 2 * v.c2 * v.T + v.c1) > 0.5; },
       statement: function (v) { return '<p>Un carrito se mueve sobre una recta con $x(t) = ' + v.c3 + 't^3 - ' + v.c2 + 't^2 + ' + v.c1 + 't$ (m, $t$ en s).</p>'; },
@@ -911,6 +932,7 @@
     },
     {
       id: 'f1-ex-encuentro', tags: ['f1.S04'], block: 'B', title: 'Dos autos que se encuentran',
+      diagram: { id: 'exam-road', state: function (v) { return { span: v.D, cars: [{ x: v.D * 0.07, dir: 1, label: v.v1 + ' m/s' }, { x: v.D * 0.93, dir: -1, label: v.v2 + ' m/s', cls: 'box-ref' }], dims: [{ a: 0, b: v.D, label: v.D + ' m' }], label: 'Dos autos que van uno hacia el otro.' }; } },
       vars: { D: [100, 1000, 50], v1: [10, 30, 1], v2: [10, 30, 1] },
       statement: function (v) { return '<p>Dos autos salen al mismo tiempo de dos ciudades separadas ' + v.D + ' m y van uno hacia el otro: el primero a ' + v.v1 + ' m/s y el segundo a ' + v.v2 + ' m/s (MRU).</p>'; },
       parts: [
@@ -931,6 +953,7 @@
     /* ---------- S05 · Caída libre ---------- */
     {
       id: 'f1-ex-pozo', tags: ['f1.S05'], block: 'B', title: 'Una piedra en un pozo',
+      diagram: { id: 'exam-well', state: function (v) { return { h: v.h }; } },
       vars: { h: [20, 120, 5] },
       statement: function (v) { return '<p>Sueltas una piedra desde el reposo en un pozo de ' + v.h + ' m de profundidad (sin aire).</p>'; },
       parts: [
@@ -951,6 +974,7 @@
     /* ---------- S06 · Tiro parabólico ---------- */
     {
       id: 'f1-ex-rueda-mesa', tags: ['f1.S06'], block: 'B', title: 'Una pelota que sale de la mesa',
+      diagram: { id: 'exam-mesa', state: function (v) { return { h: v.h, v0: v.u }; } },
       vars: { h: [0.5, 2, 0.1], u: [1, 6, 0.5] },
       statement: function (v) { return '<p>Una pelota rueda sobre una mesa de ' + v.h + ' m de alto y sale del borde con ' + v.u + ' m/s horizontales.</p>'; },
       parts: [
@@ -971,6 +995,7 @@
     /* ---------- S07 · Circular ---------- */
     {
       id: 'f1-ex-rueda-rpm', tags: ['f1.S07'], block: 'B', title: 'Una rueda que gira',
+      diagram: { id: 'exam-rotor', state: function (v) { return { r: v.r, rpm: v.rpm, what: 'un punto del borde' }; } },
       vars: { r: [0.2, 0.8, 0.1], rpm: [60, 600, 30] },
       statement: function (v) { return '<p>Una rueda de ' + v.r + ' m de radio gira a ' + v.rpm + ' rpm.</p>'; },
       parts: [
@@ -991,6 +1016,7 @@
     /* ---------- S08 · Leyes de Newton ---------- */
     {
       id: 'f1-ex-hielo', tags: ['f1.S08'], block: 'C', title: 'Una caja sobre hielo',
+      diagram: { id: 'exam-box-floor', state: function (v) { return { m: v.m, F: v.F, label: 'Una caja sobre hielo empujada con ' + v.F + ' N.' }; } },
       vars: { F: [10, 100, 5], m: [2, 40, 1], t: [2, 10, 1] },
       statement: function (v) { return '<p>Empujas horizontalmente con ' + v.F + ' N una caja de ' + v.m + ' kg que está en reposo sobre hielo (sin fricción).</p>'; },
       parts: [
@@ -1010,6 +1036,7 @@
     },
     {
       id: 'f1-ex-cohete', tags: ['f1.S08'], block: 'C', title: 'Un cohete de juguete',
+      diagram: { id: 'exam-rocket', state: function (v) { return { m: v.m, T: v.T }; } },
       vars: { T: [10, 60, 5], m: [0.5, 3, 0.5], t: [1, 4, 1] },
       where: function (v) { return v.T / v.m - g > 1; },
       statement: function (v) { return '<p>Un cohete de juguete de ' + v.m + ' kg despega verticalmente con un empuje de ' + v.T + ' N que dura ' + v.t + ' s (desprecia el aire y la masa del combustible).</p>'; },
@@ -1031,6 +1058,7 @@
     /* ---------- S09 · Tensiones ---------- */
     {
       id: 'f1-ex-dos-bloques', tags: ['f1.S09'], block: 'C', title: 'Dos bloques jalados',
+      diagram: { id: 'exam-box-floor', state: function (v) { return { m: v.m1, m2: v.m2, F: v.F, label: 'Dos bloques unidos por una cuerda y jalados.' }; } },
       vars: { F: [10, 100, 5], m1: [1, 10, 1], m2: [1, 10, 1], t: [1, 5, 1] },
       statement: function (v) { return '<p>Dos bloques de ' + v.m1 + ' kg y ' + v.m2 + ' kg, unidos por una cuerda, están sobre una mesa sin fricción. Jalas el de ' + v.m2 + ' kg con ' + v.F + ' N horizontales.</p>'; },
       parts: [
@@ -1051,6 +1079,7 @@
     /* ---------- S10 · Resortes y fricción ---------- */
     {
       id: 'f1-ex-resorte-friccion', tags: ['f1.S10'], block: 'C', title: 'Un resorte que jala una caja',
+      diagram: { id: 'exam-box-floor', state: function (v) { return { m: v.m, mu: v.mu, spring: { k: v.k, x: v.x }, label: 'Un resorte estirado jala una caja sobre un piso con fricción.' }; } },
       vars: { k: [100, 1000, 50], x: [0.05, 0.3, 0.05], m: [1, 10, 1], mu: [0.1, 0.5, 0.05] },
       where: function (v) { return v.k * v.x - v.mu * v.m * g > 2; },
       statement: function (v) { return '<p>Un resorte de $k = ' + v.k + '$ N/m, estirado ' + v.x + ' m, jala horizontalmente una caja de ' + v.m + ' kg que ya se desliza por un piso con $\\mu_k = ' + v.mu + '$.</p>'; },
@@ -1071,6 +1100,7 @@
     },
     {
       id: 'f1-ex-deslizar-frenar', tags: ['f1.S10'], block: 'C', title: 'Una caja que se frena sola',
+      diagram: { id: 'exam-box-floor', state: function (v) { return { mu: v.mu, v: v.v0, label: 'Una caja que se desliza y se frena por fricción.' }; } },
       vars: { v0: [2, 15, 1], mu: [0.1, 0.6, 0.05] },
       statement: function (v) { return '<p>Una caja se desliza a ' + v.v0 + ' m/s por un piso horizontal con $\\mu_k = ' + v.mu + '$ y nadie la empuja.</p>'; },
       parts: [
@@ -1091,6 +1121,7 @@
     /* ---------- S14 · Equilibrio de la partícula ---------- */
     {
       id: 'f1-ex-lampara-simetrica', tags: ['f1.S14'], block: 'E', title: 'Una lámpara colgada del centro',
+      diagram: { id: 'exam-cables', state: function (v) { return { m: v.m, a: v.th, b: v.th }; } },
       vars: { m: [1, 30, 1], th: [15, 75, 5] },
       where: function (v) { return v.th !== 30; },
       statement: function (v) { return '<p>Una lámpara de ' + v.m + ' kg cuelga del centro de un cable; cada mitad del cable forma $' + v.th + '^\\circ$ con la horizontal.</p>'; },

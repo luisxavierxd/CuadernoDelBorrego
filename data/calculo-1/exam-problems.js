@@ -385,6 +385,7 @@
     },
     {
       id: 'c1-ex-terreno', tags: ['c1.S08'], block: 'B', title: 'Un terreno junto al río',
+      diagram: { id: 'exam-river-field', state: function () { return {}; } },
       vars: { B: [1200, 6000, 600], c1: [10, 30, 10], c2: [10, 30, 10] },
       statement: function (v) { return '<p>Se cerca un terreno rectangular junto a un río; el lado del río no lleva cerca. El lado paralelo al río ($y$) cuesta ' + v.c1 + ' pesos/m y cada lado perpendicular ($x$) cuesta ' + v.c2 + ' pesos/m. Hay ' + v.B + ' pesos de presupuesto.</p>'; },
       parts: [
@@ -449,6 +450,7 @@
     },
     {
       id: 'c1-ex-lata', tags: ['c1.S08'], block: 'B', title: 'Una lata con tapas caras',
+      diagram: { id: 'exam-can', state: function () { return {}; } },
       vars: { V: [300, 1000, 100], c: [1, 5, 1] },
       statement: function (v) { return '<p>Una lata cilíndrica cerrada debe guardar ' + v.V + ' cm³. La pared cuesta ' + v.c + ' centavos por cm² y las tapas, más gruesas, cuestan el doble. El costo es $C(r) = 2\\cdot(2\\pi r^2)(' + v.c + ') + 2\\pi r h\\,(' + v.c + ')$.</p>'; },
       parts: [
@@ -683,6 +685,7 @@
     /* ---------- S01 · Razón de cambio ---------- */
     {
       id: 'c1-ex-pelota-altura', tags: ['c1.S01'], block: 'A', title: 'La altura de una pelota',
+      diagram: { id: 'exam-fn', state: function (v) { var h = function (t) { return v.v0 * t - 4.9 * t * t; }; return { x: [0, v.v0 / 4.9], fns: [{ f: h }], secant: { f: h, x1: 1, x2: 2 }, tangent: { f: h, x0: 1 }, xlab: 't (s)', ylab: 'h (m)', label: 'Altura de la pelota con la secante entre 1 y 2 s y la tangente en 1 s.' }; } },
       vars: { v0: [15, 30, 1] },
       statement: function (v) { return '<p>Una pelota se lanza hacia arriba y su altura es $h(t) = ' + v.v0 + 't - 4.9t^2$ (m, con $t$ en s).</p>'; },
       parts: [
@@ -706,6 +709,7 @@
     },
     {
       id: 'c1-ex-costo-marginal', tags: ['c1.S01'], block: 'A', title: 'Costo de producir una unidad más',
+      diagram: { id: 'exam-fn', state: function (v) { var C = function (q) { return v.F + v.c * q + 0.001 * v.k * q * q * q; }; return { x: [0, 30], fns: [{ f: C }], secant: { f: C, x1: 10, x2: 20 }, tangent: { f: C, x0: 15 }, xlab: 'q', ylab: 'C (pesos)', label: 'Costo con la secante de 10 a 20 y la tangente en 15.' }; } },
       vars: { F: [100, 500, 50], c: [2, 10, 1], k: [1, 9, 1] },
       statement: function (v) { return '<p>Producir $q$ piezas cuesta $C(q) = ' + v.F + ' + ' + v.c + 'q + 0.00' + v.k + 'q^3$ pesos.</p>'; },
       parts: [
@@ -730,6 +734,7 @@
     /* ---------- S02 · Fórmulas directas ---------- */
     {
       id: 'c1-ex-poblacion-exp', tags: ['c1.S02'], block: 'A', title: 'Una población que crece',
+      diagram: { id: 'exam-fn', state: function (v) { var P = function (t) { return v.P0 * Math.exp(v.r * t); }, td = Math.log(2) / v.r; return { x: [0, Math.max(v.T, td) * 1.25], fns: [{ f: P }], tangent: { f: P, x0: v.T }, hlines: [{ y: 2 * v.P0, label: '2P₀' }], xlab: 't (años)', ylab: 'P', label: 'La población crece exponencialmente.' }; } },
       vars: { P0: [100, 1000, 100], r: [0.02, 0.1, 0.01], T: [5, 20, 5] },
       statement: function (v) { return '<p>Una población crece como $P(t) = ' + v.P0 + 'e^{' + v.r + 't}$ (individuos, $t$ en años).</p>'; },
       parts: [
@@ -753,6 +758,7 @@
     },
     {
       id: 'c1-ex-cubica-log', tags: ['c1.S02'], block: 'A', title: 'Una curva con logaritmo',
+      diagram: { id: 'exam-fn', state: function (v) { var f = function (x) { return v.a * x * x * x - v.b * Math.log(x); }, m = Math.pow(v.b / (3 * v.a), 1 / 3); return { x: [0.15, Math.max(3, m * 1.8)], fns: [{ f: f }], tangent: { f: f, x0: 2, len: 0.6 }, pts: [{ x: m, y: f(m), label: 'mínimo' }], xlab: 'x', ylab: 'f(x)', label: 'La curva con su tangente en x = 2 y su mínimo.' }; } },
       vars: { a: [1, 5, 1], b: [2, 30, 2] },
       where: function (v) { return Math.pow(v.b / (3 * v.a), 1 / 3) !== 2; },
       statement: function (v) { return '<p>Sea $f(x) = ' + v.a + 'x^3 - ' + v.b + '\\ln x$ para $x > 0$.</p>'; },
@@ -778,6 +784,7 @@
     /* ---------- S03 · Regla del producto ---------- */
     {
       id: 'c1-ex-ingreso-producto', tags: ['c1.S03'], block: 'A', title: 'Ingreso con precio y ventas que cambian',
+      diagram: { id: 'exam-fn', state: function (v) { var R = function (t) { return (v.p0 + v.al * t) * (v.q0 - v.be * t); }, tm = (v.al * v.q0 - v.be * v.p0) / (2 * v.al * v.be); return { x: [0, tm * 2], fns: [{ f: R }], tangent: { f: R, x0: v.T }, pts: [{ x: tm, y: R(tm), label: 'máximo' }], xlab: 't (semanas)', ylab: 'R (pesos)', label: 'El ingreso sube, llega a un máximo y baja.' }; } },
       vars: { p0: [20, 60, 5], al: [1, 5, 1], q0: [200, 600, 50], be: [2, 10, 1], T: [1, 5, 1] },
       where: function (v) { var t = (v.al * v.q0 - v.be * v.p0) / (2 * v.al * v.be); return t > v.T + 1 && t < 40 && v.q0 - v.be * t > 0; },
       statement: function (v) { return '<p>El precio de un producto sube como $p(t) = ' + v.p0 + ' + ' + v.al + 't$ pesos y las ventas bajan como $q(t) = ' + v.q0 + ' - ' + v.be + 't$ piezas por semana. El ingreso es $R(t) = p(t)\\,q(t)$.</p>'; },
@@ -802,6 +809,7 @@
     },
     {
       id: 'c1-ex-xekx', tags: ['c1.S03'], block: 'A', title: 'Una función por una exponencial',
+      diagram: { id: 'exam-fn', state: function (v) { var f = function (x) { return x * Math.exp(-v.k * x); }; return { x: [0, 5 / v.k], fns: [{ f: f }], tangent: { f: f, x0: 0.5, len: 0.5 / v.k }, pts: [{ x: 1 / v.k, y: f(1 / v.k), label: 'máximo' }], xlab: 'x', ylab: 'f(x)', label: 'La función sube hasta su máximo y luego decae.' }; } },
       vars: { k: [0.5, 3, 0.5] },
       statement: function (v) { return '<p>Sea $f(x) = x\\,e^{-' + v.k + 'x}$.</p>'; },
       parts: [
@@ -829,6 +837,7 @@
     },
     {
       id: 'c1-ex-x2sen', tags: ['c1.S03'], block: 'A', title: 'La pendiente de x² sen x',
+      diagram: { id: 'exam-fn', state: function (v) { var f = function (x) { return x * x * Math.sin(x); }; return { x: [0, 3.4], fns: [{ f: f }], tangent: { f: f, x0: v.x0, len: 0.5 }, xlab: 'x', ylab: 'f(x)', label: 'La curva y su tangente en el punto pedido.' }; } },
       vars: { x0: [0.5, 2.5, 0.5] },
       statement: function (v) { return '<p>Sea $f(x) = x^2\\sin x$ ($x$ en radianes) y el punto $x_0 = ' + v.x0 + '$.</p>'; },
       parts: [
@@ -849,6 +858,7 @@
     /* ---------- S04 · Regla del cociente ---------- */
     {
       id: 'c1-ex-concentracion', tags: ['c1.S04'], block: 'A', title: 'Un medicamento en la sangre',
+      diagram: { id: 'exam-fn', state: function (v) { var C = function (t) { return v.a * t / (t * t + v.b); }, tm = Math.sqrt(v.b); return { x: [0, tm * 4], fns: [{ f: C }], tangent: { f: C, x0: 1, len: tm * 0.5 }, pts: [{ x: tm, y: C(tm), label: 'máxima' }], xlab: 't (h)', ylab: 'C (mg/L)', label: 'La concentración sube, llega a un máximo y baja.' }; } },
       vars: { a: [5, 20, 1], b: [2, 16, 1] },
       statement: function (v) { return '<p>La concentración de un medicamento es $C(t) = \\dfrac{' + v.a + 't}{t^2 + ' + v.b + '}$ (mg/L, $t$ en horas).</p>'; },
       parts: [
@@ -872,6 +882,7 @@
     },
     {
       id: 'c1-ex-costo-promedio-min', tags: ['c1.S04'], block: 'A', title: 'El costo promedio más bajo',
+      diagram: { id: 'exam-fn', state: function (v) { var A = function (q) { return (v.F + v.c * q + v.k * q * q) / q; }, qm = Math.sqrt(v.F / v.k); return { x: [qm * 0.2, qm * 3], fns: [{ f: A }], tangent: { f: A, x0: v.q0, len: qm * 0.35 }, pts: [{ x: qm, y: A(qm), label: 'mínimo' }], xlab: 'q', ylab: 'A (pesos/pieza)', label: 'El costo promedio baja hasta un mínimo y vuelve a subir.' }; } },
       vars: { F: [100, 1000, 100], c: [1, 10, 1], k: [0.1, 2, 0.1], q0: [5, 20, 5] },
       where: function (v) { var d = (v.k * v.q0 * v.q0 - v.F) / (v.q0 * v.q0); return Math.abs(Math.sqrt(v.F / v.k) - v.q0) > 2 && Math.abs(d + 2.7) > 0.4; },
       statement: function (v) { return '<p>El costo total de producir $q$ piezas es $C(q) = ' + v.F + ' + ' + v.c + 'q + ' + v.k + 'q^2$ y el costo promedio es $A(q) = \\dfrac{C(q)}{q}$.</p>'; },
@@ -901,6 +912,7 @@
     /* ---------- S05 · Regla de la cadena ---------- */
     {
       id: 'c1-ex-resorte-oscila', tags: ['c1.S05'], block: 'A', title: 'Una masa que oscila',
+      diagram: { id: 'exam-fn', state: function (v) { var x = function (t) { return v.A * Math.sin(v.w * t); }; return { x: [0, 4 * Math.PI / v.w], fns: [{ f: x }], tangent: { f: x, x0: v.T, len: 0.4 / v.w }, xlab: 't (s)', ylab: 'x (cm)', label: 'La posición oscila; la tangente es la velocidad en el instante pedido.' }; } },
       vars: { A: [2, 10, 1], w: [1, 4, 0.5], T: [0.5, 3, 0.5] },
       statement: function (v) { return '<p>La posición de una masa es $x(t) = ' + v.A + '\\sin(' + v.w + 't)$ (cm, $t$ en s).</p>'; },
       parts: [
@@ -924,6 +936,7 @@
     },
     {
       id: 'c1-ex-globo', tags: ['c1.S05'], block: 'A', title: 'Un globo que se infla',
+      diagram: { id: 'exam-balloon', state: function () { return { r0: 55, r1: 95 }; } },
       vars: { r0: [2, 10, 1], k: [5, 50, 5], T: [1, 10, 1] },
       statement: function (v) { return '<p>El radio de un globo es $r(t) = \\sqrt{' + v.r0 * v.r0 + ' + ' + v.k + 't}$ (cm, $t$ en s) y su volumen es $V = \\tfrac{4}{3}\\pi r^3$.</p>'; },
       parts: [
@@ -944,6 +957,7 @@
     /* ---------- S06 · Derivación implícita ---------- */
     {
       id: 'c1-ex-circulo-tangente', tags: ['c1.S06'], block: 'A', title: 'La tangente a un círculo',
+      diagram: { id: 'exam-fn', state: function (v) { var R = v.R, up = function (x) { return Math.sqrt(R * R - x * x); }, lo = function (x) { return -Math.sqrt(R * R - x * x); }; return { x: [-R * 1.4, R * 1.4], y: [-R * 1.15, R * 1.5], equal: true, curves: [{ xy: function (t) { return [R * Math.cos(t), R * Math.sin(t)]; }, t0: 0, t1: 2 * Math.PI }], tangent: { f: up, x0: v.x0, len: R * 0.7 }, xlab: 'x', ylab: 'y', label: 'El círculo y su tangente en el punto de arriba.' }; } },
       vars: { R: [5, 13, 1], x0: [1, 4, 1] },
       statement: function (v) { return '<p>Considera el círculo $x^2 + y^2 = ' + v.R * v.R + '$ y su punto de la mitad superior con $x = ' + v.x0 + '$.</p>'; },
       parts: [
@@ -963,6 +977,7 @@
     },
     {
       id: 'c1-ex-escalera', tags: ['c1.S06'], block: 'A', title: 'La escalera que resbala',
+      diagram: { id: 'exam-ladder', state: function (v) { return { L: v.L, x: v.x0, u: v.u + ' m/s' }; } },
       vars: { L: [4, 10, 1], x0: [1, 3, 0.5], u: [0.2, 1, 0.1] },
       statement: function (v) { return '<p>Una escalera de ' + v.L + ' m está apoyada en una pared. Su pie se aleja de la pared a ' + v.u + ' m/s. Sea $x$ la distancia del pie a la pared y $y$ la altura de la punta: $x^2 + y^2 = ' + v.L * v.L + '$.</p>'; },
       parts: [
@@ -983,6 +998,7 @@
     /* ---------- S07 · Extremos relativos ---------- */
     {
       id: 'c1-ex-cuartica', tags: ['c1.S07'], block: 'B', title: 'Una curva en forma de W',
+      diagram: { id: 'exam-fn', state: function (v) { var f = function (x) { return Math.pow(x, 4) - 2 * v.a * v.a * x * x + v.c; }; return { x: [-1.6 * v.a, 1.6 * v.a], fns: [{ f: f }], pts: [{ x: v.a, y: f(v.a), label: 'mínimo' }, { x: v.a / Math.sqrt(3), y: f(v.a / Math.sqrt(3)), label: 'inflexión' }], xlab: 'x', ylab: 'f(x)', label: 'Una curva en forma de W con sus mínimos y su inflexión.' }; } },
       vars: { a: [1, 4, 1], c: [0, 20, 2] },
       statement: function (v) { return '<p>Sea $f(x) = x^4 - ' + 2 * v.a * v.a + 'x^2 + ' + v.c + '$.</p>'; },
       parts: [
@@ -1007,6 +1023,7 @@
     /* ---------- S09 · La integral y el TFC ---------- */
     {
       id: 'c1-ex-riemann-velocidad', tags: ['c1.S09'], block: 'C', title: 'Distancia con rectángulos',
+      diagram: { id: 'exam-fn', state: function (v) { var f = function (t) { return v.a + v.b * t * t; }; return { x: [0, v.T], fns: [{ f: f }], rects: { f: f, a: 0, b: v.T, n: 4 }, xlab: 't (s)', ylab: 'v (m/s)', label: 'La velocidad y cuatro rectángulos de extremo izquierdo.' }; } },
       vars: { a: [1, 5, 1], b: [0.5, 3, 0.5], T: [2, 6, 1] },
       statement: function (v) { return '<p>Un carro va a $v(t) = ' + v.a + ' + ' + v.b + 't^2$ m/s entre $t = 0$ y $t = ' + v.T + '$ s.</p>'; },
       parts: [
@@ -1031,6 +1048,7 @@
     /* ---------- S10 · Cambio de variable ---------- */
     {
       id: 'c1-ex-campana', tags: ['c1.S10'], block: 'C', title: 'El área bajo una campana',
+      diagram: { id: 'exam-fn', state: function (v) { var f = function (x) { return x * Math.exp(-x * x); }; return { x: [0, 2.6], fns: [{ f: f }], shade: { f: f, a: 0, b: v.b }, xlab: 'x', ylab: 'y', label: 'El área bajo la curva hasta el límite pedido.' }; } },
       vars: { b: [0.5, 2, 0.25] },
       statement: function (v) { return '<p>Considera $\\displaystyle\\int_0^{' + v.b + '} x\\,e^{-x^2}\\,dx$ con el cambio $u = x^2$.</p>'; },
       parts: [
@@ -1051,6 +1069,7 @@
     /* ---------- S11 · Por partes ---------- */
     {
       id: 'c1-ex-partes-exp', tags: ['c1.S11'], block: 'C', title: 'El tiempo promedio de espera',
+      diagram: { id: 'exam-fn', state: function (v) { var f = function (t) { return t * Math.exp(-v.k * t); }; return { x: [0, Math.max(v.T, 6 / v.k) * 1.05], fns: [{ f: f }], shade: { f: f, a: 0, b: v.T }, xlab: 't', ylab: 'y', label: 'El área bajo la curva de 0 a T.' }; } },
       vars: { k: [0.5, 2, 0.5], T: [1, 5, 1] },
       statement: function (v) { return '<p>Considera $\\displaystyle I = \\int_0^{' + v.T + '} t\\,e^{-' + v.k + 't}\\,dt$.</p>'; },
       parts: [
@@ -1070,6 +1089,7 @@
     },
     {
       id: 'c1-ex-partes-ln', tags: ['c1.S11'], block: 'C', title: 'El promedio de un logaritmo',
+      diagram: { id: 'exam-fn', state: function (v) { var avg = (v.b * Math.log(v.b) - v.b + 1) / (v.b - 1); return { x: [0.4, v.b + 1], fns: [{ f: Math.log }], shade: { f: Math.log, a: 1, b: v.b }, hlines: [{ y: avg, label: 'promedio' }], xlab: 'x', ylab: 'ln x', label: 'El área bajo ln x y su valor promedio.' }; } },
       vars: { b: [2, 8, 1] },
       statement: function (v) { return '<p>Considera $\\displaystyle\\int_1^{' + v.b + '} \\ln x\\,dx$.</p>'; },
       parts: [
@@ -1090,6 +1110,7 @@
     /* ---------- S12 · Sustitución trigonométrica ---------- */
     {
       id: 'c1-ex-trig-circulo', tags: ['c1.S12'], block: 'C', title: 'Un pedazo de círculo',
+      diagram: { id: 'exam-fn', state: function (v) { var R = v.R, f = function (x) { return Math.sqrt(Math.max(0, R * R - x * x)); }; return { x: [-0.1 * R, R * 1.2], y: [0, R * 1.15], equal: true, curves: [{ xy: function (t) { return [R * Math.cos(t), R * Math.sin(t)]; }, t0: 0, t1: Math.PI / 2 }], shade: { f: f, a: 0, b: R * v.p / 10 }, xlab: 'x', ylab: 'y', label: 'Un cuarto de círculo con la parte sombreada.' }; } },
       vars: { R: [2, 10, 1], p: [2, 9, 1] },
       statement: function (v) { var a = v.R * v.p / 10; return '<p>Considera $\\displaystyle\\int_0^{' + fx(a) + '} \\sqrt{' + v.R * v.R + ' - x^2}\\,dx$ con $x = ' + v.R + '\\sin\\theta$.</p>'; },
       parts: [
@@ -1109,6 +1130,7 @@
     },
     {
       id: 'c1-ex-trig-tan', tags: ['c1.S12'], block: 'C', title: 'Una integral con arcotangente',
+      diagram: { id: 'exam-fn', state: function (v) { var f = function (x) { return 1 / (x * x + v.c * v.c); }; return { x: [0, Math.max(v.b * 1.3, 3 * v.c)], fns: [{ f: f }], shade: { f: f, a: 0, b: v.b }, xlab: 'x', ylab: 'y', label: 'El área bajo la curva de 0 a b.' }; } },
       vars: { c: [1, 5, 1], b: [1, 10, 1] },
       where: function (v) { return v.b !== v.c; },
       statement: function (v) { return '<p>Considera $\\displaystyle\\int_0^{' + v.b + '} \\frac{dx}{x^2 + ' + v.c * v.c + '}$ con $x = ' + v.c + '\\tan\\theta$.</p>'; },
@@ -1129,6 +1151,7 @@
     },
     {
       id: 'c1-ex-trig-sec', tags: ['c1.S12'], block: 'C', title: 'Una integral con raíz de x² + c²',
+      diagram: { id: 'exam-fn', state: function (v) { var f = function (x) { return 1 / Math.sqrt(x * x + v.c * v.c); }; return { x: [0, Math.max(v.b * 1.3, 3 * v.c)], fns: [{ f: f }], shade: { f: f, a: 0, b: v.b }, xlab: 'x', ylab: 'y', label: 'El área bajo la curva de 0 a b.' }; } },
       vars: { c: [1, 5, 1], b: [1, 10, 1] },
       statement: function (v) { return '<p>Considera $\\displaystyle\\int_0^{' + v.b + '} \\frac{dx}{\\sqrt{x^2 + ' + v.c * v.c + '}}$ con $x = ' + v.c + '\\tan\\theta$.</p>'; },
       parts: [
@@ -1149,6 +1172,7 @@
     /* ---------- S13 · Fracciones parciales ---------- */
     {
       id: 'c1-ex-fp-diferencia', tags: ['c1.S13'], block: 'C', title: 'Una diferencia de cuadrados',
+      diagram: { id: 'exam-fn', state: function (v) { var f = function (x) { return 1 / (x * x - v.a * v.a); }; return { x: [v.a + 0.7, v.a + v.d + 1], fns: [{ f: f }], shade: { f: f, a: v.a + 1, b: v.a + v.d }, xlab: 'x', ylab: 'y', label: 'El área bajo la curva entre los límites.' }; } },
       vars: { a: [1, 4, 1], d: [2, 10, 1] },
       statement: function (v) { var L = v.a + 1, b = v.a + v.d; return '<p>Considera $\\displaystyle\\int_{' + L + '}^{' + b + '} \\frac{dx}{x^2 - ' + v.a * v.a + '}$ y escribe $\\dfrac{1}{x^2 - ' + v.a * v.a + '} = \\dfrac{A}{x - ' + v.a + '} - \\dfrac{A}{x + ' + v.a + '}$.</p>'; },
       parts: [
@@ -1168,6 +1192,7 @@
     },
     {
       id: 'c1-ex-fp-producto', tags: ['c1.S13'], block: 'C', title: 'Dos factores lineales',
+      diagram: { id: 'exam-fn', state: function (v) { var f = function (x) { return 1 / (x * (x + v.k)); }; return { x: [0.6, v.b + 1], fns: [{ f: f }], shade: { f: f, a: 1, b: v.b }, xlab: 'x', ylab: 'y', label: 'El área bajo la curva entre los límites.' }; } },
       vars: { k: [1, 5, 1], b: [2, 10, 1] },
       statement: function (v) { return '<p>Considera $\\displaystyle\\int_1^{' + v.b + '} \\frac{dx}{x(x + ' + v.k + ')}$ y escribe $\\dfrac{1}{x(x + ' + v.k + ')} = \\dfrac{A}{x} - \\dfrac{A}{x + ' + v.k + '}$.</p>'; },
       parts: [
@@ -1187,6 +1212,7 @@
     },
     {
       id: 'c1-ex-fp-repetido', tags: ['c1.S13'], block: 'C', title: 'Un factor repetido',
+      diagram: { id: 'exam-fn', state: function (v) { var f = function (x) { return 1 / (x * x * (x + v.k)); }; return { x: [0.75, v.b + 1], fns: [{ f: f }], shade: { f: f, a: 1, b: v.b }, xlab: 'x', ylab: 'y', label: 'El área bajo la curva entre los límites.' }; } },
       vars: { k: [1, 4, 1], b: [2, 8, 1] },
       statement: function (v) { return '<p>Considera $\\displaystyle\\int_1^{' + v.b + '} \\frac{dx}{x^2(x + ' + v.k + ')}$ con $\\dfrac{1}{x^2(x + ' + v.k + ')} = \\dfrac{A}{x} + \\dfrac{B}{x^2} + \\dfrac{C}{x + ' + v.k + '}$.</p>'; },
       parts: [
@@ -1207,6 +1233,7 @@
     /* ---------- S14 · Áreas y arcos ---------- */
     {
       id: 'c1-ex-dos-parabolas', tags: ['c1.S14'], block: 'C', title: 'Entre dos parábolas',
+      diagram: { id: 'exam-fn', state: function (v) { var f = function (x) { return v.a - x * x; }, g = function (x) { return x * x - v.a; }, p = Math.sqrt(v.a); return { x: [-1.5 * p, 1.5 * p], fns: [{ f: f }, { f: g, cls: 'aux' }], shade: { f: f, g: g, a: -p, b: p }, xlab: 'x', ylab: 'y', label: 'La región entre las dos parábolas.' }; } },
       vars: { a: [1, 9, 1] },
       where: function (v) { return v.a !== 4 && v.a !== 1; },
       statement: function (v) { return '<p>Considera la región entre $y = ' + v.a + ' - x^2$ y $y = x^2 - ' + v.a + '$.</p>'; },
@@ -1227,6 +1254,7 @@
     },
     {
       id: 'c1-ex-arco-semicubica', tags: ['c1.S14'], block: 'C', title: 'El largo de una curva',
+      diagram: { id: 'exam-fn', state: function (v) { var f = function (x) { return 2 / 3 * Math.pow(Math.max(x, 0), 1.5); }, yb = f(v.b); return { x: [0, v.b * 1.1], fns: [{ f: f }, { f: function (x) { return x <= v.b ? yb / v.b * x : NaN; }, cls: 'error', w: 2, dash: '7 5' }], pts: [{ x: 0, y: 0 }, { x: v.b, y: yb }], xlab: 'x', ylab: 'y', label: 'La curva y el segmento que une sus extremos.' }; } },
       vars: { b: [1, 8, 1] },
       statement: function (v) { return '<p>Considera la curva $y = \\tfrac{2}{3}x^{3/2}$ entre $x = 0$ y $x = ' + v.b + '$.</p>'; },
       parts: [
@@ -1251,6 +1279,7 @@
     /* ---------- S15 · Sólidos de revolución ---------- */
     {
       id: 'c1-ex-vaso', tags: ['c1.S15'], block: 'C', title: 'Un vaso parabólico',
+      diagram: { id: 'exam-fn', state: function (v) { var r = Math.sqrt(v.H / v.k), f = function (x) { return v.k * x * x; }; return { x: [-1.5 * r, 1.5 * r], y: [0, v.H * 1.2], equal: true, fns: [{ f: f }], shade: { f: function () { return v.H; }, g: f, a: -r, b: r }, xlab: 'x', ylab: 'y (cm)', label: 'Corte del vaso: el líquido llena la parábola hasta y = H.' }; } },
       vars: { k: [0.5, 3, 0.5], H: [2, 10, 1] },
       statement: function (v) { return '<p>Un vaso tiene la forma que resulta de girar $y = ' + v.k + 'x^2$ alrededor del eje $y$, lleno hasta $y = ' + v.H + '$ cm.</p>'; },
       parts: [
@@ -1274,6 +1303,7 @@
     },
     {
       id: 'c1-ex-dona', tags: ['c1.S15'], block: 'C', title: 'El volumen de una dona',
+      diagram: { id: 'exam-fn', state: function (v) { var up = function (x) { return Math.sqrt(Math.max(0, v.r * v.r - (x - v.R) * (x - v.R))); }, lo = function (x) { return -up(x); }; return { x: [-2, v.R + v.r + 2], y: [-(v.r + 2), v.r + 2], equal: true, curves: [{ xy: function (t) { return [v.R + v.r * Math.cos(t), v.r * Math.sin(t)]; }, t0: 0, t1: 2 * Math.PI }], shade: { f: up, g: lo, a: v.R - v.r, b: v.R + v.r }, vlines: [{ x: 0, label: 'eje de giro' }], label: 'Un círculo separado del eje; al girar forma una dona.' }; } },
       vars: { R: [5, 20, 1], r: [1, 4, 1] },
       statement: function (v) { return '<p>Un círculo de radio ' + v.r + ' cm, con centro a ' + v.R + ' cm del eje $y$, gira alrededor de ese eje y forma una dona.</p>'; },
       parts: [

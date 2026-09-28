@@ -15,8 +15,8 @@
 .qcard__meta { font-size: 0.75rem; color: var(--text-muted); }
 .qcard__prompt p, .problem__statement p { margin: 0; }
 .qcard__why { padding: var(--space-2); border-radius: var(--radius); background: var(--page); border-left: 3px solid var(--accent); }
-.problem__figure { margin: 0; max-width: 620px; padding: var(--space-2) var(--space-2) var(--space-2) calc(48px + var(--space-1)); }
-:root[data-theme="dark"] .problem__figure { padding: var(--space-2); }
+/* La tarjeta del problema ya es la hoja: la figura va en un recuadro simple, sin margen de cuaderno. */
+.problem__figure { margin: 0; max-width: 640px; padding: 6px; border: 1px solid var(--line); border-radius: var(--radius); background: var(--panel); }
 .problem__figure svg { width: 100%; height: auto; display: block; }
 .problem__parts { margin: 0; padding: 0; list-style: none; display: grid; gap: var(--space-3); }
 .part { display: grid; gap: var(--space-1); padding-top: var(--space-2); border-top: 1px dashed var(--line-strong); }
@@ -211,6 +211,10 @@ a.history__link:focus-visible { outline: 2px solid var(--focus); outline-offset:
   .exam__side .clock { grid-column: 1 / -1; padding-bottom: 6px; }
   .exam__side .clock__label { display: none; }
   .exam__side .clock .btn { padding: 4px 10px; min-height: 36px; }
+  /* Entregado: el avance arriba y los dos botones abajo, sin encimarse. */
+  .exam__side.is-done { grid-template-columns: minmax(0, 1fr); }
+  .exam__side.is-done .exam__actions { flex-wrap: wrap; }
+  .exam__side.is-done .exam__actions .btn { flex: 1 1 auto; }
   /* El aviso va sobre el header para no tapar la caja del reloj. */
   .time-toast { top: 6px; padding: 8px 10px; font-size: 0.88rem; }
 }

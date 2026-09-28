@@ -678,7 +678,7 @@
   };
 
   // Dos tramos de un dron (cabeza con cola) y su desplazamiento total.
-  D['exam-dron'] = function (v) {
+  D['exam-dron-vuelo'] = function (v) {
     var p1 = [v.d1 * Math.cos(v.a1 * RAD), v.d1 * Math.sin(v.a1 * RAD)];
     var p2 = [p1[0] + v.d2 * Math.cos(v.a2 * RAD), p1[1] + v.d2 * Math.sin(v.a2 * RAD)];
     var xs = [0, p1[0], p2[0]], ys = [0, p1[1], p2[1]];
@@ -914,4 +914,148 @@
     body += seg('axis', 60, Y + 67, 580, Y + 67, 1.2);
     return svgBox('0 55 640 225', 'Una viga de ' + v.L + ' m y ' + v.M + ' kg sobre apoyos en ' + v.a + ' y ' + v.b + ' m, con una carga de ' + v.F + ' N en ' + v.x + ' m.', body);
   };
+
+  /* ---------- Problemas de examen · figuras del lote de "un dibujo por problema" ---------- */
+  // Vectores desde el origen (2D) o en perspectiva (3D). s.vecs: [[x, y, z, etiqueta, clase]]; s.chain: punta con cola.
+  D['exam-vectors'] = function (s) {
+    var vecs = s.vecs || [], d3 = !!s.d3, body = '';
+    // Proyección oblicua: x a la derecha, y hacia arriba, z en diagonal hacia abajo-izquierda.
+    function proj(v) { return d3 ? [v[0] - 0.5 * v[2], v[1] - 0.35 * v[2]] : [v[0], v[1]]; }
+    var big = 1e-9, cx = 0, cy = 0;
+    vecs.forEach(function (v) { var p = proj(v); big = Math.max(big, Math.abs(p[0]), Math.abs(p[1])); if (s.chain) { cx += p[0]; cy += p[1]; big = Math.max(big, Math.abs(cx), Math.abs(cy)); } });
+    var k = (s.chain ? 120 : 140) / big;
+    // Primero las flechas en coordenadas relativas al origen; luego se centra todo en el recuadro.
+    var segs = [], px = 0, py = 0, xs = [0], ys = [0];
+    vecs.forEach(function (v) {
+      var p = proj(v), kk = v[5] ? v[5] / Math.max(Math.hypot(p[0], p[1]), 1e-9) : k, dx = p[0] * kk, dy = -p[1] * kk, sx = s.chain ? px : 0, sy = s.chain ? py : 0;
+      segs.push([sx, sy, dx, dy, v]); xs.push(sx + dx); ys.push(sy + dy);
+      if (s.chain) { px += dx; py += dy; }
+    });
+    var ox = 320 - (Math.min.apply(null, xs) + Math.max.apply(null, xs)) / 2, oy = 175 - (Math.min.apply(null, ys) + Math.max.apply(null, ys)) / 2;
+    body += arrow('axis', ox - 170, oy, 340, 0, 1.2) + arrow('axis', ox, oy + 90, 0, -180, 1.2) + text(ox + 176, oy + 18, 'x', ' font-size="15"') + text(ox - 16, oy - 80, 'y', ' font-size="15"');
+    if (d3) body += arrow('axis', ox, oy, -90, 63, 1.2) + text(ox - 102, oy + 80, 'z', ' font-size="15"');
+    segs.forEach(function (g) {
+      var sx = ox + g[0], sy = oy + g[1], dx = g[2], dy = g[3], v = g[4];
+      body += arrow(v[4] || 'ref', sx, sy, dx, dy, 3.2) + text(sx + dx + (dx >= 0 ? 8 : -8), sy + dy + (dy > 0 ? 16 : -6), v[3], ' font-size="16"' + (dx >= 0 ? '' : ' text-anchor="end"'));
+    });
+    px += ox; py += oy;
+    if (s.chain && s.total) body += arrow('error', ox, oy, px - ox, py - oy, 2.6) + text((ox + px) / 2 + 10, (oy + py) / 2 + 18, s.total, ' font-size="15"');
+    return svgBox('0 30 640 290', s.label || 'Vectores del problema.', body);
+  };
+
+  // Una recta con autos, distancias y obstáculos. s.cars: [{ x, dir, label, cls }]; s.marks: [{ x, label }]; s.span: metros visibles.
+  D['exam-road'] = function (s) {
+    var span = s.span || 100, X = function (x) { return 50 + 540 * x / span; }, Y = 190;
+    var body = seg('axis', 30, Y + 22, 610, Y + 22, 3) + seg('axis', 30, Y + 60, 610, Y + 60, 1.2, '14 10');
+    (s.marks || []).forEach(function (m) { body += seg('error', X(m.x), Y - 40, X(m.x), Y + 22, 3) + text(X(m.x), Y - 48, m.label, ' text-anchor="middle" font-size="14"'); });
+    (s.cars || []).forEach(function (c) {
+      var x = X(c.x), dir = c.dir || 1;
+      body += '<rect class="' + (c.cls || 'box-aux') + '" x="' + (x - 28) + '" y="' + (Y - 8) + '" width="56" height="24" rx="7"/>' +
+        '<circle class="dot-ref" cx="' + (x - 16) + '" cy="' + (Y + 18) + '" r="6"/><circle class="dot-ref" cx="' + (x + 16) + '" cy="' + (Y + 18) + '" r="6"/>' +
+        arrow('aux', x + dir * 34, Y + 4, dir * 60, 0, 3) + text(x, Y - 18, c.label || '', ' text-anchor="middle" font-size="14"');
+    });
+    (s.dims || []).forEach(function (d) { var y = Y + 90; body += seg('axis', X(d.a), y, X(d.b), y, 1.4) + seg('axis', X(d.a), y - 6, X(d.a), y + 6, 1.4) + seg('axis', X(d.b), y - 6, X(d.b), y + 6, 1.4) + text((X(d.a) + X(d.b)) / 2, y - 8, d.label, ' text-anchor="middle" font-size="14"'); });
+    return svgBox('0 110 640 200', s.label || 'Una recta con autos.', body);
+  };
+
+  // Rueda o rotor visto de frente: radio, punto y sentido de giro.
+  D['exam-rotor'] = function (s) {
+    var cx = 230, cy = 170, R = 110;
+    var body = '<circle class="box-aux" cx="' + cx + '" cy="' + cy + '" r="' + R + '"/><circle class="dot-ref" cx="' + cx + '" cy="' + cy + '" r="5"/>' +
+      seg('ref', cx, cy, cx + R, cy, 2.4) + text(cx + R / 2, cy - 8, 'r = ' + s.r + ' m', ' text-anchor="middle" font-size="15"') +
+      '<circle class="dot-error" cx="' + (cx + R) + '" cy="' + cy + '" r="7"/>' + arrow('aux', cx + R, cy, 0, -60, 3) + text(cx + R + 10, cy - 50, 'v', ' font-size="16"') +
+      arrow('error', cx + R - 8, cy + 18, -50, 0, 3) + text(cx + R - 64, cy + 40, 'aₙ', ' font-size="16"') +
+      '<path class="axis" fill="none" stroke-width="1.6" d="M' + (cx - 60) + ' ' + (cy - R - 14) + 'A' + (R + 14) + ' ' + (R + 14) + ' 0 0 1 ' + (cx + 60) + ' ' + (cy - R - 14) + '"/>' +
+      text(460, 150, s.rpm + ' rpm', ' font-size="18"') + text(460, 178, s.what || '', ' font-size="14"');
+    return svgBox('0 26 640 274', 'Un rotor de radio ' + s.r + ' m que gira a ' + s.rpm + ' rpm.', body);
+  };
+
+  // Curva plana vista desde arriba.
+  D['exam-curve-top'] = function (s) {
+    var cx = 180, cy = 250, R = 190, a = -50 * RAD;
+    var x = cx + R * Math.cos(a), y = cy + R * Math.sin(a);
+    var body = '<path class="axis" fill="none" stroke-width="22" stroke-linecap="round" d="M' + (cx + R * Math.cos(-100 * RAD)) + ' ' + (cy + R * Math.sin(-100 * RAD)) + 'A' + R + ' ' + R + ' 0 0 1 ' + (cx + R) + ' ' + cy + '" opacity="0.25"/>' +
+      '<circle class="dot-ref" cx="' + cx + '" cy="' + cy + '" r="5"/>' + seg('axis', cx, cy, x, y, 1.4, '5 6') + text((cx + x) / 2 - 8, (cy + y) / 2, 'r = ' + s.r + ' m', ' text-anchor="end" font-size="14"') +
+      box(x, y, 34, 22, 40) + arrow('aux', x, y, 70 * Math.cos(a + Math.PI / 2), 70 * Math.sin(a + Math.PI / 2), 3) + text(x + 60, y + 50, 'v', ' font-size="16"') +
+      arrow('error', x, y, -60 * Math.cos(a), -60 * Math.sin(a), 3) + text(x - 70, y + 30, 'fricción al centro', ' text-anchor="end" font-size="14"');
+    return svgBox('0 40 640 240', 'Vista desde arriba de un auto en una curva plana; la fricción apunta al centro.', body);
+  };
+
+  // Carga que un cable sube.
+  D['exam-lift'] = function (s) {
+    var body = seg('axis', 200, 30, 460, 30, 5) + '<circle class="ref" cx="330" cy="52" r="18" fill="none" stroke-width="2.5"/>' + seg('axis', 330, 70, 330, 150, 2) +
+      box(330, 180, 70, 60, 0, 'box-ref') + text(330, 186, s.m + ' kg', ' text-anchor="middle" font-size="14"') + arrow('aux', 380, 190, 0, -60, 3) + text(392, 150, 'v cte', ' font-size="14"') +
+      seg('axis', 480, 150, 480, 262, 1.3) + text(490, 210, 'h = ' + s.h + ' m', ' font-size="15"') + seg('axis', 200, 262, 560, 262, 2);
+    return svgBox('0 20 640 260', 'Un motor sube una carga de ' + s.m + ' kg a velocidad constante.', body);
+  };
+
+  // Péndulo soltado desde un ángulo.
+  D['exam-pendulum'] = function (s) {
+    var ox = 320, oy = 40, L = 190, a = s.th * RAD, bx = ox + L * Math.sin(a), by = oy + L * Math.cos(a);
+    var body = seg('axis', 240, oy, 400, oy, 5) + seg('axis', ox, oy, ox, oy + L + 20, 1.2, '5 6') + seg('axis', ox, oy, bx, by, 2) +
+      '<circle class="box-ref" cx="' + r1(bx) + '" cy="' + r1(by) + '" r="14"/><circle class="axis" cx="' + ox + '" cy="' + (oy + L) + '" r="14" fill="none" stroke-dasharray="4 4" stroke-width="1.4"/>' +
+      arc(ox, oy, 60, 270, 270 + s.th) + text(ox + 22 * Math.sin(a / 2) + 14, oy + 80, s.th + '°', ' font-size="15"') +
+      text((ox + bx) / 2 + 12, (oy + by) / 2, 'L = ' + s.L + ' m', ' font-size="15"') + seg('axis', 470, by, 470, oy + L, 1.3) + text(480, (by + oy + L) / 2 + 5, 'h', ' font-size="16"') +
+      seg('axis', bx, by, 480, by, 1, '3 5') + seg('axis', ox, oy + L, 480, oy + L, 1, '3 5');
+    return svgBox('0 20 640 250', 'Un péndulo de ' + s.L + ' m que se suelta a ' + s.th + ' grados de la vertical.', body);
+  };
+  function r1(n) { return (+n).toFixed(1); }
+
+  // Lanzador de resorte vertical.
+  D['exam-launcher'] = function (s) {
+    var body = seg('axis', 220, 262, 420, 262, 3) + '<rect class="box-base" x="270" y="150" width="100" height="112" rx="6"/>' + coil(320, 262, 205, 14, 7) +
+      '<circle class="box-ref" cx="320" cy="190" r="14"/>' + arrow('aux', 350, 180, 0, -90, 3) + text(362, 110, 'H = ?', ' font-size="16"') +
+      text(440, 220, 'k = ' + s.k + ' N/m', ' font-size="15"') + text(440, 244, 'comprimido ' + s.x + ' cm', ' font-size="14"');
+    return svgBox('0 60 640 220', 'Un lanzador de resorte que dispara una pelota hacia arriba.', body);
+  };
+
+  // Letrero colgado de un cable horizontal y otro inclinado.
+  D['exam-sign'] = function (s) {
+    var K = [330, 170], ceilY = 40, wallX = 90, a = s.th * RAD, top = [K[0] + (K[1] - ceilY) / Math.tan(a), ceilY];
+    var body = seg('axis', wallX, 30, wallX, 280, 5) + seg('axis', 300, ceilY, 620, ceilY, 5) +
+      seg('axis', wallX, K[1], K[0], K[1], 2) + seg('axis', K[0], K[1], Math.min(top[0], 610), ceilY, 2) + seg('axis', K[0], K[1], K[0], 210, 2) +
+      box(K[0], 236, 90, 50, 0, 'box-ref') + text(K[0], 242, s.m + ' kg', ' text-anchor="middle" font-size="14"') +
+      arc(K[0], K[1], 50, 0, s.th) + text(K[0] + 58, K[1] - 12, s.th + '°', ' font-size="15"');
+    return svgBox('0 20 640 280', 'Un letrero colgado de un cable horizontal a la pared y otro inclinado al techo.', body);
+  };
+
+  // Bloque con sus tres medidas.
+  D['exam-block3d'] = function (s) {
+    var k = 22, a = s.a * k, b = s.b * k * 0.6, c = s.c * k, x = 200, y = 250;
+    var body = '<path class="box-aux" d="M' + x + ' ' + y + 'h' + a + 'v' + (-c) + 'h' + (-a) + 'Z"/>' +
+      '<path class="box-ref" d="M' + x + ' ' + (y - c) + 'l' + b + ' ' + (-b * 0.6) + 'h' + a + 'l' + (-b) + ' ' + b * 0.6 + 'Z"/>' +
+      '<path class="box-base" d="M' + (x + a) + ' ' + y + 'l' + b + ' ' + (-b * 0.6) + 'v' + (-c) + 'l' + (-b) + ' ' + b * 0.6 + 'Z"/>' +
+      text(x + a / 2, y + 22, s.a + ' cm', ' text-anchor="middle" font-size="14"') + text(x - 8, y - c / 2, s.c + ' cm', ' text-anchor="end" font-size="14"') +
+      text(x + a + b / 2 + 10, y - c - b * 0.3 - 6, s.b + ' cm', ' font-size="14"') + text(x + a + b + 30, y - c / 2, s.m + ' g', ' font-size="16"');
+    return svgBox('0 0 640 290', 'Un bloque de ' + s.a + ' × ' + s.b + ' × ' + s.c + ' cm y ' + s.m + ' g.', body);
+  };
+
+  // Piedra que cae en un pozo.
+  D['exam-well'] = function (s) {
+    var body = seg('axis', 120, 60, 260, 60, 3) + seg('axis', 380, 60, 520, 60, 3) + '<path class="axis" fill="none" stroke-width="3" d="M260 60V270H380V60"/>' +
+      '<circle class="box-ref" cx="320" cy="78" r="9"/>' + arrow('aux', 340, 90, 0, 60, 3) + text(352, 130, 'se suelta', ' font-size="14"') +
+      seg('axis', 420, 60, 420, 270, 1.3) + text(430, 170, 'h = ' + s.h + ' m', ' font-size="16"') + '<path class="trace" d="M262 250H378" stroke-width="3"/>';
+    return svgBox('0 40 640 250', 'Una piedra que se suelta dentro de un pozo de ' + s.h + ' m.', body);
+  };
+
+  // Cohete de juguete con empuje y peso.
+  D['exam-rocket'] = function (s) {
+    var body = seg('axis', 200, 262, 440, 262, 3) + '<path class="box-ref" d="M300 250V140L320 105L340 140V250Z"/>' + '<path class="error" fill="none" stroke-width="2.5" d="M306 252l6 18l8-12l8 12l6-18"/>' +
+      force('aux', 360, 170, 90, 80, 'T = ' + s.T + ' N') + force('error', 280, 190, 270, 60, 'mg') + text(320, 300, s.m + ' kg', ' text-anchor="middle" font-size="14"');
+    return svgBox('0 50 640 260', 'Un cohete de juguete de ' + s.m + ' kg con empuje ' + s.T + ' N.', body);
+  };
+
+  // Uno o dos bloques en el piso, con empuje, resorte, velocidad y fricción opcionales.
+  D['exam-box-floor'] = function (s) {
+    var Y = 240, body = seg('axis', 40, Y, 600, Y, 3), x1 = s.spring ? 360 : 250;
+    if (s.mu) { var h = ''; for (var i = 60; i < 590; i += 14) h += 'M' + i + ' ' + (Y + 2) + 'l-8 10'; body += '<path class="error" fill="none" stroke-width="1.3" d="' + h + '"/>' + text(590, Y + 32, 'μₖ = ' + s.mu, ' text-anchor="end" font-size="14"'); }
+    if (s.spring) body += seg('axis', 60, Y - 90, 60, Y, 5) + '<path class="axis" fill="none" stroke-width="2" d="M60 ' + (Y - 40) + coilH(60, x1 - 40, Y - 40) + '"/>' + text(170, Y - 62, 'k = ' + s.spring.k + ' N/m, x = ' + s.spring.x + ' m', ' text-anchor="middle" font-size="14"');
+    body += box(x1, Y - 40, 80, 80) + (s.m != null ? text(x1, Y - 34, s.m + ' kg', ' text-anchor="middle" font-size="14"') : '');
+    if (s.m2) { body += seg('axis', x1 + 40, Y - 40, x1 + 110, Y - 40, 2) + box(x1 + 150, Y - 40, 80, 80, 0, 'box-ref') + text(x1 + 150, Y - 34, s.m2 + ' kg', ' text-anchor="middle" font-size="14"'); }
+    var endX = s.m2 ? x1 + 190 : x1 + 40;
+    if (s.F) body += force('ref', endX, Y - 40, 0, 70, null) + text(endX + 80, Y - 34, 'F = ' + s.F + ' N', ' font-size="15"');
+    if (s.v) body += arrow('aux', x1 - 30, Y - 100, 70, 0, 3) + text(x1 + 48, Y - 94, 'v = ' + s.v + ' m/s', ' font-size="14"');
+    return svgBox('0 110 640 170', s.label || 'Un bloque sobre el piso.', body);
+  };
+  function coilH(x0, x1, y) { var n = 10, d = ''; for (var i = 1; i <= n; i++) d += 'L' + r1(x0 + (x1 - x0) * i / (n + 1)) + ' ' + (y + (i % 2 ? -10 : 10)); return d + 'L' + x1 + ' ' + y; }
 })();

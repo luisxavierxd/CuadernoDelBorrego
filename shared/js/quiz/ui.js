@@ -397,7 +397,7 @@
       parts.push({ node: node, inp: inp, st: st, verdict: verdict, sol: sol, btns: btns, part: part });
     });
     var diagram = p.diagram && window.Diagrams && window.Diagrams[p.diagram.id]
-      ? h('figure', { class: 'figure sheet problem__figure', html: window.Diagrams[p.diagram.id](p.diagram.state(v)) }) : null;
+      ? h('figure', { class: 'figure problem__figure', html: window.Diagrams[p.diagram.id](p.diagram.state(v)) }) : null;
     var node = h('article', { class: 'problem' }, [
       h('header', { class: 'qcard__head' }, [h('span', { class: 'qcard__n mono' }, ['Problema ' + n + ' · ' + p.title])]),
       h('div', { class: 'problem__statement', html: p.statement(v) }),
@@ -836,7 +836,8 @@
       return qCards.filter(function (c) { return String(c.get()).trim(); }).length +
         pCards.reduce(function (s, c) { return s + c.parts.filter(function (x) { return String(safeGet(x.inp.get)).trim(); }).length; }, 0);
     }
-    function upd() { progress.textContent = answered() + ' de ' + total + ' contestadas'; }
+    // Al entregar se queda en «Entregado» (los clics en la revisión ya no cuentan respuestas).
+    function upd() { progress.textContent = finished ? 'Entregado' : answered() + ' de ' + total + ' contestadas'; }
     L.main.addEventListener('input', upd); L.main.addEventListener('change', upd); L.main.addEventListener('click', function () { setTimeout(upd, 0); });
     upd();
     render(L.main);
@@ -897,6 +898,7 @@
       actions.appendChild(h('a', { class: 'btn btn--ghost', href: '../' }, ['Volver al lanzador']));
       endBar.remove();
       progress.textContent = 'Entregado';
+      L.side.classList.add('is-done');
       window.scrollTo(0, 0);
     }
   }

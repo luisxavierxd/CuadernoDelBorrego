@@ -21,12 +21,17 @@ const clean = (s) => typeof s === 'string' && s.length > 5 && !/undefined|NaN|In
 (async () => {
   const math = await loadMathjs();
   let problems = 0;
+  // La página del examen carga las figuras de ambos cursos y las comunes: un nombre repetido
+  // haría que un curso dibujara la figura del otro (pasó con exam-dron).
+  const own = {};
+  for (const c of ['calculo-1', 'fisica-1']) own[c] = Object.keys(loadData(path.join(ROOT, 'shared/js/diagrams', c + '.js'), {}).Diagrams || {});
+  own['calculo-1'].filter((id) => own['fisica-1'].includes(id)).forEach((id) => ok(false, `la figura ${id} existe en ambos cursos`));
   for (const course of ['calculo-1', 'fisica-1']) {
     const file = path.join(ROOT, 'data', course, 'exam-problems.js');
     if (!fs.existsSync(file)) continue;
     const W = loadData(LIBS, {});
     loadData(file, W);
-    const diagrams = loadData(path.join(ROOT, 'shared/js/diagrams', course + '.js'), {}).Diagrams || {};
+    const diagrams = loadData(['shared/js/diagrams/' + course + '.js', 'shared/js/diagrams/examen.js'].map((f) => path.join(ROOT, f)), {}).Diagrams || {};
     const Q = W.CBQuiz, E = W.CBExercises;
     for (const [code, list] of Object.entries(W.CB_EXAMS || {})) {
       for (const p of list) {
