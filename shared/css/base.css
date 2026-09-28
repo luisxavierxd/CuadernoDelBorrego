@@ -42,6 +42,9 @@ a:hover { text-decoration-thickness: 2px; }
 strong { font-weight: 600; }
 code, kbd, .mono { font-family: var(--font-mono); font-weight: 500; }
 img, svg { max-width: 100%; }
+/* KaTeX dibuja \vec, \overrightarrow y las raíces con SVG dentro de cajas de ancho 0:
+   con max-width: 100% la flecha se aplasta a nada. */
+.katex svg { max-width: none; }
 
 :focus-visible { outline: 2px solid var(--focus); outline-offset: 3px; border-radius: 4px; }
 

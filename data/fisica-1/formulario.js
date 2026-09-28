@@ -14,7 +14,7 @@
       {
         title: 'Unidades y constantes', sessions: [1], items: [
           { tex: 'g = 9.81\\ \\text{m/s}^2' },
-          { label: 'Prefijos', tex: '\\text{k} = 10^{3},\\ \\text{M} = 10^{6},\\ \\text{c} = 10^{-2},\\ \\text{m} = 10^{-3},\\ \\mu = 10^{-6}' },
+          { label: 'Prefijos', tex: '\\text{M} = 10^{6},\\quad \\text{k} = 10^{3},\\quad \\text{c} = 10^{-2},\\quad \\text{m} = 10^{-3},\\quad \\mu = 10^{-6}' },
           { tex: '1\\ \\text{km/h} = \\tfrac{1}{3.6}\\ \\text{m/s},\\quad 1\\ \\text{hp} = 746\\ \\text{W},\\quad 1\\ \\text{kWh} = 3.6\\ \\text{MJ}' },
           { label: 'Unidades derivadas', tex: '1\\ \\text{N} = 1\\ \\text{kg·m/s}^2,\\quad 1\\ \\text{J} = 1\\ \\text{N·m},\\quad 1\\ \\text{W} = 1\\ \\text{J/s}' }
         ]
@@ -23,10 +23,11 @@
         title: 'Vectores', sessions: [2, 3], items: [
           { label: 'Componentes', tex: 'A_x = A\\cos\\theta,\\quad A_y = A\\sin\\theta', s: 2 },
           { label: 'Magnitud y dirección', tex: 'A = \\sqrt{A_x^2 + A_y^2},\\quad \\tan\\theta = \\dfrac{A_y}{A_x}', s: 2, check: { eq: ['sqrt((5*cos(x))^2 + (5*sin(x))^2)', '5'] } },
-          { label: 'Suma', tex: '\\vec R = \\vec A + \\vec B:\\ R_x = A_x + B_x,\\ R_y = A_y + B_y', s: 2 },
+          { label: 'Suma', tex: '\\vec R = \\vec A + \\vec B:\\quad R_x = A_x + B_x,\\quad R_y = A_y + B_y', s: 2 },
           { label: 'Unitario', tex: '\\hat u = \\dfrac{\\vec A}{A}', s: 3 },
-          { label: 'Producto escalar', tex: '\\vec A\\cdot\\vec B = AB\\cos\\theta = A_xB_x + A_yB_y + A_zB_z', s: 3, check: { eq: ['(3*cos(x))*(4*cos(0.5)) + (3*sin(x))*(4*sin(0.5))', '12*cos(x - 0.5)'] } },
-          { label: 'Producto vectorial', tex: '|\\vec A\\times\\vec B| = AB\\sin\\theta,\\quad \\vec A\\times\\vec B = (A_yB_z - A_zB_y,\\ A_zB_x - A_xB_z,\\ A_xB_y - A_yB_x)', s: 3 },
+          { label: 'Producto escalar', tex: '\\vec A\\cdot\\vec B = AB\\cos\\theta,\\quad \\vec A\\cdot\\vec B = A_xB_x + A_yB_y + A_zB_z', s: 3, check: { eq: ['(3*cos(x))*(4*cos(0.5)) + (3*sin(x))*(4*sin(0.5))', '12*cos(x - 0.5)'] } },
+          { label: 'Producto vectorial', tex: '|\\vec A\\times\\vec B| = AB\\sin\\theta', s: 3 },
+          { label: 'Por componentes', tex: '\\vec A\\times\\vec B = \\begin{vmatrix} \\hat\\imath & \\hat\\jmath & \\hat k \\\\ A_x & A_y & A_z \\\\ B_x & B_y & B_z \\end{vmatrix}', s: 3 },
           { label: 'Proyección de A sobre B', tex: 'A_B = \\dfrac{\\vec A\\cdot\\vec B}{B}', s: 3 }
         ]
       },

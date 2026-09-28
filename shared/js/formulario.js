@@ -42,6 +42,33 @@
     return listToString(list).split(',').map(function (p) { return p.split('-').map(function (n) { return 'S' + pad(+n); }).join('–'); }).join(', ');
   }
 
+  // Parte una fórmula en sus piezas de primer nivel ("A,\quad B" o "A:\ \ B") para que, si no
+  // caben en un renglón, se acomoden en varios en vez de mostrar una barra de desplazamiento.
+  var SEP = /^[,:;]\s*(\\qquad|\\quad|\\ \\ )\s*/;
+  function pieces(tex) {
+    var out = [], depth = 0, start = 0, i = 0;
+    while (i < tex.length) {
+      var c = tex[i];
+      if (c === '\\' && /^\\left\b/.test(tex.slice(i))) { depth++; i += 5; continue; }
+      if (c === '\\' && /^\\right\b/.test(tex.slice(i))) { depth--; i += 6; continue; }
+      if (c === '\\') { i += 2; continue; }
+      if (c === '{') depth++;
+      else if (c === '}') depth--;
+      else if (depth === 0) {
+        var m = tex.slice(i).match(SEP);
+        if (m) { out.push(tex.slice(start, i + 1).trim()); i += m[0].length; start = i; continue; }
+      }
+      i++;
+    }
+    out.push(tex.slice(start).trim());
+    return out.filter(Boolean);
+  }
+  function texNode(tex) {
+    return h('div', { class: 'form-tex' }, pieces(tex).map(function (p) {
+      return h('span', { class: 'form-tex__part', html: '$\\displaystyle ' + p + '$' });
+    }));
+  }
+
   function render(root, F, meta, base) {
     var tag = {}, all = [];
     meta.groups.forEach(function (g) { g.sessions.forEach(function (s) { tag[s.n] = s; all.push(s.n); }); });
@@ -64,7 +91,10 @@
     var presets = ((window.QUIZ_PRESETS && window.QUIZ_PRESETS.presets) || []).filter(function (p) { return p.kind === 'exam' && p.id !== 'final'; });
     var summary = h('span', { class: 'form-pick__summary mono' });
     var pick = h('details', { class: 'form-pick' }, [
-      h('summary', {}, [h('strong', {}, ['Elegir temas']), summary]),
+      h('summary', {}, [
+        h('span', { class: 'form-pick__btn', html: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 7h10M18 7h2M4 17h4M12 17h8"/><circle cx="16" cy="7" r="2"/><circle cx="10" cy="17" r="2"/></svg><span>Elegir temas</span>' }),
+        h('span', { class: 'form-pick__now' }, ['Mostrando: ', summary])
+      ]),
       h('div', { class: 'form-pick__body' }, [
         h('div', { class: 'form-pick__presets' }, [shortcut('Todo el curso', all)].concat(presets.map(function (p) {
           return shortcut(p.label + ' · S' + pad(p.sessions[0]) + '–S' + pad(p.sessions[p.sessions.length - 1]), p.sessions);
@@ -98,6 +128,7 @@
     }
 
     var scope = h('p', { class: 'form-scope mono' });
+    var pageStyle = document.head.appendChild(h('style', { id: 'form-page-head' }));
     var grid = h('div', { class: 'form-grid' });
     root.appendChild(pick);
     root.appendChild(scope);
@@ -116,7 +147,7 @@
           // Etiqueta arriba (y la sesión, si la sección abarca varias); la fórmula abajo, sin partirse.
           var own = it.s && !(secSess.length === 1) ? link(it.s) : null;
           var sub = it.label || own ? h('div', { class: 'form-label' }, [it.label || null, own]) : null;
-          return h('li', {}, [sub, h('div', { class: 'form-tex', html: '$\\displaystyle ' + it.tex + '$' })]);
+          return h('li', {}, [sub, texNode(it.tex)]);
         }));
         var shown = secSess.filter(function (n) { return on[n]; });
         var sess = shown.length ? h('p', { class: 'form-sessions' }, shown.map(link)) : null;
@@ -132,6 +163,9 @@
       // En la hoja (y en papel) queda escrito qué temas trae cuando no es el curso completo.
       scope.textContent = isAll() ? '' : 'Temas: ' + label + (hasBasics ? (basics ? ' · con básicos' : ' · sin básicos') : '');
       scope.hidden = isAll();
+      // Encabezado impreso (caja de margen de @page): curso y temas de esta hoja.
+      var head = (F.title || 'Formulario') + ' · ' + (isAll() ? 'todo el curso' : label);
+      pageStyle.textContent = '@media print { @page { @top-right { content: "' + head.replace(/["\\]/g, '') + '"; } } }';
       var q = new URLSearchParams(location.search);
       if (picked.length === all.length) q.delete('s'); else q.set('s', listToString(picked));
       if (hasBasics && !basics) q.set('b', '0'); else q.delete('b');
@@ -158,5 +192,5 @@
     if (saved) document.documentElement.setAttribute('data-theme', saved);
   });
 
-  window.CBFormulario = { render: render, parseList: parseList, listToString: listToString };
+  window.CBFormulario = { render: render, pieces: pieces, parseList: parseList, listToString: listToString };
 })();

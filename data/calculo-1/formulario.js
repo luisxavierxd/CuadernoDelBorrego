@@ -17,7 +17,7 @@
           { tex: '1 + \\tan^2 x = \\sec^2 x', check: { eq: ['1 + tan(x)^2', 'sec(x)^2'], a: -1, b: 1 } },
           { tex: '1 + \\cot^2 x = \\csc^2 x', check: { eq: ['1 + cot(x)^2', 'csc(x)^2'] } },
           { tex: '\\sin 2x = 2\\sin x\\cos x', check: { eq: ['sin(2x)', '2*sin(x)*cos(x)'] } },
-          { tex: '\\cos 2x = \\cos^2 x - \\sin^2 x = 1 - 2\\sin^2 x', check: { eq: ['cos(2x)', '1 - 2*sin(x)^2'] } },
+          { tex: '\\cos 2x = \\cos^2 x - \\sin^2 x,\\quad \\cos 2x = 1 - 2\\sin^2 x', check: { eq: ['cos(2x)', '1 - 2*sin(x)^2'] } },
           { tex: '\\sin^2 x = \\dfrac{1 - \\cos 2x}{2}', check: { eq: ['sin(x)^2', '(1 - cos(2x))/2'] } },
           { tex: '\\cos^2 x = \\dfrac{1 + \\cos 2x}{2}', check: { eq: ['cos(x)^2', '(1 + cos(2x))/2'] } },
           { tex: '\\ln(ab) = \\ln a + \\ln b', check: { eq: ['ln(3x)', 'ln(3) + ln(x)'] } },
@@ -64,7 +64,7 @@
       {
         title: 'Extremos y optimización', sessions: [7, 8], items: [
           { label: 'Punto crítico', tex: "f'(c) = 0 \\text{ o } f'(c) \\text{ no existe}", s: 7 },
-          { label: 'Criterio de la primera derivada', tex: "f'\\!: + \\to - \\Rightarrow \\text{máx}\\qquad f'\\!: - \\to + \\Rightarrow \\text{mín}", s: 7 },
+          { label: 'Criterio de la primera derivada', tex: "f'\\!: + \\to - \\Rightarrow \\text{máx},\\qquad f'\\!: - \\to + \\Rightarrow \\text{mín}", s: 7 },
           { label: 'Criterio de la segunda derivada', tex: "f'(c) = 0:\\ \\ f''(c) < 0 \\Rightarrow \\text{máx},\\ \\ f''(c) > 0 \\Rightarrow \\text{mín}", s: 7 },
           { label: 'Concavidad', tex: "f'' > 0: \\cup\\qquad f'' < 0: \\cap", s: 7 },
           { label: 'Inflexión', tex: "f'' \\text{ cambia de signo}", s: 7 },
@@ -109,7 +109,7 @@
           { label: 'Fracciones parciales', tex: '\\dfrac{P(x)}{(x - r)(x - s)} = \\dfrac{A}{x - r} + \\dfrac{B}{x - s}', s: 13, check: { i: ['1/(x*(x + 1))', 'ln(x) - ln(x + 1)'] } },
           { tex: '(x - r)^2:\\ \\ \\dfrac{A}{x - r} + \\dfrac{B}{(x - r)^2}', s: 13 },
           { tex: 'x^2 + c \\text{ sin raíces}:\\ \\ \\dfrac{Ax + B}{x^2 + c}', s: 13 },
-          { tex: '\\text{grado de arriba} \\geq \\text{abajo: divide primero}', s: 13 }
+          { tex: '\\text{grado de arriba} \\geq \\text{abajo}:\\quad \\text{divide primero}', s: 13 }
         ]
       },
       {

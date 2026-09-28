@@ -45,12 +45,28 @@ function serve() {
       const pdf = buf.toString('latin1');
       const pages = (pdf.match(/\/Type\s*\/Page[^s]/g) || []).length;
       const box = (pdf.match(/MediaBox\s*\[\s*0\s+0\s+([\d.]+)\s+([\d.]+)/) || []).slice(1).map(Number);
-      const wide = await page.evaluate(() => [...document.querySelectorAll('.form-tex')].filter((n) => n.scrollWidth > n.clientWidth + 1).length);
+      const wide = await page.evaluate(() => [...document.querySelectorAll('.form-tex, .form-tex__part')].filter((n) => n.scrollWidth > n.clientWidth + 1).length);
+      // En pantalla, a lo ancho de escritorio y de celular: ninguna pieza con barra de desplazamiento
+      // (overflow-y siempre oculto) y ninguna flecha de \vec aplastada a ancho 0.
+      await page.emulateMedia({ media: 'screen' });
+      const screen = [];
+      for (const w of [1280, 390]) {
+        await page.setViewportSize({ width: w, height: 900 });
+        const r = await page.evaluate(() => ({
+          h: [...document.querySelectorAll('.form-tex__part')].filter((n) => n.scrollWidth > n.clientWidth + 1).length,
+          v: [...document.querySelectorAll('.form-tex__part')].filter((n) => getComputedStyle(n).overflowY !== 'hidden').length,
+          arrows: [...document.querySelectorAll('.form-tex .accent-body svg')].filter((s) => s.getBoundingClientRect().width < 1).length
+        }));
+        if (r.h) screen.push(r.h + ' fórmulas con desplazamiento horizontal a ' + w + ' px');
+        if (r.v) screen.push(r.v + ' fórmulas que pueden desplazarse en vertical');
+        if (r.arrows) screen.push(r.arrows + ' flechas de vector sin ancho a ' + w + ' px');
+      }
       const letter = Math.abs(box[0] - 612) < 1 && Math.abs(box[1] - 792) < 1;
       const bad = [];
       if (!letter) bad.push('no es carta (' + box.join('×') + ' pt)');
       if (pages > MAX_PAGES) bad.push(pages + ' páginas (máx. ' + MAX_PAGES + ')');
       if (wide) bad.push(wide + ' fórmulas más anchas que su columna');
+      bad.push(...screen);
       if (bad.length) { fail++; console.log('✗ ' + c + ': ' + bad.join('; ')); }
       else console.log('✓ ' + c + ': carta, ' + pages + (pages === 1 ? ' página' : ' páginas'));
       await ctx.close();
