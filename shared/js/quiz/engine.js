@@ -152,6 +152,24 @@
       return p.tags.every(function (t) { return sessionTags.indexOf(t) >= 0; });
     });
   }
+  // Para armar un examen con pocas sesiones: primero los problemas que caben por completo en lo
+  // elegido y, si no alcanzan, los que comparten al menos una sesión. Cada uno de estos últimos
+  // lleva .extra con las sesiones que usa y no se eligieron (para avisarlo).
+  function problemsFor(problems, sessionTags, n, rnd) {
+    rnd = rnd || Math.random;
+    var full = eligibleProblems(problems, sessionTags);
+    var partial = (problems || []).filter(function (p) {
+      return full.indexOf(p) < 0 && p.tags.some(function (t) { return sessionTags.indexOf(t) >= 0; });
+    }).map(function (p) {
+      return { p: p, extra: p.tags.filter(function (t) { return sessionTags.indexOf(t) < 0; }) };
+    });
+    var out = shuffle(full, rnd).slice(0, n).map(function (p) { return { p: p, extra: [] }; });
+    if (out.length < n) {
+      // Primero los que piden menos sesiones de fuera.
+      out = out.concat(shuffle(partial, rnd).sort(function (a, b) { return a.extra.length - b.extra.length; }).slice(0, n - out.length));
+    }
+    return out;
+  }
   function composeSimulacro(questions, problems, rnd) {
     rnd = rnd || Math.random;
     return {
@@ -183,7 +201,7 @@
     STATE_LABEL: STATE_LABEL, WEIGHTS: WEIGHTS, SOLUTION_KEEPS: SOLUTION_KEEPS,
     state: state, pool: pool, pick: pick, grade: grade, gradeShort: gradeShort,
     scoreByTag: scoreByTag, gradeProblem: gradeProblem, simulacroScore: simulacroScore,
-    suggestedMinutes: suggestedMinutes, eligibleProblems: eligibleProblems, composeSimulacro: composeSimulacro,
+    suggestedMinutes: suggestedMinutes, eligibleProblems: eligibleProblems, problemsFor: problemsFor, composeSimulacro: composeSimulacro,
     loadHistory: loadHistory, saveHistory: saveHistory, clearHistory: clearHistory, subtopic: subtopic
   };
 })();

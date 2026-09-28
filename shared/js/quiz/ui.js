@@ -623,7 +623,7 @@
       return { node: h('div', { class: 'lab-field' }, [h('label', { for: id, class: 'lab-field__label' }, [label]), h('div', { class: 'exercise__inputrow' }, [input, unit ? h('span', { class: 'exercise__unit' }, [unit]) : null])]), input: input,
         get: function () { var v = Math.round(+input.value); return isFinite(v) ? Math.max(min, Math.min(max, v)) : min; } };
     }
-    var cQ = numField('Preguntas cortas', 0, 30, 6);
+    var cQ = numField('Preguntas cortas', 0, 30, 3);
     var cP = numField('Problemas de examen', 0, 3, 1);
     var cMin = numField('Reloj', 0, 240, 30, 'min · 0 = sin reloj');
     var cFeed = window.LabUI.select({ label: 'Revisión', options: ['Al terminar el examen completo', 'Al contestar cada pregunta o inciso'] });
@@ -719,11 +719,24 @@
       root.innerHTML = '';
       var pool = Q().pool(window.CB_BANK, [{ code: plan.code, sessions: plan.sessions }]);
       var tags = plan.sessions.map(function (n) { return plan.code + '.S' + pad(n); });
-      var probs = needExams ? Q().eligibleProblems((window.CB_EXAMS || {})[plan.code], tags) : [];
+      var allProbs = needExams ? (window.CB_EXAMS || {})[plan.code] || [] : [];
+      var probs = Q().eligibleProblems(allProbs, tags);
       var qs, ps, notes = [];
+      // Problemas que también usan sesiones no elegidas: se avisan con nombre y sesión.
+      function borrowed(list) {
+        list.filter(function (x) { return x.extra.length; }).forEach(function (x) {
+          notes.push('«' + x.p.title + '» también usa ' + x.extra.map(function (t) {
+            var n = +t.split('.S')[1];
+            return 'S' + pad(n) + (tagOf[n] ? ' · ' + tagOf[n] : '');
+          }).join(', '));
+        });
+        return list.map(function (x) { return x.p; });
+      }
       if (plan.kind === 'quiz') { qs = Q().pick(pool, plan.count); ps = []; }
       else if (plan.kind === 'sim') {
         var comp = Q().composeSimulacro(pool, probs);
+        // Sin problemas propios de estas sesiones, toma uno que comparta alguna (y lo avisa).
+        if (!comp.problems.length) comp.problems = borrowed(Q().problemsFor(allProbs, tags, 1));
         if (comp.questions.length < 3 || comp.problems.length < 1) {
           root.appendChild(h('div', { class: 'sheet exam-empty' }, [h('p', { class: 'verdict verdict--warn' }, ['Con estas sesiones todavía no alcanza para un simulacro (hacen falta 3 preguntas y al menos 1 problema). Agrega sesiones o prueba el modo personalizado.']), h('p', {}, [h('a', { class: 'btn btn--ghost', href: '../' }, ['Volver al lanzador'])])]));
           return;
@@ -731,9 +744,10 @@
         qs = comp.questions; ps = comp.problems;
       } else {
         qs = Q().pick(pool, plan.qN);
-        ps = probs.slice().sort(function () { return Math.random() - 0.5; }).slice(0, plan.pN);
-        if (qs.length < plan.qN) notes.push('solo hay ' + qs.length + ' preguntas');
-        if (ps.length < plan.pN) notes.push('solo hay ' + ps.length + ' problemas');
+        ps = borrowed(Q().problemsFor(allProbs, tags, plan.pN));
+        if (qs.length < plan.qN) notes.push('con estas sesiones solo hay ' + qs.length + (qs.length === 1 ? ' pregunta' : ' preguntas'));
+        if (ps.length < plan.pN) notes.push(ps.length ? 'con estas sesiones solo hay ' + ps.length + (ps.length === 1 ? ' problema' : ' problemas')
+          : 'estas sesiones todavía no tienen problemas de examen: el examen trae solo preguntas cortas');
       }
       if (!qs.length && !ps.length) { root.appendChild(h('p', { class: 'verdict verdict--warn' }, ['Con estas sesiones todavía no hay preguntas.'])); return; }
       runAttempt(root, plan, meta, qs, ps, topics, notes);
@@ -783,7 +797,7 @@
     var L = examLayout(root, KIND_NAME[plan.kind] + ' · ' + meta.name, immediate
       ? 'Revisión inmediata: pulsa “Revisar” al contestar cada pregunta o inciso. “Ver solución” antes de contestar deja máximo el 30 %.'
       : 'No hay revisión hasta que entregues. “Ver solución” está disponible, pero deja máximo el 30 % de esa pregunta o inciso.');
-    if (notes.length) L.main.appendChild(h('p', { class: 'verdict verdict--warn' }, ['Con estas sesiones ' + notes.join(' y ') + '; el examen usa las que hay.']));
+    if (notes.length) L.main.appendChild(h('p', { class: 'verdict verdict--warn' }, [notes.map(function (t) { return t.charAt(0).toUpperCase() + t.slice(1) + '.'; }).join(' ')]));
     var both = questions.length && problems.length;
     var minutes = plan.kind === 'sim' ? Q().suggestedMinutes(plan.preset) : plan.kind === 'custom' ? plan.minutes : 0;
     var ck = minutes > 0 ? clock(minutes, plan.kind === 'sim' ? 'Reloj sugerido' : 'Reloj') : null;
@@ -874,7 +888,12 @@
       if (sub) sub.remove();
       showResults(L, entry, meta);
       actions.innerHTML = '';
-      actions.appendChild(h('a', { class: 'btn btn--primary', href: '../' }, ['Volver al lanzador']));
+      // Otro intento con la misma configuración (curso, tipo, sesiones y opciones), con preguntas nuevas.
+      actions.appendChild(window.LabUI.button('Hacer otro examen igual', 'primary', function () {
+        try { sessionStorage.setItem('cb-exam-plan', JSON.stringify(plan)); } catch (e) { window.location.href = '../'; return; }
+        window.location.reload();
+      }));
+      actions.appendChild(h('a', { class: 'btn btn--ghost', href: '../' }, ['Volver al lanzador']));
       endBar.remove();
       progress.textContent = 'Entregado';
       window.scrollTo(0, 0);

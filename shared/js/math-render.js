@@ -48,6 +48,30 @@
     if (!el) return;
     if (ready()) { window.renderMathInElement(el, OPTS); return; }
     queue.push(el);
+    watch();
+  }
+
+  // Si KaTeX (del CDN) tarda o no llegó, se reintenta: se revisa cada 250 ms y, a los 4 s sin
+  // KaTeX, se vuelven a pedir sus dos archivos una vez. Así nunca quedan fórmulas como $…$.
+  var watching = null, retried = false;
+  var CDN = 'https://cdn.jsdelivr.net/npm/katex@0.16.47/dist/';
+  function load(src) {
+    var s = document.createElement('script');
+    s.src = src; s.async = false;
+    document.head.appendChild(s);
+  }
+  function watch() {
+    if (watching) return;
+    var t0 = Date.now();
+    watching = setInterval(function () {
+      if (flush()) { clearInterval(watching); watching = null; return; }
+      if (!retried && Date.now() - t0 > 4000) {
+        retried = true;
+        if (!window.katex) load(CDN + 'katex.min.js');
+        load(CDN + 'contrib/auto-render.min.js');
+      }
+      if (Date.now() - t0 > 20000) { clearInterval(watching); watching = null; }
+    }, 250);
   }
 
   // KaTeX llega con defer: vacía la cola cuando termina de cargar.

@@ -140,6 +140,13 @@ function rng(seed) { return () => { seed = (seed * 16807) % 2147483647; return (
     eq(Q.loadHistory('cb-quiz-history').length, 0);
   });
 
+  test('problemas: primero los que caben en las sesiones elegidas, luego los que comparten alguna', () => {
+    const Q = W.CBQuiz, P = [{ id: 'a', tags: ['c1.S15', 'c1.S09'] }, { id: 'b', tags: ['c1.S14', 'c1.S09', 'c1.S07'] }, { id: 'c', tags: ['c1.S15'] }];
+    const one = Q.problemsFor(P, ['c1.S15'], 2, rng(3));
+    eq(one.map((x) => x.p.id).join(), 'c,a'); eq(one[1].extra.join(), 'c1.S09');
+    eq(Q.problemsFor(P, ['c1.S01'], 2, rng(3)).length, 0);
+    eq(Q.problemsFor(P, ['c1.S15', 'c1.S09'], 1, rng(3))[0].extra.length, 0);
+  });
   test('números: notación científica en los formatos que escribe un alumno', () => {
     const P = W.CBExercises.parseNumber;
     ['8.3e-5', '8.3E-5', '8.3×10^-5', '8.3x10^-5', '8.3 x 10^(-5)', '8.3*10^-5', '8.3·10⁻⁵', '8.3 × 10 ^ −5']
