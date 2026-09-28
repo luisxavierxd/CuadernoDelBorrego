@@ -36,9 +36,20 @@
     throw new Error('No encontré valores que cumplan la restricción de ' + ex.id);
   }
 
+  // Notación científica como la escriba el alumno: 8.3e-5, 8.3×10^-5, 8.3x10^(-5), 8.3*10^-5,
+  // 8.3·10⁻⁵ o 8.3 × 10 ^ −5. Todo se convierte a 8.3e-5 antes de leer el número.
+  var SUP = { '⁰': '0', '¹': '1', '²': '2', '³': '3', '⁴': '4', '⁵': '5', '⁶': '6', '⁷': '7', '⁸': '8', '⁹': '9', '⁻': '-', '⁺': '+' };
+  function sciToE(t) {
+    t = t.replace(/[⁰¹²³⁴⁵⁶⁷⁸⁹⁻⁺]+/g, function (m) { return '^' + m.split('').map(function (c) { return SUP[c]; }).join(''); });
+    var m = t.match(/^([+-]?(?:\d+\.?\d*|\.\d+))(?:[x×X*·]|\\times|\\cdot)10\^?\(?([+-]?\d+)\)?$/);
+    if (m) return m[1] + 'e' + m[2];
+    m = t.match(/^([+-]?)10\^\(?([+-]?\d+)\)?$/);          // 10^-5 → 1e-5
+    return m ? m[1] + '1e' + m[2] : t;
+  }
   function parseNumber(s, math) {
     var t = String(s == null ? '' : s).trim().replace(/\s+/g, '').replace(/,/g, '.').replace(/−/g, '-');
     if (t === '') return NaN;
+    t = sciToE(t);
     var n = Number(t);
     if (isFinite(n)) return n;
     if (math) { try { var e = math.evaluate(t); if (typeof e === 'number') return e; } catch (err) {} }
@@ -147,7 +158,22 @@
     throw new Error('check desconocido: ' + ex.check);
   }
 
-  var api = { instance: instance, grade: grade, parseNumber: parseNumber, sameExpr: sameExpr, withinTol: withinTol };
+  /* Aviso bajo cada respuesta numérica: formato, redondeo y constantes, para que nadie pierda
+     puntos por tecnicismos. g en todas las de Física; π solo si la pregunta lo usa (en el
+     enunciado o en la cuenta de la respuesta). ctx: { fis, parts: [funciones o textos] }. */
+  function usesPi(parts) {
+    return (parts || []).some(function (p) { return p && /\\pi\b|π|Math\.PI|\bPI\b/.test(String(p)); });
+  }
+  function numberHint(ctx) {
+    ctx = ctx || {};
+    var consts = [];
+    if (ctx.fis) consts.push('g = 9.81 m/s²');
+    if (usesPi(ctx.parts)) consts.push('π = 3.14');
+    return 'Usa punto decimal y redondea a 2 decimales. Si es muy chico o muy grande, usa notación científica: <code>8.3e-5</code> o <code>8.3×10^-5</code>.' +
+      (consts.length ? ' Toma ' + consts.join(' y ') + '.' : '');
+  }
+
+  var api = { instance: instance, grade: grade, parseNumber: parseNumber, sameExpr: sameExpr, withinTol: withinTol, numberHint: numberHint };
   window.CBExercises = api;
 
   /* ------------------------------ UI ------------------------------ */
@@ -230,7 +256,7 @@
       answer.appendChild(h('div', { class: 'lab-field' }, [
         h('label', { for: inputId, class: 'lab-field__label' }, ['Tu resultado']),
         h('div', { class: 'exercise__inputrow' }, [inp, ex.unit ? h('span', { class: 'exercise__unit' }, [ex.unit]) : null]),
-        h('p', { id: inputId + '-help', class: 'lab-field__hint', html: 'Usa punto decimal y redondea a 2 decimales (si es muy chico, escríbelo como <code>8.3e-5</code>).' })
+        h('p', { id: inputId + '-help', class: 'lab-field__hint', html: numberHint({ fis: /^f\d/.test(ex.id || ''), parts: [ex.prompt, ex.answer, ex.solution] }) })
       ]));
       inp.addEventListener('keydown', function (e) { if (e.key === 'Enter') { e.preventDefault(); check(); } });
       get = function () { return inp.value; };

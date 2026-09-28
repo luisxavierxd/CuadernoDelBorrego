@@ -48,6 +48,12 @@
   /* ---------- Tarjeta de pregunta ----------
      mode 'practice': retroalimentación inmediata con why.
      mode 'exam': sin revisar; "Ver solución" con confirmación en la página. */
+  // Contexto del aviso numérico: ¿es de Física (g) y usa π? q es una pregunta del banco o
+  // { tags, parts } para un inciso de problema de examen.
+  function hintCtx(q) {
+    q = q || {};
+    return { fis: /^f\d/.test((q.tags && q.tags[0]) || ''), parts: q.parts || [q.prompt, q.answer, q.why] };
+  }
   function answerInput(kind, opts, v, unit, q) {
     var id = uid('qa');
     if (kind === 'choice') {
@@ -74,7 +80,7 @@
     var node = h('div', { class: 'lab-field' }, [
       h('label', { for: id, class: 'lab-field__label' }, [isExpr ? (q && q.integrand ? 'Tu antiderivada F(x)' : 'Tu respuesta') : 'Tu resultado']),
       h('div', { class: 'exercise__inputrow' }, [inp, unit ? h('span', { class: 'exercise__unit' }, [unit]) : null]),
-      h('p', { class: 'lab-field__hint', html: isExpr ? (q && q.integrand ? 'La constante C es opcional. Ej.:' : 'Ej.:') + ' <code>x^3/3</code>, <code>e^(2x)/2</code>, <code>ln(x)</code>.' : 'Usa punto decimal y redondea a 2 decimales (si es muy chico, escríbelo como <code>8.3e-5</code>).' })
+      h('p', { class: 'lab-field__hint', html: isExpr ? (q && q.integrand ? 'La constante C es opcional. Ej.:' : 'Ej.:') + ' <code>x^3/3</code>, <code>e^(2x)/2</code>, <code>ln(x)</code>.' : window.CBExercises.numberHint(hintCtx(q)) })
     ]);
     return { node: node, input: inp, get: function () { return inp.value; }, lock: function () { inp.readOnly = true; }, set: function (val) { inp.value = val == null ? '' : val; } };
   }
@@ -354,7 +360,7 @@
   function problemCard(p, v, n, review) {
     var parts = [];
     p.parts.forEach(function (part, i) {
-      var inp = answerInput(part.type || 'numeric', null, v, part.unit);
+      var inp = answerInput(part.type || 'numeric', null, v, part.unit, { tags: p.tags, parts: [p.statement, part.prompt, part.answer, part.solution] });
       var sol = h('div', { class: 'qcard__why', hidden: true });
       var verdict = h('div', { class: 'verdict', hidden: true, role: 'status' });
       var st = { seen: false, reviewed: false };

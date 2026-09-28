@@ -140,6 +140,27 @@ function rng(seed) { return () => { seed = (seed * 16807) % 2147483647; return (
     eq(Q.loadHistory('cb-quiz-history').length, 0);
   });
 
+  test('números: notación científica en los formatos que escribe un alumno', () => {
+    const P = W.CBExercises.parseNumber;
+    ['8.3e-5', '8.3E-5', '8.3×10^-5', '8.3x10^-5', '8.3 x 10^(-5)', '8.3*10^-5', '8.3·10⁻⁵', '8.3 × 10 ^ −5']
+      .forEach((s) => near(P(s), 8.3e-5, 1e-15, s));
+    near(P('1.2×10^3'), 1200, 1e-9); near(P('−2,5x10^4'), -25000, 1e-9); near(P('10^-5'), 1e-5, 1e-15);
+    eq(P('3.14'), 3.14); eq(Number.isNaN(P('x10^5')), true);
+  });
+  test('tolerancia: una centésima de holgura desde 0.1; los resultados chicos siguen con ±1 %', () => {
+    const T = W.CBExercises.withinTol;
+    eq(T(0.57, 0.567), true); eq(T(0.56, 0.567), true); eq(T(0.55, 0.567), false);
+    eq(T(0, 8.3e-5), false); eq(T(8.3e-5, 8.33e-5), true);
+  });
+  test('aviso numérico: g en Física, π solo si la pregunta lo usa', () => {
+    const H = W.CBExercises.numberHint;
+    eq(/g = 9\.81/.test(H({ fis: true, parts: ['sin pi'] })), true);
+    eq(/g = 9\.81/.test(H({ fis: false, parts: [] })), false);
+    eq(/π = 3\.14/.test(H({ fis: false, parts: [function (v) { return Math.PI * v.r; }] })), true);
+    eq(/π = 3\.14/.test(H({ fis: false, parts: ['$\\pi r^2$'] })), true);
+    eq(/π = 3\.14/.test(H({ fis: true, parts: ['Calcula el trabajo'] })), false);
+  });
+
   console.log(`\nquiz-engine.test.js: ${pass} ok, ${fail} fallan.`);
   process.exit(fail ? 1 : 0);
 })().catch((e) => { console.error(e); process.exit(1); });
