@@ -22,15 +22,44 @@
   function text(x, y, s, extra) {
     return '<text class="ann" x="' + x.toFixed(1) + '" y="' + y.toFixed(1) + '"' + (extra || '') + '>' + s + '</text>';
   }
+  // Etiquetas que no chocan: cands = [[x, y, texto, anchor]]; se usa la primera cuya caja
+  // (ancho estimado) cabe en el lienzo W × H y no toca ningún punto de pts.
+  function spot(cands, pts, fs, W, H) {
+    for (var i = 0; i < cands.length; i++) {
+      var c = cands[i], w = String(c[2]).length * fs * 0.6, a = c[3] || 'start';
+      var x0 = a === 'end' ? c[0] - w : a === 'middle' ? c[0] - w / 2 : c[0];
+      var l = x0 - 4, r = x0 + w + 4, t = c[1] - fs * 0.85 - 2, b = c[1] + fs * 0.3 + 2;
+      if (l < 2 || r > W - 2 || t < 2 || b > H - 2) continue;
+      if (!pts.some(function (p) { return p[0] > l && p[0] < r && p[1] > t && p[1] < b; })) return c;
+    }
+    return cands[0];
+  }
+  function ring(px, py, s) {
+    var c = [];
+    [[12, -12, ''], [-12, -12, 'end'], [12, 24, ''], [-12, 24, 'end'], [0, -22, 'middle'], [0, 34, 'middle'], [26, -30, ''], [-26, -30, 'end'], [26, 44, ''], [-26, 44, 'end'], [0, -44, 'middle'], [0, 56, 'middle'], [50, 50, ''], [80, 50, ''], [50, -50, ''], [80, -50, ''], [-50, 50, 'end'], [-50, -50, 'end']]
+      .forEach(function (o) { c.push([px + o[0], py + o[1], s, o[2] || undefined]); });
+    return c;
+  }
+  function label(c, fs) { return text(c[0], c[1], c[2], (c[3] ? ' text-anchor="' + c[3] + '"' : '') + ' font-size="' + fs + '"'); }
+  function samp(fn, a, b, X, Y, n) {
+    var o = []; n = n || 300;
+    for (var i = 0; i <= n; i++) { var x = a + (b - a) * i / n, y = fn(x); if (isFinite(y)) o.push([X(x), Y(y)]); }
+    return o;
+  }
+  function segPts(x1, y1, x2, y2) {
+    var o = [], n = Math.ceil(Math.hypot(x2 - x1, y2 - y1) / 3) || 1;
+    for (var i = 0; i <= n; i++) o.push([x1 + (x2 - x1) * i / n, y1 + (y2 - y1) * i / n]);
+    return o;
+  }
 
   /* ---------- Familia de antiderivadas F(x) + C ---------- */
   D['antiderivative-family'] = function () {
-    var X = function (x) { return 300 + x * 120; };
+    var X = function (x) { return 330 + x * 115; };
     var Y = function (y) { return 205 - y * 45; };
     var F = function (x) { return x * x * x / 3 - x; };
     var f = function (x) { return x * x - 1; };
     var x0 = 1.5, m = f(x0), dx = 0.42;
-    var body = '<path class="axis" d="M' + X(-2.35) + ' ' + Y(0) + 'H' + X(2.35) + 'M' + X(0) + ' ' + Y(-2.6) + 'V' + Y(3.7) + '" stroke-width="1.5" fill="none"/>';
+    var body = '<path class="axis" d="M' + X(-2.3) + ' ' + Y(0) + 'H' + X(2.3) + 'M' + X(0) + ' ' + Y(-2.6) + 'V' + Y(2.8) + '" stroke-width="1.5" fill="none"/>';
     [-1, 0, 1, 2].forEach(function (C) {
       body += '<path class="ref' + (C === 0 ? '' : ' is-faint') + '" d="' + path(function (x) { return F(x) + C; }, -2.2, 2.2, X, Y) + '" fill="none" stroke-width="' + (C === 0 ? 3.5 : 2.5) + '" stroke-linecap="round"/>';
       var y0 = F(x0) + C;
@@ -40,7 +69,7 @@
     });
     body += '<path class="axis" d="M' + X(x0) + ' ' + Y(-2.5) + 'V' + Y(3.6) + '" stroke-dasharray="4 6" stroke-width="1.2"/>';
     body += text(X(x0), Y(-2.5) + 22, 'x₀', ' text-anchor="middle" font-size="18"');
-    body += text(X(0.15), Y(3.35), 'misma x₀ → misma pendiente f(x₀)', ' font-size="19"');
+    body += text(X(-2.2), Y(3.35), 'misma x₀ → misma pendiente f(x₀)', ' font-size="19"');
     return svg('0 0 600 360', 'Cuatro curvas F(x) + C desplazadas verticalmente; en el mismo x₀ sus tangentes son paralelas.', body);
   };
 
@@ -70,10 +99,10 @@
       '<path class="ref" d="' + curve + '" fill="none" stroke-width="3.5" stroke-linecap="round"/>' +
       '<path class="axis" d="M' + X(px(b)) + ' ' + (Y(0) - 8) + 'V' + (Y(0) + 8) + '" stroke-width="2"/>' +
       text(X(px(b)), Y(0) - 14, endLabel, ' text-anchor="middle" font-size="18"') +
-      text(X(2.85), Y(0) + 24, xLabel, ' text-anchor="end" font-size="20"') +
+      text(X(2.6), Y(0) + 26, xLabel, ' font-size="18"') +
       text(X(0.12), Y(1.5), fLabel, ' font-size="20"') +
-      text(X(1.25), Y(-2.55), 'área neta = sin(2.56) ≈ 0.549', ' font-size="19"');
-    if (t > 0.15 && t < 0.85) body += text(X(0.9), Y(1.05), 'la base se estira: du = 2x·dx', ' font-size="18"');
+      text(X(0.1), Y(-2.95) + 4, 'área neta = sin(2.56) ≈ 0.549', ' font-size="19"');
+    if (t > 0.15 && t < 0.85) body += text(X(0.1), Y(-2.95) - 24, 'la base se estira: du = 2x·dx', ' font-size="18"');
     return svg('0 0 600 370', 'Área bajo f(x) = 2x cos(x²) entre 0 y 1.6 que se transforma en el área bajo cos(u) entre 0 y 2.56; el área neta es la misma.', body);
   };
 
@@ -91,10 +120,10 @@
       '<path class="ref" d="' + path(r, 0, T, X, Y, 160) + '" fill="none" stroke-width="3.5" stroke-linecap="round"/>' +
       '<path class="axis" d="M' + X(1) + ' ' + Y(c / 2) + 'V' + Y(0) + '" stroke-dasharray="4 6" stroke-width="1.2"/>' +
       '<circle class="dot-ref" cx="' + X(1) + '" cy="' + Y(c / 2) + '" r="5"/>' +
-      text(X(1) + 10, Y(c / 2) - 10, 'máximo', ' font-size="18"') +
+      text(X(1) + 10, Y(c / 2) - 8, 'máximo', ' font-size="18"') +
       text(X(T), Y(0) + 24, 't = ' + T + ' min', ' text-anchor="end" font-size="18"') +
-      text(X(T * 0.55), Y(c / 8), 'V = área', ' text-anchor="middle" font-size="20"') +
-      text(X(0) + 8, Y(c / 2) - 22, 'r(t) en L/min', ' font-size="18"');
+      text(T < 3 ? X((1 + T) / 2) : X(T * 0.55), Y(c / 8), 'V = área', ' text-anchor="middle" font-size="20"') +
+      text(X(0) + 8, Y(c / 2) - 32, 'r(t) en L/min', ' font-size="18"');
     return svg('0 0 600 290', 'Gráfica del caudal r(t): sube hasta un máximo en t = 1 y luego baja; el área bajo la curva hasta t = ' + T + ' es el volumen.', body);
   };
 
@@ -113,8 +142,8 @@
       '<path class="axis" d="M' + X(0) + ' ' + Y(0) + 'H' + (X(T) + 20) + 'M' + X(0) + ' ' + Y(-M) + 'V' + Y(M) + '" stroke-width="1.5" fill="none"/>' +
       '<path class="ref" d="' + path(v, 0, T, X, Y, 160) + '" fill="none" stroke-width="3.5" stroke-linecap="round"/>' +
       '<circle class="dot-aux" cx="' + X(ts) + '" cy="' + Y(0) + '" r="5"/>' +
-      text(X(ts), Y(0) - 12, 'v = 0', ' text-anchor="middle" font-size="18"') +
-      text(X(T), Y(0) + 24, 't = ' + T + ' s', ' text-anchor="end" font-size="18"') +
+      text(X(ts) - 10, Y(0) + 22, 'v = 0', ' text-anchor="end" font-size="18"') +
+      text(X(T), Math.max(Y(0), Y(v(T))) + 30, 't = ' + T + ' s', ' text-anchor="end" font-size="18"') +
       text(X(0) + 8, Y(M) + 6, 'v(t) en m/s', ' font-size="18"');
     return svg('0 0 600 290', 'Gráfica de la velocidad v(t): positiva hasta que se detiene en t = √(π/2); luego negativa, el robot regresa.', body);
   };
@@ -129,7 +158,7 @@
   D['rate-of-change'] = function () {
     var s = function (t) { return 0.35 * t * t + 0.4 * t; };
     // s(5.4) ≈ 12.4: la escala vertical cabe completa en el recuadro
-    var X = function (t) { return 60 + t * 92; }, Y = function (y) { return 300 - y * 20; };
+    var X = function (t) { return 60 + t * 88; }, Y = function (y) { return 300 - y * 20; };
     var a = 1.5, b = 4.5, m = (s(b) - s(a)) / (b - a);
     var body =
       '<path class="axis" d="M' + X(0) + ' ' + Y(0) + 'H' + X(5.9) + 'M' + X(0) + ' ' + Y(0) + 'V' + Y(13.5) + '" stroke-width="1.5" fill="none"/>' +
@@ -162,8 +191,8 @@
       '<circle class="dot-aux" cx="' + X(a + h) + '" cy="' + Y(f(a + h)) + '" r="6"/>' +
       '<path class="axis" d="M' + X(a) + ' ' + (Y(0) + 14) + 'H' + X(a + h) + '" stroke-width="1.5"/>' +
       text((X(a) + X(a + h)) / 2, Y(0) + 32, 'h = ' + (+h.toFixed(2)), ' text-anchor="middle" font-size="18"') +
-      text(X(-0.4), Y(6.2), 'pendiente de la secante: ' + (+m.toFixed(3)), ' font-size="20"') +
-      text(X(-0.4), Y(5.5), 'tangente (punteada): 1', ' font-size="18"');
+      text(X(0) + 12, Y(6.2), 'pendiente de la secante: ' + (+m.toFixed(3)), ' font-size="20"') +
+      text(X(0) + 12, Y(5.5), 'tangente (punteada): 1', ' font-size="18"');
     return svg('0 0 600 360', 'Curva con una secante por x = 1 y x = 1 + h; al hacer h pequeño, la secante se acerca a la tangente punteada.', body);
   };
 
@@ -171,19 +200,19 @@
   D['derivative-graph'] = function () {
     var f = function (x) { return x * x * x - 3 * x; }, d = function (x) { return 3 * x * x - 3; };
     var X = function (x) { return 300 + x * 110; };
-    var Yf = function (y) { return 110 - y * 20; }, Yd = function (y) { return 290 - y * 13; };
+    var Yf = function (y) { return 110 - y * 20; }, Yd = function (y) { return 280 - y * 12; };
     var body =
       '<path class="axis" d="M' + X(-2.5) + ' ' + Yf(0) + 'H' + X(2.5) + 'M' + X(-2.5) + ' ' + Yd(0) + 'H' + X(2.5) + '" stroke-width="1.5" fill="none"/>' +
-      '<path class="ref" d="' + path(f, -2.2, 2.2, X, Yf) + '" fill="none" stroke-width="3.5" stroke-linecap="round"/>' +
+      '<path class="ref" d="' + path(f, -2.05, 2.05, X, Yf) + '" fill="none" stroke-width="3.5" stroke-linecap="round"/>' +
       '<path class="error" d="' + path(d, -1.95, 1.95, X, Yd) + '" fill="none" stroke-width="3.5" stroke-linecap="round"/>' +
       '<path class="axis" d="M' + X(-1) + ' ' + Yf(2) + 'V' + Yd(0) + 'M' + X(1) + ' ' + Yf(-2) + 'V' + Yd(0) + '" stroke-dasharray="4 6" stroke-width="1.2"/>' +
       '<path class="aux" d="M' + X(-1.4) + ' ' + Yf(2) + 'H' + X(-0.6) + 'M' + X(0.6) + ' ' + Yf(-2) + 'H' + X(1.4) + '" stroke-width="3"/>' +
       text(X(-2.45), Yf(3.2), 'f(x) = x³ − 3x', ' font-size="19"') +
-      text(X(-2.45), Yd(6.2), 'f′(x) = 3x² − 3', ' font-size="19"') +
-      text(X(1.05), Yd(0) - 8, 'f′ = 0', ' font-size="17"') +
-      text(X(1.6), Yd(3.5), 'f′ > 0: f sube', ' font-size="17"') +
-      text(X(-0.55), Yd(-2.2), 'f′ < 0: f baja', ' font-size="17"');
-    return svg('0 0 600 340', 'Arriba la gráfica de f(x) = x³ − 3x; abajo su derivada 3x² − 3. En x = ±1 la derivada vale cero y la tangente de f es horizontal.', body);
+      text(X(-2.45), Yd(0) + 26, 'f′(x) = 3x² − 3', ' font-size="19"') +
+      text(X(1) + 8, Yd(0) + 22, 'f′ = 0', ' font-size="17"') +
+      text(X(1.2), Yd(-3) + 26, 'f′ > 0: f sube', ' font-size="17"') +
+      text(X(0), Yd(-3) + 26, 'f′ < 0: f baja', ' text-anchor="middle" font-size="17"');
+    return svg('0 0 600 350', 'Arriba la gráfica de f(x) = x³ − 3x; abajo su derivada 3x² − 3. En x = ±1 la derivada vale cero y la tangente de f es horizontal.', body);
   };
 
   // S03 · Regla del producto como área: d(uv) = v·du + u·dv (+ du·dv, despreciable).
@@ -214,7 +243,7 @@
       text(X(1.2), Y(0.5) - 12, 'f′(1) = 0', ' font-size="18"') +
       text(X(-1.2), Y(-0.5) + 26, 'f′(−1) = 0', ' text-anchor="end" font-size="18"') +
       text(X(0.35), Y(0.12), 'f′(0) = 1', ' font-size="18"') +
-      text(X(2.2), Y(0.62), 'f(x) = x / (x² + 1)', ' font-size="19"');
+      text(X(4.6), Y(0) - 12, 'f(x) = x / (x² + 1)', ' text-anchor="end" font-size="19"');
     return svg('0 0 600 330', 'Gráfica de x/(x² + 1) con sus tangentes horizontales en x = 1 y x = −1 y la tangente de pendiente 1 en el origen.', body);
   };
 
@@ -246,9 +275,10 @@
       '<path class="axis" d="M' + X(0) + ' ' + Y(0) + 'L' + X(px) + ' ' + Y(py) + '" stroke-dasharray="4 5" stroke-width="1.4"/>' +
       '<path class="aux" d="M' + X(px - 3 * Math.cos(Math.atan(m))) + ' ' + Y(py - 3 * Math.sin(Math.atan(m))) + 'L' + X(px + 3 * Math.cos(Math.atan(m))) + ' ' + Y(py + 3 * Math.sin(Math.atan(m))) + '" stroke-width="3"/>' +
       '<circle class="dot-aux" cx="' + X(px) + '" cy="' + Y(py) + '" r="6"/>' +
-      text(X(-6.3), Y(5.6), 'x² + y² = 25', ' font-size="20"') +
-      text(X(-6.3), Y(4.7), 'y′ = −x/y = ' + (Math.abs(py) > 0.05 ? (+m.toFixed(2)) : '∞'), ' font-size="20"') +
-      text(X(px) + 10, Y(py) - 10, '(' + (+px.toFixed(1)) + ', ' + (+py.toFixed(1)) + ')', ' font-size="17"');
+      text(14, 30, 'x² + y² = 25', ' font-size="20"') +
+      text(14, 58, 'y′ = −x/y = ' + (Math.abs(py) > 0.05 ? (+m.toFixed(2)) : '∞'), ' font-size="20"') +
+      text(X(px * 1.22) + (Math.abs(px) < 0.8 ? 10 : 0), Math.max(24, Y(py * 1.22) + (py < 0 ? 14 : 0) - (Math.abs(py) < 1.5 ? 12 : 0)),
+        '(' + (+px.toFixed(1)) + ', ' + (+py.toFixed(1)) + ')', (px < -0.8 ? ' text-anchor="end"' : '') + ' font-size="17"');
     return svg('0 0 600 340', 'Círculo de radio 5 con un punto y su recta tangente, perpendicular al radio; la pendiente es −x/y.', body);
   };
 
@@ -258,7 +288,9 @@
     var X = function (x) { return 60 + (x - x0) * 500 / (x1 - x0); };
     var Y = function (y) { return 250 - (y - y0) * 210 / (y1 - y0); };
     var axes = '<path class="axis" d="M' + X(x0) + ' ' + Y(Math.max(y0, Math.min(0, y1))) + 'H' + (X(x1) + 14) + 'M' + X(Math.max(x0, Math.min(0, x1))) + ' ' + (Y(y0) + 6) + 'V' + (Y(y1) - 12) + '" stroke-width="1.5" fill="none"/>';
-    return { X: X, Y: Y, axes: axes };
+    var ay = Y(Math.max(y0, Math.min(0, y1))), ax = X(Math.max(x0, Math.min(0, x1)));
+    var pts = segPts(X(x0), ay, X(x1) + 14, ay).concat(segPts(ax, Y(y0) + 6, ax, Y(y1) - 12));
+    return { X: X, Y: Y, axes: axes, pts: pts };
   }
   function line(F, m, x, y, x0, x1, cls) {
     return '<path class="' + cls + '" d="M' + F.X(x0).toFixed(1) + ' ' + F.Y(y + m * (x0 - x)).toFixed(1) + 'L' + F.X(x1).toFixed(1) + ' ' + F.Y(y + m * (x1 - x)).toFixed(1) + '" stroke-width="3" stroke-linecap="round" fill="none"/>';
@@ -274,7 +306,7 @@
       line(F, h(T) / T, 0, 0, 0, T, 'aux') +
       line(F, 2 * p * T + q, T, h(T), T * 0.65, T * 1.1, 'student') +
       '<circle class="dot-ref" cx="' + F.X(T) + '" cy="' + F.Y(h(T)) + '" r="5"/>' +
-      text(F.X(T * 0.3) - 6, F.Y(h(T) * 0.3) - 12, 'secante (promedio)', ' text-anchor="end" font-size="17"') +
+      text(F.X(T * 0.5) - 6, F.Y(h(T) * 0.5) - 12, 'secante (promedio)', ' text-anchor="end" font-size="17"') +
       text(F.X(T) - 14, F.Y(h(T)) - 12, 'tangente en t = ' + T, ' text-anchor="end" font-size="17"') +
       text(F.X(0) + 8, F.Y(h(T) * 1.15) + 4, 'h(t) en m', ' font-size="17"');
     return svg('0 0 600 290', 'Altura del dron contra el tiempo, con la secante desde t = 0 y la tangente en t = ' + T + ', más empinada.', body);
@@ -285,13 +317,15 @@
     var a = s.a || 2, k = s.k || 3;
     var f = function (x) { return x * x * x - k * x; };
     var m = 3 * a * a - k, L = a + 1.2;
-    var F = frame(-L, L, f(-L) * 1.05, f(L) * 1.05);
+    var ysT = samp(f, -L, L, function (x) { return x; }, function (y) { return y; }).map(function (p) { return p[1]; });
+    var F = frame(-L, L, Math.min.apply(null, ysT) * 1.1, Math.max.apply(null, ysT) * 1.1);
     var body = F.axes +
       '<path class="ref" d="' + path(f, -L, L, F.X, F.Y) + '" fill="none" stroke-width="3.5" stroke-linecap="round"/>' +
       line(F, m, a, f(a), Math.max(-L, a - 1.2), Math.min(L, a + 0.8), 'aux') +
       '<circle class="dot-aux" cx="' + F.X(a) + '" cy="' + F.Y(f(a)) + '" r="5"/>' +
-      text(F.X(a) + 10, F.Y(f(a)) + 22, 'x = ' + a, ' font-size="17"') +
-      text(F.X(-L) + 6, F.Y(f(L) * 1.05) + 16, 'f(x) = x³ − ' + k + 'x', ' font-size="18"');
+      label(spot(ring(F.X(a), F.Y(f(a)), 'x = ' + a),
+        F.pts.concat(samp(f, -L, L, F.X, F.Y), segPts(F.X(Math.max(-L, a - 1.2)), F.Y(f(a) + m * (Math.max(-L, a - 1.2) - a)), F.X(Math.min(L, a + 0.8)), F.Y(f(a) + m * (Math.min(L, a + 0.8) - a)))), 17, 600, 290), 17) +
+      label(spot([[F.X(-L) + 6, 34, 'f(x) = x³ − ' + (k === 1 ? '' : k) + 'x'], [F.X(L), 34, 'f(x) = x³ − ' + (k === 1 ? '' : k) + 'x', 'end'], [F.X(-L) + 6, 262, 'f(x) = x³ − ' + (k === 1 ? '' : k) + 'x'], [F.X(L), 262, 'f(x) = x³ − ' + (k === 1 ? '' : k) + 'x', 'end'], [F.X(-L) + 6, 56, 'f(x) = x³ − ' + (k === 1 ? '' : k) + 'x'], [F.X(L), 56, 'f(x) = x³ − ' + (k === 1 ? '' : k) + 'x', 'end']], F.pts.concat(samp(f, -L, L, F.X, F.Y)), 18, 600, 290), 18);
     return svg('0 0 600 290', 'Cúbica f(x) = x³ − ' + k + 'x con su recta tangente en x = ' + a + '.', body);
   };
 
@@ -299,7 +333,7 @@
   D['exam-costo'] = function (s) {
     var Fc = s.F || 900, b = s.b || 10, x0 = s.x0 || 100;
     var A = function (x) { return Fc / x + b + 0.01 * x; };
-    var xm = 10 * Math.sqrt(Fc), x1 = Math.max(2.2 * xm, x0 * 1.3), top = A(xm) * 2.2;
+    var xm = 10 * Math.sqrt(Fc), x1 = Math.max(2.2 * xm, x0 * 1.3), top = Math.max(A(xm) * 2.2, A(x0) * 1.2);
     var F = frame(0, x1, 0, top);
     var body = F.axes +
       '<path class="ref" d="' + path(A, Fc / (top - b), x1, F.X, F.Y) + '" fill="none" stroke-width="3.5" stroke-linecap="round"/>' +
@@ -335,9 +369,11 @@
       '<path class="ref" d="' + path(T, 0, 24, F.X, F.Y) + '" fill="none" stroke-width="3.5" stroke-linecap="round"/>' +
       line(F, m, t0, T(t0), Math.max(0, t0 - 2.5), t0 + 2.5, 'aux') +
       '<circle class="dot-aux" cx="' + F.X(t0) + '" cy="' + F.Y(T(t0)) + '" r="5"/>' +
-      text(F.X(24), F.Y(20) + 22, '24 h', ' text-anchor="end" font-size="16"') +
-      text(F.X(0) + 8, F.Y(20) + 20, '20 °C', ' font-size="16"') +
-      text(F.X(t0) + 12, F.Y(T(t0)) + 24, 't = ' + t0 + ' h', ' font-size="17"');
+      text(F.X(24), F.Y(20) - 10, '24 h', ' text-anchor="end" font-size="16"') +
+      text(F.X(0) + 8, F.Y(20) + 20, '20 °C', ' font-size="16"');
+    var px = F.X(t0), py = F.Y(T(t0)), lb = 't = ' + t0 + ' h';
+    var pts = samp(T, 0, 24, F.X, F.Y).concat(segPts(F.X(0), F.Y(20), F.X(24) + 14, F.Y(20)), segPts(F.X(0), F.Y(20 - A * 1.3) + 6, F.X(0), F.Y(20 + A * 1.4) - 12), segPts(F.X(0) + 8, F.Y(20) + 14, F.X(0) + 60, F.Y(20) + 14), segPts(F.X(Math.max(0, t0 - 2.5)), F.Y(T(t0) - m * Math.min(t0, 2.5)), F.X(t0 + 2.5), F.Y(T(t0) + m * 2.5)));
+    body += label(spot(ring(px, py, lb), pts, 17, 600, 290), 17);
     return svg('0 0 600 290', 'Temperatura a lo largo del día: una onda alrededor de 20 °C, con la tangente en t = ' + t0 + ' h.', body);
   };
 
@@ -383,12 +419,12 @@
   D['critical-points'] = function () {
     var F = frame(-2.3, 2.3, -3.2, 3.2);
     var body = F.axes +
-      '<path class="ref" d="' + path(cubic3, -2.2, 2.2, F.X, F.Y) + '" fill="none" stroke-width="3.5" stroke-linecap="round"/>' +
+      '<path class="ref" d="' + path(cubic3, -2.1, 2.1, F.X, F.Y) + '" fill="none" stroke-width="3.5" stroke-linecap="round"/>' +
       line(F, 0, -1, 2, -1.7, -0.3, 'aux') + line(F, 0, 1, -2, 0.3, 1.7, 'aux') +
       '<circle class="dot-aux" cx="' + F.X(-1) + '" cy="' + F.Y(2) + '" r="6"/><circle class="dot-aux" cx="' + F.X(1) + '" cy="' + F.Y(-2) + '" r="6"/>' +
       text(F.X(-1), F.Y(2) - 14, 'máximo relativo · f′ = 0', ' text-anchor="middle" font-size="17"') +
       text(F.X(1), F.Y(-2) + 28, 'mínimo relativo · f′ = 0', ' text-anchor="middle" font-size="17"') +
-      text(F.X(2.25), F.Y(3.2) + 16, 'f(x) = x³ − 3x', ' text-anchor="end" font-size="18"');
+      text(F.X(-2.25), F.Y(3.2) - 6, 'f(x) = x³ − 3x', ' font-size="18"');
     return svg('0 0 600 290', 'Gráfica de x³ − 3x con tangentes horizontales en su máximo relativo (x = −1) y su mínimo relativo (x = 1).', body);
   };
 
@@ -408,7 +444,7 @@
       body += text((X(s[0]) + X(s[1])) / 2, yb - 10, s[2], ' text-anchor="middle" font-size="17"');
     });
     [-1, 1].forEach(function (c) { body += '<path class="axis" d="M' + X(c) + ' ' + (yb - 6) + 'V' + (yb + 6) + '" stroke-width="2"/>' + text(X(c), yb + 24, String(c), ' text-anchor="middle" font-size="16"'); });
-    body += '<path class="error" d="M' + X(x).toFixed(1) + ' ' + (yb - 26) + 'V' + (yb + 8) + '" stroke-width="2" stroke-dasharray="4 4"/>' +
+    body += '<path class="error" d="M' + X(x).toFixed(1) + ' ' + (yb - 5) + 'V' + (yb + 9) + '" stroke-width="3" stroke-linecap="round"/>' +
       text(24, 30, 'f′(x) = ' + (Math.abs(m) < 0.05 ? '0' : m.toFixed(2).replace('-', '−')), ' font-size="19"') +
       text(24, yb + 24, 'signo de f′', ' font-size="15"');
     return svg('0 0 600 330', 'Un punto recorre x³ − 3x con su tangente; abajo, la tabla de signos de f′: positiva, negativa y positiva, con cambios en −1 y 1.', body);
@@ -489,9 +525,9 @@
       '<circle class="dot-ref" cx="' + X(x).toFixed(1) + '" cy="' + Yf(f(x)).toFixed(1) + '" r="5"/>' +
       '<circle class="dot-aux" cx="' + X(x).toFixed(1) + '" cy="' + YA(A(x)).toFixed(1) + '" r="6"/>' +
       text(X(0) + 8, 26, 'f(t)', ' font-size="18"') +
-      text(X(0) + 8, YA(0) - 84, 'A(x) = área de 0 a x', ' font-size="18"') +
-      text(X(3.2), YA(0) - 84, 'A′(x) = f(x) = ' + f(x).toFixed(2), ' text-anchor="end" font-size="18"');
-    return svg('0 0 600 320', 'Arriba, el área bajo f desde 0 hasta x; abajo, esa área como función A(x). La pendiente de A en x es la altura f(x).', body);
+      text(X(0) + 8, YA(0) + 22, 'A(x) = área de 0 a x', ' font-size="18"') +
+      text(X(3.2), YA(0) + 22, 'A′(x) = f(x) = ' + f(x).toFixed(2), ' text-anchor="end" font-size="18"');
+    return svg('0 0 600 332', 'Arriba, el área bajo f desde 0 hasta x; abajo, esa área como función A(x). La pendiente de A en x es la altura f(x).', body);
   };
 
   /* ---------- Problemas de examen · bloque B y S09 ---------- */
@@ -516,8 +552,9 @@
     }
     body += F.axes + '<path class="ref" d="' + path(g.f, g.x[0], g.x[1], F.X, F.Y) + '" fill="none" stroke-width="3.5" stroke-linecap="round"/>';
     if (g.mark != null) body += '<circle class="dot-aux" cx="' + F.X(g.mark).toFixed(1) + '" cy="' + F.Y(g.f(g.mark)).toFixed(1) + '" r="6"/>';
-    body += text(F.X(g.x[1]), F.Y(0) + 22, g.xl, ' text-anchor="end" font-size="16"') +
-      text(F.X(g.x[0]) + 8, F.Y(hi + pad) + 14, g.yl, ' font-size="17"');
+    var pts = samp(g.f, g.x[0], g.x[1], F.X, F.Y).concat(F.pts), xe = F.X(g.x[1]), y0 = F.Y(0);
+    body += label(spot([[xe, y0 + 22, g.xl, 'end'], [xe, y0 - 10, g.xl, 'end'], [xe - 40, y0 + 22, g.xl, 'end'], [xe - 40, y0 - 10, g.xl, 'end'], [xe + 12, y0 + 5, g.xl]], pts, 16, 600, 290), 16) +
+      label(spot([[F.X(g.x[0]) + 8, F.Y(hi + pad) + 14, g.yl], [F.X(g.x[0]) + 8, F.Y(hi + pad) - 2, g.yl], [F.X(g.x[1]), F.Y(hi + pad) + 14, g.yl, 'end']], pts, 17, 600, 290), 17);
     return svg('0 0 600 290', 'Gráfica de ' + g.yl + ' contra ' + g.xl + ' para el problema.', body);
   };
 
@@ -530,7 +567,7 @@
       '<circle class="dot-ref" cx="' + F.X(0) + '" cy="' + F.Y(k).toFixed(1) + '" r="6"/>' +
       '<circle class="dot-aux" cx="' + F.X(m).toFixed(1) + '" cy="' + F.Y(m * m).toFixed(1) + '" r="6"/>' +
       text(F.X(0) - 10, F.Y(k) - 8, '(0, ' + k + ')', ' text-anchor="end" font-size="17"') +
-      text(F.X(-L) + 6, F.Y(Math.max(L * L, k) * 1.05) + 16, 'y = x²', ' font-size="18"');
+      text(F.X(-L * 0.62) + 10, F.Y(L * L * 0.62 * 0.62) + 4, 'y = x²', ' font-size="18"');
     return svg('0 0 600 290', 'Parábola y = x² y el segmento más corto desde el punto (0, ' + k + ') hasta la curva.', body);
   };
 
@@ -566,7 +603,7 @@
     var body = '<path class="ref" d="M' + A.join(' ') + 'L' + B.join(' ') + 'L' + C.join(' ') + 'Z" fill="none" stroke-width="3.2" stroke-linejoin="round"/>' +
       '<path class="axis" d="M' + (B[0] - 14) + ' ' + B[1] + 'V' + (B[1] - 14) + 'H' + B[0] + '" fill="none" stroke-width="1.4"/>' +
       '<path class="aux" d="M' + (ox + 38) + ' ' + oy + 'A38 38 0 0 0 ' + (ox + 38 * Math.cos(th)).toFixed(1) + ' ' + (oy - 38 * Math.sin(th)).toFixed(1) + '" fill="none" stroke-width="2.5"/>' +
-      text(ox + 48, oy - 10, 'θ', ' font-size="20"') +
+      text(ox + Math.min(75, Math.max(54, c * S * 0.7)) * Math.cos(th / 2), oy - Math.min(75, Math.max(54, c * S * 0.7)) * Math.sin(th / 2) + 5, 'θ', ' text-anchor="middle" font-size="18"') +
       text((A[0] + C[0]) / 2 - 12, (A[1] + C[1]) / 2 - 8, 'a = 3', ' text-anchor="end" font-size="18"') +
       text(C[0] + 10, (B[1] + C[1]) / 2, 'x = 3 sen θ = ' + x.toFixed(2), ' font-size="18"') +
       text((A[0] + B[0]) / 2, oy + 24, '√(9 − x²) = 3 cos θ = ' + c.toFixed(2), ' text-anchor="middle" font-size="18"');
@@ -581,7 +618,7 @@
     var body = F.axes +
       '<path class="aux" d="' + path(f1, 0.3, 3, F.X, F.Y) + '" fill="none" stroke-width="2.6"' + (stage === 2 ? ' stroke-dasharray="6 5"' : '') + '/>' +
       '<path class="trace" d="' + path(f2, 0.25, 3, F.X, F.Y) + '" fill="none" stroke-width="2.6"' + (stage === 2 ? ' stroke-dasharray="6 5"' : '') + '/>' +
-      text(F.X(0.55), F.Y(2.4), '1/x', ' font-size="18"') + text(F.X(2.3), F.Y(-0.55), '−1/(x + 1)', ' font-size="18"');
+      text(F.X(0.55), F.Y(2.4), '1/x', ' font-size="18"') + text(F.X(2.3), F.Y(-0.95), '−1/(x + 1)', ' font-size="18"');
     if (stage >= 1) body += '<path class="ref" d="' + path(sum, 0.3, 3, F.X, F.Y) + '" fill="none" stroke-width="3.6" stroke-linecap="round"/>' +
       text(F.X(1.1), F.Y(1.1), '1/(x(x + 1)): la suma', ' font-size="18"');
     return svg('0 0 600 290', 'Las curvas 1/x y −1/(x + 1) sumadas dan 1/(x(x + 1)): la fracción difícil es la suma de dos fáciles.', body);
@@ -636,7 +673,7 @@
         '<ellipse class="rect-fill" cx="' + X(x0 + dx).toFixed(1) + '" cy="' + Y(0) + '" rx="' + (R * 55 * 0.28).toFixed(1) + '" ry="' + (R * 55).toFixed(1) + '"/>';
     }
     body += '<path class="ref" d="M' + X(0) + ' ' + Y(0) + 'L' + X(4) + ' ' + Y(2) + 'M' + X(0) + ' ' + Y(0) + 'L' + X(4) + ' ' + Y(-2) + '" stroke-width="3.2" fill="none"/>' +
-      text(X(4.4), Y(0) - 8, 'eje x', ' text-anchor="end" font-size="16"') +
+      text(X(0) - 8, Y(0) + 22, 'eje x', ' text-anchor="end" font-size="16"') +
       text(330, 285, 'n = ' + n + ' discos · V ≈ ' + V.toFixed(3) + ' (exacto 16π/3 ≈ 16.755)', ' text-anchor="middle" font-size="18"');
     return svg('0 0 600 310', 'Cono generado por y = x/2 al girar alrededor del eje x, aproximado con ' + n + ' discos.', body);
   };

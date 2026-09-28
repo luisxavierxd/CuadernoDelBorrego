@@ -11,7 +11,7 @@ const ROOT = path.join(__dirname, '..');
 const OFFLINE = process.argv.includes('--offline');
 const COURSE_DIRS = ['calculo-1', 'fisica-1'];
 const FOOTER = 'Proyecto de alumnos, no oficial';
-const IGNORE_DIRS = new Set(['.git', 'node_modules', 'docs', 'scripts', 'reference', '.claude', 'design-system', 'test-results']);
+const IGNORE_DIRS = new Set(['.git', 'node_modules', 'docs', 'notes', 'scripts', 'reference', '.claude', 'design-system', 'test-results']);
 
 const errors = [];
 const warnings = [];

@@ -22,6 +22,26 @@
     return '<path class="' + cls + '" fill="none" stroke-width="' + (w || 3) + '" stroke-linecap="round" stroke-linejoin="round" d="M' + f1(x1) + ' ' + f1(y1) + 'L' + f1(x2) + ' ' + f1(y2) +
       'M' + f1(x2 - L * Math.cos(a - 0.4)) + ' ' + f1(y2 - L * Math.sin(a - 0.4)) + 'L' + f1(x2) + ' ' + f1(y2) + 'L' + f1(x2 - L * Math.cos(a + 0.4)) + ' ' + f1(y2 - L * Math.sin(a + 0.4)) + '"/>';
   }
+  // Etiquetas que no chocan: cands = [[x, y, texto, anchor]]; se usa la primera cuya caja (ancho
+  // estimado) cabe en W × H y no toca ningún punto de pts. Con strict, null si ninguna cabe.
+  function box(c, fs) {
+    var w = String(c[2]).length * fs * 0.6, a = c[3] || 'start', x0 = a === 'end' ? c[0] - w : a === 'middle' ? c[0] - w / 2 : c[0];
+    return { l: x0 - 4, r: x0 + w + 4, t: c[1] - fs * 0.85 - 2, b: c[1] + fs * 0.3 + 2 };
+  }
+  function spot(cands, pts, fs, W, H, strict) {
+    for (var i = 0; i < cands.length; i++) {
+      var q = box(cands[i], fs);
+      if (q.l < 2 || q.r > W - 2 || q.t < 2 || q.b > H - 2) continue;
+      if (!pts.some(function (p) { return p[0] > q.l && p[0] < q.r && p[1] > q.t && p[1] < q.b; })) return cands[i];
+    }
+    return strict ? null : cands[0];
+  }
+  function segPts(x1, y1, x2, y2) {
+    var o = [], n = Math.ceil(Math.hypot(x2 - x1, y2 - y1) / 3) || 1;
+    for (var i = 0; i <= n; i++) o.push([x1 + (x2 - x1) * i / n, y1 + (y2 - y1) * i / n]);
+    return o;
+  }
+  function boxPts(q) { return segPts(q.l, q.t, q.r, q.t).concat(segPts(q.l, q.b, q.r, q.b), segPts(q.l, q.t, q.l, q.b), segPts(q.r, q.t, q.r, q.b), segPts(q.l, (q.t + q.b) / 2, q.r, (q.t + q.b) / 2)); }
   function svg(w, h, label, body) {
     return '<svg viewBox="0 0 ' + w + ' ' + h + '" role="img" aria-label="' + esc(label) + '"><g class="sketch">' + body + '</g></svg>';
   }
@@ -65,14 +85,17 @@
       var rc = s.rects, h = (rc.b - rc.a) / rc.n;
       for (var j = 0; j < rc.n; j++) { var xl = rc.a + j * h, yv = rc.f(xl); body += '<rect class="rect-fill" x="' + f1(X(xl)) + '" y="' + f1(Math.min(Y(yv), Y(0))) + '" width="' + f1(h * sx) + '" height="' + f1(Math.abs(Y(yv) - Y(0))) + '"/>'; }
     }
-    // Ejes con marcas.
+    // Primero todos los trazos (y sus puntos, para que las etiquetas no los pisen); al final las etiquetas.
+    var pts = segPts(L, y0, R, y0).concat(segPts(x0, T, x0, B)), labels = [];
+    function put(cands, fs, strict) {
+      var c = spot(cands, pts, fs, W, H, strict);
+      if (!c) return;
+      pts = pts.concat(boxPts(box(c, fs)));
+      labels.push(text(c[0], c[1], c[2], (c[3] ? ' text-anchor="' + c[3] + '"' : '') + ' font-size="' + fs + '"'));
+    }
     body += line('axis', L, y0, R, y0, 1.4) + line('axis', x0, T, x0, B, 1.4);
-    ticks(a, b, 5).forEach(function (t) { if (Math.abs(X(t) - x0) < 2 && t !== 0) return; body += line('axis', X(t), y0 - 4, X(t), y0 + 4, 1.2) + text(X(t), Math.min(y0 + 18, H - 4), num(t), ' text-anchor="middle" font-size="13"'); });
-    ticks(lo, hi, 4).forEach(function (t) { if (t === 0) return; body += line('axis', x0 - 4, Y(t), x0 + 4, Y(t), 1.2) + text(x0 - 8, Y(t) + 4, num(t), ' text-anchor="end" font-size="13"'); });
-    if (s.xlab) body += text(R, y0 - 8, s.xlab, ' text-anchor="end" font-size="15"');
-    if (s.ylab) body += text(x0 + 8, T + 12, s.ylab, ' font-size="15"');
-    (s.hlines || []).forEach(function (hl) { body += line('axis', L, Y(hl.y), R, Y(hl.y), 1.3, '5 6') + (hl.label ? text(R, Y(hl.y) - 6, hl.label, ' text-anchor="end" font-size="14"') : ''); });
-    (s.vlines || []).forEach(function (vl) { body += line('axis', X(vl.x), T, X(vl.x), B, 1.3, '5 6') + (vl.label ? text(X(vl.x) + 5, T + 14, vl.label, ' font-size="14"') : ''); });
+    (s.hlines || []).forEach(function (hl) { body += line('axis', L, Y(hl.y), R, Y(hl.y), 1.3, '5 6'); pts = pts.concat(segPts(L, Y(hl.y), R, Y(hl.y))); });
+    (s.vlines || []).forEach(function (vl) { body += line('axis', X(vl.x), T, X(vl.x), B, 1.3, '5 6'); pts = pts.concat(segPts(X(vl.x), T, X(vl.x), B)); });
     // Curvas (el trazo se corta donde la función no existe).
     fns.forEach(function (F) {
       var d = '', pen = false;
@@ -80,28 +103,63 @@
         var x = a + (b - a) * i / 240, y = F.f(x);
         if (!isFinite(y) || y < lo - (hi - lo) || y > hi + (hi - lo)) { pen = false; continue; }
         d += (pen ? 'L' : 'M') + f1(X(x)) + ' ' + f1(Y(y)); pen = true;
+        if (i && isFinite(F.f(x - (b - a) / 240))) { var yp = F.f(x - (b - a) / 240); pts = pts.concat(segPts(X(x - (b - a) / 240), Y(yp), X(x), Y(y))); }
       }
       body += '<path class="' + (F.cls || 'ref') + '" fill="none" stroke-width="' + (F.w || 3) + '"' + (F.dash ? ' stroke-dasharray="' + F.dash + '"' : '') + ' d="' + d + '"/>';
-      if (F.label) { var xl = F.at != null ? F.at : a + (b - a) * 0.82; body += text(X(xl) + 6, Y(F.f(xl)) - 10, F.label, ' font-size="15"'); }
     });
     // Curvas paramétricas (círculos completos, sin huecos donde la gráfica es vertical).
     (s.curves || []).forEach(function (C) {
-      var d = '';
-      for (var i = 0; i <= 240; i++) { var p = C.xy(C.t0 + (C.t1 - C.t0) * i / 240); d += (i ? 'L' : 'M') + f1(X(p[0])) + ' ' + f1(Y(p[1])); }
+      var d = '', prev = null;
+      for (var i = 0; i <= 240; i++) {
+        var p = C.xy(C.t0 + (C.t1 - C.t0) * i / 240), q = [X(p[0]), Y(p[1])];
+        d += (i ? 'L' : 'M') + f1(q[0]) + ' ' + f1(q[1]);
+        if (prev) pts = pts.concat(segPts(prev[0], prev[1], q[0], q[1]));
+        prev = q;
+      }
       body += '<path class="' + (C.cls || 'ref') + '" fill="none" stroke-width="' + (C.w || 3) + '" d="' + d + '"/>';
     });
     if (s.secant) {
       var sc = s.secant, ya = sc.f(sc.x1), yb = sc.f(sc.x2), m = (yb - ya) / (sc.x2 - sc.x1), ext = (sc.x2 - sc.x1) * 0.35;
       body += line('error', X(sc.x1 - ext), Y(ya - m * ext), X(sc.x2 + ext), Y(yb + m * ext), 2.2, '7 5') +
         '<circle class="dot-error" cx="' + f1(X(sc.x1)) + '" cy="' + f1(Y(ya)) + '" r="5"/><circle class="dot-error" cx="' + f1(X(sc.x2)) + '" cy="' + f1(Y(yb)) + '" r="5"/>';
+      pts = pts.concat(segPts(X(sc.x1 - ext), Y(ya - m * ext), X(sc.x2 + ext), Y(yb + m * ext)));
     }
     if (s.tangent) {
       var tg = s.tangent, yt = tg.f(tg.x0), mt = (tg.f(tg.x0 + 1e-5) - tg.f(tg.x0 - 1e-5)) / 2e-5, len = tg.len || (b - a) * 0.22;
       body += line('aux', X(tg.x0 - len), Y(yt - mt * len), X(tg.x0 + len), Y(yt + mt * len), 2.6) + '<circle class="dot-ref" cx="' + f1(X(tg.x0)) + '" cy="' + f1(Y(yt)) + '" r="5"/>';
+      pts = pts.concat(segPts(X(tg.x0 - len), Y(yt - mt * len), X(tg.x0 + len), Y(yt + mt * len)));
     }
     (s.pts || []).forEach(function (p) {
-      body += '<circle class="dot-ref" cx="' + f1(X(p.x)) + '" cy="' + f1(Y(p.y)) + '" r="5"/>' + (p.label ? text(X(p.x) + 8, Y(p.y) - 9, p.label, ' font-size="14"') : '');
+      body += '<circle class="dot-ref" cx="' + f1(X(p.x)) + '" cy="' + f1(Y(p.y)) + '" r="5"/>';
+      pts = pts.concat(segPts(X(p.x) - 5, Y(p.y), X(p.x) + 5, Y(p.y)), segPts(X(p.x), Y(p.y) - 5, X(p.x), Y(p.y) + 5));
     });
+    // Etiquetas: primero las importantes; las marcas de los ejes solo si caben sin chocar.
+    if (s.xlab) put([[R, y0 - 8, s.xlab, 'end'], [R, y0 + 20, s.xlab, 'end'], [R - 40, y0 - 8, s.xlab, 'end'], [R - 40, y0 + 20, s.xlab, 'end'], [R - 80, y0 - 8, s.xlab, 'end'], [R - 80, y0 + 20, s.xlab, 'end'], [R, y0 + 34, s.xlab, 'end'], [R, T + 12, s.xlab, 'end']], 15);
+    if (s.ylab) put([[x0 + 8, T + 12, s.ylab], [x0 - 8, T + 12, s.ylab, 'end'], [x0 + 8, T + 30, s.ylab], [R, T + 12, s.ylab, 'end']], 15);
+    (s.pts || []).forEach(function (p) {
+      if (!p.label) return;
+      var px = X(p.x), py = Y(p.y);
+      put([[px + 8, py - 9, p.label], [px - 8, py - 9, p.label, 'end'], [px + 8, py + 18, p.label], [px - 8, py + 18, p.label, 'end'], [px, py - 16, p.label, 'middle'], [px, py + 24, p.label, 'middle'], [px, py - 30, p.label, 'middle'], [px, py - 44, p.label, 'middle'], [px + 20, py - 30, p.label], [px - 20, py - 30, p.label, 'end']], 14);
+    });
+    fns.forEach(function (F) {
+      if (!F.label) return;
+      var at = [F.at != null ? F.at : a + (b - a) * 0.82, a + (b - a) * 0.6, a + (b - a) * 0.4, a + (b - a) * 0.2, a + (b - a) * 0.9], c = [];
+      at.forEach(function (xl) { var yl = F.f(xl); if (!isFinite(yl)) return; c.push([X(xl) + 6, Y(yl) - 10, F.label], [X(xl) - 6, Y(yl) - 10, F.label, 'end'], [X(xl) + 6, Y(yl) + 22, F.label], [X(xl) - 6, Y(yl) + 22, F.label, 'end']); });
+      if (c.length) put(c, 15);
+    });
+    (s.hlines || []).forEach(function (hl) { if (hl.label) put([[R, Y(hl.y) - 6, hl.label, 'end'], [R, Y(hl.y) + 18, hl.label, 'end'], [L + 6, Y(hl.y) - 6, hl.label], [L + 6, Y(hl.y) + 18, hl.label]], 14); });
+    (s.vlines || []).forEach(function (vl) { if (vl.label) put([[X(vl.x) + 5, T + 14, vl.label], [X(vl.x) - 5, T + 14, vl.label, 'end'], [X(vl.x) + 5, B - 6, vl.label], [X(vl.x) - 5, B - 6, vl.label, 'end']], 14); });
+    ticks(a, b, 5).forEach(function (t) {
+      if (Math.abs(X(t) - x0) < 2 && t !== 0) return;
+      body += line('axis', X(t), y0 - 4, X(t), y0 + 4, 1.2);
+      put([[X(t), Math.min(y0 + 18, H - 4), num(t), 'middle']], 13, true);
+    });
+    ticks(lo, hi, 4).forEach(function (t) {
+      if (t === 0) return;
+      body += line('axis', x0 - 4, Y(t), x0 + 4, Y(t), 1.2);
+      put([[x0 - 8, Y(t) + 4, num(t), 'end']], 13, true);
+    });
+    body += labels.join('');
     return svg(W, H, s.label || 'Gráfica del problema', body);
   };
 
@@ -115,7 +173,11 @@
       text(ox + x * k / 2 + 16, oy - y * k / 2 - 6, s.Llab || ('L = ' + L + ' m'), ' font-size="16"');
     if (s.u) body += arrow('aux', ox + x * k + 12, oy - 14, ox + x * k + 70, oy - 14, 3) + text(ox + x * k + 76, oy - 10, s.u, ' font-size="15"');
     if (s.th) body += text(ox + x * k - 44, oy - 8, s.th + '°', ' font-size="15"');
-    if (s.person) { var px = ox + x * k * (1 - s.person), py = oy - y * k * s.person; body += '<circle class="dot-ref" cx="' + f1(px) + '" cy="' + f1(py - 10) + '" r="8"/>' + text(px + 14, py - 4, 'persona', ' font-size="14"'); }
+    if (s.person) { var px = ox + x * k * (1 - s.person), py = oy - y * k * s.person; body += '<circle class="dot-ref" cx="' + f1(px) + '" cy="' + f1(py - 10) + '" r="8"/>';
+      var lp = segPts(ox + x * k, oy, ox, oy - y * k).concat(segPts(ox, 30, ox, oy), segPts(ox, oy, 600, oy), boxPts(box([ox + x * k / 2 + 16, oy - y * k / 2 - 6, s.Llab || ('L = ' + L + ' m')], 16)));
+      lp = lp.concat(boxPts(box([ox - 10, oy - y * k / 2, s.ylab || 'y', 'end'], 16)));
+      var c = spot([[px - 14, py - 4, 'persona', 'end'], [px + 14, py - 4, 'persona'], [px + 14, py - 24, 'persona'], [px + 14, py - 42, 'persona'], [px - 14, py - 24, 'persona', 'end'], [px + 30, py + 14, 'persona'], [px + 30, py + 30, 'persona'], [px - 16, py + 14, 'persona', 'end']], lp, 14, 640, 290);
+      body += text(c[0], c[1], c[2], (c[3] ? ' text-anchor="' + c[3] + '"' : '') + ' font-size="14"'); }
     return svg(640, 290, 'Una escalera apoyada en una pared.', body);
   };
 
@@ -130,7 +192,7 @@
   /* ---------- Lata cilíndrica ---------- */
   D['exam-can'] = function () {
     var body = '<ellipse class="box-ref" cx="320" cy="70" rx="90" ry="22"/>' + '<path class="box-aux" d="M230 70 V230 A90 22 0 0 0 410 230 V70 A90 22 0 0 1 230 70 Z"/>' +
-      '<ellipse class="box-ref" cx="320" cy="70" rx="90" ry="22"/>' + line('axis', 320, 70, 410, 70, 1.6) + text(365, 62, 'r', ' text-anchor="middle" font-size="17"') +
+      '<ellipse class="box-ref" cx="320" cy="70" rx="90" ry="22"/>' + line('axis', 320, 70, 410, 70, 1.6) + text(365, 42, 'r', ' text-anchor="middle" font-size="17"') +
       line('axis', 440, 70, 440, 230, 1.4) + text(452, 155, 'h', ' font-size="17"') + text(520, 70, 'tapas: el doble', ' text-anchor="middle" font-size="14"');
     return svg(640, 270, 'Una lata cilíndrica de radio r y altura h.', body);
   };
@@ -138,7 +200,7 @@
   /* ---------- Globo que se infla ---------- */
   D['exam-balloon'] = function (s) {
     var body = '<circle class="box-aux" cx="260" cy="140" r="' + f1(s.r1) + '"/><circle class="axis" cx="260" cy="140" r="' + f1(s.r0) + '" fill="none" stroke-width="1.5" stroke-dasharray="5 6"/>' +
-      line('ref', 260, 140, 260 + s.r1, 140, 2.2) + text(260 + s.r1 / 2, 132, 'r(t)', ' text-anchor="middle" font-size="15"') +
+      line('ref', 260, 140, 260 + s.r1, 140, 2.2) + text(260 + s.r1 + 29, 128, 'r(t)', ' text-anchor="middle" font-size="15"') +
       arrow('aux', 260 + s.r1 + 8, 140, 260 + s.r1 + 50, 140, 3) + text(470, 90, 'V = 4πr³/3', ' font-size="16"') + text(470, 118, 'el radio crece', ' font-size="14"');
     return svg(640, 270, 'Un globo esférico que se infla: su radio crece con el tiempo.', body);
   };

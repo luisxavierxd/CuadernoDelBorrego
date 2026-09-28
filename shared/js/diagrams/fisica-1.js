@@ -19,6 +19,35 @@
   function text(x, y, s, extra) {
     return '<text class="ann" x="' + x.toFixed(1) + '" y="' + y.toFixed(1) + '"' + (extra || '') + '>' + s + '</text>';
   }
+  // Etiquetas que no chocan: cands = [[x, y, texto, anchor]]; se usa la primera cuya caja (ancho
+  // estimado) cabe en el recuadro [x0, y0, x1, y1] y no toca ningún punto de pts.
+  function spot(cands, pts, fs, vb) {
+    for (var i = 0; i < cands.length; i++) {
+      var c = cands[i], w = String(c[2]).length * fs * 0.6, a = c[3] || 'start';
+      var x0 = a === 'end' ? c[0] - w : a === 'middle' ? c[0] - w / 2 : c[0];
+      var l = x0 - 4, r = x0 + w + 4, t = c[1] - fs * 0.85 - 2, b = c[1] + fs * 0.3 + 2;
+      if (l < vb[0] + 2 || r > vb[2] - 2 || t < vb[1] + 2 || b > vb[3] - 2) continue;
+      if (!pts.some(function (p) { return p[0] > l && p[0] < r && p[1] > t && p[1] < b; })) return c;
+    }
+    return cands[0];
+  }
+  // Posiciones alrededor de un punto: 16 direcciones a tres distancias.
+  function around(x, y, s) {
+    var c = [];
+    [18, 32, 48].forEach(function (r) { for (var i = 0; i < 16; i++) { var a = i * Math.PI / 8, cx = Math.cos(a), cy = Math.sin(a); c.push([x + r * cx, y + r * cy + 5, s, cx > 0.3 ? 'start' : cx < -0.3 ? 'end' : 'middle']); } });
+    return c;
+  }
+  function label(c, fs) { return text(c[0], c[1], c[2], (c[3] ? ' text-anchor="' + c[3] + '"' : '') + ' font-size="' + fs + '"'); }
+  // Puntos de una flecha completa (asta y punta), como la dibuja arrow().
+  function arrowPts(x, y, dx, dy) {
+    var L = Math.hypot(dx, dy) || 1, ux = dx / L, uy = dy / L, hh = Math.min(11, L * 0.45), ex = x + dx, ey = y + dy;
+    return segPts(x, y, ex, ey).concat(segPts(ex - ux * hh - uy * hh * 0.6, ey - uy * hh + ux * hh * 0.6, ex, ey), segPts(ex - ux * hh + uy * hh * 0.6, ey - uy * hh - ux * hh * 0.6, ex, ey));
+  }
+  function segPts(x1, y1, x2, y2) {
+    var o = [], n = Math.ceil(Math.hypot(x2 - x1, y2 - y1) / 3) || 1;
+    for (var i = 0; i <= n; i++) o.push([x1 + (x2 - x1) * i / n, y1 + (y2 - y1) * i / n]);
+    return o;
+  }
   function svg(label, body) {
     return '<svg viewBox="0 118 620 222" role="img" aria-label="' + label + '"><g class="sketch">' + body + '</g></svg>';
   }
@@ -46,8 +75,8 @@
       body += arrow('aux', x, y, 0, -vy * K, 3);
       body += '<circle class="dot-trace" cx="' + x.toFixed(1) + '" cy="' + y.toFixed(1) + '" r="6"/>';
     });
-    body += text(X(0) + VX * K + 6, Y(0) + 5, 'vx', ' font-size="19"');
-    body += text(X(0) + 8, Y(0) - VY * K, 'vy', ' font-size="19"');
+    body += text(X(0) + VX * K / 2, Y(0) + 28, 'vx', ' text-anchor="middle" font-size="19"');
+    body += text(X(0) - 8, Y(0) - VY * K / 2, 'vy', ' text-anchor="end" font-size="19"');
     var apex = pos(T / 2);
     body += arrow('error', X(apex.x) + 26, Y(apex.y), 0, 46, 3);
     body += text(X(apex.x) + 34, Y(apex.y) + 44, 'a = g', ' font-size="19"');
@@ -75,14 +104,14 @@
     body += '<circle class="dot-trace" cx="' + x.toFixed(1) + '" cy="' + y.toFixed(1) + '" r="7"/>';
 
     if (show === 'launch') {
-      body += text(x + VX * K + 8, y + 6, 'v₀x = v₀ cos θ', ' font-size="19"');
-      body += text(x + 10, y - VY * K - 6, 'v₀y = v₀ sin θ', ' font-size="19"');
+      body += text(x + VX * K / 2, y + 24, 'v₀x', ' text-anchor="middle" font-size="19"') + text(x - 8, y - VY * K / 2, 'v₀y', ' text-anchor="end" font-size="19"');
+      body += text(600, 150, 'v₀x = v₀ cos θ', ' text-anchor="end" font-size="19"') + text(600, 178, 'v₀y = v₀ sin θ', ' text-anchor="end" font-size="19"');
     } else if (show === 'apex') {
       body += text(x, y - 26, 'vy = 0  →  t = v₀ sin θ / g', ' text-anchor="middle" font-size="19"');
       body += arrow('error', x + 30, y + 4, 0, 44, 3);
       body += text(x + 38, y + 44, 'g', ' font-size="19"');
     } else if (show === 'land') {
-      body += text(x - 6, y - 40, 'misma rapidez vertical que al salir, hacia abajo', ' text-anchor="end" font-size="18"');
+      body += text(x - 16, Y(0) + 26, 'misma rapidez vertical que al salir, hacia abajo', ' text-anchor="end" font-size="18"');
       body += text(X(R / 2), 146, 'T = 2 v₀ sin θ / g', ' text-anchor="middle" font-size="21"');
     } else if (show === 'range') {
       body += '<path class="aux" fill="none" stroke-width="2" d="M' + X(0) + ' ' + (Y(0) + 22) + 'H' + X(R) + 'M' + X(0) + ' ' + (Y(0) + 14) + 'v16M' + X(R) + ' ' + (Y(0) + 14) + 'v16"/>';
@@ -174,7 +203,7 @@
     var dx = L * Math.cos(th * RAD), dy = L * Math.sin(th * RAD);
     var body =
       arrow('axis', 60, oy, 380, 0, 1.4) + arrow('axis', ox, 290, 0, -170, 1.4) +
-      text(446, oy + 20, 'x', ' font-size="18"') + text(ox - 16, 132, 'y', ' font-size="18"') +
+      text(446, oy + 20, 'x', ' font-size="18"') + text(ox - 18, 140, 'y', ' font-size="18"') +
       seg('axis', ox + dx, oy, ox + dx, oy - dy, 1.6, '5 6') + seg('axis', ox, oy - dy, ox + dx, oy - dy, 1.6, '5 6') +
       arrow('aux', ox, oy, dx, 0, 3) + arrow('aux', ox, oy, 0, -dy, 3) +
       arrow('ref', ox, oy, dx, -dy, 3.5) +
@@ -182,7 +211,7 @@
       text(ox + 56, oy - 12, 'θ', ' font-size="20"') +
       text(ox + dx / 2, oy + 26, 'Ax = A cos θ', ' text-anchor="middle" font-size="18"') +
       text(ox - 10, oy - dy / 2, 'Ay = A sin θ', ' text-anchor="end" font-size="18"') +
-      text(ox + dx / 2 + 10, oy - dy / 2 - 16, 'A', ' font-size="22"') +
+      text(ox + dx / 2 - 22 * Math.sin(th * RAD), oy - dy / 2 - 22 * Math.cos(th * RAD), 'A', ' text-anchor="end" font-size="22"') +
       text(560, 170, '|A| = √(Ax² + Ay²)', ' text-anchor="middle" font-size="18"') +
       text(560, 200, 'tan θ = Ay / Ax', ' text-anchor="middle" font-size="18"');
     return svgBox('0 120 640 190', 'Un vector A con ángulo θ desde el eje x y sus componentes Ax = A cos θ y Ay = A sin θ.', body);
@@ -198,7 +227,7 @@
     var body = arrow('axis', 90, O2[1], 380, 0, 1.2) + arrow('axis', O2[0], 300, 0, -190, 1.2) +
       arrow('aux', O2[0], O2[1], VA[0], -VA[1], 3.5) + text(O2[0] + VA[0] / 2 + 6, O2[1] - VA[1] / 2 + 22, 'A', ' font-size="21"') +
       arrow('trace', bx, by, VB[0], -VB[1], 3.5) + text(bx + VB[0] / 2 + 12, by - VB[1] / 2, 'B', ' font-size="21"');
-    body += fade(arrow('ref', O2[0], O2[1], R[0], -R[1], 4) + text(O2[0] + R[0] / 2 - 26, O2[1] - R[1] / 2, 'R = A + B', ' text-anchor="end" font-size="19"'), clamp01(k - 1));
+    body += fade(arrow('ref', O2[0], O2[1], R[0], -R[1], 4) + text(O2[0] - 10, O2[1] - R[1] / 2, 'R = A + B', ' text-anchor="end" font-size="19"'), clamp01(k - 1));
     var comp = seg('aux', O2[0], O2[1] + 14, O2[0] + VA[0], O2[1] + 14, 3) + seg('trace', O2[0] + VA[0], O2[1] + 22, O2[0] + VA[0] + VB[0], O2[1] + 22, 3) +
       seg('ref', O2[0], O2[1] + 30, O2[0] + R[0], O2[1] + 30, 3.5) + text(O2[0] - 8, O2[1] + 36, 'Rx', ' text-anchor="end" font-size="16"') +
       text(545, 190, 'Rx = Ax + Bx', ' text-anchor="middle" font-size="19"') + text(545, 222, 'Ry = Ay + By', ' text-anchor="middle" font-size="19"') +
@@ -230,11 +259,11 @@
     var ax = LA * Math.cos(a * RAD), ay = LA * Math.sin(a * RAD);
     var sign = Math.abs(ax) < 3 ? 'A·B = 0: perpendiculares' : ax > 0 ? 'A·B > 0: la sombra va con B' : 'A·B < 0: la sombra va en contra';
     var body = seg('axis', 60, oy, 600, oy, 1) +
-      arrow('trace', ox, oy, LB, 0, 3.5) + text(ox + LB + 8, oy + 6, 'B', ' font-size="21"') +
+      arrow('trace', ox, oy, LB, 0, 3.5) + text(ox + LB - 4, oy - 12, 'B', ' font-size="21"') +
       arrow('aux', ox, oy, ax, -ay, 3.5) + text(ox + ax + (ax >= 0 ? 8 : -22), oy - ay - 6, 'A', ' font-size="21"') +
       seg('axis', ox + ax, oy - ay, ox + ax, oy, 1.6, '5 6') +
       seg('ref', ox, oy + 12, ox + ax, oy + 12, 6) +
-      arc(ox, oy, 38, 0, a) + text(ox + 44 * Math.cos(a / 2 * RAD), oy - 44 * Math.sin(a / 2 * RAD) - 4, 'θ', ' font-size="19"') +
+      arc(ox, oy, 38, 0, a) + text(ox + 56 * Math.cos(a / 2 * RAD), oy - 56 * Math.sin(a / 2 * RAD) + 6, 'θ', ' text-anchor="middle" font-size="19"') +
       text(ox + ax / 2, oy + 38, 'A cos θ', ' text-anchor="middle" font-size="18"') +
       text(320, 318, sign, ' text-anchor="middle" font-size="19"') +
       text(320, 346, 'A·B = |A| |B| cos θ = (sombra de A) × |B|', ' text-anchor="middle" font-size="19"');
@@ -245,7 +274,7 @@
   D['cross-product'] = function () {
     // Vista oblicua: x hacia el frente-izquierda, y a la derecha, z hacia arriba.
     function P(x, y, z) { return [200 + y * 150 - x * 70, 250 - z * 150 + x * 45]; }
-    var O = P(0, 0, 0), A = P(1.1, 0.2, 0), B = P(0.1, 1.2, 0), AB = P(1.2, 1.4, 0), C = P(0, 0, 0.95);
+    var O = P(0, 0, 0), A = P(1.1, 0.2, 0), B = P(0.1, 1.2, 0), AB = P(1.2, 1.4, 0), C = P(0, 0, 0.85);
     var body =
       '<path class="box-ref" d="M' + O.join(' ') + 'L' + A.join(' ') + 'L' + AB.join(' ') + 'L' + B.join(' ') + 'Z" stroke-width="1"/>' +
       arrow('aux', O[0], O[1], A[0] - O[0], A[1] - O[1], 3.5) + text(A[0] - 18, A[1] + 18, 'A', ' font-size="21"') +
@@ -275,7 +304,7 @@
     for (var m = 0; m <= 11; m++) body += seg('axis', X(m), y - 6, X(m), y + 6, 1.2) + (m % 2 === 0 ? text(X(m), y + 26, String(m), ' text-anchor="middle" font-size="16"') : '');
     body += text(600, y + 26, 'x (m)', ' text-anchor="end" font-size="16"');
     body += arrow('aux', X(2), 200, X(10) - X(2), 0, 3) + text((X(2) + X(10)) / 2, 190, 'va 8 m', ' text-anchor="middle" font-size="17"');
-    body += arrow('aux', X(10), 222, X(6) - X(10), 0, 3) + text((X(10) + X(6)) / 2, 216, 'regresa 4 m', ' text-anchor="middle" font-size="17"');
+    body += arrow('aux', X(10), 226, X(6) - X(10), 0, 3) + text(X(6) - 10, 232, 'regresa 4 m', ' text-anchor="end" font-size="17"');
     body += arrow('ref', X(2), 160, X(6) - X(2), 0, 4) + text((X(2) + X(6)) / 2, 150, 'Δx = 6 − 2 = 4 m', ' text-anchor="middle" font-size="18"');
     body += '<circle class="dot-trace" cx="' + X(2) + '" cy="' + y + '" r="7"/><circle class="dot-ref" cx="' + X(6) + '" cy="' + y + '" r="7"/>';
     body += text(560, 150, 'distancia = 8 + 4 = 12 m', ' text-anchor="end" font-size="18"');
@@ -292,8 +321,8 @@
     for (var i = 0; i <= 80; i++) { var t = 6 * i / 80; d += (i ? 'L' : 'M') + PX(t).toFixed(1) + ' ' + PY(x(t)).toFixed(1); }
     var m = (x(t0 + hh) - x(t0)) / hh, mt = 8 - 2 * t0;
     function line(slope, cls, w, dash) { return seg(cls, PX(0.2), PY(x(t0) + slope * (0.2 - t0)), PX(4.6), PY(x(t0) + slope * (4.6 - t0)), w, dash); }
-    var body = arrow('axis', PX(0), PY(0), 350, 0, 1.3) + arrow('axis', PX(0), PY(0), 0, -180, 1.3) +
-      text(PX(7.2), PY(0) + 6, 't', ' font-size="18"') + text(PX(0) - 14, PY(17), 'x', ' font-size="18"') +
+    var body = arrow('axis', PX(0), PY(0), 350, 0, 1.3) + arrow('axis', PX(0), PY(0), 0, -165, 1.3) +
+      text(PX(7.2), PY(0) + 6, 't', ' font-size="18"') + text(PX(0) - 20, PY(0) - 150, 'x', ' font-size="18"') +
       '<path class="ref" d="' + d + '" fill="none" stroke-width="3"/>' +
       line(mt, 'trace', 1.8, '6 6') + line(m, 'aux', 3) +
       '<circle class="dot-ref" cx="' + PX(t0) + '" cy="' + PY(x(t0)) + '" r="6"/>' +
@@ -323,10 +352,10 @@
   /* ---------- S05 · Gráfica v-t del MRUA ---------- */
   D['mrua-vt'] = function () {
     var body = arrow('axis', 60, 270, 420, 0, 1.3) + arrow('axis', 60, 270, 0, -150, 1.3) +
-      text(486, 276, 't', ' font-size="17"') + text(48, 126, 'v', ' font-size="17"') +
+      text(486, 276, 't', ' font-size="17"') + text(48, 128, 'v', ' text-anchor="end" font-size="17"') +
       '<path class="box-aux" d="M60 270V220L380 150V270Z" stroke-width="1"/>' +
       seg('ref', 60, 220, 440, 137, 3) +
-      text(52, 224, 'v₀', ' text-anchor="end" font-size="17"') + text(390, 146, 'v', ' font-size="17"') +
+      text(52, 224, 'v₀', ' text-anchor="end" font-size="17"') + text(448, 142, 'v', ' font-size="17"') +
       seg('axis', 380, 150, 380, 270, 1.3, '4 5') + text(380, 290, 't', ' text-anchor="middle" font-size="16"') +
       text(220, 250, 'área = Δx = ½(v₀ + v)·t', ' text-anchor="middle" font-size="16"') +
       text(560, 170, 'pendiente = a', ' text-anchor="middle" font-size="18"') +
@@ -397,13 +426,13 @@
       '<circle class="dot-ref" cx="' + cx + '" cy="' + cy + '" r="4"/>' +
       arrow('aux', p1[0], p1[1], v1[0], v1[1], 3) + arrow('trace', p2[0], p2[1], v2[0], v2[1], 3) +
       '<circle class="dot-trace" cx="' + p1[0].toFixed(1) + '" cy="' + p1[1].toFixed(1) + '" r="6"/><circle class="dot-trace" cx="' + p2[0].toFixed(1) + '" cy="' + p2[1].toFixed(1) + '" r="6"/>' +
-      text(p1[0] + 8, p1[1] + 22, 'v₁', ' font-size="18"') + text(p2[0] - 16, p2[1] + 22, 'v₂', ' text-anchor="end" font-size="18"');
+      text(p1[0] + v1[0], p1[1] + v1[1] - 10, 'v₁', ' text-anchor="middle" font-size="18"') + text(p2[0] + v2[0] - 10, p2[1] + v2[1] + 16, 'v₂', ' text-anchor="end" font-size="18"');
     if (show === 'dv') {
       // Triángulo de velocidades: v₁ y v₂ con la misma cola; Δv = v₂ − v₁.
       var tx = 470, ty = 170;
       body += arrow('aux', tx, ty, v1[0], v1[1], 3) + arrow('trace', tx, ty, v2[0], v2[1], 3) +
         arrow('error', tx + v1[0], ty + v1[1], v2[0] - v1[0], v2[1] - v1[1], 3.5) +
-        text(tx + (v1[0] + v2[0]) / 2, ty + (v1[1] + v2[1]) / 2 + 22, 'Δv', ' text-anchor="middle" font-size="19"') +
+        text(tx + Math.min(v1[0], v2[0]) - 10, ty + (v1[1] + v2[1]) / 2 + 6, 'Δv', ' text-anchor="end" font-size="19"') +
         text(tx - 50, 290, 'Δv apunta al centro', ' text-anchor="middle" font-size="18"') +
         text(tx - 50, 314, 'a = Δv/Δt → v²/r', ' text-anchor="middle" font-size="18"');
     } else {
@@ -469,11 +498,11 @@
   /* ---------- S08 · Elevador que acelera ---------- */
   D['elevator'] = function () {
     var body = '<rect class="axis" x="180" y="110" width="170" height="200" fill="none" stroke-width="2"/>' + '<path class="axis" d="M265 20V110" stroke-width="2"/>' +
-      box(265, 250, 50, 80) + force('error', 265, 250, 270, 70, 'mg') + force('aux', 245, 250, 90, 100, 'N') +
+      box(265, 269, 50, 80) + force('error', 265, 269, 270, 62, null) + text(279, 330, 'mg', ' font-size="17"') + force('aux', 245, 269, 90, 90, null) + text(231, 192, 'N', ' text-anchor="end" font-size="17"') +
       arrow('ref', 400, 250, 0, -70, 3) + text(412, 200, 'a', ' font-size="18"') +
       text(520, 170, 'N − mg = ma', ' text-anchor="middle" font-size="18"') + text(520, 200, 'N = m(g + a)', ' text-anchor="middle" font-size="18"') +
       text(520, 232, 'la báscula marca N,', ' text-anchor="middle" font-size="16"') + text(520, 254, 'el "peso aparente"', ' text-anchor="middle" font-size="16"');
-    return svgBox('0 10 640 310', 'Una persona dentro de un elevador que acelera hacia arriba: la normal es mayor que su peso.', body);
+    return svgBox('0 10 640 335', 'Una persona dentro de un elevador que acelera hacia arriba: la normal es mayor que su peso.', body);
   };
 
   /* ---------- S09 · Máquina de Atwood (explainer) ----------
@@ -496,7 +525,7 @@
     var body = '<path class="axis" d="M40 170H420V330" stroke-width="2.5" fill="none"/><path class="axis" d="M420 170L432 154" stroke-width="2"/><circle class="ref" cx="432" cy="154" r="14" fill="none" stroke-width="2.5"/>' +
       box(230, 140, 70, 60) + '<path class="axis" d="M265 140H432M446 154V242" stroke-width="1.8" fill="none"/>' + box(446, 265, 46, 46, 0, 'box-ref') +
       text(230, 146, 'm₁', ' text-anchor="middle" font-size="16"') + text(446, 271, 'm₂', ' text-anchor="middle" font-size="16"') +
-      force('ref', 270, 110, 0, 70, 'T') + force('trace', 190, 160, 180, 50, 'μm₁g') + force('ref', 485, 265, 90, 60, 'T') + force('error', 485, 265, 270, 80, 'm₂g') +
+      force('ref', 270, 110, 0, 70, 'T') + force('trace', 190, 160, 180, 50, null) + text(165, 148, 'μm₁g', ' text-anchor="middle" font-size="17"') + force('ref', 485, 265, 90, 60, 'T') + force('error', 485, 265, 270, 80, 'm₂g') +
       text(560, 110, 'T − μm₁g = m₁a', ' text-anchor="middle" font-size="16"') + text(560, 136, 'm₂g − T = m₂a', ' text-anchor="middle" font-size="16"');
     return svgBox('0 80 640 295', 'Un bloque sobre una mesa unido a una masa colgante por una cuerda que pasa por una polea.', body);
   };
@@ -547,7 +576,7 @@
   /* ---------- S10 · Fricción contra fuerza aplicada ---------- */
   D['friction-graph'] = function () {
     var body = arrow('axis', 80, 280, 460, 0, 1.3) + arrow('axis', 80, 280, 0, -170, 1.3) +
-      text(548, 286, 'F', ' font-size="17"') + text(66, 120, 'f', ' font-size="17"') +
+      text(548, 286, 'F', ' font-size="17"') + text(58, 122, 'f', ' font-size="17"') +
       '<path class="trace" d="M80 280L300 150" stroke-width="3" fill="none"/><path class="trace" d="M300 150L300 190L520 190" stroke-width="3" fill="none" stroke-dasharray="1 0"/>' +
       seg('axis', 80, 150, 300, 150, 1.2, '4 5') + seg('axis', 80, 190, 300, 190, 1.2, '4 5') + text(72, 155, 'μₛN', ' text-anchor="end" font-size="15"') + text(72, 195, 'μₖN', ' text-anchor="end" font-size="15"') +
       text(210, 262, 'no se mueve: f = F', ' text-anchor="middle" font-size="15"') + text(420, 175, 'desliza: f = μₖN', ' text-anchor="middle" font-size="15"');
@@ -564,8 +593,8 @@
     body += text(540, 150, pull ? 'jalar hacia arriba:' : 'empujar hacia abajo:', ' text-anchor="middle" font-size="18"') +
       text(540, 180, pull ? 'N = mg − F sin θ' : 'N = mg + F sin θ', ' text-anchor="middle" font-size="19"') +
       text(540, 214, 'θ = ' + Math.round(th) + '°', ' text-anchor="middle" font-size="17"') +
-      text(540, 244, pull ? 'menos normal, menos fricción' : 'más normal, más fricción', ' text-anchor="middle" font-size="16"');
-    return svgBox('0 70 640 200', 'Caja con una fuerza inclinada: al jalar hacia arriba la normal disminuye; al empujar hacia abajo aumenta.', body);
+      text(540, 244, pull ? 'menos normal,' : 'más normal,', ' text-anchor="middle" font-size="16"') + text(540, 266, pull ? 'menos fricción' : 'más fricción', ' text-anchor="middle" font-size="16"');
+    return svgBox('0 40 640 285', 'Caja con una fuerza inclinada: al jalar hacia arriba la normal disminuye; al empujar hacia abajo aumenta.', body);
   };
 
   /* ---------- S11 · Descomponer el peso en un plano (explainer) ----------
@@ -575,8 +604,8 @@
     var bx = x0 + 0.55 * L * Math.cos(a), by = y0 - 0.55 * L * Math.sin(a), cx = bx - 28 * Math.sin(a), cy = by - 28 * Math.cos(a);
     var body = '<path class="axis" d="M' + x0 + ' ' + y0 + 'L' + (x0 + L * Math.cos(a)).toFixed(1) + ' ' + y0 + 'L' + (x0 + L * Math.cos(a)).toFixed(1) + ' ' + (y0 - L * Math.sin(a)).toFixed(1) + 'Z" stroke-width="2" fill="none"/>' +
       arc(x0, y0, 50, 0, t) + text(x0 + 60, y0 - 10, 'θ', ' font-size="18"') + box(cx, cy, 56, 56, t);
-    body += fade(force('error', cx, cy, 270, 110, 'mg'), clamp01(k));
-    body += fade(force('error', cx, cy, 180 + t, 55, 'mg sin θ', '6 5') + force('error', cx, cy, 270 + t, 95, 'mg cos θ', '6 5'), clamp01(k - 1));
+    body += fade(force('error', cx, cy, 270, 100, null) + text(cx - 10, cy + 96, 'mg', ' text-anchor="end" font-size="17"'), clamp01(k));
+    body += fade(force('error', cx, cy, 180 + t, 50, null, '6 5') + text(cx - 50 * Math.cos(a) - 8, cy + 50 * Math.sin(a) + 20, 'mg sin θ', ' text-anchor="end" font-size="17"') + force('error', cx, cy, 270 + t, 86.6, 'mg cos θ', '6 5'), clamp01(k - 1));
     body += fade(force('aux', cx, cy, 90 + t, 95, 'N'), clamp01(k - 2));
     body += fade(force('trace', cx, cy, t, 45, 'f'), clamp01(k - 3));
     var cap = ['un bloque sobre un plano de ángulo θ', 'el peso apunta vertical, no contra el plano', 'componentes: mg sin θ a lo largo, mg cos θ contra el plano', 'N equilibra mg cos θ: N = mg cos θ', 'si baja, la fricción apunta plano arriba: μN'];
@@ -611,9 +640,9 @@
   D['exam-jalon'] = function (v) {
     var cx = 250, cy = 210, th = v.th;
     var body = '<path class="axis" d="M40 250H600" stroke-width="2"/>' + box(cx, cy, 80, 80) +
-      '<path class="axis" d="M' + (cx + 40) + ' ' + (cy - 20) + 'L' + (cx + 40 + 170 * Math.cos(th * RAD)).toFixed(1) + ' ' + (cy - 20 - 170 * Math.sin(th * RAD)).toFixed(1) + '" stroke-width="2"/>' +
-      arc(cx + 40, cy - 20, 50, 0, th) + text(cx + 100, cy - 26, 'θ = ' + th + '°', ' font-size="16"') +
-      text(cx, cy + 6, v.m + ' kg', ' text-anchor="middle" font-size="16"') + text(cx + 40 + 175 * Math.cos(th * RAD), cy - 30 - 170 * Math.sin(th * RAD), 'F = ' + v.F + ' N', ' font-size="16"');
+      '<path class="axis" d="M' + (cx + 40) + ' ' + (cy - 20) + 'L' + (cx + 40 + 130 * Math.cos(th * RAD)).toFixed(1) + ' ' + (cy - 20 - 130 * Math.sin(th * RAD)).toFixed(1) + '" stroke-width="2"/>' +
+      arc(cx + 40, cy - 20, 50, 0, th) + text(cx + 40 + 58 * Math.cos(th * RAD / 2), cy - 20 - 58 * Math.sin(th * RAD / 2) + 12, 'θ = ' + th + '°', ' font-size="16"') +
+      text(cx, cy + 6, v.m + ' kg', ' text-anchor="middle" font-size="16"') + text(cx + 40 + 130 * Math.cos(th * RAD) + 8, cy - 24 - 130 * Math.sin(th * RAD), 'F = ' + v.F + ' N', ' font-size="16"');
     return svgBox('0 60 640 210', 'Una caja de ' + v.m + ' kg jalada con una cuerda que forma ' + th + ' grados con la horizontal.', body);
   };
 
@@ -647,15 +676,17 @@
     var PX = function (x) { return 40 + x * k; }, PY = function (y) { return 270 - y * k; };
     var d = '';
     for (var i = 0; i <= 60; i++) { var t = Tf * i / 60; d += (i ? 'L' : 'M') + PX(vx * t).toFixed(1) + ' ' + PY(vy * t - G * t * t / 2).toFixed(1); }
+    var tp = [];
+    for (i = 0; i < 60; i++) { var t1 = Tf * i / 60, t2 = Tf * (i + 1) / 60; tp = tp.concat(segPts(PX(vx * t1), PY(vy * t1 - G * t1 * t1 / 2), PX(vx * t2), PY(vy * t2 - G * t2 * t2 / 2))); }
     var body =
       '<path class="axis" d="M20 ' + PY(0) + 'H600" stroke-width="1.5"/>' +
       '<path class="ref" d="' + d + '" fill="none" stroke-width="3" stroke-dasharray="1 9" stroke-linecap="round"/>' +
       '<rect class="wall" x="' + (PX(v.D) - 4).toFixed(1) + '" y="' + PY(v.h).toFixed(1) + '" width="8" height="' + (v.h * k).toFixed(1) + '"/>' +
       '<path class="axis" d="M' + PX(0) + ' ' + (PY(0) + 16) + 'H' + PX(v.D).toFixed(1) + '" stroke-width="1.2"/>' +
       text((PX(0) + PX(v.D)) / 2, PY(0) + 34, v.D + ' m', ' text-anchor="middle" font-size="18"') +
-      text(PX(v.D) + 10, PY(v.h) + 16, v.h + ' m', ' font-size="18"') +
+      label(spot([[PX(v.D) + 10, Math.min(PY(v.h) + 16, PY(0) - 6), v.h + ' m'], [PX(v.D) - 10, Math.min(PY(v.h) + 16, PY(0) - 6), v.h + ' m', 'end'], [PX(v.D) + 10, PY(0) - 6, v.h + ' m'], [PX(v.D) - 10, PY(0) - 6, v.h + ' m', 'end']], tp, 18, [0, 20, 620, 320]), 18) +
       arrow('aux', PX(0), PY(0), 46 * Math.cos(th), -46 * Math.sin(th), 3) +
-      text(PX(0) + 50, PY(0) - 30, 'v₀ = ' + v.v0 + ' m/s', ' font-size="18"');
+      text(600, 44, 'v₀ = ' + v.v0 + ' m/s a ' + v.th + '°', ' text-anchor="end" font-size="18"');
     return svgBox('0 20 620 300', 'Balón lanzado desde el piso hacia una barda de ' + v.h + ' m que está a ' + v.D + ' m.', body);
   };
 
@@ -685,15 +716,23 @@
     var x0 = Math.min.apply(null, xs), x1 = Math.max.apply(null, xs), y0 = Math.min.apply(null, ys), y1 = Math.max.apply(null, ys);
     var k = Math.min(440 / Math.max(x1 - x0, 1), 200 / Math.max(y1 - y0, 1));
     var PX = function (x) { return 310 + (x - (x0 + x1) / 2) * k; }, PY = function (y) { return 250 - (y - y0) * k; };
-    var body = arrow('axis', PX(0) - 30, PY(0), 70, 0, 1.2) + arrow('axis', PX(0), PY(0) + 30, 0, -70, 1.2) +
-      text(PX(0) + 44, PY(0) + 18, 'este', ' font-size="15"') + text(PX(0) + 6, PY(0) - 44, 'norte', ' font-size="15"') +
+    var body = arrow('axis', 34, 110, 40, 0, 1.4) + arrow('axis', 34, 110, 0, -40, 1.4) +
+      text(80, 115, 'E', ' font-size="15"') + text(34, 60, 'N', ' text-anchor="middle" font-size="15"') +
       arrow('aux', PX(0), PY(0), p1[0] * k, -p1[1] * k, 3.5) + arrow('trace', PX(p1[0]), PY(p1[1]), (p2[0] - p1[0]) * k, -(p2[1] - p1[1]) * k, 3.5) +
       '<path class="ref" d="M' + PX(0).toFixed(1) + ' ' + PY(0).toFixed(1) + 'L' + PX(p2[0]).toFixed(1) + ' ' + PY(p2[1]).toFixed(1) + '" stroke-width="2.5" stroke-dasharray="6 6" fill="none"/>' +
-      text(PX(p1[0] / 2) + 8, PY(p1[1] / 2) + 20, v.d1 + ' m', ' font-size="17"') +
-      text(PX((p1[0] + p2[0]) / 2) + 10, PY((p1[1] + p2[1]) / 2) - 8, v.d2 + ' m', ' font-size="17"') +
+      segLabel([PX(0), PY(0)], [PX(p1[0]), PY(p1[1])], [PX(p2[0]), PY(p2[1])], v.d1 + ' m') +
+      segLabel([PX(p1[0]), PY(p1[1])], [PX(p2[0]), PY(p2[1])], [PX(0), PY(0)], v.d2 + ' m') +
       '<circle class="dot-trace" cx="' + PX(p2[0]).toFixed(1) + '" cy="' + PY(p2[1]).toFixed(1) + '" r="6"/>';
     return svgBox('0 20 620 290', 'Un dron vuela ' + v.d1 + ' m en una dirección y luego ' + v.d2 + ' m en otra; la línea punteada es su desplazamiento total.', body);
   };
+
+  // Etiqueta al lado de un segmento P→Q, del lado contrario al punto C.
+  function segLabel(P, Q, C, s) {
+    var dx = Q[0] - P[0], dy = Q[1] - P[1], L = Math.hypot(dx, dy) || 1, nx = -dy / L, ny = dx / L;
+    var M = [(P[0] + Q[0]) / 2, (P[1] + Q[1]) / 2];
+    if (nx * (M[0] - C[0]) + ny * (M[1] - C[1]) < 0) { nx = -nx; ny = -ny; }
+    return text(M[0] + nx * 18, M[1] + ny * 22 + 5, s, ' text-anchor="' + (nx > 0.35 ? 'start' : nx < -0.35 ? 'end' : 'middle') + '" font-size="17"');
+  }
 
   // Tres fuerzas sobre un anillo.
   D['exam-fuerzas'] = function (v) {
@@ -716,7 +755,7 @@
       arrow('aux', 262, top - 10, 0, -56, 3.2) + text(270, top - 50, 'v₀ = ' + v.v0 + ' m/s', ' font-size="17"') +
       seg('axis', 240, top - 18, 240, base - (v.h0 + v.v0 * v.v0 / (2 * G)) * k, 1.4, '3 6') +
       seg('axis', 420, top, 420, base, 1.4) + text(430, (top + base) / 2, 'h₀ = ' + v.h0 + ' m', ' font-size="17"');
-    return svgBox('0 70 620 240', 'Desde una azotea de ' + v.h0 + ' m se lanza una pelota verticalmente hacia arriba a ' + v.v0 + ' m/s.', body);
+    return svgBox('0 16 620 294', 'Desde una azotea de ' + v.h0 + ' m se lanza una pelota verticalmente hacia arriba a ' + v.v0 + ' m/s.', body);
   };
 
   // Lancha que cruza un río apuntando a la otra orilla.
@@ -724,7 +763,7 @@
     var drift = v.vc * v.w / v.vb, k = Math.min(200 / v.w, 380 / Math.max(drift, 1)), top = 60, bot = top + v.w * k, x0 = 90;
     var body = '<path class="axis" d="M20 ' + top + 'H600M20 ' + bot.toFixed(1) + 'H600" stroke-width="2"/>' +
       arrow('aux', x0, bot, 0, -70, 3.2) + text(x0 - 8, bot - 40, v.vb + ' m/s', ' text-anchor="end" font-size="16"') +
-      arrow('trace', 460, (top + bot) / 2, 80, 0, 2.5) + text(500, (top + bot) / 2 - 10, 'corriente ' + v.vc + ' m/s', ' text-anchor="middle" font-size="16"') +
+      arrow('trace', 400, (top + bot) / 2, 80, 0, 2.5) + text(440, (top + bot) / 2 - 12, 'corriente ' + v.vc + ' m/s', ' text-anchor="middle" font-size="16"') +
       '<path class="ref" d="M' + x0 + ' ' + bot.toFixed(1) + 'L' + (x0 + drift * k).toFixed(1) + ' ' + top + '" stroke-width="2.5" stroke-dasharray="6 6" fill="none"/>' +
       seg('axis', 560, top, 560, bot, 1.2) + text(570, (top + bot) / 2 + 30, v.w + ' m', ' font-size="16"');
     return svgBox('0 30 620 ' + (bot - 30 + 30).toFixed(0), 'Una lancha cruza un río de ' + v.w + ' m apuntando a la otra orilla mientras la corriente la arrastra.', body);
@@ -734,13 +773,13 @@
   /* ---------- S12 · Trabajo con ángulo (explainer) ----------
      state.th: ángulo entre la fuerza y el desplazamiento (0–180). */
   D['work-angle'] = function (s) {
-    var th = num(s, 'th', 30), cx = 200, cy = 220, F = 120, c = Math.cos(th * RAD);
+    var th = num(s, 'th', 30), cx = 200, cy = 220, F = 105, c = Math.cos(th * RAD);
     var body = '<path class="axis" d="M40 260H440" stroke-width="2"/>' + box(cx, cy, 80, 80) +
       force('ref', cx + 40, cy - 10, th, F, 'F') +
-      seg('ref', cx + 40, cy - 10, cx + 40 + F * c, cy - 10, 3, '6 5') + text(c >= 0 ? cx + 50 + F * c : cx + 40 + F * c - 50, cy - 18, 'F cos θ', ' text-anchor="' + (c >= 0 ? 'start' : 'end') + '" font-size="15"') +
-      arc(cx + 40, cy - 10, 36, 0, th) + text(cx + 86, cy - 22, 'θ', ' font-size="17"') +
+      seg('ref', cx + 40, cy - 10, cx + 40 + F * c, cy - 10, 3, '6 5') + text(c >= 0 ? cx + 50 : cx + 40 + F * c - 10, cy + 12, 'F cos θ', ' text-anchor="' + (c >= 0 ? 'start' : 'end') + '" font-size="15"') +
+      arc(cx + 40, cy - 10, 36, 0, th) + text(cx + 40 + 50 * Math.cos(Math.max(th / 2, 16) * RAD), cy - 10 - 50 * Math.sin(Math.max(th / 2, 16) * RAD) + 6, 'θ', ' text-anchor="middle" font-size="17"') +
       arrow('aux', 120, 290, 180, 0, 3) + text(210, 316, 'desplazamiento d', ' text-anchor="middle" font-size="16"');
-    var sign = Math.abs(c) < 0.02 ? 'W = 0: la fuerza no trabaja' : c > 0 ? 'W > 0: la fuerza ayuda' : 'W < 0: la fuerza frena';
+    var sign = Math.abs(c) < 0.02 ? 'W = 0: no trabaja' : c > 0 ? 'W > 0: ayuda' : 'W < 0: frena';
     body += text(545, 150, 'W = F d cos θ', ' text-anchor="middle" font-size="19"') + text(545, 184, 'θ = ' + Math.round(th) + '°', ' text-anchor="middle" font-size="17"') +
       text(545, 216, sign, ' text-anchor="middle" font-size="16"') + text(545, 244, 'solo cuenta la parte', ' text-anchor="middle" font-size="14"') + text(545, 264, 'a lo largo de d', ' text-anchor="middle" font-size="14"');
     return svgBox('0 70 640 260', 'Una caja se desplaza una distancia d mientras una fuerza F forma un ángulo θ con el desplazamiento; solo la componente F cos θ hace trabajo.', body);
@@ -758,7 +797,7 @@
     } else if (show === 'spring') {
       fill = 'M' + x0 + ' ' + y0 + 'L' + (x0 + 300) + ' ' + (y0 - 160) + 'V' + y0 + 'Z'; path = 'M' + x0 + ' ' + y0 + 'L' + (x0 + 340) + ' ' + (y0 - 181);
       cap = ['resorte: F = kx crece', 'el área es un triángulo', 'W = ½ k x²'];
-      body += text(x0 + 300, y0 + 22, 'x', ' text-anchor="middle" font-size="16"') + text(x0 + 312, y0 - 160, 'kx', ' font-size="16"');
+      body += text(x0 + 300, y0 + 22, 'x', ' text-anchor="middle" font-size="16"') + text(x0 + 308, y0 - 146, 'kx', ' font-size="16"');
     } else {
       var pts = [], fpts = 'M' + x0 + ' ' + y0;
       for (var i = 0; i <= 40; i++) { var u = i / 40, px = x0 + 340 * u, py = y0 - 40 - 130 * u * u; pts.push(px.toFixed(1) + ' ' + py.toFixed(1)); if (u <= 300 / 340 + 1e-9) fpts += 'L' + px.toFixed(1) + ' ' + py.toFixed(1); }
@@ -767,8 +806,8 @@
     }
     body += '<path class="area-fill" d="' + fill + '"/>' + '<path class="ref" d="' + path + '" stroke-width="3.5" fill="none"/>' +
       seg('axis', x0 + 300, y0, x0 + 300, y0 - 190, 1.2, '4 5');
-    cap.forEach(function (t, n) { body += text(545, 150 + 30 * n, t, ' text-anchor="middle" font-size="17"'); });
-    return svgBox('0 90 640 230', 'Gráfica de fuerza contra posición: el trabajo es el área bajo la curva, un rectángulo si F es constante y un triángulo en un resorte.', body);
+    cap.forEach(function (t, n) { body += text(535, 150 + 30 * n, t, ' text-anchor="middle" font-size="17"'); });
+    return svgBox('0 70 640 250', 'Gráfica de fuerza contra posición: el trabajo es el área bajo la curva, un rectángulo si F es constante y un triángulo en un resorte.', body);
   };
 
   /* ---------- S13 · Conservación de la energía (explainer) ----------
@@ -806,12 +845,12 @@
   /* ---------- S14 · Nudo con dos cables (explainer) ----------
      state.step ∈ [0, 3]: situación · DCL · componentes · polígono. */
   D['knot-explainer'] = function (s) {
-    var k = num(s, 'step', 0), a = 35, b = 60, K = [180, 200], ceil = 70, dy = K[1] - ceil;
+    var k = num(s, 'step', 0), a = 35, b = 60, K = [220, 200], ceil = 70, dy = K[1] - ceil;
     var A = [K[0] - dy / Math.tan(a * RAD), ceil], B = [K[0] + dy / Math.tan(b * RAD), ceil];
-    var body = '<path class="axis" d="M20 ' + ceil + 'H340" stroke-width="4"/>' +
+    var body = '<path class="axis" d="M' + Math.min(20, A[0] - 16).toFixed(1) + ' ' + ceil + 'H' + Math.max(340, B[0] + 30).toFixed(1) + '" stroke-width="4"/>' +
       '<path class="axis" d="M' + A[0].toFixed(1) + ' ' + ceil + 'L' + K[0] + ' ' + K[1] + 'L' + B[0].toFixed(1) + ' ' + ceil + 'M' + K[0] + ' ' + K[1] + 'V260" stroke-width="2" fill="none"/>' +
       box(K[0], 282, 50, 44, 0, 'box-ref') + text(K[0], 288, 'm', ' text-anchor="middle" font-size="16"') +
-      arc(A[0], ceil, 40, 360 - a, 360) + text(A[0] + 46, ceil + 22, 'θ₁', ' font-size="15"') + arc(B[0], ceil, 40, 180, 180 + b) + text(B[0] - 50, ceil + 28, 'θ₂', ' font-size="15"');
+      arc(A[0], ceil, 40, 360 - a, 360) + text(A[0] + 46, ceil + 22, 'θ₁', ' font-size="15"') + arc(B[0], ceil, 40, 180, 180 + b) + text(B[0] - 50, ceil + 28, 'θ₂', ' text-anchor="end" font-size="15"');
     var N = [470, 200];
     body += fade('<circle class="dot-ref" cx="' + N[0] + '" cy="' + N[1] + '" r="5"/>' + force('aux', N[0], N[1], 180 - a, 90, 'T₁') + force('ref', N[0], N[1], b, 105, 'T₂') + force('error', N[0], N[1], 270, 80, 'mg'), clamp01(k));
     body += fade(seg('aux', N[0], N[1], N[0] - 90 * Math.cos(a * RAD), N[1], 2, '5 5') + seg('ref', N[0], N[1], N[0] + 105 * Math.cos(b * RAD), N[1], 2, '5 5'), clamp01(k - 1));
@@ -835,7 +874,7 @@
     var th = num(s, 'th', 90), P = [90, 230], L = 240, E = [P[0] + L, P[1]];
     var body = '<path class="axis" d="M' + P[0] + ' ' + P[1] + 'H' + E[0] + '" stroke-width="8" stroke-linecap="round"/>' + '<circle class="dot-ref" cx="' + P[0] + '" cy="' + P[1] + '" r="7"/>' +
       text(P[0], P[1] + 30, 'pivote', ' text-anchor="middle" font-size="15"') + text(P[0] + L / 2, P[1] + 30, 'r', ' text-anchor="middle" font-size="17"') +
-      force('ref', E[0], E[1], th, 100, 'F') + arc(E[0], E[1], 30, 0, th) + text(E[0] + 44 * Math.cos(th * RAD / 2) + 4, E[1] - 44 * Math.sin(th * RAD / 2) + 10, 'θ', ' font-size="16"') +
+      force('ref', E[0], E[1], th, 100, 'F') + arc(E[0], E[1], 30, 0, th) + (th < 30 ? text(E[0] + 40, E[1] + 24, 'θ', ' font-size="16"') : text(E[0] + 46 * Math.cos(th * RAD / 2), E[1] - 46 * Math.sin(th * RAD / 2) + 6, 'θ', ' text-anchor="middle" font-size="16"')) +
       seg('ref', E[0], E[1], E[0], E[1] - 100 * Math.sin(th * RAD), 2, '5 5');
     body += text(540, 150, 'τ = r F sin θ', ' text-anchor="middle" font-size="19"') + text(540, 182, 'θ = ' + Math.round(th) + '°', ' text-anchor="middle" font-size="17"') +
       text(540, 214, 'solo gira la parte', ' text-anchor="middle" font-size="15"') + text(540, 236, 'perpendicular al brazo', ' text-anchor="middle" font-size="15"');
@@ -845,10 +884,11 @@
   /* ---------- S15 · Balancín ---------- */
   D['seesaw'] = function () {
     var body = '<path class="axis" d="M80 200H560" stroke-width="8" stroke-linecap="round"/>' + '<path class="axis" d="M320 204l-22 40h44z" stroke-width="2" fill="none"/>' +
-      box(130, 175, 44, 44) + box(470, 170, 54, 54, 0, 'box-ref') + force('error', 130, 200, 270, 60, 'F₁') + force('error', 470, 200, 270, 80, 'F₂') +
-      seg('axis', 130, 270, 320, 270, 1.3) + seg('axis', 320, 270, 470, 270, 1.3) + text(225, 290, 'x₁', ' text-anchor="middle" font-size="16"') + text(395, 290, 'x₂', ' text-anchor="middle" font-size="16"') +
+      box(130, 175, 44, 44) + box(470, 170, 54, 54, 0, 'box-ref') + force('error', 130, 200, 270, 60, null) + text(142, 256, 'F₁', ' font-size="17"') + force('error', 470, 200, 270, 80, null) + text(482, 276, 'F₂', ' font-size="17"') +
+      seg('axis', 130, 300, 320, 300, 1.3) + seg('axis', 320, 300, 470, 300, 1.3) + seg('axis', 130, 294, 130, 306, 1.3) + seg('axis', 320, 294, 320, 306, 1.3) + seg('axis', 470, 294, 470, 306, 1.3) +
+      text(225, 322, 'x₁', ' text-anchor="middle" font-size="16"') + text(395, 322, 'x₂', ' text-anchor="middle" font-size="16"') +
       text(320, 130, 'F₁ x₁ = F₂ x₂', ' text-anchor="middle" font-size="19"');
-    return svgBox('0 110 640 195', 'Un balancín con un peso chico lejos del pivote y uno grande cerca: se equilibran cuando F₁x₁ = F₂x₂.', body);
+    return svgBox('0 110 640 225', 'Un balancín con un peso chico lejos del pivote y uno grande cerca: se equilibran cuando F₁x₁ = F₂x₂.', body);
   };
 
   /* ---------- S15 · Viga con dos apoyos (explainer) ----------
@@ -894,12 +934,26 @@
   };
   // Peso colgado de dos cables.
   D['exam-cables'] = function (v) {
-    var a = v.a, b = v.b, K = [320, 190], ceil = 50, dy = K[1] - ceil;
+    var a = v.a, b = v.b, ceil = 50, dy = Math.min(140, 270 * Math.tan(Math.min(a, b) * RAD)), K = [320, ceil + dy];
     var A = [K[0] - dy / Math.tan(a * RAD), ceil], B = [K[0] + dy / Math.tan(b * RAD), ceil];
+    // Ángulo agudo: la etiqueta va bajo el cable; si no, dentro del ángulo, cerca del techo.
+    var cpts = segPts(A[0], ceil, K[0], K[1]).concat(segPts(B[0], ceil, K[0], K[1]), segPts(0, ceil, 640, ceil), segPts(K[0], K[1], K[0], 240));
+    function angLabel(P, ang, dir) {
+      var cs = [], s = ang + '°';
+      if (ang < 35) cs.push([P[0] + dir * 64, ceil + 64 * Math.tan(ang * RAD) + 27, s, 'middle']);
+      [30, 40, 52, 64, 76].forEach(function (r) { cs.push([P[0] + dir * r * Math.cos(ang / 2 * RAD), ceil + r * Math.sin(ang / 2 * RAD) + 5, s, 'middle']); });
+      cs.push([P[0] - dir * 10, ceil + 20, s, dir > 0 ? 'end' : 'start']);
+      var c = spot(cs, cpts, 15, [0, 30, 640, 290]);
+      cpts = cpts.concat(segPts(c[0] - 14, c[1] - 12, c[0] + 14, c[1]), segPts(c[0] - 14, c[1], c[0] + 14, c[1] - 12));
+      return label(c, 15);
+      if (ang < 35) return text(P[0] + dir * 64, ceil + 64 * Math.tan(ang * RAD) + 27, ang + '°', ' text-anchor="middle" font-size="15"');
+      var r = dir < 0 && a >= 55 && b >= 55 ? 64 : 40;
+      return text(P[0] + dir * r * Math.cos(ang / 2 * RAD), ceil + r * Math.sin(ang / 2 * RAD) + 5, ang + '°', ' text-anchor="middle" font-size="15"');
+    }
     var body = '<path class="axis" d="M' + Math.min(A[0] - 20, 60).toFixed(1) + ' ' + ceil + 'H' + Math.max(B[0] + 20, 580).toFixed(1) + '" stroke-width="4"/>' +
       '<path class="axis" d="M' + A[0].toFixed(1) + ' ' + ceil + 'L' + K[0] + ' ' + K[1] + 'L' + B[0].toFixed(1) + ' ' + ceil + 'M' + K[0] + ' ' + K[1] + 'V240" stroke-width="2" fill="none"/>' +
       box(K[0], 262, 60, 44, 0, 'box-ref') + text(K[0], 268, v.m + ' kg', ' text-anchor="middle" font-size="15"') +
-      arc(A[0], ceil, 44, 360 - a, 360) + text(A[0] + 50, ceil + 24, a + '°', ' font-size="15"') + arc(B[0], ceil, 44, 180, 180 + b) + text(B[0] - 54, ceil + 30, b + '°', ' text-anchor="end" font-size="15"');
+      arc(A[0], ceil, a < 35 ? 44 : 24, 360 - a, 360) + angLabel(A, a, 1) + arc(B[0], ceil, b < 35 ? 44 : 24, 180, 180 + b) + angLabel(B, b, -1);
     return svgBox('0 30 640 260', 'Una masa de ' + v.m + ' kg cuelga de dos cables que forman ' + a + ' y ' + b + ' grados con el techo.', body);
   };
   // Viga con dos apoyos y una carga.
@@ -910,7 +964,8 @@
       text(X(v.a), Y + 52, 'A', ' text-anchor="middle" font-size="15"') + text(X(v.b), Y + 52, 'B', ' text-anchor="middle" font-size="15"') +
       force('error', X(v.x), Y - 80, 270, 70, null) + text(X(v.x), Y - 88, v.F + ' N', ' text-anchor="middle" font-size="15"');
     var marks = [0, v.a, v.x, v.b, v.L].filter(function (x, i, arr) { return arr.indexOf(x) === i; }).sort(function (p, q) { return p - q; });
-    marks.forEach(function (x) { body += seg('axis', X(x), Y + 62, X(x), Y + 72, 1.3) + text(X(x), Y + 90, x + ' m', ' text-anchor="middle" font-size="13"'); });
+    var lastX = -99, row = 0;
+    marks.forEach(function (x) { row = X(x) - lastX < 38 && row === 0 ? 1 : 0; lastX = X(x); body += seg('axis', X(x), Y + 62, X(x), Y + 72 + row * 16, 1.3) + text(X(x), Y + 90 + row * 16, x + ' m', ' text-anchor="middle" font-size="13"'); });
     body += seg('axis', 60, Y + 67, 580, Y + 67, 1.2);
     return svgBox('0 55 640 225', 'Una viga de ' + v.L + ' m y ' + v.M + ' kg sobre apoyos en ' + v.a + ' y ' + v.b + ' m, con una carga de ' + v.F + ' N en ' + v.x + ' m.', body);
   };
@@ -932,11 +987,26 @@
       if (s.chain) { px += dx; py += dy; }
     });
     var ox = 320 - (Math.min.apply(null, xs) + Math.max.apply(null, xs)) / 2, oy = 175 - (Math.min.apply(null, ys) + Math.max.apply(null, ys)) / 2;
-    body += arrow('axis', ox - 170, oy, 340, 0, 1.2) + arrow('axis', ox, oy + 90, 0, -180, 1.2) + text(ox + 176, oy + 18, 'x', ' font-size="15"') + text(ox - 16, oy - 80, 'y', ' font-size="15"');
-    if (d3) body += arrow('axis', ox, oy, -90, 63, 1.2) + text(ox - 102, oy + 80, 'z', ' font-size="15"');
+    ox = Math.max(200, Math.min(440, ox)); oy = Math.max(130, Math.min(210, oy));
+    body += arrow('axis', ox - 170, oy, 340, 0, 1.2) + arrow('axis', ox, oy + 90, 0, -180, 1.2);
+    if (d3) body += arrow('axis', ox, oy, -90, 63, 1.2);
+    var pts = arrowPts(ox - 170, oy, 340, 0).concat(arrowPts(ox, oy + 90, 0, -180));
+    if (d3) pts = pts.concat(arrowPts(ox, oy, -90, 63));
+    segs.forEach(function (g) { pts = pts.concat(arrowPts(ox + g[0], oy + g[1], g[2], g[3])); });
+    if (s.chain && s.total) pts = pts.concat(arrowPts(ox, oy, px, py));
+    [[[ox + 176, oy + 18, 'x'], [ox + 176, oy - 8, 'x']], [[ox - 16, oy - 80, 'y'], [ox + 8, oy - 80, 'y']]].concat(d3 ? [[[ox - 102, oy + 80, 'z'], [ox - 84, oy + 84, 'z'], [ox - 108, oy + 60, 'z']]] : []).forEach(function (cs) {
+      var c = spot(cs.concat(around(cs[0][0], cs[0][1] - 5, cs[0][2])), pts, 15, [0, 30, 640, 320]);
+      body += label(c, 15); pts = pts.concat(segPts(c[0] - 2, c[1] - 12, c[0] + 12, c[1]), segPts(c[0] - 2, c[1], c[0] + 12, c[1] - 12));
+    });
     segs.forEach(function (g) {
-      var sx = ox + g[0], sy = oy + g[1], dx = g[2], dy = g[3], v = g[4];
-      body += arrow(v[4] || 'ref', sx, sy, dx, dy, 3.2) + text(sx + dx + (dx >= 0 ? 8 : -8), sy + dy + (dy > 0 ? 16 : -6), v[3], ' font-size="16"' + (dx >= 0 ? '' : ' text-anchor="end"'));
+      var sx = ox + g[0], sy = oy + g[1], dx = g[2], dy = g[3], v = g[4], ex = sx + dx, ey = sy + dy, L = Math.hypot(dx, dy) || 1, ux = dx / L, uy = dy / L;
+      var c = spot([[ex + ux * 14, ey + uy * 14 + 5, v[3], ux > 0.3 ? 'start' : ux < -0.3 ? 'end' : 'middle'],
+        [ex - uy * 16, ey + ux * 16 + 5, v[3], -uy > 0 ? 'start' : 'end'], [ex + uy * 16, ey - ux * 16 + 5, v[3], uy > 0 ? 'start' : 'end'],
+        [ex + ux * 14, ey + uy * 14 + 22, v[3], 'middle'], [ex + ux * 14, ey + uy * 14 - 14, v[3], 'middle'],
+        [ex, ey + 30, v[3], 'middle'], [ex, ey - 24, v[3], 'middle']].concat(around(ex, ey, v[3]), around(sx + dx * 0.6, sy + dy * 0.6, v[3])), pts, 16, [0, 30, 640, 320]);
+      body += arrow(v[4] || 'ref', sx, sy, dx, dy, 3.2) + label(c, 16);
+      var w = String(v[3]).length * 16 * 0.55, x0 = c[3] === 'end' ? c[0] - w : c[3] === 'middle' ? c[0] - w / 2 : c[0];
+      pts = pts.concat(segPts(x0, c[1] - 13, x0 + w, c[1] - 13), segPts(x0, c[1] + 3, x0 + w, c[1] + 3), segPts(x0, c[1] - 5, x0 + w, c[1] - 5), segPts(x0, c[1] - 13, x0, c[1] + 3), segPts(x0 + w, c[1] - 13, x0 + w, c[1] + 3));
     });
     px += ox; py += oy;
     if (s.chain && s.total) body += arrow('error', ox, oy, px - ox, py - oy, 2.6) + text((ox + px) / 2 + 10, (oy + py) / 2 + 18, s.total, ' font-size="15"');
@@ -994,7 +1064,7 @@
     var ox = 320, oy = 40, L = 190, a = s.th * RAD, bx = ox + L * Math.sin(a), by = oy + L * Math.cos(a);
     var body = seg('axis', 240, oy, 400, oy, 5) + seg('axis', ox, oy, ox, oy + L + 20, 1.2, '5 6') + seg('axis', ox, oy, bx, by, 2) +
       '<circle class="box-ref" cx="' + r1(bx) + '" cy="' + r1(by) + '" r="14"/><circle class="axis" cx="' + ox + '" cy="' + (oy + L) + '" r="14" fill="none" stroke-dasharray="4 4" stroke-width="1.4"/>' +
-      arc(ox, oy, 60, 270, 270 + s.th) + text(ox + 22 * Math.sin(a / 2) + 14, oy + 80, s.th + '°', ' font-size="15"') +
+      arc(ox, oy, 60, 270, 270 + s.th) + text(ox - 8, oy + 72, s.th + '°', ' text-anchor="end" font-size="15"') +
       text((ox + bx) / 2 + 12, (oy + by) / 2, 'L = ' + s.L + ' m', ' font-size="15"') + seg('axis', 470, by, 470, oy + L, 1.3) + text(480, (by + oy + L) / 2 + 5, 'h', ' font-size="16"') +
       seg('axis', bx, by, 480, by, 1, '3 5') + seg('axis', ox, oy + L, 480, oy + L, 1, '3 5');
     return svgBox('0 20 640 250', 'Un péndulo de ' + s.L + ' m que se suelta a ' + s.th + ' grados de la vertical.', body);
@@ -1021,19 +1091,19 @@
 
   // Bloque con sus tres medidas.
   D['exam-block3d'] = function (s) {
-    var k = 22, a = s.a * k, b = s.b * k * 0.6, c = s.c * k, x = 200, y = 250;
+    var k = Math.min(22, 220 / (s.c + 0.36 * s.b), 300 / (s.a + 0.6 * s.b)), a = s.a * k, b = s.b * k * 0.6, c = s.c * k, x = 200, y = 262;
     var body = '<path class="box-aux" d="M' + x + ' ' + y + 'h' + a + 'v' + (-c) + 'h' + (-a) + 'Z"/>' +
       '<path class="box-ref" d="M' + x + ' ' + (y - c) + 'l' + b + ' ' + (-b * 0.6) + 'h' + a + 'l' + (-b) + ' ' + b * 0.6 + 'Z"/>' +
       '<path class="box-base" d="M' + (x + a) + ' ' + y + 'l' + b + ' ' + (-b * 0.6) + 'v' + (-c) + 'l' + (-b) + ' ' + b * 0.6 + 'Z"/>' +
       text(x + a / 2, y + 22, s.a + ' cm', ' text-anchor="middle" font-size="14"') + text(x - 8, y - c / 2, s.c + ' cm', ' text-anchor="end" font-size="14"') +
-      text(x + a + b / 2 + 10, y - c - b * 0.3 - 6, s.b + ' cm', ' font-size="14"') + text(x + a + b + 30, y - c / 2, s.m + ' g', ' font-size="16"');
+      text(x + a + b / 2 + 8, y - b * 0.3 + 18, s.b + ' cm', ' font-size="14"') + text(x + a + b + 20, y - c - b * 0.6 + 6, s.m + ' g', ' font-size="16"');
     return svgBox('0 0 640 290', 'Un bloque de ' + s.a + ' × ' + s.b + ' × ' + s.c + ' cm y ' + s.m + ' g.', body);
   };
 
   // Piedra que cae en un pozo.
   D['exam-well'] = function (s) {
     var body = seg('axis', 120, 60, 260, 60, 3) + seg('axis', 380, 60, 520, 60, 3) + '<path class="axis" fill="none" stroke-width="3" d="M260 60V270H380V60"/>' +
-      '<circle class="box-ref" cx="320" cy="78" r="9"/>' + arrow('aux', 340, 90, 0, 60, 3) + text(352, 130, 'se suelta', ' font-size="14"') +
+      '<circle class="box-ref" cx="320" cy="78" r="9"/>' + arrow('aux', 340, 90, 0, 60, 3) + text(332, 126, 'se suelta', ' text-anchor="end" font-size="14"') +
       seg('axis', 420, 60, 420, 270, 1.3) + text(430, 170, 'h = ' + s.h + ' m', ' font-size="16"') + '<path class="trace" d="M262 250H378" stroke-width="3"/>';
     return svgBox('0 40 640 250', 'Una piedra que se suelta dentro de un pozo de ' + s.h + ' m.', body);
   };
@@ -1041,7 +1111,7 @@
   // Cohete de juguete con empuje y peso.
   D['exam-rocket'] = function (s) {
     var body = seg('axis', 200, 262, 440, 262, 3) + '<path class="box-ref" d="M300 250V140L320 105L340 140V250Z"/>' + '<path class="error" fill="none" stroke-width="2.5" d="M306 252l6 18l8-12l8 12l6-18"/>' +
-      force('aux', 360, 170, 90, 80, 'T = ' + s.T + ' N') + force('error', 280, 190, 270, 60, 'mg') + text(320, 300, s.m + ' kg', ' text-anchor="middle" font-size="14"');
+      force('aux', 360, 170, 90, 80, 'T = ' + s.T + ' N') + force('error', 280, 190, 270, 55, null) + text(268, 240, 'mg', ' text-anchor="end" font-size="17"') + text(320, 300, s.m + ' kg', ' text-anchor="middle" font-size="14"');
     return svgBox('0 50 640 260', 'Un cohete de juguete de ' + s.m + ' kg con empuje ' + s.T + ' N.', body);
   };
 
