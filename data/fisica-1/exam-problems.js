@@ -558,7 +558,7 @@
 
   ex.f1 = ex.f1.concat([
     {
-      id: 'f1-ex-trineo', tags: ['f1.S10', 'f1.S12', 'f1.S13'], block: 'D', title: 'La caja jalada: de la fricción a la rapidez',
+      id: 'f1-ex-trineo', tags: ['f1.S12', 'f1.S13'], block: 'D', title: 'La caja jalada: de la fricción a la rapidez',
       vars: { m: [5, 30, 1], F: [40, 160, 10], th: [15, 40, 5], muk: [0.1, 0.4, 0.05], d: [2, 12, 1] },
       where: function (v) { var N = v.m * g - v.F * sn(v.th); return N > 10 && v.F * cs(v.th) - v.muk * N > 5; },
       statement: function (v) { return '<p>Jalas desde el reposo una caja de $' + v.m + '$ kg con una cuerda de $' + v.F + '$ N a $' + v.th + '^\\circ$ sobre la horizontal, a lo largo de $' + v.d + '$ m de piso con $\\mu_k = ' + v.muk + '$.</p>'; },
