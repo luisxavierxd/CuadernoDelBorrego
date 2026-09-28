@@ -509,8 +509,11 @@
     var params = new URLSearchParams(location.search);
     var presets = (window.QUIZ_PRESETS && window.QUIZ_PRESETS.presets) || [];
     var modoParam = params.get('modo');
+    // Sin ?curso= (p. ej. desde el inicio) no se elige curso por defecto: el atajo
+    // queda pendiente y se aplica cuando el alumno elige Cálculo o Física.
+    var tagCode = ((params.get('tags') || '').match(/^(\w+)\.S\d\d/) || [])[1];
     var state = {
-      code: codes.indexOf(params.get('curso')) >= 0 ? params.get('curso') : codes[0],
+      code: codes.indexOf(params.get('curso')) >= 0 ? params.get('curso') : codes.indexOf(tagCode) >= 0 ? tagCode : null,
       kind: modoParam === 'simulacro' ? 'sim' : modoParam === 'personalizado' ? 'custom' : 'quiz',
       preset: null
     };
@@ -535,7 +538,13 @@
     var courseCards = radioCards('curso', codes.map(function (c) {
       var n = sessionsOf(M[c]).filter(function (s) { return s.bank; }).length;
       return { value: c, title: M[c].fullName || M[c].name, text: n + (n === 1 ? ' sesión' : ' sesiones') + ' con banco de preguntas' };
-    }), state.code, function (v) { state.code = v; state.preset = null; drawTopics(); upd(); });
+    }), state.code, function (v) {
+      var keep = presetById(state.preset);
+      state.code = v; state.preset = null; drawTopics();
+      if (keep) applyPreset(keep);
+      upd();
+    });
+    function presetById(id) { return presets.filter(function (p) { return p.id === id; })[0]; }
 
     // 2. Tipo
     var kindCards = radioCards('tipo', [
@@ -553,6 +562,16 @@
       var meta = M[state.code];
       presetRow.innerHTML = '';
       availability.textContent = '';
+      presetNote.hidden = !meta;
+      if (!meta) {
+        var pending = presetById(state.preset);
+        boxes = [];
+        sessionsBox.innerHTML = '';
+        sessionsBox.appendChild(h('p', { class: 'launcher__pick muted' }, [pending
+          ? 'Elige el curso en el paso 1 y se marcan las sesiones de ' + pending.label + '.'
+          : 'Elige el curso en el paso 1 para ver sus sesiones.']));
+        return;
+      }
       presets.filter(function (p) {
         return state.kind === 'custom' || (state.kind === 'sim' ? p.kind === 'exam' : p.kind === 'quiz');
       }).forEach(function (p) {
@@ -576,6 +595,7 @@
       });
     }
     function applyPreset(p) {
+      if (!state.code) { state.preset = p.id; drawTopics(); upd(); return; }
       boxes.forEach(function (b) { b.cb.checked = b.bank && p.sessions.indexOf(b.n) >= 0; });
       state.preset = p.id;
       var have = boxes.filter(function (b) { return b.cb.checked; }).length;
@@ -614,7 +634,8 @@
     function selected() { return boxes.filter(function (b) { return b.cb.checked; }); }
     function upd() {
       var n = selected().length, msg = '';
-      if (!n) msg = 'Elige al menos una sesión o un atajo.';
+      if (!state.code) msg = 'Elige el curso (paso 1).';
+      else if (!n) msg = 'Elige al menos una sesión o un atajo.';
       else msg = n + (n === 1 ? ' sesión elegida' : ' sesiones elegidas');
       if (state.kind === 'custom') {
         if (n && cQ.get() + cP.get() === 0) msg = 'Pide al menos una pregunta o un problema.';
