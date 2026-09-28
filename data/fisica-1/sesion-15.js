@@ -41,6 +41,27 @@
 
     lesson: [
       {
+        "type": "warmup",
+        "heading": "Antes de empezar",
+        "short": "Antes de empezar",
+        "idea": "Un cuerpo extenso también puede <strong>girar</strong>. Para que no gire, la suma de <strong>torques</strong> debe ser cero.",
+        "recall": [
+          "Equilibrio de fuerzas (S14).",
+          "Producto vectorial (S03): $\\tau = rF\\sin\\theta$."
+        ],
+        "why": "Puertas, llaves, balancines, vigas, puentes y escaleras dependen de los torques. Explican por qué una llave larga afloja mejor y cuánto carga cada apoyo de un puente."
+      },
+      {
+        "type": "concept",
+        "heading": "Imagínalo así",
+        "short": "Imagínalo así",
+        "body": [
+          "Empuja una puerta cerca de las bisagras y cuesta mucho; empújala del borde y abre fácil. El efecto de giro (torque) depende de la fuerza <em>y</em> de qué tan lejos del eje la aplicas.",
+          "Solo gira la parte de la fuerza perpendicular al brazo: jalar la puerta hacia las bisagras no la abre. Por eso $\\tau = rF\\sin\\theta$.",
+          "En una viga en equilibrio hay dos condiciones: que no se traslade ($\\Sigma F = 0$) y que no gire ($\\Sigma\\tau = 0$). El truco: tomar torques respecto a un apoyo, así la fuerza de ese apoyo no aparece en la ecuación."
+        ]
+      },
+      {
         type: 'explainer', heading: 'Torque: la tendencia a girar', short: 'Torque',
         title: 'Brazo, fuerza y ángulo',
         intro: 'Una fuerza puede hacer girar un cuerpo alrededor de un eje. Cuánto gira depende de qué tan lejos y con qué ángulo empuja: $$\\tau = rF\\sin\\theta$$',
@@ -50,6 +71,29 @@
           { text: 'Con ángulo, solo gira la componente perpendicular $F\\sin\\theta$. Equivale a usar el <strong>brazo de palanca</strong> $r\\sin\\theta$.', state: { th: 40 } },
           { text: 'A lo largo del brazo ($\\theta = 0$) no hay torque: jalar la puerta hacia la bisagra no la abre.', state: { th: 3 } },
           { text: 'Signo: antihorario positivo, horario negativo. En equilibrio la suma de torques respecto a <em>cualquier</em> punto es cero. Unidad: N·m.', state: { th: 90 } }
+        ]
+      },
+      {
+        "type": "recipe",
+        "heading": "Receta: viga en equilibrio",
+        "short": "Receta",
+        "steps": [
+          {
+            "text": "Dibuja la viga con todas sus cargas, su peso en el centro y las reacciones de los apoyos."
+          },
+          {
+            "text": "Elige el eje de torques en un apoyo (donde hay una fuerza desconocida)."
+          },
+          {
+            "text": "Escribe $\\Sigma\\tau = 0$: cada fuerza por su distancia al eje, con signo según el sentido de giro.",
+            "tip": "Las distancias se miden desde el eje que elegiste, no desde la punta de la viga."
+          },
+          {
+            "text": "Despeja la reacción del otro apoyo."
+          },
+          {
+            "text": "Con $\\Sigma F = 0$ obtén la reacción que falta. Si alguna sale negativa, la viga se vuelca."
+          }
         ]
       },
       {
@@ -144,6 +188,36 @@
         body: [
           'DCL del cuerpo completo (con su peso en el centro). Elige como eje de torques el punto con más incógnitas.',
           'Mide los brazos desde ese eje. Si una reacción sale negativa, el apoyo tendría que jalar: la viga se vuelca.'
+        ]
+      },
+      {
+        "type": "faq",
+        "heading": "Dudas comunes",
+        "short": "Dudas comunes",
+        "items": [
+          {
+            "q": "¿Respecto a qué punto tomo torques?",
+            "a": "Respecto a cualquiera: en equilibrio siempre da cero. Conviene el punto donde hay más fuerzas desconocidas."
+          },
+          {
+            "q": "¿Dónde actúa el peso de la viga?",
+            "a": "En su centro, si es uniforme."
+          },
+          {
+            "q": "¿Por qué el apoyo más cercano a la carga carga más?",
+            "a": "Porque la carga tiene poco brazo respecto a él y mucho respecto al otro; para equilibrar torques, la reacción cercana tiene que ser mayor."
+          }
+        ]
+      },
+      {
+        "type": "recap",
+        "heading": "Lo que te llevas",
+        "short": "Resumen",
+        "points": [
+          "$\\tau = rF\\sin\\theta$: fuerza por brazo perpendicular.",
+          "Equilibrio: $\\Sigma F = 0$ y $\\Sigma\\tau = 0$.",
+          "Toma torques en un apoyo para eliminar su fuerza.",
+          "Reacción negativa → la viga se vuelca."
         ]
       }
     ],

@@ -45,6 +45,28 @@
 
     lesson: [
       {
+        "type": "warmup",
+        "heading": "Antes de empezar",
+        "short": "Antes de empezar",
+        "idea": "Si la aceleración es <strong>constante</strong>, tres fórmulas resuelven casi cualquier problema de movimiento en línea recta.",
+        "recall": [
+          "Despejar una variable de una ecuación.",
+          "Resolver cuadráticas (fórmula general).",
+          "Que $g = 9.81\\ \\text{m/s}^2$ hacia abajo."
+        ],
+        "why": "Frenar un auto, soltar una piedra o lanzar una pelota hacia arriba son movimientos con aceleración constante. Son de los problemas más comunes en exámenes."
+      },
+      {
+        "type": "concept",
+        "heading": "Imagínalo así",
+        "short": "Imagínalo así",
+        "body": [
+          "Con aceleración constante, la velocidad cambia la misma cantidad cada segundo: si $a = 2\\ \\text{m/s}^2$, cada segundo la velocidad sube 2 m/s. Por eso $v = v_0 + at$.",
+          "En caída libre la aceleración es siempre $g$ hacia abajo, suba o baje el objeto. Una pelota lanzada hacia arriba va frenando, se detiene un instante en la cima y regresa, pero en todo momento su aceleración es la misma.",
+          "La clave para no equivocarte es escoger un sentido positivo (por ejemplo, hacia arriba) y respetarlo: si arriba es positivo, $a = -9.81\\ \\text{m/s}^2$."
+        ]
+      },
+      {
         type: 'concept', heading: 'Movimiento con aceleración constante', short: 'MRUA',
         body: [
           'Si la aceleración $a$ es constante, la velocidad cambia lo mismo cada segundo y la gráfica $v$-$t$ es una recta. De ahí salen cuatro ecuaciones: $$v = v_0 + at \\qquad x = x_0 + v_0t + \\tfrac{1}{2}at^2$$ $$v^2 = v_0^2 + 2a\\,\\Delta x \\qquad \\Delta x = \\tfrac{1}{2}(v_0 + v)\\,t$$',
@@ -53,6 +75,29 @@
         ],
         diagram: 'mrua-vt',
         caption: 'El área bajo la recta $v$-$t$ es un trapecio: de ahí sale $\\Delta x = \\tfrac{1}{2}(v_0 + v)\\,t$.'
+      },
+      {
+        "type": "recipe",
+        "heading": "Receta: problemas de MRUA",
+        "short": "Receta",
+        "steps": [
+          {
+            "text": "Elige el sentido positivo y el origen, y anótalo."
+          },
+          {
+            "text": "Haz la lista de datos: $x_0$, $v_0$, $v$, $a$, $t$, $\\Delta x$. Marca la incógnita.",
+            "tip": "\"Parte del reposo\" significa $v_0 = 0$; \"en la altura máxima\", $v = 0$."
+          },
+          {
+            "text": "Elige la fórmula que tiene tus datos y tu incógnita: $v = v_0 + at$, $x = x_0 + v_0t + \\tfrac{1}{2}at^2$ o $v^2 = v_0^2 + 2a\\Delta x$."
+          },
+          {
+            "text": "Despeja y calcula, cuidando signos."
+          },
+          {
+            "text": "Revisa que el resultado tenga sentido (un tiempo negativo se descarta)."
+          }
+        ]
       },
       {
         type: 'example', heading: 'Distancia de frenado',
@@ -112,6 +157,36 @@
         body: [
           'Si en la cima $a$ fuera cero, la pelota se quedaría flotando. Es $v$ la que vale cero en ese instante; un momento después ya baja porque $a = -g$.',
           'Revisa también los signos: con el eje hacia arriba, una velocidad hacia abajo es negativa.'
+        ]
+      },
+      {
+        "type": "faq",
+        "heading": "Dudas comunes",
+        "short": "Dudas comunes",
+        "items": [
+          {
+            "q": "¿Por qué en la cima la aceleración no es cero?",
+            "a": "Porque la gravedad sigue actuando. La velocidad es cero un instante, pero sigue cambiando: un instante después ya va hacia abajo."
+          },
+          {
+            "q": "¿Cuál de las tres fórmulas uso?",
+            "a": "La que no tenga la variable que no conoces ni te piden. Por ejemplo, si no te dan ni te piden el tiempo, usa $v^2 = v_0^2 + 2a\\Delta x$."
+          },
+          {
+            "q": "¿Qué hago si sale una cuadrática?",
+            "a": "Resuélvela y quédate con la solución que tenga sentido (normalmente el tiempo positivo)."
+          }
+        ]
+      },
+      {
+        "type": "recap",
+        "heading": "Lo que te llevas",
+        "short": "Resumen",
+        "points": [
+          "$v = v_0 + at$, $x = x_0 + v_0t + \\tfrac{1}{2}at^2$, $v^2 = v_0^2 + 2a\\Delta x$.",
+          "Caída libre: $a = -g$ si arriba es positivo.",
+          "En la cima $v = 0$, pero $a = -g$.",
+          "Elige el sentido positivo antes de empezar."
         ]
       }
     ],

@@ -45,6 +45,28 @@
 
     lesson: [
       {
+        "type": "warmup",
+        "heading": "Antes de empezar",
+        "short": "Antes de empezar",
+        "idea": "Entre dos vectores hay dos \"productos\": el <strong>escalar</strong> da un número y el <strong>vectorial</strong> da otro vector perpendicular a ambos.",
+        "recall": [
+          "Componentes de vectores (S02).",
+          "Magnitud: $|\\vec A| = \\sqrt{A_x^2 + A_y^2 + A_z^2}$.",
+          "Calcular un determinante de $2\\times 2$."
+        ],
+        "why": "El producto escalar aparece en el trabajo de una fuerza; el vectorial, en el torque de una llave o en fuerzas magnéticas. También sirven para encontrar ángulos entre direcciones."
+      },
+      {
+        "type": "concept",
+        "heading": "Imagínalo así",
+        "short": "Imagínalo así",
+        "body": [
+          "El <strong>producto escalar</strong> $\\vec A\\cdot\\vec B$ mide qué tanto apuntan dos vectores hacia el mismo lado. Si van en la misma dirección es grande; si son perpendiculares vale cero; si van en sentidos contrarios es negativo. Es como la \"sombra\" de uno sobre el otro, multiplicada por el tamaño del otro.",
+          "El <strong>producto vectorial</strong> $\\vec A\\times\\vec B$ mide qué tanto \"giran\" uno respecto al otro. Su tamaño es el área del paralelogramo que forman, y apunta perpendicular a los dos (regla de la mano derecha).",
+          "Un <strong>vector unitario</strong> es un vector de tamaño 1 que solo indica dirección: se obtiene dividiendo un vector entre su magnitud."
+        ]
+      },
+      {
         type: 'concept', heading: 'El vector unitario', short: 'Vector unitario',
         body: [
           'Un vector <strong>unitario</strong> mide 1 y solo sirve para señalar una dirección. Para obtener el de $\\vec{A}$, divide entre su magnitud: $$\\hat{A} = \\frac{\\vec{A}}{|\\vec{A}|}$$',
@@ -64,6 +86,26 @@
           { text: 'A $90^\\circ$ no hay sombra: $\\cos 90^\\circ = 0$. Dos vectores son <strong>perpendiculares</strong> si y solo si su producto escalar es cero.', state: { ang: 90 } },
           { text: 'Con $\\theta$ obtuso la sombra apunta en contra de $\\vec{B}$: el producto es negativo.', state: { ang: 145 } },
           { text: 'Con componentes no hace falta el ángulo: $\\vec{A}\\cdot\\vec{B} = A_xB_x + A_yB_y + A_zB_z$. Igualando las dos formas se despeja $\\theta$.', state: { ang: 60 } }
+        ]
+      },
+      {
+        "type": "recipe",
+        "heading": "Receta: los dos productos",
+        "short": "Receta",
+        "steps": [
+          {
+            "text": "Escalar: multiplica componente por componente y suma: $A_xB_x + A_yB_y + A_zB_z$."
+          },
+          {
+            "text": "Si te piden el ángulo, despeja de $\\vec A\\cdot\\vec B = AB\\cos\\theta$: $\\cos\\theta = \\dfrac{\\vec A\\cdot\\vec B}{AB}$."
+          },
+          {
+            "text": "Vectorial: arma el determinante con $\\hat\\imath$, $\\hat\\jmath$, $\\hat k$ en la primera fila y las componentes de $\\vec A$ y $\\vec B$ abajo.",
+            "tip": "El término del medio ($\\hat\\jmath$) lleva signo menos."
+          },
+          {
+            "text": "Comprueba: el resultado del vectorial debe ser perpendicular a los dos; su producto escalar con $\\vec A$ y con $\\vec B$ tiene que dar 0."
+          }
         ]
       },
       {
@@ -115,6 +157,36 @@
         body: [
           'El <strong>escalar</strong> da un número y es máximo cuando los vectores son paralelos: sirve para el trabajo y para proyectar.',
           'El <strong>vectorial</strong> da un vector y es máximo cuando son perpendiculares: sirve para el torque (S15) y para todo lo que gira.'
+        ]
+      },
+      {
+        "type": "faq",
+        "heading": "Dudas comunes",
+        "short": "Dudas comunes",
+        "items": [
+          {
+            "q": "¿Importa el orden?",
+            "a": "En el escalar no: $\\vec A\\cdot\\vec B = \\vec B\\cdot\\vec A$. En el vectorial sí: $\\vec B\\times\\vec A = -\\vec A\\times\\vec B$."
+          },
+          {
+            "q": "¿Qué significa un producto escalar cero?",
+            "a": "Que los vectores son perpendiculares (si ninguno es cero)."
+          },
+          {
+            "q": "¿Para qué sirve el unitario?",
+            "a": "Para separar \"hacia dónde\" de \"cuánto\". Por ejemplo, una fuerza de 10 N en la dirección de $\\hat u$ es $10\\,\\hat u$."
+          }
+        ]
+      },
+      {
+        "type": "recap",
+        "heading": "Lo que te llevas",
+        "short": "Resumen",
+        "points": [
+          "Escalar: número; $A_xB_x + A_yB_y + A_zB_z = AB\\cos\\theta$.",
+          "Vectorial: vector perpendicular; $|\\vec A\\times\\vec B| = AB\\sin\\theta$.",
+          "Unitario: vector entre su magnitud.",
+          "Perpendiculares → escalar 0; paralelos → vectorial 0."
         ]
       }
     ],

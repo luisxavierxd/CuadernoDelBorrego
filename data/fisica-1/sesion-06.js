@@ -51,6 +51,27 @@
 
     lesson: [
       {
+        "type": "warmup",
+        "heading": "Antes de empezar",
+        "short": "Antes de empezar",
+        "idea": "Un proyectil hace <strong>dos movimientos a la vez</strong>: uno horizontal con velocidad constante y uno vertical en caída libre.",
+        "recall": [
+          "Componentes de un vector (S02).",
+          "Las fórmulas de caída libre (S05)."
+        ],
+        "why": "Balones, chorros de agua, proyectiles y saltos siguen parábolas. Saber separarlas en dos movimientos permite predecir dónde cae algo."
+      },
+      {
+        "type": "concept",
+        "heading": "Imagínalo así",
+        "short": "Imagínalo así",
+        "body": [
+          "Si sueltas una pelota y al mismo tiempo lanzas otra horizontalmente desde la misma altura, las dos llegan al piso <strong>al mismo tiempo</strong>. La velocidad horizontal no cambia qué tan rápido cae.",
+          "Por eso se analiza por separado: en horizontal no hay aceleración (sin aire), así que $x = v_{0x}t$; en vertical es caída libre con $v_{0y}$. El tiempo $t$ es el mismo para ambos: es el hilo que los une.",
+          "La trayectoria resulta una parábola porque $x$ crece de forma lineal con $t$ y $y$ de forma cuadrática."
+        ]
+      },
+      {
         type: 'concept', heading: 'Dos movimientos independientes', short: 'Movimientos independientes',
         body: [
           'Sin resistencia del aire, la única aceleración del proyectil es la gravedad: $g = 9.81\\ \\text{m/s}^2$ hacia abajo. No hay nada que lo empuje o lo frene de lado.',
@@ -69,6 +90,26 @@
           { text: 'En la cima $v_y = 0$: $v_0\\sin\\theta - g\\,t = 0$, así que sube durante $t = \\frac{v_0\\sin\\theta}{g}$ y llega a $H = \\frac{v_0^2\\sin^2\\theta}{2g}$.', state: { u: 0.5, show: 'apex' } },
           { text: 'Si cae a la misma altura de la que salió, baja en el mismo tiempo que subió: $T = \\frac{2v_0\\sin\\theta}{g}$.', state: { u: 1, show: 'land' } },
           { text: 'Mientras tanto avanzó a $v_{0x}$ constante: $R = v_{0x}\\,T = \\frac{v_0^2\\sin 2\\theta}{g}$, porque $2\\sin\\theta\\cos\\theta = \\sin 2\\theta$.', state: { u: 1, show: 'range' } }
+        ]
+      },
+      {
+        "type": "recipe",
+        "heading": "Receta: tiro parabólico",
+        "short": "Receta",
+        "steps": [
+          {
+            "text": "Descompón la velocidad inicial: $v_{0x} = v_0\\cos\\theta$, $v_{0y} = v_0\\sin\\theta$."
+          },
+          {
+            "text": "Movimiento vertical: usa caída libre para encontrar el tiempo (de vuelo, de subida o hasta cierta altura).",
+            "tip": "Casi siempre el tiempo sale del movimiento vertical."
+          },
+          {
+            "text": "Movimiento horizontal: con ese tiempo, $x = v_{0x}t$."
+          },
+          {
+            "text": "Si te piden la velocidad al final, combina componentes: $v = \\sqrt{v_x^2 + v_y^2}$."
+          }
         ]
       },
       {
@@ -100,6 +141,36 @@
         ],
         answer: 'Tarda $' + fx(e2.T, 3) + '\\ \\text{s}$ y cae a $' + fx(e2.R) + '\\ \\text{m}$ de la mesa.',
         verify: { lab: 'projectile', p: { v0: e2.v0, theta: 0, h0: e2.h0 }, values: { T: e2.T, R: e2.R } }
+      },
+      {
+        "type": "faq",
+        "heading": "Dudas comunes",
+        "short": "Dudas comunes",
+        "items": [
+          {
+            "q": "¿Qué ángulo llega más lejos?",
+            "a": "En terreno plano y sin aire, $45^\\circ$. Ángulos complementarios (como $30^\\circ$ y $60^\\circ$) llegan igual de lejos."
+          },
+          {
+            "q": "¿En la altura máxima la velocidad es cero?",
+            "a": "No: solo la componente vertical. La horizontal sigue igual."
+          },
+          {
+            "q": "¿Y si se lanza horizontal desde una mesa?",
+            "a": "Entonces $\\theta = 0$: $v_{0y} = 0$ y el tiempo de caída solo depende de la altura."
+          }
+        ]
+      },
+      {
+        "type": "recap",
+        "heading": "Lo que te llevas",
+        "short": "Resumen",
+        "points": [
+          "Horizontal: velocidad constante, $x = v_{0x}t$.",
+          "Vertical: caída libre con $v_{0y}$.",
+          "El tiempo une los dos movimientos.",
+          "Arriba solo se anula $v_y$."
+        ]
       }
     ],
 

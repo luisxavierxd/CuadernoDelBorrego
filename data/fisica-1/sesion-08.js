@@ -41,6 +41,27 @@
 
     lesson: [
       {
+        "type": "warmup",
+        "heading": "Antes de empezar",
+        "short": "Antes de empezar",
+        "idea": "Las fuerzas cambian el movimiento: la <strong>fuerza neta</strong> sobre un cuerpo es su masa por su aceleración, $\\Sigma\\vec F = m\\vec a$.",
+        "recall": [
+          "Suma de vectores por componentes (S02).",
+          "Que el peso es $mg$ y apunta hacia abajo."
+        ],
+        "why": "Las tres leyes de Newton explican casi todo lo que se mueve a tu alrededor: por qué frenas, por qué una báscula marca distinto en un elevador o cuánta fuerza necesita un motor."
+      },
+      {
+        "type": "concept",
+        "heading": "Imagínalo así",
+        "short": "Imagínalo así",
+        "body": [
+          "Primera ley: si nadie empuja ni jala, un objeto sigue como está (quieto o en línea recta a velocidad constante). Por eso sales \"hacia adelante\" cuando un camión frena: tu cuerpo quiere seguir.",
+          "Segunda ley: si las fuerzas no se cancelan, el objeto acelera en la dirección de la fuerza neta. Más masa, menos aceleración con la misma fuerza.",
+          "Tercera ley: si empujas una pared, la pared te empuja igual. Esas dos fuerzas actúan en cuerpos distintos, por eso no se cancelan entre sí."
+        ]
+      },
+      {
         type: 'concept', heading: 'Las tres leyes', short: 'Leyes de Newton',
         body: [
           '<strong>Primera ley (inercia):</strong> si la fuerza neta sobre un cuerpo es cero, su velocidad no cambia: sigue en reposo o en línea recta a velocidad constante. No hace falta una fuerza para <em>mantener</em> el movimiento.',
@@ -68,6 +89,29 @@
           { text: 'Recorre lo que toca a la caja. El piso la empuja: normal $N$, perpendicular al piso.', state: { step: 2 } },
           { text: 'La cuerda jala a lo largo de sí misma: tensión $T$. Las cuerdas solo jalan, nunca empujan.', state: { step: 3 } },
           { text: 'Si hay fricción, se opone al deslizamiento. Elige ejes y descompón las fuerzas inclinadas. No existe la "fuerza del movimiento".', state: { step: 4 } }
+        ]
+      },
+      {
+        "type": "recipe",
+        "heading": "Receta: problemas de Newton",
+        "short": "Receta",
+        "steps": [
+          {
+            "text": "Elige un cuerpo y dibújalo solo (diagrama de cuerpo libre)."
+          },
+          {
+            "text": "Dibuja todas las fuerzas que actúan sobre él: peso, normal, tensiones, fricción, empujes.",
+            "tip": "Cada fuerza necesita \"algo que la haga\": si no puedes decir quién la ejerce, no existe."
+          },
+          {
+            "text": "Elige ejes; conviene uno en la dirección de la aceleración."
+          },
+          {
+            "text": "Escribe $\\Sigma F_x = ma_x$ y $\\Sigma F_y = ma_y$ con signos."
+          },
+          {
+            "text": "Resuelve el sistema."
+          }
         ]
       },
       {
@@ -120,6 +164,36 @@
           'Poner una "fuerza del movimiento": si algo se mueve y nada lo empuja, no hay fuerza hacia adelante; solo inercia.',
           'Usar $N = mg$ sin pensarlo. Escribe siempre $\\Sigma F_y = ma_y$.',
           'Sumar el par de acción y reacción en el mismo DCL: esas fuerzas actúan sobre cuerpos distintos.'
+        ]
+      },
+      {
+        "type": "faq",
+        "heading": "Dudas comunes",
+        "short": "Dudas comunes",
+        "items": [
+          {
+            "q": "¿La normal siempre es $mg$?",
+            "a": "No. Solo cuando nada más empuja en vertical y no hay aceleración vertical. En un elevador que acelera, o si alguien jala hacia arriba, cambia."
+          },
+          {
+            "q": "¿Masa y peso son lo mismo?",
+            "a": "No. La masa (kg) es cuánta materia hay; el peso (N) es la fuerza con que la Tierra la jala: $w = mg$."
+          },
+          {
+            "q": "¿Existe la \"fuerza del movimiento\"?",
+            "a": "No. Un objeto en movimiento no necesita una fuerza para seguir moviéndose; necesita una fuerza para <em>cambiar</em> su movimiento."
+          }
+        ]
+      },
+      {
+        "type": "recap",
+        "heading": "Lo que te llevas",
+        "short": "Resumen",
+        "points": [
+          "$\\Sigma\\vec F = m\\vec a$.",
+          "Diagrama de cuerpo libre antes de escribir ecuaciones.",
+          "Acción y reacción actúan sobre cuerpos distintos.",
+          "La normal no siempre es $mg$."
         ]
       }
     ],

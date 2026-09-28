@@ -46,6 +46,27 @@
 
     lesson: [
       {
+        "type": "warmup",
+        "heading": "Antes de empezar",
+        "short": "Antes de empezar",
+        "idea": "Un <strong>resorte</strong> empuja o jala más entre más lo deformas; la <strong>fricción</strong> se opone a que las superficies resbalen.",
+        "recall": [
+          "Diagrama de cuerpo libre y la normal (S08).",
+          "Componentes de una fuerza inclinada (S02)."
+        ],
+        "why": "Los resortes están en básculas, amortiguadores y colchones; la fricción decide si una caja se mueve, cuánto frena un auto o si un librero se resbala."
+      },
+      {
+        "type": "concept",
+        "heading": "Imagínalo así",
+        "short": "Imagínalo así",
+        "body": [
+          "Ley de Hooke: si estiras un resorte el doble, jala con el doble de fuerza. La constante $k$ dice qué tan \"duro\" es: un resorte de auto tiene $k$ grande, uno de bolígrafo, pequeño.",
+          "La fricción estática es \"inteligente\": vale justo lo necesario para que el objeto no se mueva, hasta un máximo $\\mu_sN$. Si empujas más que eso, el objeto arranca y la fricción pasa a ser cinética, $\\mu_kN$, que suele ser menor.",
+          "La fricción depende de la <strong>normal</strong>, no directamente del peso. Si empujas una caja hacia abajo, la aprietas contra el piso y hay más fricción; si la jalas hacia arriba, hay menos."
+        ]
+      },
+      {
         type: 'concept', heading: 'Resortes: la ley de Hooke', short: 'Ley de Hooke',
         body: [
           'Un resorte estirado o comprimido una distancia $x$ desde su largo natural ejerce una fuerza proporcional y opuesta: $$F = -kx$$ La constante $k$ (N/m) mide qué tan rígido es.',
@@ -53,6 +74,27 @@
         ],
         diagram: 'hooke',
         caption: 'La fuerza del resorte crece en línea recta con la deformación.'
+      },
+      {
+        "type": "recipe",
+        "heading": "Receta: ¿se mueve? y ¿cuánto acelera?",
+        "short": "Receta",
+        "steps": [
+          {
+            "text": "Dibuja el diagrama de cuerpo libre y calcula la normal $N$ con $\\Sigma F_y = 0$.",
+            "tip": "Si la fuerza aplicada tiene ángulo, su componente vertical cambia la normal."
+          },
+          {
+            "text": "Calcula la fricción estática máxima: $f_{s,máx} = \\mu_sN$."
+          },
+          {
+            "text": "Compara con la fuerza que intenta moverlo (su componente horizontal). Si es menor o igual, no se mueve y la fricción vale lo mismo que esa fuerza."
+          },
+          {
+            "text": "Si es mayor, se mueve: usa $f_k = \\mu_kN$ y $\\Sigma F_x = ma$ para la aceleración."
+          }
+        ],
+        "note": "Para resortes: $F = kx$, con $x$ la deformación desde el largo natural (en metros)."
       },
       {
         type: 'example', heading: 'La constante de un resorte',
@@ -154,6 +196,36 @@
         ],
         answer: 'Sí se mueve; arranca con $a \\approx ' + fx(e5.a) + '\\ \\text{m/s}^2$.',
         verify: { lab: 'call', mod: 'friction', fn: 'analyze', args: [{ m: e5.m, F: 0, th: 0, mode: 'horizontal', mus: e5.mus, muk: e5.muk, k: e5.k, x: e5.x }], values: { a: e5.a } }
+      },
+      {
+        "type": "faq",
+        "heading": "Dudas comunes",
+        "short": "Dudas comunes",
+        "items": [
+          {
+            "q": "¿La fricción depende del área de contacto?",
+            "a": "En este modelo no: solo del tipo de superficies ($\\mu$) y de la normal."
+          },
+          {
+            "q": "¿Por qué $\\mu_s$ es mayor que $\\mu_k$?",
+            "a": "Porque cuesta más arrancar algo que mantenerlo deslizando. Por eso sientes el \"tirón\" al empujar un mueble pesado."
+          },
+          {
+            "q": "¿En serie o en paralelo?",
+            "a": "En serie (uno tras otro) el conjunto es más blando: $\\tfrac{1}{k} = \\tfrac{1}{k_1} + \\tfrac{1}{k_2}$. En paralelo (lado a lado) es más duro: $k = k_1 + k_2$."
+          }
+        ]
+      },
+      {
+        "type": "recap",
+        "heading": "Lo que te llevas",
+        "short": "Resumen",
+        "points": [
+          "Hooke: $F = kx$.",
+          "Estática: hasta $\\mu_sN$; cinética: $\\mu_kN$.",
+          "La fricción depende de la normal, no del peso directamente.",
+          "Una fuerza inclinada cambia la normal."
+        ]
       }
     ],
 

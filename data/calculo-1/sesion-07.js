@@ -19,6 +19,28 @@
 
     lesson: [
       {
+        "type": "warmup",
+        "heading": "Antes de empezar",
+        "short": "Antes de empezar",
+        "idea": "Los máximos y mínimos de una función están donde la tangente se pone <strong>horizontal</strong> (o donde la derivada no existe).",
+        "recall": [
+          "Derivar polinomios, exponenciales y productos (S02–S05).",
+          "Resolver ecuaciones: factorizar, fórmula general.",
+          "Que $f' > 0$ significa que la función sube y $f' < 0$ que baja."
+        ],
+        "why": "Saber dónde una función llega a su punto más alto o más bajo es la base de la optimización (S08) y de entender la forma de cualquier gráfica."
+      },
+      {
+        "type": "concept",
+        "heading": "Imagínalo así",
+        "short": "Imagínalo así",
+        "body": [
+          "Imagina que caminas por una sierra de izquierda a derecha. Cuando subes, la pendiente es positiva; cuando bajas, negativa. En la cima de una montaña, justo antes de empezar a bajar, estás \"en plano\" un instante: pendiente cero. Lo mismo en el fondo de un valle.",
+          "Por eso buscamos los <strong>puntos críticos</strong>: donde $f' = 0$ (o donde $f'$ no existe). Pero no todo punto crítico es una cima o un valle: puedes estar en un tramo plano y seguir subiendo después. Para decidir, miras el signo de $f'$ antes y después.",
+          "La segunda derivada dice hacia dónde se \"curva\" la gráfica: si $f'' > 0$ es como una taza (abre hacia arriba) y el punto crítico es un mínimo; si $f'' < 0$ es como un domo y es un máximo."
+        ]
+      },
+      {
         type: 'concept', heading: 'Puntos críticos', short: 'Puntos críticos',
         body: [
           'Un <strong>máximo relativo</strong> es un punto más alto que todos sus vecinos cercanos; un <strong>mínimo relativo</strong>, uno más bajo. No tienen que ser los más altos o bajos de toda la gráfica.',
@@ -48,6 +70,30 @@
           '<strong>Criterio de la segunda derivada:</strong> si $f\'(c) = 0$ y $f\'\'(c) < 0$, hay un máximo; si $f\'\'(c) > 0$, un mínimo; si $f\'\'(c) = 0$, el criterio no decide y hay que volver al signo de $f\'$.'
         ],
         diagram: 'concavity', caption: 'La inflexión separa la parte ∩ de la parte ∪.'
+      },
+      {
+        "type": "recipe",
+        "heading": "Receta: encontrar y clasificar extremos",
+        "short": "Receta",
+        "steps": [
+          {
+            "text": "Deriva la función."
+          },
+          {
+            "text": "Resuelve $f'(x) = 0$ (y anota dónde $f'$ no existe). Esos son los puntos críticos.",
+            "tip": "Factoriza: suele ser más fácil que usar la fórmula general."
+          },
+          {
+            "text": "Haz una tabla de signos de $f'$ en los intervalos entre puntos críticos (prueba un número de cada intervalo)."
+          },
+          {
+            "text": "Si $f'$ pasa de $+$ a $-$ hay un máximo; de $-$ a $+$, un mínimo; si no cambia de signo, no es extremo.",
+            "tip": "Con la segunda derivada: $f''(c) < 0$ máximo, $f''(c) > 0$ mínimo; si vale 0, usa la tabla."
+          },
+          {
+            "text": "Evalúa $f$ en cada extremo para dar su valor."
+          }
+        ]
       },
       {
         type: 'example', heading: 'Un polinomio de grado 3',
@@ -88,6 +134,36 @@
       {
         type: 'callout', heading: 'Crítico no siempre es extremo',
         body: '$f(x) = x^3$ tiene $f\'(0) = 0$, pero $f\'$ es positiva a los dos lados: la curva solo se aplana y sigue subiendo. Siempre revisa el signo de $f\'$ alrededor del punto (o $f\'\'$ cuando no es cero).'
+      },
+      {
+        "type": "faq",
+        "heading": "Dudas comunes",
+        "short": "Dudas comunes",
+        "items": [
+          {
+            "q": "¿Un punto crítico siempre es máximo o mínimo?",
+            "a": "No. En $f(x) = x^3$, la derivada vale 0 en $x = 0$ pero la función sigue subiendo: no es extremo. Por eso hay que revisar el cambio de signo."
+          },
+          {
+            "q": "¿Qué es un punto de inflexión?",
+            "a": "Donde la gráfica cambia de \"taza\" a \"domo\" o al revés: $f''$ cambia de signo. No es lo mismo que un extremo."
+          },
+          {
+            "q": "¿Me piden el punto o el valor?",
+            "a": "El punto es la $x$ donde ocurre; el valor es $f(x)$ en ese punto. Lee con cuidado qué te piden."
+          }
+        ]
+      },
+      {
+        "type": "recap",
+        "heading": "Lo que te llevas",
+        "short": "Resumen",
+        "points": [
+          "Puntos críticos: $f' = 0$ o $f'$ no existe.",
+          "Cambio de signo de $f'$: $+\\to -$ máximo, $-\\to +$ mínimo.",
+          "Segunda derivada: $f'' > 0$ mínimo (taza), $f'' < 0$ máximo (domo).",
+          "Inflexión: donde $f''$ cambia de signo."
+        ]
       }
     ],
 

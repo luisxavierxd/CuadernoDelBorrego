@@ -21,6 +21,28 @@
 
     lesson: [
       {
+        "type": "warmup",
+        "heading": "Antes de empezar",
+        "short": "Antes de empezar",
+        "idea": "Cuando $y$ no está despejada, derivas <strong>ambos lados</strong> de la ecuación y despejas $y'$ al final.",
+        "recall": [
+          "La regla de la cadena (S05): $y$ depende de $x$, así que $y^2$ deriva a $2y\\,y'$.",
+          "La regla del producto (S03), para términos como $xy$.",
+          "Despejar una letra de una ecuación lineal."
+        ],
+        "why": "Muchas curvas no se pueden escribir como $y = f(x)$: círculos, elipses, órbitas. También es la base de las \"razones relacionadas\": una escalera que resbala, un globo que se infla, una sombra que crece."
+      },
+      {
+        "type": "concept",
+        "heading": "Imagínalo así",
+        "short": "Imagínalo así",
+        "body": [
+          "En $x^2 + y^2 = 25$ no te dicen cuánto vale $y$, pero sí te dicen cómo están <em>amarradas</em> $x$ y $y$: si te mueves por el círculo, cuando $x$ cambia, $y$ también tiene que cambiar para que la suma siga dando 25.",
+          "Por eso tratamos a $y$ como una función de $x$ que no conocemos. Al derivar un término con $y$ aparece la regla de la cadena: la derivada de $y^2$ es $2y$ <em>por</em> $y'$, igual que la derivada de $(\\text{algo})^2$ es $2(\\text{algo})$ por la derivada de ese algo.",
+          "Al final, la $y'$ puede depender de $x$ y de $y$. Es normal: para saber la pendiente necesitas saber en qué punto de la curva estás."
+        ]
+      },
+      {
         type: 'concept', heading: 'La idea', short: 'Curvas implícitas',
         body: [
           'Una ecuación como $x^2 + y^2 = 25$ define una curva, pero no una sola función $y(x)$: para cada $x$ hay dos valores de $y$.',
@@ -38,6 +60,29 @@
           { text: 'En $(0, 5)$, arriba del círculo: $y\' = 0$, tangente horizontal.', state: { t: 1.5708 } },
           { text: 'En $(-3, 4)$: $y\' = \\tfrac{3}{4}$. Del otro lado la tangente sube.', state: { t: 2.2143 } },
           { text: 'Cerca de $(5, 0)$ la tangente es casi vertical: $y \\to 0$ y $-x/y$ se dispara.', state: { t: 0.05 } }
+        ]
+      },
+      {
+        "type": "recipe",
+        "heading": "Receta: derivación implícita",
+        "short": "Receta",
+        "steps": [
+          {
+            "text": "Deriva cada término de ambos lados respecto a $x$."
+          },
+          {
+            "text": "Cada vez que derives algo con $y$, multiplica por $y'$.",
+            "tip": "$(y^3)' = 3y^2\\,y'$; $(\\sin y)' = \\cos y\\,y'$; una constante sigue derivando a 0."
+          },
+          {
+            "text": "Los términos con $x$ y $y$ juntos ($xy$, $x^2y$) llevan regla del producto."
+          },
+          {
+            "text": "Pasa todos los términos con $y'$ a un lado y lo demás al otro."
+          },
+          {
+            "text": "Factoriza $y'$ y divide. Si te dan un punto, sustitúyelo al final."
+          }
         ]
       },
       {
@@ -76,6 +121,36 @@
       {
         type: 'callout', heading: 'No olvides el y′',
         body: 'La derivada de $y^3$ respecto a $x$ no es $3y^2$: es $3y^2y\'$. Si se te olvida, el lab te marca la pendiente equivocada.'
+      },
+      {
+        "type": "faq",
+        "heading": "Dudas comunes",
+        "short": "Dudas comunes",
+        "items": [
+          {
+            "q": "¿Por qué $x^2$ no lleva $y'$ pero $y^2$ sí?",
+            "a": "Porque derivamos respecto a $x$. La derivada de $x$ respecto a $x$ es 1, así que no aparece nada extra; la de $y$ es $y'$."
+          },
+          {
+            "q": "¿Puedo despejar $y$ primero?",
+            "a": "A veces sí (en el círculo, $y = \\sqrt{25 - x^2}$), pero sale más largo y solo te da media curva. En otras curvas es imposible despejar."
+          },
+          {
+            "q": "¿Qué significa que $y'$ quede con $x$ y $y$?",
+            "a": "Que la pendiente depende del punto. Por eso en los problemas siempre te dan un punto $(x_0, y_0)$ para evaluar."
+          }
+        ]
+      },
+      {
+        "type": "recap",
+        "heading": "Lo que te llevas",
+        "short": "Resumen",
+        "points": [
+          "Deriva ambos lados respecto a $x$.",
+          "Todo término con $y$ lleva un $y'$ por la regla de la cadena.",
+          "Agrupa los $y'$, factoriza y despeja.",
+          "Evalúa en el punto que te dan."
+        ]
       }
     ],
 

@@ -32,6 +32,28 @@
 
     lesson: [
       {
+        "type": "warmup",
+        "heading": "Antes de empezar",
+        "short": "Antes de empezar",
+        "idea": "Todo número en física lleva <strong>unidades</strong>, y las unidades se pueden multiplicar, dividir y cancelar igual que las letras en álgebra.",
+        "recall": [
+          "Multiplicar y simplificar fracciones.",
+          "Potencias de 10: $10^3 = 1000$, $10^{-2} = 0.01$.",
+          "Que $1\\ \\text{km} = 1000\\ \\text{m}$ y $1\\ \\text{h} = 3600\\ \\text{s}$."
+        ],
+        "why": "Un resultado sin unidades no sirve: \"el auto va a 20\" puede ser 20 km/h o 20 m/s (72 km/h). Además, revisar unidades es la forma más rápida de detectar un error antes de entregar."
+      },
+      {
+        "type": "concept",
+        "heading": "Imagínalo así",
+        "short": "Imagínalo así",
+        "body": [
+          "Convertir unidades es multiplicar por \"1\" disfrazado. Como $1\\ \\text{km} = 1000\\ \\text{m}$, la fracción $\\dfrac{1000\\ \\text{m}}{1\\ \\text{km}}$ vale exactamente 1: multiplicar por ella no cambia la cantidad, solo la forma de escribirla.",
+          "El truco es acomodar la fracción para que la unidad que quieres quitar quede una vez arriba y otra abajo, y se cancele. Si al final te quedan las unidades que buscabas, lo hiciste bien.",
+          "El análisis dimensional es la misma idea aplicada a fórmulas: los dos lados de una ecuación deben tener las mismas dimensiones. Si una fórmula de distancia te da segundos, hay un error."
+        ]
+      },
+      {
         type: 'concept', heading: 'Modelar es decidir qué ignorar', short: 'Modelación',
         body: [
           'La física no resuelve el mundo real completo: resuelve un <strong>modelo</strong> de él. Un carro que avanza por una carretera tiene ruedas, motor y aire que lo frena, pero para saber cuánto tarda en llegar basta tratarlo como un <strong>punto</strong> que se mueve.',
@@ -60,6 +82,30 @@
           { text: 'Multiplica por $\\frac{1\\ \\text{h}}{3600\\ \\text{s}}$, que también vale 1. Ahora se cancelan las horas.', state: { step: 2 } },
           { text: 'Solo quedan m/s: $\\frac{72 \\cdot 1000}{3600} = 20\\ \\text{m/s}$. Atajo: de km/h a m/s se divide entre 3.6.', state: { step: 3 } }
         ]
+      },
+      {
+        "type": "recipe",
+        "heading": "Receta: convertir unidades",
+        "short": "Receta",
+        "steps": [
+          {
+            "text": "Escribe la cantidad con su unidad: $72\\ \\dfrac{\\text{km}}{\\text{h}}$."
+          },
+          {
+            "text": "Multiplica por factores que valen 1, acomodados para cancelar lo que sobra: $\\dfrac{1000\\ \\text{m}}{1\\ \\text{km}}$ y $\\dfrac{1\\ \\text{h}}{3600\\ \\text{s}}$.",
+            "tip": "La unidad que quieres quitar va en el lado contrario al que está."
+          },
+          {
+            "text": "Cancela las unidades repetidas arriba y abajo."
+          },
+          {
+            "text": "Haz la cuenta con los números: $72\\cdot\\dfrac{1000}{3600} = 20$."
+          },
+          {
+            "text": "Revisa que te quedaron las unidades pedidas: $20\\ \\text{m/s}$."
+          }
+        ],
+        "note": "Con unidades al cuadrado o al cubo, el factor también va al cuadrado o al cubo: $1\\ \\text{m}^2 = (100\\ \\text{cm})^2 = 10\\,000\\ \\text{cm}^2$."
       },
       {
         type: 'example', heading: 'De km/h a m/s',
@@ -117,6 +163,36 @@
         body: [
           'Escribe los números muy grandes o muy chicos como $a \\times 10^n$: la rapidez de la luz es $3.00 \\times 10^8\\ \\text{m/s}$ y el grosor de un cabello, unos $8 \\times 10^{-5}\\ \\text{m}$.',
           'Da tus resultados con unas 3 cifras significativas: si los datos traen 2 o 3 cifras, escribir 8 decimales no agrega precisión.'
+        ]
+      },
+      {
+        "type": "faq",
+        "heading": "Dudas comunes",
+        "short": "Dudas comunes",
+        "items": [
+          {
+            "q": "¿Por qué km/h a m/s es dividir entre 3.6?",
+            "a": "Porque $\\dfrac{1000}{3600} = \\dfrac{1}{3.6}$. Al revés, de m/s a km/h se multiplica por 3.6."
+          },
+          {
+            "q": "¿Qué es una dimensión?",
+            "a": "El \"tipo\" de cantidad: longitud (L), masa (M) o tiempo (T). Una velocidad es L/T sin importar si la mides en m/s o km/h."
+          },
+          {
+            "q": "¿Cuántas cifras pongo en el resultado?",
+            "a": "En este curso redondea a 2 decimales. En notación científica, $3.2\\times 10^{5}$ se escribe <code>3.2e5</code> o <code>3.2×10^5</code>."
+          }
+        ]
+      },
+      {
+        "type": "recap",
+        "heading": "Lo que te llevas",
+        "short": "Resumen",
+        "points": [
+          "Toda cantidad lleva unidad; sin ella el número no dice nada.",
+          "Convertir es multiplicar por factores que valen 1.",
+          "Las unidades se cancelan como letras.",
+          "Si las dimensiones no cuadran, la fórmula está mal."
         ]
       }
     ],

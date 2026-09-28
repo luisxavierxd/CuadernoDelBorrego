@@ -20,6 +20,28 @@
 
     lesson: [
       {
+        "type": "warmup",
+        "heading": "Antes de empezar",
+        "short": "Antes de empezar",
+        "idea": "Al girar una región alrededor de un eje se forma un sólido; su volumen se calcula sumando <strong>discos</strong> o <strong>capas</strong>.",
+        "recall": [
+          "Área de un círculo: $\\pi r^2$. Volumen de un cilindro: $\\pi r^2 h$.",
+          "Área entre curvas (S14).",
+          "Integrales definidas."
+        ],
+        "why": "Así se calculan volúmenes de tanques, vasos, piezas torneadas, cúpulas y recipientes que no son cajas."
+      },
+      {
+        "type": "concept",
+        "heading": "Imagínalo así",
+        "short": "Imagínalo así",
+        "body": [
+          "Piensa en rebanar un pan redondo: cada rebanada es un disco delgado. Su volumen es $\\pi r^2$ por el grosor. Sumar todas las rebanadas es integrar $\\pi r^2$, donde el radio $r$ es la altura de la curva en cada punto.",
+          "Si la región tiene un hueco (la gira una zona entre dos curvas), cada rebanada es una dona plana o <strong>arandela</strong>: el disco grande menos el chico.",
+          "Las <strong>capas cilíndricas</strong> son otra forma de rebanar: en lugar de rebanadas, tubos delgados como las capas de una cebolla. Cada tubo tiene volumen $2\\pi\\cdot\\text{radio}\\cdot\\text{altura}\\cdot\\text{grosor}$. Conviene cuando girar alrededor del eje $y$ te obligaría a despejar $x$."
+        ]
+      },
+      {
         type: 'concept', heading: 'Discos y arandelas', short: 'Discos',
         body: [
           'Si la región bajo $y = f(x)$ gira alrededor del eje $x$, cada rebanada delgada es un disco de radio $f(x)$ y grosor $dx$: su volumen es $\\pi f(x)^2\\,dx$. Sumando: $$V = \\pi\\int_a^b f(x)^2\\,dx.$$',
@@ -54,6 +76,29 @@
           { text: 'Una tira cerca del eje barre una capa angosta.', state: { x: 0.2 } },
           { text: 'Una tira en medio: radio $x$ y altura $x - x^2$.', state: { x: 0.5 } },
           { text: 'Lejos del eje la capa es ancha pero baja. En total: $2\\pi\\int_0^1 x(x - x^2)\\,dx = \\tfrac{\\pi}{6}$.', state: { x: 0.8 } }
+        ]
+      },
+      {
+        "type": "recipe",
+        "heading": "Receta: volumen de un sólido de revolución",
+        "short": "Receta",
+        "steps": [
+          {
+            "text": "Dibuja la región y el eje de giro."
+          },
+          {
+            "text": "Elige método: si rebanas perpendicular al eje, discos o arandelas; si rebanas paralelo al eje, capas."
+          },
+          {
+            "text": "Discos: el radio es la distancia de la curva al eje. $V = \\pi\\int r^2$.",
+            "tip": "Arandelas: $\\pi\\int(R^2 - r^2)$, ¡no $\\pi\\int(R - r)^2$!"
+          },
+          {
+            "text": "Capas: radio = distancia al eje, altura = alto de la región en ese punto. $V = 2\\pi\\int(\\text{radio})(\\text{altura})$."
+          },
+          {
+            "text": "Pon los límites en la variable correcta ($x$ o $y$) e integra."
+          }
         ]
       },
       {
@@ -98,6 +143,36 @@
       {
         type: 'callout', heading: '¿Discos o capas?',
         body: 'Si giras alrededor del eje $x$ y la región está descrita como $y = f(x)$, usa discos. Si giras alrededor del eje $y$, las capas evitan despejar $x$ en función de $y$. Los dos métodos dan el mismo volumen; elige el que produce la integral más fácil.'
+      },
+      {
+        "type": "faq",
+        "heading": "Dudas comunes",
+        "short": "Dudas comunes",
+        "items": [
+          {
+            "q": "¿Discos o capas?",
+            "a": "Los dos dan el mismo volumen. Elige el que te deje integrar en la variable más cómoda sin despejar."
+          },
+          {
+            "q": "¿Qué cambia si el eje no es un eje coordenado?",
+            "a": "El radio: ya no es la función sola, sino la distancia de la curva al eje. Si giras alrededor de $y = -1$, el radio es $f(x) + 1$."
+          },
+          {
+            "q": "¿Por qué no se resta dentro del cuadrado en arandelas?",
+            "a": "Porque el área de una dona es el círculo grande menos el chico: $\\pi R^2 - \\pi r^2$, que no es igual a $\\pi(R - r)^2$."
+          }
+        ]
+      },
+      {
+        "type": "recap",
+        "heading": "Lo que te llevas",
+        "short": "Resumen",
+        "points": [
+          "Discos: $V = \\pi\\int r^2$; arandelas: $\\pi\\int(R^2 - r^2)$.",
+          "Capas: $V = 2\\pi\\int(\\text{radio})(\\text{altura})$.",
+          "El radio es la distancia al eje de giro.",
+          "Discos y capas dan el mismo volumen."
+        ]
       }
     ],
 

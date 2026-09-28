@@ -46,6 +46,27 @@
 
     lesson: [
       {
+        "type": "warmup",
+        "heading": "Antes de empezar",
+        "short": "Antes de empezar",
+        "idea": "En un círculo, aunque la rapidez no cambie, la velocidad cambia de dirección y eso es una <strong>aceleración hacia el centro</strong>.",
+        "recall": [
+          "Radianes: una vuelta completa son $2\\pi$ rad.",
+          "Suma de vectores (S02)."
+        ],
+        "why": "Ruedas, centrífugas, satélites y autos en curva giran. Y la velocidad relativa explica por qué un bote se desvía en un río o cómo se ve la lluvia desde un auto en movimiento."
+      },
+      {
+        "type": "concept",
+        "heading": "Imagínalo así",
+        "short": "Imagínalo así",
+        "body": [
+          "Ata una piedra a un hilo y hazla girar: aunque vaya siempre igual de rápido, tienes que jalar hacia el centro todo el tiempo; si sueltas, sale derecha. Ese jalón es la causa de la <strong>aceleración centrípeta</strong>, $a_c = v^2/r$.",
+          "La rapidez angular $\\omega$ dice cuántos radianes gira por segundo. Un punto más lejos del centro recorre más distancia en el mismo tiempo: por eso $v = \\omega r$.",
+          "La velocidad relativa es una suma de vectores: la velocidad de un bote respecto a la orilla es la del bote respecto al agua más la del agua respecto a la orilla."
+        ]
+      },
+      {
         type: 'concept', heading: 'Ángulos, vueltas y rapidez angular', short: 'Cinemática angular',
         body: [
           'En un círculo de radio $r$, el arco recorrido es $s = r\\theta$ con $\\theta$ en <strong>radianes</strong>. Una vuelta completa son $2\\pi$ rad.',
@@ -65,6 +86,25 @@
           { text: 'Pon las dos flechas con la misma cola: el cambio $\\Delta\\vec{v} = \\vec{v}_2 - \\vec{v}_1$ apunta hacia el centro.', state: { dth: 60, show: 'dv' } },
           { text: 'Al acercar los instantes, $\\Delta\\vec{v}$ se vuelve más chico y apunta cada vez más exacto al centro.', state: { dth: 25, show: 'dv' } },
           { text: 'En el límite, la aceleración es <strong>centrípeta</strong> (hacia el centro) y vale $$a_c = \\frac{v^2}{r} = \\omega^2 r$$', state: { dth: 6, show: 'dv' } }
+        ]
+      },
+      {
+        "type": "recipe",
+        "heading": "Receta: movimiento circular",
+        "short": "Receta",
+        "steps": [
+          {
+            "text": "Pasa lo que te den a $\\omega$ en rad/s: de rpm, multiplica por $\\dfrac{2\\pi}{60}$; de periodo $T$, $\\omega = \\dfrac{2\\pi}{T}$."
+          },
+          {
+            "text": "Rapidez del punto: $v = \\omega r$ (con $r$ en metros)."
+          },
+          {
+            "text": "Aceleración centrípeta: $a_c = \\dfrac{v^2}{r} = \\omega^2r$, siempre hacia el centro."
+          },
+          {
+            "text": "Si además la rapidez cambia, hay una aceleración tangencial $a_t$ y la total es $\\sqrt{a_c^2 + a_t^2}$."
+          }
         ]
       },
       {
@@ -127,6 +167,36 @@
           'La aceleración centrípeta no es una fuerza nueva: es lo que le pasa a la velocidad. En S11 verás qué fuerza la produce (fricción, tensión, la normal).',
           'Convierte rpm a rad/s antes de usar $v = \\omega r$: sin el $2\\pi$ el resultado sale 6.28 veces menor.',
           'En velocidad relativa, dibuja los vectores: los signos y las direcciones deciden si se suman o se restan.'
+        ]
+      },
+      {
+        "type": "faq",
+        "heading": "Dudas comunes",
+        "short": "Dudas comunes",
+        "items": [
+          {
+            "q": "¿Si la rapidez es constante no hay aceleración?",
+            "a": "Sí hay: la dirección cambia. La aceleración mide cambios de velocidad, y la velocidad es un vector."
+          },
+          {
+            "q": "¿Por qué las rpm se convierten?",
+            "a": "Porque las fórmulas usan radianes por segundo. 1 rpm = una vuelta por minuto = $2\\pi$ rad en 60 s."
+          },
+          {
+            "q": "¿Cómo cruzo un río en línea recta?",
+            "a": "Apuntando un poco contra la corriente, para que la componente del bote contra la corriente la cancele."
+          }
+        ]
+      },
+      {
+        "type": "recap",
+        "heading": "Lo que te llevas",
+        "short": "Resumen",
+        "points": [
+          "$\\omega = 2\\pi/T$, $v = \\omega r$.",
+          "$a_c = v^2/r$ hacia el centro, aun con rapidez constante.",
+          "Convierte rpm a rad/s.",
+          "Velocidades relativas se suman como vectores."
         ]
       }
     ],

@@ -47,6 +47,28 @@
 
     lesson: [
       {
+        "type": "warmup",
+        "heading": "Antes de empezar",
+        "short": "Antes de empezar",
+        "idea": "Un <strong>vector</strong> tiene tamaño y dirección; para sumarlos se descomponen en dos partes: una horizontal y una vertical.",
+        "recall": [
+          "Seno, coseno y tangente en un triángulo rectángulo.",
+          "Pitágoras: $c = \\sqrt{a^2 + b^2}$.",
+          "Usar la calculadora en grados."
+        ],
+        "why": "Fuerzas, velocidades y desplazamientos son vectores. No se suman como números: 3 N hacia el este más 4 N hacia el norte dan 5 N, no 7 N."
+      },
+      {
+        "type": "concept",
+        "heading": "Imagínalo así",
+        "short": "Imagínalo así",
+        "body": [
+          "Imagina que caminas 3 cuadras al este y luego 4 al norte. Terminaste a 5 cuadras (en línea recta) de donde empezaste, aunque caminaste 7. Sumar vectores es encontrar ese \"desplazamiento neto\".",
+          "Para sumar vectores con cualquier ángulo, se descompone cada uno en cuánto avanza en $x$ (su componente horizontal) y cuánto en $y$. Las componentes sí se suman como números normales, porque todas apuntan en la misma dirección.",
+          "Al final, con las componentes totales, Pitágoras da el tamaño y el arcotangente da la dirección."
+        ]
+      },
+      {
         type: 'concept', heading: 'Escalares y vectores', short: 'Escalares y vectores',
         body: [
           'Un <strong>escalar</strong> queda dicho con un número y su unidad: la masa, el tiempo, la temperatura, la rapidez o la distancia recorrida.',
@@ -83,6 +105,27 @@
           { text: 'Traslada $\\vec{B}$ sin girarlo hasta que su cola quede en la cabeza (la punta) de $\\vec{A}$.', state: { step: 1 } },
           { text: 'La resultante $\\vec{R} = \\vec{A} + \\vec{B}$ va de la cola de $\\vec{A}$ a la cabeza de $\\vec{B}$.', state: { step: 2 } },
           { text: 'Por componentes: $R_x = A_x + B_x$ y $R_y = A_y + B_y$. Luego $R = \\sqrt{R_x^2 + R_y^2}$ y el ángulo con cuidado del cuadrante.', state: { step: 3 } }
+        ]
+      },
+      {
+        "type": "recipe",
+        "heading": "Receta: sumar vectores por componentes",
+        "short": "Receta",
+        "steps": [
+          {
+            "text": "Para cada vector, calcula $A_x = A\\cos\\theta$ y $A_y = A\\sin\\theta$, con $\\theta$ medido desde el eje $+x$ en sentido contrario a las manecillas.",
+            "tip": "Si el ángulo te lo dan desde otro eje o hacia otra dirección, ajústalo primero o pon los signos a mano."
+          },
+          {
+            "text": "Suma todas las componentes $x$ y, aparte, todas las $y$."
+          },
+          {
+            "text": "Tamaño de la resultante: $R = \\sqrt{R_x^2 + R_y^2}$."
+          },
+          {
+            "text": "Dirección: $\\theta = \\arctan\\dfrac{R_y}{R_x}$, y revisa el cuadrante.",
+            "tip": "Si $R_x < 0$, suma $180^\\circ$ al resultado de la calculadora."
+          }
         ]
       },
       {
@@ -126,6 +169,36 @@
         ],
         answer: '$|\\Delta\\vec{v}| \\approx ' + fx(e3.mag) + '\\ \\text{m/s}$ hacia el noroeste ($' + fx(e3.ang, 1) + '^\\circ$).',
         verify: { lab: 'call', mod: 'vectors', fn: 'sum', args: [[[10, 90], [10, 0]], [1, -1]], values: { x: e3.x, y: e3.y, mag: e3.mag, ang: e3.ang } }
+      },
+      {
+        "type": "faq",
+        "heading": "Dudas comunes",
+        "short": "Dudas comunes",
+        "items": [
+          {
+            "q": "¿Por qué hay que revisar el cuadrante?",
+            "a": "Porque el arcotangente de la calculadora solo da ángulos entre $-90^\\circ$ y $90^\\circ$. Un vector que apunta a la izquierda necesita $180^\\circ$ más."
+          },
+          {
+            "q": "¿Qué es un escalar?",
+            "a": "Una cantidad que solo tiene tamaño: masa, temperatura, tiempo, rapidez. Se suman como números normales."
+          },
+          {
+            "q": "¿Cómo resto vectores?",
+            "a": "Sumando el opuesto: $\\vec A - \\vec B = \\vec A + (-\\vec B)$, donde $-\\vec B$ tiene las componentes de $\\vec B$ con signo cambiado."
+          }
+        ]
+      },
+      {
+        "type": "recap",
+        "heading": "Lo que te llevas",
+        "short": "Resumen",
+        "points": [
+          "Vector = tamaño + dirección.",
+          "Componentes: $A\\cos\\theta$ y $A\\sin\\theta$.",
+          "Suma las $x$ con las $x$ y las $y$ con las $y$.",
+          "Pitágoras para el tamaño; arcotangente (revisando cuadrante) para la dirección."
+        ]
       }
     ],
 

@@ -20,6 +20,28 @@
 
     lesson: [
       {
+        "type": "warmup",
+        "heading": "Antes de empezar",
+        "short": "Antes de empezar",
+        "idea": "Optimizar es encontrar el <strong>mejor valor posible</strong> (máximo o mínimo) de algo que depende de una sola variable.",
+        "recall": [
+          "Encontrar extremos con la derivada (S07).",
+          "Fórmulas de área y volumen: rectángulo, caja, cilindro ($V = \\pi r^2h$).",
+          "Despejar una variable de una ecuación."
+        ],
+        "why": "Es la aplicación más práctica del curso: menos material para una lata, más área con la misma cerca, menor costo, mayor ganancia."
+      },
+      {
+        "type": "concept",
+        "heading": "Imagínalo así",
+        "short": "Imagínalo así",
+        "body": [
+          "Casi todos los problemas de optimización tienen la misma forma: hay algo que quieres hacer lo más grande (o chico) posible y una <strong>restricción</strong> que no puedes romper. Por ejemplo, el área de un corral (lo que quieres máximo) con 100 m de cerca (la restricción).",
+          "El truco está en usar la restricción para dejar todo en <em>una sola variable</em>. Con una variable ya sabes qué hacer: derivas, igualas a cero y revisas que sea máximo o mínimo.",
+          "Siempre ayuda imaginar los casos extremos: un corral larguísimo y delgado casi no tiene área; uno muy ancho y corto tampoco. En algún punto intermedio está el mejor, y la derivada lo encuentra."
+        ]
+      },
+      {
         type: 'concept', heading: 'El método en cinco pasos', short: 'El método',
         body: [
           '<strong>1. Dibuja y nombra.</strong> Pon letras a las cantidades que cambian.',
@@ -40,6 +62,32 @@
           { text: 'En $x = 5$: $V\'(x) = (30 - 2x)(30 - 6x) = 0$. Volumen máximo de 2000 cm³.', state: { x: 5 } },
           { text: 'Si sigues cortando, la base se encoge más rápido de lo que gana la altura.', state: { x: 9 } },
           { text: 'En $x = 15$ la base desaparece y el volumen vuelve a cero.', state: { x: 13 } }
+        ]
+      },
+      {
+        "type": "recipe",
+        "heading": "Receta: problemas de optimización",
+        "short": "Receta",
+        "steps": [
+          {
+            "text": "Haz un dibujo y ponle nombre a las medidas ($x$, $y$, $r$, $h$…)."
+          },
+          {
+            "text": "Escribe la función que quieres optimizar (área, costo, volumen…)."
+          },
+          {
+            "text": "Escribe la restricción como ecuación y despeja una variable.",
+            "tip": "Despeja la que sea más fácil; no importa cuál, el resultado final es el mismo."
+          },
+          {
+            "text": "Sustituye en la función: ahora depende de una sola variable. Anota su dominio (qué valores tienen sentido)."
+          },
+          {
+            "text": "Deriva, iguala a cero y resuelve."
+          },
+          {
+            "text": "Comprueba que es máximo o mínimo (signo de $f'$ o $f''$, o compara con los extremos del dominio) y contesta lo que te preguntan, con unidades."
+          }
         ]
       },
       {
@@ -80,6 +128,36 @@
       {
         type: 'callout', heading: 'Revisa los extremos del dominio',
         body: 'El óptimo puede estar en un borde, donde $f\'$ no vale cero. Si la variable vive en $[a, b]$, compara $f$ en los críticos y en $a$ y $b$. Y responde lo que se pregunta: el lado, el área o el costo.'
+      },
+      {
+        "type": "faq",
+        "heading": "Dudas comunes",
+        "short": "Dudas comunes",
+        "items": [
+          {
+            "q": "¿Qué hago con dos variables?",
+            "a": "Usa la restricción para despejar una en términos de la otra. Si no hay restricción explícita, búscala en el enunciado (\"con 100 m de cerca\", \"un volumen de 500 cm³\")."
+          },
+          {
+            "q": "¿Y si la derivada da una $x$ negativa?",
+            "a": "Si la $x$ es una longitud, una $x$ negativa no tiene sentido físico: se descarta. Por eso es importante anotar el dominio."
+          },
+          {
+            "q": "¿Siempre hay que comprobar?",
+            "a": "Sí. A veces el punto crítico es un mínimo cuando buscabas el máximo, o el mejor valor está en un extremo del dominio."
+          }
+        ]
+      },
+      {
+        "type": "recap",
+        "heading": "Lo que te llevas",
+        "short": "Resumen",
+        "points": [
+          "Dibujo, función objetivo y restricción.",
+          "Con la restricción, deja todo en una variable.",
+          "Deriva, iguala a cero y resuelve dentro del dominio.",
+          "Comprueba y contesta con unidades."
+        ]
       }
     ],
 

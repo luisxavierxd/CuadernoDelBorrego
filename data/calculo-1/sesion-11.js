@@ -20,6 +20,27 @@
 
     lesson: [
       {
+        "type": "warmup",
+        "heading": "Antes de empezar",
+        "short": "Antes de empezar",
+        "idea": "Integración <strong>por partes</strong> sirve para productos donde un factor se simplifica al derivarlo.",
+        "recall": [
+          "La regla del producto (S03): $(uv)' = u'v + uv'$.",
+          "Integrales directas (S10)."
+        ],
+        "why": "Aparece con $x\\,e^x$, $x\\sin x$, $\\ln x$ o $\\arctan x$: productos que el cambio de variable no puede resolver. Es común en probabilidad, física y señales."
+      },
+      {
+        "type": "concept",
+        "heading": "Imagínalo así",
+        "short": "Imagínalo así",
+        "body": [
+          "Integrar por partes es la regla del producto leída al revés. De $(uv)' = u'v + uv'$ se despeja $\\int u\\,dv = uv - \\int v\\,du$: cambias una integral difícil por otra, ojalá más fácil.",
+          "El chiste es elegir bien cuál factor derivar ($u$) y cuál integrar ($dv$). Conviene derivar el que se <strong>simplifica</strong> al derivarlo ($x$ se vuelve 1, $\\ln x$ se vuelve $\\tfrac{1}{x}$) e integrar el que no se complica ($e^x$, $\\sin x$).",
+          "La regla LIATE ayuda: Logaritmo, Inversa trigonométrica, Algebraica, Trigonométrica, Exponencial. El que aparece primero en esa lista suele ser $u$."
+        ]
+      },
+      {
         type: 'concept', heading: 'De dónde sale', short: 'La fórmula',
         body: [
           'La regla del producto dice $(uv)\' = u\'v + uv\'$. Integrando ambos lados y despejando: $$\\int u\\,dv = uv - \\int v\\,du.$$',
@@ -43,6 +64,29 @@
           { text: 'Cuando $u$ y $v$ cambian juntos, trazan una curva en el plano $u$-$v$.', state: { stage: 0 } },
           { text: 'El área bajo la curva (hacia el eje $u$) es $\\int v\\,du$.', state: { stage: 1 } },
           { text: 'El área a la izquierda (hacia el eje $v$) es $\\int u\\,dv$. Juntas llenan el rectángulo: $\\int u\\,dv + \\int v\\,du = uv$ (menos el pedacito de la esquina inicial).', state: { stage: 2 } }
+        ]
+      },
+      {
+        "type": "recipe",
+        "heading": "Receta: integración por partes",
+        "short": "Receta",
+        "steps": [
+          {
+            "text": "Elige $u$ con LIATE; lo demás (incluido el $dx$) es $dv$."
+          },
+          {
+            "text": "Calcula $du$ (derivando $u$) y $v$ (integrando $dv$).",
+            "tip": "Haz una tablita con $u$, $dv$, $du$ y $v$."
+          },
+          {
+            "text": "Aplica $\\int u\\,dv = uv - \\int v\\,du$."
+          },
+          {
+            "text": "Resuelve la integral nueva. Si también es un producto, puede que tengas que aplicar partes otra vez."
+          },
+          {
+            "text": "Suma $+C$ (o evalúa en los límites) y comprueba derivando."
+          }
         ]
       },
       {
@@ -99,6 +143,36 @@
       {
         type: 'callout', heading: 'Si la integral empeora, cambia la elección',
         body: 'Con $\\int x\\,e^x\\,dx$, si eliges $u = e^x$ y $dv = x\\,dx$ te queda $\\int \\tfrac{x^2}{2}e^x\\,dx$: más difícil que la original. Esa es la señal de que $u$ y $dv$ van al revés. Y siempre puedes comprobar derivando: el lab lo hace por ti.'
+      },
+      {
+        "type": "faq",
+        "heading": "Dudas comunes",
+        "short": "Dudas comunes",
+        "items": [
+          {
+            "q": "¿Y si la integral nueva sale más difícil?",
+            "a": "Elegiste al revés. Cambia cuál es $u$ y cuál $dv$."
+          },
+          {
+            "q": "¿Cómo integro $\\ln x$ si no es un producto?",
+            "a": "Úsalo como producto con 1: $u = \\ln x$, $dv = dx$. Sale $x\\ln x - x + C$."
+          },
+          {
+            "q": "¿En una definida dónde evalúo?",
+            "a": "El término $uv$ se evalúa en los límites igual que la integral que queda: $[uv]_a^b - \\int_a^b v\\,du$."
+          }
+        ]
+      },
+      {
+        "type": "recap",
+        "heading": "Lo que te llevas",
+        "short": "Resumen",
+        "points": [
+          "$\\int u\\,dv = uv - \\int v\\,du$ (la regla del producto al revés).",
+          "LIATE para elegir $u$.",
+          "Si empeora, cambia la elección.",
+          "A veces hay que aplicarla dos veces."
+        ]
       }
     ],
 

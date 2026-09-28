@@ -21,6 +21,28 @@
 
     lesson: [
       {
+        "type": "warmup",
+        "heading": "Antes de empezar",
+        "short": "Antes de empezar",
+        "idea": "Para las funciones más comunes ya no hace falta la definición: hay <strong>fórmulas directas</strong> que se aplican como una tabla.",
+        "recall": [
+          "Leyes de los exponentes: $\\sqrt{x} = x^{1/2}$, $\\dfrac{1}{x^3} = x^{-3}$, $x^a\\cdot x^b = x^{a + b}$.",
+          "Que $e \\approx 2.718$ y que $\\ln x$ es el logaritmo con base $e$.",
+          "Los valores de $\\sin$ y $\\cos$ en $0$, $\\tfrac{\\pi}{6}$, $\\tfrac{\\pi}{4}$, $\\tfrac{\\pi}{2}$ (con la calculadora en radianes)."
+        ],
+        "why": "Casi todos los problemas de derivadas terminan en estas fórmulas. Si las dominas, las reglas que siguen (producto, cociente, cadena) solo te dicen cómo combinarlas."
+      },
+      {
+        "type": "concept",
+        "heading": "Imagínalo así",
+        "short": "Imagínalo así",
+        "body": [
+          "Derivar con la definición es como calcular una multiplicación sumando: funciona, pero tarda. Las fórmulas directas son las \"tablas de multiplicar\" de la derivada: alguien ya hizo el límite una vez y el resultado sirve siempre.",
+          "La más usada es la <strong>regla de la potencia</strong>: el exponente \"baja\" a multiplicar y el exponente nuevo es uno menos. Por eso $x^3$ se vuelve $3x^2$. Funciona con cualquier exponente, también negativo o fraccionario, siempre que primero escribas la función como potencia.",
+          "Hay dos derivadas \"raras\" que conviene aprenderse de memoria porque salen en todos lados: $e^x$ es su propia derivada (crece tan rápido como vale) y la derivada de $\\ln x$ es $\\tfrac{1}{x}$."
+        ]
+      },
+      {
         type: 'concept', heading: 'Reglas básicas y la regla de la potencia', short: 'Potencia y polinomios',
         body: [
           'Tres reglas cubren cualquier polinomio: $$\\frac{d}{dx}c = 0 \\qquad \\frac{d}{dx}x^n = n\\,x^{n-1} \\qquad \\frac{d}{dx}\\big[a\\,f + b\\,g\\big] = a\\,f\' + b\\,g\'.$$',
@@ -47,6 +69,31 @@
           '$(\\arcsin x)\' = \\dfrac{1}{\\sqrt{1 - x^2}}$, $\\ (\\arccos x)\' = -\\dfrac{1}{\\sqrt{1 - x^2}}$, $\\ (\\arctan x)\' = \\dfrac{1}{1 + x^2}$'
         ],
         teacher: 'Truco para los signos: todas las “co” (coseno, cosecante, cotangente, arcocoseno) llevan signo menos.'
+      },
+      {
+        "type": "recipe",
+        "heading": "Receta: derivar con fórmulas directas",
+        "short": "Receta",
+        "intro": "Antes de derivar, prepara la función. La mayoría de los errores ocurren en este paso, no en la fórmula.",
+        "steps": [
+          {
+            "text": "Reescribe raíces y fracciones como potencias: $\\sqrt[3]{x} = x^{1/3}$, $\\dfrac{5}{x^2} = 5x^{-2}$.",
+            "tip": "Una constante que multiplica se queda: $5x^{-2}$ deriva a $5\\cdot(-2)x^{-3}$."
+          },
+          {
+            "text": "Separa en sumas y restas: cada término se deriva por su lado."
+          },
+          {
+            "text": "A cada término aplícale su fórmula de la tabla (potencia, $e^x$, $\\ln x$, $\\sin x$…)."
+          },
+          {
+            "text": "Una constante sola (sin $x$) deriva a cero.",
+            "tip": "$\\pi^2$, $e^3$ o $\\ln 5$ son constantes: su derivada es 0."
+          },
+          {
+            "text": "Si quieres, vuelve a escribir el resultado con raíces o fracciones para que se vea como el original."
+          }
+        ]
       },
       {
         type: 'example', heading: 'Un polinomio',
@@ -90,6 +137,40 @@
       {
         type: 'callout', heading: 'Reescribe antes de derivar',
         body: 'Casi todos los errores de esta sesión vienen de derivar raíces o fracciones “como se ven”. Primero pásalas a potencias: $\\sqrt[3]{x^2} = x^{2/3}$ y $\\dfrac{5}{x} = 5x^{-1}$.'
+      },
+      {
+        "type": "faq",
+        "heading": "Dudas comunes",
+        "short": "Dudas comunes",
+        "items": [
+          {
+            "q": "¿Por qué la derivada de una constante es cero?",
+            "a": "Porque una constante no cambia. Su gráfica es una recta horizontal, que tiene pendiente cero en todas partes."
+          },
+          {
+            "q": "¿$x^x$ se deriva con la regla de la potencia?",
+            "a": "No. La regla de la potencia es para $x^n$ con $n$ fijo. Si la $x$ también está en el exponente hace falta otra técnica (logaritmos). En este curso casi no aparece."
+          },
+          {
+            "q": "¿La derivada de $e^x$ es $x\\,e^{x - 1}$?",
+            "a": "No: eso sería tratar a $e^x$ como potencia, pero ahí la variable está arriba. La derivada de $e^x$ es $e^x$."
+          },
+          {
+            "q": "¿Grados o radianes?",
+            "a": "Siempre radianes. Las fórmulas $(\\sin x)' = \\cos x$ solo son ciertas si $x$ está en radianes."
+          }
+        ]
+      },
+      {
+        "type": "recap",
+        "heading": "Lo que te llevas",
+        "short": "Resumen",
+        "points": [
+          "Primero reescribe como potencias, luego deriva término a término.",
+          "Potencia: $(x^n)' = n\\,x^{n - 1}$ para cualquier $n$.",
+          "$(e^x)' = e^x$, $(\\ln x)' = \\tfrac{1}{x}$, $(\\sin x)' = \\cos x$, $(\\cos x)' = -\\sin x$.",
+          "Las constantes solas derivan a cero; las que multiplican se quedan."
+        ]
       }
     ],
 

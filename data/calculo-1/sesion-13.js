@@ -20,6 +20,28 @@
 
     lesson: [
       {
+        "type": "warmup",
+        "heading": "Antes de empezar",
+        "short": "Antes de empezar",
+        "idea": "Una fracción de polinomios difícil se <strong>parte en fracciones sencillas</strong> que ya sabes integrar.",
+        "recall": [
+          "Sumar fracciones con denominador común.",
+          "Factorizar polinomios: $x^2 - 1 = (x - 1)(x + 1)$.",
+          "$\\int \\dfrac{dx}{x - a} = \\ln|x - a| + C$."
+        ],
+        "why": "Aparece en modelos de crecimiento con límite (logístico), en circuitos eléctricos y en la transformada de Laplace que verás en ecuaciones diferenciales."
+      },
+      {
+        "type": "concept",
+        "heading": "Imagínalo así",
+        "short": "Imagínalo así",
+        "body": [
+          "Sumar fracciones es fácil: $\\tfrac{1}{x - 1} - \\tfrac{1}{x + 1} = \\tfrac{2}{x^2 - 1}$. Fracciones parciales hace el camino de regreso: a partir de $\\tfrac{2}{x^2 - 1}$, recupera las dos fracciones sencillas.",
+          "Esas fracciones sencillas se integran con logaritmos. Así, una integral que parecía imposible se vuelve una suma de logaritmos.",
+          "Las constantes ($A$, $B$…) se encuentran igualando: multiplicas todo por el denominador y le das valores convenientes a $x$ (los que hacen cero algún factor)."
+        ]
+      },
+      {
         type: 'concept', heading: 'La idea', short: 'La idea',
         body: [
           'Si el denominador se factoriza, la fracción se reparte: $$\\frac{1}{x(x + 1)} = \\frac{1}{x} - \\frac{1}{x + 1}.$$ Cada pedazo se integra como un logaritmo.',
@@ -41,6 +63,29 @@
           { text: 'Dos curvas que sabes integrar: $\\tfrac{1}{x}$ y $-\\tfrac{1}{x + 1}$.', state: { stage: 0 } },
           { text: 'Su suma, punto por punto, es exactamente $\\tfrac{1}{x(x + 1)}$.', state: { stage: 1 } },
           { text: 'Integrar la suma es integrar cada pedazo: $\\ln|x| - \\ln|x + 1| + C$.', state: { stage: 2 } }
+        ]
+      },
+      {
+        "type": "recipe",
+        "heading": "Receta: fracciones parciales",
+        "short": "Receta",
+        "steps": [
+          {
+            "text": "Si el grado de arriba es mayor o igual que el de abajo, primero divide los polinomios."
+          },
+          {
+            "text": "Factoriza el denominador."
+          },
+          {
+            "text": "Escribe la forma: un $\\dfrac{A}{x - a}$ por cada factor lineal; si un factor se repite, $\\dfrac{A}{x - a} + \\dfrac{B}{(x - a)^2}$; un cuadrático sin raíces lleva $\\dfrac{Bx + C}{x^2 + \\ldots}$."
+          },
+          {
+            "text": "Multiplica por el denominador y encuentra las constantes dando valores a $x$.",
+            "tip": "Usa las raíces de cada factor: hacen cero todo menos un término."
+          },
+          {
+            "text": "Integra cada fracción: casi siempre salen logaritmos (y a veces un arcotangente)."
+          }
         ]
       },
       {
@@ -98,6 +143,36 @@
       {
         type: 'callout', heading: 'Revisa antes si es un cambio de variable',
         body: '$\\displaystyle\\int \\frac{2x + 3}{x^2 + 3x}\\,dx$ se podría descomponer, pero el numerador es justo la derivada del denominador: con $u = x^2 + 3x$ sale $\\ln|x^2 + 3x| + C$ en un paso.'
+      },
+      {
+        "type": "faq",
+        "heading": "Dudas comunes",
+        "short": "Dudas comunes",
+        "items": [
+          {
+            "q": "¿Cómo compruebo mis constantes?",
+            "a": "Suma las fracciones que obtuviste: debe salir la fracción original."
+          },
+          {
+            "q": "¿Por qué hay que dividir primero?",
+            "a": "Las fracciones parciales solo funcionan si el grado de arriba es menor que el de abajo. Si no, la división te da un polinomio (fácil de integrar) más una fracción que sí cumple."
+          },
+          {
+            "q": "¿Y si el denominador no se puede factorizar?",
+            "a": "Un cuadrático sin raíces reales se queda como está; su parte se integra con logaritmo y arcotangente."
+          }
+        ]
+      },
+      {
+        "type": "recap",
+        "heading": "Lo que te llevas",
+        "short": "Resumen",
+        "points": [
+          "Factoriza el denominador (divide antes si hace falta).",
+          "Una fracción sencilla por factor; los repetidos llevan varias.",
+          "Constantes: multiplica y evalúa en las raíces.",
+          "Cada fracción sencilla se integra con $\\ln$."
+        ]
       }
     ],
 

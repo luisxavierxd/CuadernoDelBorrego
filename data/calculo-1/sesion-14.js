@@ -21,6 +21,28 @@
 
     lesson: [
       {
+        "type": "warmup",
+        "heading": "Antes de empezar",
+        "short": "Antes de empezar",
+        "idea": "La integral también sirve para medir el <strong>área entre dos curvas</strong> y la <strong>longitud</strong> de una curva.",
+        "recall": [
+          "Integrales definidas y el TFC (S09).",
+          "Encontrar dónde se cortan dos gráficas: igualarlas.",
+          "Pitágoras, para la longitud de un segmento."
+        ],
+        "why": "Sirve para calcular superficies de terrenos, cantidad de material en perfiles curvos o el largo de un cable o camino curvo."
+      },
+      {
+        "type": "concept",
+        "heading": "Imagínalo así",
+        "short": "Imagínalo así",
+        "body": [
+          "El área entre dos curvas se piensa con tiras verticales delgadas: cada tira mide de alto \"la de arriba menos la de abajo\" y de ancho $dx$. Sumarlas todas es integrar $(\\text{arriba} - \\text{abajo})$.",
+          "Para la longitud, imagina aproximar la curva con muchos segmentos rectos pequeños. Cada uno mide $\\sqrt{dx^2 + dy^2}$ por Pitágoras. Al sumarlos e ir haciéndolos más pequeños sale la fórmula $L = \\int\\sqrt{1 + (y')^2}\\,dx$.",
+          "En los dos casos, lo más importante es el dibujo: saber qué curva está arriba, dónde se cortan y entre qué valores se integra."
+        ]
+      },
+      {
         type: 'concept', heading: 'Área entre dos curvas', short: 'Área entre curvas',
         body: [
           'Si $f(x) \\geq g(x)$ en $[a, b]$, el área de la región entre ellas es $$A = \\int_a^b \\big(f(x) - g(x)\\big)\\,dx.$$',
@@ -38,6 +60,30 @@
           { text: 'En medio la tira es alta: su altura es $f(x) - g(x) = x + 2 - x^2$.', state: { x: 0.5 } },
           { text: 'Sumar todas las tiras es integrar: $\\int_{-1}^{2}(x + 2 - x^2)\\,dx = 4.5$.', state: { x: 1.6 } }
         ]
+      },
+      {
+        "type": "recipe",
+        "heading": "Receta: área entre curvas",
+        "short": "Receta",
+        "steps": [
+          {
+            "text": "Dibuja las dos curvas (aunque sea a mano)."
+          },
+          {
+            "text": "Encuentra dónde se cortan: iguala las funciones y resuelve. Esos son tus límites."
+          },
+          {
+            "text": "Decide cuál está arriba en cada tramo: evalúa ambas en un punto intermedio.",
+            "tip": "Si se cruzan dentro del intervalo, parte la integral en tramos."
+          },
+          {
+            "text": "Integra $(\\text{arriba} - \\text{abajo})$ en cada tramo y suma."
+          },
+          {
+            "text": "Revisa: un área siempre es positiva."
+          }
+        ],
+        "note": "Para longitud de arco: deriva, eleva al cuadrado, suma 1, saca raíz e integra. Muchas veces $1 + (y')^2$ resulta ser un cuadrado perfecto; revísalo antes de integrar."
       },
       {
         type: 'example', heading: 'Parábola y recta',
@@ -115,6 +161,36 @@
       {
         type: 'callout', heading: 'Dibuja antes de integrar',
         body: 'Un bosquejo te dice qué curva va arriba y si se cruzan dentro del intervalo. Si te sale un área negativa o cero, casi siempre restaste al revés o no partiste la integral en un cruce.'
+      },
+      {
+        "type": "faq",
+        "heading": "Dudas comunes",
+        "short": "Dudas comunes",
+        "items": [
+          {
+            "q": "¿Qué pasa si resto al revés?",
+            "a": "El resultado sale negativo. Es la señal de que la de abajo era la de arriba: cambia el orden (o toma el valor absoluto si ya revisaste el tramo)."
+          },
+          {
+            "q": "¿Por qué la longitud de arco es tan difícil de integrar?",
+            "a": "Porque la raíz rara vez se simplifica. En los ejercicios del curso se eligen curvas donde sí se simplifica; en la vida real se aproxima numéricamente."
+          },
+          {
+            "q": "¿Puedo usar tiras horizontales?",
+            "a": "Sí, a veces conviene: integras en $y$ con \"derecha menos izquierda\"."
+          }
+        ]
+      },
+      {
+        "type": "recap",
+        "heading": "Lo que te llevas",
+        "short": "Resumen",
+        "points": [
+          "Área entre curvas: $\\int_a^b(\\text{arriba} - \\text{abajo})\\,dx$.",
+          "Los cortes dan los límites; si se cruzan adentro, parte la integral.",
+          "Longitud: $\\int_a^b\\sqrt{1 + (y')^2}\\,dx$.",
+          "Siempre dibuja primero."
+        ]
       }
     ],
 

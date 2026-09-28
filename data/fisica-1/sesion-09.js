@@ -39,6 +39,27 @@
 
     lesson: [
       {
+        "type": "warmup",
+        "heading": "Antes de empezar",
+        "short": "Antes de empezar",
+        "idea": "Una cuerda transmite una <strong>tensión</strong>; cuando varios cuerpos están unidos, se mueven juntos con la misma aceleración.",
+        "recall": [
+          "Diagramas de cuerpo libre y $\\Sigma F = ma$ (S08).",
+          "Resolver sistemas de dos ecuaciones."
+        ],
+        "why": "Elevadores, grúas, poleas y trenes de carros funcionan con cuerdas y cables. Saber la tensión es saber si el cable aguanta."
+      },
+      {
+        "type": "concept",
+        "heading": "Imagínalo así",
+        "short": "Imagínalo así",
+        "body": [
+          "Una cuerda ideal (sin masa) jala con la misma fuerza en sus dos extremos: esa fuerza es la tensión $T$. Solo puede jalar, nunca empujar.",
+          "Si dos cuerpos están unidos por una cuerda tensa, avanzan juntos: tienen la misma aceleración (en tamaño). Esa condición es la que une las ecuaciones de cada cuerpo.",
+          "Un truco muy útil: si sumas las ecuaciones de todos los cuerpos, las tensiones internas se cancelan y queda \"fuerza que mueve al sistema = masa total × aceleración\"."
+        ]
+      },
+      {
         type: 'concept', heading: 'La tensión', short: 'Tensión',
         body: [
           'Una cuerda tensa jala lo que tiene atado en cada extremo con una fuerza llamada <strong>tensión</strong>, $T$, a lo largo de la cuerda. Las cuerdas <strong>solo jalan</strong>.',
@@ -58,6 +79,29 @@
           { text: 'DCL de $m_1$, que sube: la tensión le gana al peso. $T - m_1g = m_1a$.', state: { step: 1 } },
           { text: 'DCL de $m_2$, que baja: el peso le gana a la tensión. $m_2g - T = m_2a$.', state: { step: 2 } },
           { text: 'Suma las dos ecuaciones: la $T$ se cancela y queda $a = \\frac{(m_2 - m_1)g}{m_1 + m_2}$. Con $a$, despeja $T$ de cualquiera.', state: { step: 3 } }
+        ]
+      },
+      {
+        "type": "recipe",
+        "heading": "Receta: sistemas con cuerdas y poleas",
+        "short": "Receta",
+        "steps": [
+          {
+            "text": "Dibuja un diagrama de cuerpo libre para <em>cada</em> cuerpo."
+          },
+          {
+            "text": "Decide hacia dónde se mueve el sistema y toma ese sentido como positivo para cada cuerpo (siguiendo la cuerda)."
+          },
+          {
+            "text": "Escribe $\\Sigma F = ma$ para cada cuerpo, con la misma $a$ y la misma $T$ en toda la cuerda."
+          },
+          {
+            "text": "Suma las ecuaciones para eliminar $T$ y despeja $a$."
+          },
+          {
+            "text": "Sustituye $a$ en la ecuación más sencilla para obtener $T$.",
+            "tip": "Comprueba: la tensión debe quedar entre los pesos si una masa sube y otra baja."
+          }
         ]
       },
       {
@@ -110,6 +154,36 @@
         body: [
           'Solo si el cuerpo que cuelga no acelera (en reposo o a velocidad constante). Si baja acelerando, $T < mg$; si sube acelerando, $T > mg$.',
           'Revisa siempre que tu $T$ quede entre los pesos de las masas de una máquina de Atwood.'
+        ]
+      },
+      {
+        "type": "faq",
+        "heading": "Dudas comunes",
+        "short": "Dudas comunes",
+        "items": [
+          {
+            "q": "¿La tensión es igual al peso que cuelga?",
+            "a": "Solo si no hay aceleración. Si la masa baja acelerando, $T < mg$; si sube acelerando, $T > mg$."
+          },
+          {
+            "q": "¿Qué hace la polea?",
+            "a": "Cambia la dirección de la cuerda sin cambiar la tensión (si es ideal)."
+          },
+          {
+            "q": "¿Y si elegí mal el sentido del movimiento?",
+            "a": "La aceleración te saldrá negativa: significa que se mueve al revés. El valor absoluto sigue siendo correcto."
+          }
+        ]
+      },
+      {
+        "type": "recap",
+        "heading": "Lo que te llevas",
+        "short": "Resumen",
+        "points": [
+          "Una cuerda ideal tiene la misma tensión en todas partes.",
+          "Cuerpos unidos: misma aceleración.",
+          "Suma las ecuaciones para eliminar $T$.",
+          "$T = mg$ solo sin aceleración."
         ]
       }
     ],

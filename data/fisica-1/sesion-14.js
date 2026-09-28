@@ -44,6 +44,28 @@
 
     lesson: [
       {
+        "type": "warmup",
+        "heading": "Antes de empezar",
+        "short": "Antes de empezar",
+        "idea": "Un objeto está en <strong>equilibrio</strong> cuando todas las fuerzas se cancelan: la suma en $x$ y la suma en $y$ valen cero.",
+        "recall": [
+          "Componentes de vectores (S02).",
+          "Diagramas de cuerpo libre (S08).",
+          "Resolver un sistema de dos ecuaciones."
+        ],
+        "why": "Así se calcula cuánta tensión soporta el cable de un semáforo, un letrero o una lámpara, y si una estructura aguanta."
+      },
+      {
+        "type": "concept",
+        "heading": "Imagínalo así",
+        "short": "Imagínalo así",
+        "body": [
+          "Si algo cuelga quieto de dos cables, cada cable jala en diagonal. Las partes horizontales de las tensiones se cancelan entre sí; las verticales, juntas, sostienen el peso.",
+          "El cable más cercano a la vertical carga más peso. Y entre más horizontal esté un cable, más tensión necesita para sostener lo mismo: por eso un tendedero muy tenso puede romperse.",
+          "Dibujadas punta con cola, las fuerzas en equilibrio forman un polígono cerrado: no hay \"sobrante\" que acelere al objeto."
+        ]
+      },
+      {
         type: 'concept', heading: 'Equilibrio de una partícula', short: 'Equilibrio',
         body: [
           'Un cuerpo está en <strong>equilibrio</strong> si su aceleración es cero: en reposo (equilibrio estático) o con velocidad constante. Por la segunda ley, $$\\Sigma \\vec F = 0 \\quad\\Longleftrightarrow\\quad \\Sigma F_x = 0,\\ \\ \\Sigma F_y = 0$$',
@@ -61,6 +83,29 @@
           { text: 'Aísla el nudo: $\\vec T_1$ y $\\vec T_2$ a lo largo de cada cable y el peso $mg$ hacia abajo (el cable vertical transmite el peso).', state: { step: 1 } },
           { text: 'Horizontal: las componentes se cancelan. $$T_1\\cos\\theta_1 = T_2\\cos\\theta_2$$', state: { step: 2 } },
           { text: 'Vertical: entre las dos sostienen el peso. $$T_1\\sin\\theta_1 + T_2\\sin\\theta_2 = mg$$ Resolviendo: $T_1 = \\frac{mg\\cos\\theta_2}{\\sin(\\theta_1 + \\theta_2)}$ y $T_2 = \\frac{mg\\cos\\theta_1}{\\sin(\\theta_1 + \\theta_2)}$.', state: { step: 3 } }
+        ]
+      },
+      {
+        "type": "recipe",
+        "heading": "Receta: equilibrio de un nudo",
+        "short": "Receta",
+        "steps": [
+          {
+            "text": "Aísla el nudo (o la partícula) y dibuja todas las fuerzas sobre él."
+          },
+          {
+            "text": "Descompón cada fuerza con su ángulo.",
+            "tip": "Fíjate si el ángulo es con la horizontal o con la vertical: cambia seno por coseno."
+          },
+          {
+            "text": "Escribe $\\Sigma F_x = 0$ y $\\Sigma F_y = 0$."
+          },
+          {
+            "text": "Resuelve el sistema. Empieza por la ecuación que tenga una sola incógnita, si la hay."
+          },
+          {
+            "text": "Comprueba con un caso límite o sumando las componentes verticales."
+          }
         ]
       },
       {
@@ -133,6 +178,36 @@
         body: [
           'Casos límite: si un cable se vuelve vertical, debe cargar todo el peso y el otro nada.',
           'La suma de las tensiones casi nunca es $mg$: las componentes verticales sí suman $mg$.'
+        ]
+      },
+      {
+        "type": "faq",
+        "heading": "Dudas comunes",
+        "short": "Dudas comunes",
+        "items": [
+          {
+            "q": "¿Cada cable carga la mitad del peso?",
+            "a": "Solo si están simétricos. Con ángulos distintos, carga más el más vertical."
+          },
+          {
+            "q": "¿Las tensiones suman el peso?",
+            "a": "No: lo que suma el peso son sus componentes verticales. Las tensiones completas suman más."
+          },
+          {
+            "q": "¿Velocidad constante cuenta como equilibrio?",
+            "a": "Sí. Equilibrio significa aceleración cero, no necesariamente estar quieto."
+          }
+        ]
+      },
+      {
+        "type": "recap",
+        "heading": "Lo que te llevas",
+        "short": "Resumen",
+        "points": [
+          "Equilibrio: $\\Sigma F_x = 0$ y $\\Sigma F_y = 0$.",
+          "Aísla el nudo, no la masa ni el techo.",
+          "El cable más vertical carga más.",
+          "Un cable casi horizontal necesita muchísima tensión."
         ]
       }
     ],

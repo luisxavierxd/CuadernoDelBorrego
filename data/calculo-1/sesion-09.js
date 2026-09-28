@@ -22,6 +22,28 @@
 
     lesson: [
       {
+        "type": "warmup",
+        "heading": "Antes de empezar",
+        "short": "Antes de empezar",
+        "idea": "La integral definida es el <strong>área bajo una curva</strong>, y se calcula con una antiderivada gracias al Teorema Fundamental.",
+        "recall": [
+          "Área de un rectángulo: base × altura.",
+          "Las fórmulas de derivadas (para \"ir al revés\").",
+          "La notación de suma $\\sum$."
+        ],
+        "why": "Si la derivada mide qué tan rápido cambia algo, la integral <em>acumula</em> esos cambios: distancia recorrida a partir de la velocidad, agua que entra a un tanque a partir del caudal, trabajo a partir de la fuerza."
+      },
+      {
+        "type": "concept",
+        "heading": "Imagínalo así",
+        "short": "Imagínalo así",
+        "body": [
+          "Si un auto va a 60 km/h durante 2 horas, recorre $60\\times 2 = 120$ km: es el área de un rectángulo en la gráfica velocidad–tiempo. Si la velocidad cambia, la gráfica ya no es plana y el \"área\" deja de ser un rectángulo.",
+          "La idea es partir el tiempo en pedacitos: en cada pedacito la velocidad casi no cambia, así que usas un rectángulo. Sumas todos (eso es una <strong>suma de Riemann</strong>). Con más pedacitos, el error es menor, y en el límite obtienes el área exacta: la integral.",
+          "Sumar infinitos rectángulos sería imposible a mano, pero el Teorema Fundamental del Cálculo lo resuelve: si encuentras una función $F$ cuya derivada es $f$, el área es simplemente $F(b) - F(a)$."
+        ]
+      },
+      {
         type: 'concept', heading: 'Área con rectángulos', short: 'Sumas de Riemann',
         body: [
           'Para aproximar el área bajo $f$ en $[a, b]$, parte el intervalo en $n$ tiras de ancho $\\Delta x = (b - a)/n$ y pon un rectángulo en cada una.',
@@ -64,6 +86,30 @@
           { text: 'Si avanzas un poco $dx$, el área gana una tira de altura $f(x)$: $dA \\approx f(x)\\,dx$.', state: { x: 1.2 } },
           { text: 'Donde $f$ es alta, $A$ sube rápido; donde $f$ es baja, sube despacio.', state: { x: 2.2 } },
           { text: 'Conclusión (TFC, parte 1): $A\'(x) = f(x)$. Y como consecuencia (parte 2): $\\int_a^b f = F(b) - F(a)$ para cualquier antiderivada $F$.', state: { x: 3 } }
+        ]
+      },
+      {
+        "type": "recipe",
+        "heading": "Receta: calcular una integral definida",
+        "short": "Receta",
+        "steps": [
+          {
+            "text": "Encuentra una antiderivada $F$ de la función: una $F$ tal que $F' = f$.",
+            "tip": "Para potencias: $x^n \\to \\dfrac{x^{n + 1}}{n + 1}$ (si $n \\ne -1$)."
+          },
+          {
+            "text": "Comprueba derivando $F$: debe darte $f$."
+          },
+          {
+            "text": "Evalúa $F$ en el límite de arriba y en el de abajo."
+          },
+          {
+            "text": "Resta: $F(b) - F(a)$, en ese orden.",
+            "tip": "Pon paréntesis al restar $F(a)$: todos sus términos cambian de signo."
+          },
+          {
+            "text": "Interpreta: si la función es negativa en parte del intervalo, esa parte resta (área neta)."
+          }
         ]
       },
       {
@@ -119,6 +165,36 @@
       {
         type: 'callout', heading: 'La constante no importa',
         body: 'En $F(b) - F(a)$ la constante $C$ se cancela, así que en una integral definida puedes usar cualquier antiderivada. Lo que sí importa es el orden: primero el límite de arriba.'
+      },
+      {
+        "type": "faq",
+        "heading": "Dudas comunes",
+        "short": "Dudas comunes",
+        "items": [
+          {
+            "q": "¿Por qué no pongo la $+C$ en la integral definida?",
+            "a": "Porque se cancela: $(F(b) + C) - (F(a) + C) = F(b) - F(a)$."
+          },
+          {
+            "q": "¿Puede salir negativa una integral?",
+            "a": "Sí, si la función está debajo del eje $x$. La integral da el área \"con signo\". Si te piden el área total, separa en tramos y suma los valores absolutos."
+          },
+          {
+            "q": "¿Qué hace la derivada de una integral?",
+            "a": "La deshace: $\\dfrac{d}{dx}\\displaystyle\\int_a^x f(t)\\,dt = f(x)$. Integrar y derivar son operaciones inversas."
+          }
+        ]
+      },
+      {
+        "type": "recap",
+        "heading": "Lo que te llevas",
+        "short": "Resumen",
+        "points": [
+          "La integral acumula: área bajo la curva, distancia a partir de la velocidad.",
+          "Riemann: rectángulos cada vez más angostos.",
+          "TFC: $\\int_a^b f\\,dx = F(b) - F(a)$ con $F' = f$.",
+          "Abajo del eje, el área cuenta negativa."
+        ]
       }
     ],
 

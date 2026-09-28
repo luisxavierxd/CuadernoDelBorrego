@@ -19,6 +19,28 @@
 
     lesson: [
       {
+        "type": "warmup",
+        "heading": "Antes de empezar",
+        "short": "Antes de empezar",
+        "idea": "La derivada mide <strong>qué tan rápido cambia</strong> algo en un instante preciso, no en promedio.",
+        "recall": [
+          "La pendiente de una recta: $m = \\dfrac{y_2 - y_1}{x_2 - x_1}$ (cuánto sube por cada paso a la derecha).",
+          "Evaluar una función: si $f(x) = x^2$, entonces $f(3) = 9$ y $f(3 + h) = (3 + h)^2$.",
+          "Desarrollar $(a + b)^2 = a^2 + 2ab + b^2$ para simplificar."
+        ],
+        "why": "Todo lo que cambia tiene una razón de cambio: la velocidad de un auto, el crecimiento de una población, lo que cuesta producir una pieza más. La derivada es la herramienta para medirlo en el momento exacto que te interesa."
+      },
+      {
+        "type": "concept",
+        "heading": "Imagínalo así",
+        "short": "Imagínalo así",
+        "body": [
+          "Piensa en el velocímetro de un auto. Si recorres 120 km en 2 horas, tu velocidad <em>promedio</em> fue 60 km/h, pero en algún momento ibas a 80 y en otro estabas parado en un semáforo. El velocímetro no te da el promedio: te dice qué tan rápido vas <em>justo ahora</em>.",
+          "La razón de cambio promedio es como el cálculo de 120 km entre 2 h: mira dos momentos separados. Si acercas cada vez más esos dos momentos (1 hora, 1 minuto, 1 segundo…), el promedio se parece cada vez más a lo que marca el velocímetro. Ese valor al que te acercas es la derivada.",
+          "En la gráfica pasa lo mismo: la recta que une dos puntos se llama <strong>secante</strong>; si el segundo punto se acerca al primero, la secante gira hasta convertirse en la <strong>tangente</strong>, la recta que apenas \"roza\" la curva. La pendiente de esa tangente es la derivada."
+        ]
+      },
+      {
         type: 'concept', heading: 'Razón de cambio promedio', short: 'Razón promedio',
         body: [
           'Si una cantidad $y = f(x)$ pasa de $f(a)$ a $f(b)$, su <strong>razón de cambio promedio</strong> en $[a, b]$ es $$\\frac{\\Delta y}{\\Delta x} = \\frac{f(b) - f(a)}{b - a}.$$',
@@ -47,6 +69,32 @@
           'Haciendo lo mismo en cada $x$ obtienes una función nueva, $f\'(x)$, que también se escribe $\\dfrac{dy}{dx}$. Sus unidades son las de $y$ entre las de $x$: si $s$ está en metros y $t$ en segundos, $s\'(t)$ es una velocidad en m/s.'
         ],
         teacher: 'Insiste en que $h = 0$ directo da $0/0$: primero se simplifica el cociente y luego se toma el límite.'
+      },
+      {
+        "type": "recipe",
+        "heading": "Receta: derivar con la definición",
+        "short": "Receta",
+        "intro": "Cuando te pidan la derivada \"usando la definición\", sigue siempre estos pasos:",
+        "steps": [
+          {
+            "text": "Escribe $f(x + h)$: cambia cada $x$ por $(x + h)$, con paréntesis.",
+            "tip": "Si $f(x) = 3x^2$, entonces $f(x + h) = 3(x + h)^2$, no $3x^2 + h$."
+          },
+          {
+            "text": "Resta $f(x + h) - f(x)$ y simplifica. Todo lo que no tenga $h$ se debe cancelar.",
+            "tip": "Si te quedan términos sin $h$, revisa el desarrollo: es la señal de un error."
+          },
+          {
+            "text": "Divide entre $h$. Como todos los términos tienen al menos una $h$, se puede sacar como factor y cancelar."
+          },
+          {
+            "text": "Ahora sí, haz $h \\to 0$: sustituye $h = 0$ en lo que quedó."
+          },
+          {
+            "text": "Si te piden la derivada en un punto (por ejemplo $x = 2$), sustituye al final."
+          }
+        ],
+        "note": "La recta tangente en $x = a$ se escribe con la pendiente que obtuviste: $y = f(a) + f'(a)(x - a)$."
       },
       {
         type: 'example', heading: 'Razón de cambio promedio',
@@ -93,6 +141,40 @@
       {
         type: 'callout', heading: 'Promedio contra instantáneo',
         body: 'La razón promedio necesita dos puntos; la derivada, uno solo. La derivada es el límite de las razones promedio en intervalos cada vez más cortos.'
+      },
+      {
+        "type": "faq",
+        "heading": "Dudas comunes",
+        "short": "Dudas comunes",
+        "items": [
+          {
+            "q": "¿Por qué no puedo poner $h = 0$ desde el principio?",
+            "a": "Porque quedaría $\\tfrac{0}{0}$, que no significa nada. Primero simplificas para quitar la $h$ del denominador y después ya puedes sustituir $h = 0$."
+          },
+          {
+            "q": "¿Qué diferencia hay entre $f(a)$ y $f'(a)$?",
+            "a": "$f(a)$ es la <em>altura</em> de la gráfica en $x = a$; $f'(a)$ es la <em>inclinación</em> ahí. Uno dice dónde está el punto y el otro hacia dónde va la curva."
+          },
+          {
+            "q": "¿Una derivada negativa significa que algo salió mal?",
+            "a": "No. Significa que la función va bajando en ese punto: por ejemplo, un tanque que se vacía o una temperatura que baja."
+          },
+          {
+            "q": "¿En qué unidades está la derivada?",
+            "a": "En unidades de \"lo de arriba entre lo de abajo\". Si $h(t)$ está en metros y $t$ en segundos, $h'(t)$ está en metros por segundo."
+          }
+        ]
+      },
+      {
+        "type": "recap",
+        "heading": "Lo que te llevas",
+        "short": "Resumen",
+        "points": [
+          "Razón de cambio promedio: pendiente de la secante entre dos puntos.",
+          "Derivada: el límite de ese promedio cuando los puntos se juntan; es la pendiente de la tangente.",
+          "Con la definición: $f(x + h)$, restar, dividir entre $h$ y hacer $h \\to 0$.",
+          "La derivada tiene unidades y signo: te dice qué tan rápido y hacia dónde cambia algo."
+        ]
       }
     ],
 

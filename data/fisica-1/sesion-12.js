@@ -40,6 +40,28 @@
 
     lesson: [
       {
+        "type": "warmup",
+        "heading": "Antes de empezar",
+        "short": "Antes de empezar",
+        "idea": "El <strong>trabajo</strong> mide cuánto cambia una fuerza la energía de un cuerpo; el trabajo total es el cambio de su energía cinética.",
+        "recall": [
+          "Producto escalar (S03): $W = \\vec F\\cdot\\vec d = Fd\\cos\\theta$.",
+          "Integrales como área bajo una curva (Cálculo S09).",
+          "Las fórmulas de MRUA (S05)."
+        ],
+        "why": "Con trabajo y energía se resuelven problemas de rapidez sin necesitar el tiempo: cuánto frena un auto, qué tan rápido sale un resorte, cuánta potencia necesita un motor."
+      },
+      {
+        "type": "concept",
+        "heading": "Imagínalo así",
+        "short": "Imagínalo así",
+        "body": [
+          "En física, \"trabajar\" es empujar algo mientras se mueve en la dirección del empuje. Si cargas una mochila caminando en plano, tu fuerza (hacia arriba) no hace trabajo sobre ella: no la mueve hacia arriba.",
+          "La energía cinética $K = \\tfrac{1}{2}mv^2$ es la energía que tiene algo por moverse. El teorema trabajo-energía dice que todo el trabajo que hacen las fuerzas se convierte en cambio de $K$: trabajo positivo acelera, negativo frena.",
+          "Si la fuerza cambia con la posición (como un resorte), el trabajo es el área bajo la gráfica de fuerza contra posición."
+        ]
+      },
+      {
         type: 'explainer', heading: 'El trabajo de una fuerza constante', short: 'Trabajo con ángulo',
         title: 'Solo cuenta la parte a lo largo del desplazamiento',
         intro: 'Una fuerza hace trabajo cuando empuja o jala a lo largo del desplazamiento. La parte perpendicular no cambia la rapidez.',
@@ -50,6 +72,27 @@
           { text: 'A $90^\\circ$ la fuerza no trabaja. Así pasa con la normal en un piso plano y con la fuerza centrípeta en un círculo.', state: { th: 90 } },
           { text: 'Si la fuerza apunta en contra del movimiento, $\\cos\\theta < 0$ y el trabajo es negativo: la fricción siempre hace trabajo negativo al deslizar.', state: { th: 150 } }
         ]
+      },
+      {
+        "type": "recipe",
+        "heading": "Receta: teorema trabajo-energía",
+        "short": "Receta",
+        "steps": [
+          {
+            "text": "Dibuja las fuerzas y el desplazamiento."
+          },
+          {
+            "text": "Calcula el trabajo de cada fuerza con su ángulo: $W = Fd\\cos\\theta$.",
+            "tip": "Las perpendiculares al desplazamiento (normal, peso en plano) hacen trabajo cero; la fricción, negativo."
+          },
+          {
+            "text": "Suma los trabajos (con signo): $W_{neto}$."
+          },
+          {
+            "text": "Iguala a $\\Delta K = \\tfrac{1}{2}mv_f^2 - \\tfrac{1}{2}mv_0^2$ y despeja lo que te piden."
+          }
+        ],
+        "note": "Potencia = trabajo entre tiempo: $P = W/t = Fv$. Se mide en watts (J/s)."
       },
       {
         type: 'example', heading: 'Jalar una caja con una cuerda inclinada',
@@ -141,6 +184,36 @@
         body: [
           'Haz el DCL y calcula el trabajo de <em>cada</em> fuerza con su propio ángulo. Las perpendiculares al desplazamiento no trabajan.',
           'El trabajo es un escalar: se suma con signo, no como vector.'
+        ]
+      },
+      {
+        "type": "faq",
+        "heading": "Dudas comunes",
+        "short": "Dudas comunes",
+        "items": [
+          {
+            "q": "¿El trabajo es un vector?",
+            "a": "No, es un escalar con signo. Se suma como número."
+          },
+          {
+            "q": "¿Por qué el trabajo de un resorte lleva ½?",
+            "a": "Porque la fuerza crece de 0 a $kx$: el área bajo esa recta es un triángulo, $\\tfrac{1}{2}kx\\cdot x$."
+          },
+          {
+            "q": "¿Cuándo conviene energía y cuándo Newton?",
+            "a": "Si te preguntan rapideces o distancias y no el tiempo, energía suele ser más corto."
+          }
+        ]
+      },
+      {
+        "type": "recap",
+        "heading": "Lo que te llevas",
+        "short": "Resumen",
+        "points": [
+          "$W = Fd\\cos\\theta$; perpendiculares no trabajan.",
+          "$K = \\tfrac{1}{2}mv^2$.",
+          "$W_{neto} = \\Delta K$.",
+          "Resorte: $\\tfrac{1}{2}kx^2$; potencia: $P = W/t$."
         ]
       }
     ],

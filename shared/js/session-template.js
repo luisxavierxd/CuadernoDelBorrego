@@ -130,6 +130,36 @@
     return section(id, b.heading, [el('div', { class: 'concept reveal' + (b.diagram ? ' concept--figure' : '') }, kids)]);
   }
 
+  /* ---------- Bloques para digerir el tema (antes del lab) ---------- */
+  // Antes de empezar: qué recordar, la idea en una frase y para qué sirve.
+  function renderWarmup(b, id) {
+    var kids = [];
+    if (b.idea) kids.push(el('p', { class: 'warmup__idea', html: '<span class="warmup__tag mono">La idea</span> ' + b.idea }));
+    if (b.recall && b.recall.length) kids.push(el('div', { class: 'warmup__box' }, [el('p', { class: 'warmup__label mono' }, ['Necesitas recordar']), el('ul', {}, b.recall.map(function (x) { return el('li', { html: x }); }))]));
+    if (b.why) kids.push(el('div', { class: 'warmup__box' }, [el('p', { class: 'warmup__label mono' }, ['¿Para qué sirve?']), el('p', { html: b.why })]));
+    return section(id, b.heading, [el('div', { class: 'warmup reveal' }, kids)]);
+  }
+  // Receta paso a paso: pasos numerados, cada uno con su aviso opcional.
+  function renderRecipe(b, id) {
+    var kids = [];
+    if (b.intro) kids.push(el('p', { class: 'recipe__intro', html: b.intro }));
+    kids.push(el('ol', { class: 'recipe__steps' }, b.steps.map(function (s) {
+      return el('li', {}, [el('p', { html: s.text }), s.tip ? el('p', { class: 'recipe__tip', html: s.tip }) : null]);
+    })));
+    if (b.note) kids.push(el('p', { class: 'recipe__note', html: b.note }));
+    return section(id, b.heading, [el('div', { class: 'recipe reveal' }, kids)]);
+  }
+  // Dudas comunes: preguntas que se abren una por una.
+  function renderFaq(b, id) {
+    return section(id, b.heading, [el('div', { class: 'faq reveal' }, b.items.map(function (it) {
+      return el('details', { class: 'faq__item' }, [el('summary', {}, [el('span', { html: it.q })]), el('div', { class: 'faq__a', html: (Array.isArray(it.a) ? it.a : [it.a]).map(function (p) { return '<p>' + p + '</p>'; }).join('') })]);
+    }))]);
+  }
+  // Lo que te llevas: resumen corto al final de la lección.
+  function renderRecap(b, id) {
+    return section(id, b.heading, [el('div', { class: 'recap reveal' }, [el('ul', {}, b.points.map(function (x) { return el('li', { html: x }); }))])]);
+  }
+
   function renderCallout(b, id) {
     return section(id, null, [el('aside', { class: 'callout reveal', 'aria-label': b.heading || 'Nota' }, [
       b.heading ? el('h3', { class: 'callout__title sheet__title', html: b.heading }) : null,
@@ -241,6 +271,10 @@
       if (b.type === 'explainer') node = renderExplainer(b, id);
       else if (b.type === 'example') node = renderExample(b, id, ++nEx);
       else if (b.type === 'callout') node = renderCallout(b, id);
+      else if (b.type === 'warmup') node = renderWarmup(b, id);
+      else if (b.type === 'recipe') node = renderRecipe(b, id);
+      else if (b.type === 'faq') node = renderFaq(b, id);
+      else if (b.type === 'recap') node = renderRecap(b, id);
       else node = renderConcept(b, id);
       main.appendChild(node);
       if (b.type !== 'callout' && b.heading) {

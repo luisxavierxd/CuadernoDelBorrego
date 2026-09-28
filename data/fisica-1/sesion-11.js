@@ -43,6 +43,28 @@
 
     lesson: [
       {
+        "type": "warmup",
+        "heading": "Antes de empezar",
+        "short": "Antes de empezar",
+        "idea": "En un plano inclinado conviene <strong>girar los ejes</strong>: uno a lo largo del plano y otro perpendicular.",
+        "recall": [
+          "Diagramas de cuerpo libre y fricción (S08–S10).",
+          "Seno y coseno de un ángulo.",
+          "Aceleración centrípeta $a_c = v^2/r$ (S07)."
+        ],
+        "why": "Rampas, carreteras en pendiente, toboganes y curvas peraltadas usan estas ideas. Explican por qué un auto derrapa en una curva o a qué ángulo empieza a resbalar una caja."
+      },
+      {
+        "type": "concept",
+        "heading": "Imagínalo así",
+        "short": "Imagínalo así",
+        "body": [
+          "En un plano inclinado el peso sigue apuntando hacia abajo, pero parte de él empuja el bloque contra el plano ($mg\\cos\\theta$) y parte lo hace resbalar hacia abajo ($mg\\sin\\theta$). Entre más inclinado, más resbala y menos aprieta.",
+          "Con los ejes girados, la aceleración queda en un solo eje (a lo largo del plano) y solo hay que descomponer el peso.",
+          "En una curva, algo tiene que empujar el auto hacia el centro. En una curva plana es la fricción; en una peraltada ayuda la normal, que está inclinada."
+        ]
+      },
+      {
         type: 'explainer', heading: 'Descomponer el peso en un plano', short: 'Plano inclinado',
         title: 'Ejes a lo largo y contra el plano',
         intro: 'Conviene poner el eje $x$ a lo largo del plano: así la aceleración queda en un solo eje y solo hay que descomponer el peso.',
@@ -53,6 +75,29 @@
           { text: 'Componentes: $mg\\sin\\theta$ a lo largo del plano (hacia abajo) y $mg\\cos\\theta$ contra el plano. El ángulo entre $mg$ y la perpendicular al plano es $\\theta$.', state: { step: 2 } },
           { text: 'La normal equilibra la componente perpendicular: $N = mg\\cos\\theta$ (si no hay otras fuerzas perpendiculares).', state: { step: 3 } },
           { text: 'La fricción va a lo largo del plano, contra el movimiento: $f_k = \\mu_k mg\\cos\\theta$.', state: { step: 4 } }
+        ]
+      },
+      {
+        "type": "recipe",
+        "heading": "Receta: bloque en un plano inclinado",
+        "short": "Receta",
+        "steps": [
+          {
+            "text": "Dibuja el diagrama y pon el eje $x$ a lo largo del plano."
+          },
+          {
+            "text": "Descompón el peso: $mg\\sin\\theta$ a lo largo del plano (hacia abajo) y $mg\\cos\\theta$ contra el plano.",
+            "tip": "Comprueba con $\\theta = 0$: el plano es horizontal y $mg\\sin 0 = 0$."
+          },
+          {
+            "text": "Normal: $N = mg\\cos\\theta$ si no hay otras fuerzas perpendiculares."
+          },
+          {
+            "text": "Fricción contra el movimiento (o contra la tendencia a moverse): $\\mu_kN$ si desliza."
+          },
+          {
+            "text": "Escribe $\\Sigma F_x = ma$ a lo largo del plano y despeja."
+          }
         ]
       },
       {
@@ -138,6 +183,36 @@
         body: [
           'Comprueba con casos extremos: con $\\theta = 0$ el plano es horizontal y $mg\\sin\\theta$ debe ser cero; con $\\theta = 90^\\circ$ el bloque cae libre y $N$ debe ser cero.',
           'La fricción siempre se opone al deslizamiento: cambia de lado según el bloque suba o baje.'
+        ]
+      },
+      {
+        "type": "faq",
+        "heading": "Dudas comunes",
+        "short": "Dudas comunes",
+        "items": [
+          {
+            "q": "¿Por qué seno a lo largo y coseno contra el plano?",
+            "a": "Porque el ángulo entre el peso y la perpendicular al plano es el mismo $\\theta$ del plano. Revísalo con los casos límite $0^\\circ$ y $90^\\circ$."
+          },
+          {
+            "q": "¿Qué es el ángulo crítico?",
+            "a": "El ángulo al que un bloque empieza a resbalar: $\\tan\\theta_c = \\mu_s$. Así se mide $\\mu_s$ en el laboratorio."
+          },
+          {
+            "q": "¿Existe la fuerza centrífuga?",
+            "a": "No en el diagrama de cuerpo libre. Lo que sientes es tu cuerpo queriendo seguir derecho; la fuerza real apunta al centro."
+          }
+        ]
+      },
+      {
+        "type": "recap",
+        "heading": "Lo que te llevas",
+        "short": "Resumen",
+        "points": [
+          "Ejes a lo largo y perpendicular al plano.",
+          "$mg\\sin\\theta$ a lo largo; $N = mg\\cos\\theta$.",
+          "Ángulo crítico: $\\tan\\theta_c = \\mu_s$.",
+          "En curvas, la suma de fuerzas al centro vale $mv^2/r$."
         ]
       }
     ],

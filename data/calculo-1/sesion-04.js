@@ -19,6 +19,28 @@
 
     lesson: [
       {
+        "type": "warmup",
+        "heading": "Antes de empezar",
+        "short": "Antes de empezar",
+        "idea": "Para derivar una <strong>división</strong> hay una regla propia, parecida a la del producto pero con una resta y el denominador al cuadrado.",
+        "recall": [
+          "La regla del producto (S03).",
+          "Que $\\tan x = \\dfrac{\\sin x}{\\cos x}$ y $\\sin^2 x + \\cos^2 x = 1$.",
+          "Una fracción vale cero solo cuando su numerador es cero."
+        ],
+        "why": "Aparecen cocientes cuando calculas promedios (costo por pieza), concentraciones (cantidad entre volumen) o rapideces. También sirve para deducir las derivadas de $\\tan x$, $\\sec x$ y otras."
+      },
+      {
+        "type": "concept",
+        "heading": "Imagínalo así",
+        "short": "Imagínalo así",
+        "body": [
+          "Una fracción crece cuando crece el numerador y <em>disminuye</em> cuando crece el denominador. Por eso en la regla hay una resta: la parte que viene de derivar el numerador suma, y la que viene de derivar el denominador resta.",
+          "La regla es $\\left(\\dfrac{f}{g}\\right)' = \\dfrac{f'g - f\\,g'}{g^2}$. Una frase para recordarla: \"abajo por la derivada de arriba, menos arriba por la derivada de abajo, todo entre abajo al cuadrado\".",
+          "A diferencia del producto, aquí el orden <strong>sí importa</strong>: si inviertes la resta obtienes el resultado con el signo cambiado."
+        ]
+      },
+      {
         type: 'concept', heading: 'La regla', short: 'La regla del cociente',
         body: [
           'Si $v(x) \\neq 0$, $$\\left(\\frac{u}{v}\\right)\' = \\frac{u\'\\,v - u\\,v\'}{v^2}.$$',
@@ -27,6 +49,29 @@
         ],
         diagram: 'quotient-graph',
         caption: 'Donde $f\'(x) = 0$, en $x = \\pm 1$, la tangente es horizontal.'
+      },
+      {
+        "type": "recipe",
+        "heading": "Receta: regla del cociente",
+        "short": "Receta",
+        "steps": [
+          {
+            "text": "¿De verdad necesitas la regla? Si el denominador es solo una potencia de $x$, reescribe: $\\dfrac{x^2 + 1}{x} = x + x^{-1}$ y deriva directo."
+          },
+          {
+            "text": "Llama $f$ al numerador y $g$ al denominador. Deriva cada uno."
+          },
+          {
+            "text": "Escribe el numerador de la respuesta: $f'g - f\\,g'$, en ese orden.",
+            "tip": "Pon paréntesis a todo antes de desarrollar; el signo menos afecta a todo el segundo producto."
+          },
+          {
+            "text": "El denominador es $g^2$: déjalo factorizado, no lo desarrolles."
+          },
+          {
+            "text": "Simplifica solo el numerador. Si te piden dónde la derivada vale cero, basta con igualar el numerador a cero."
+          }
+        ]
       },
       {
         type: 'example', heading: 'Una función racional',
@@ -72,6 +117,36 @@
       {
         type: 'callout', heading: 'A veces conviene reescribir',
         body: 'Si el denominador es una sola potencia, divide primero: $\\dfrac{x^3 + 2x}{x} = x^2 + 2$, o $\\dfrac{5}{x^2} = 5x^{-2}$. Te ahorras la regla y los errores de signo.'
+      },
+      {
+        "type": "faq",
+        "heading": "Dudas comunes",
+        "short": "Dudas comunes",
+        "items": [
+          {
+            "q": "¿Se puede derivar arriba y abajo por separado?",
+            "a": "No. $\\left(\\tfrac{f}{g}\\right)' \\ne \\tfrac{f'}{g'}$. Prueba con $\\tfrac{x^2}{x} = x$: su derivada es 1, pero $\\tfrac{2x}{1} = 2x$."
+          },
+          {
+            "q": "¿Por qué no desarrollo $g^2$?",
+            "a": "Porque casi nunca ayuda y vuelve la expresión más larga. Además, dejarlo factorizado permite ver dónde la derivada no existe (donde $g = 0$)."
+          },
+          {
+            "q": "¿Cuándo tiene tangente horizontal una función racional?",
+            "a": "Donde la derivada vale cero, o sea donde el numerador $f'g - fg'$ vale cero (y el denominador no)."
+          }
+        ]
+      },
+      {
+        "type": "recap",
+        "heading": "Lo que te llevas",
+        "short": "Resumen",
+        "points": [
+          "$\\left(\\tfrac{f}{g}\\right)' = \\tfrac{f'g - f\\,g'}{g^2}$; el orden de la resta importa.",
+          "Antes de usarla, revisa si conviene reescribir como potencias.",
+          "Simplifica solo el numerador; deja $g^2$ factorizado.",
+          "Tangentes horizontales: numerador igual a cero."
+        ]
       }
     ],
 

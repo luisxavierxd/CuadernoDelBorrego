@@ -38,6 +38,27 @@
 
     lesson: [
       {
+        "type": "warmup",
+        "heading": "Antes de empezar",
+        "short": "Antes de empezar",
+        "idea": "La energía no se crea ni se destruye: se <strong>transforma</strong>. Sin fricción, energía cinética más potencial se mantiene constante.",
+        "recall": [
+          "Energía cinética y trabajo (S12).",
+          "Que la altura se mide desde un nivel que tú eliges."
+        ],
+        "why": "Montañas rusas, péndulos, resortes que lanzan cosas y presas hidroeléctricas funcionan convirtiendo un tipo de energía en otro."
+      },
+      {
+        "type": "concept",
+        "heading": "Imagínalo así",
+        "short": "Imagínalo así",
+        "body": [
+          "Sube un carrito a lo alto de una montaña rusa: ahí tiene mucha energía <strong>potencial</strong> (por su altura) y casi nada de cinética. Al bajar, la altura se \"convierte\" en rapidez; al volver a subir, la rapidez se convierte en altura.",
+          "Sin fricción la suma no cambia: $K + U$ es la misma en todos los puntos. Por eso basta comparar dos puntos (inicio y final) sin importar la forma del camino.",
+          "Con fricción, una parte de la energía se va en calor. Sigue existiendo, pero ya no está disponible como movimiento o altura: la restas como \"energía perdida\"."
+        ]
+      },
+      {
         type: 'concept', heading: 'Energía potencial', short: 'Energía potencial',
         body: [
           'El trabajo del peso no depende del camino, solo de la altura inicial y la final. Por eso se puede guardar como <strong>energía potencial gravitacional</strong>: $$U_g = mgy$$ con $y$ medida desde un nivel que tú eliges (solo importan las diferencias).',
@@ -54,6 +75,29 @@
           { text: 'Arriba, en reposo, toda la energía es potencial: $E = mgh$.', state: { u: 0 } },
           { text: 'A la mitad de la altura, la mitad se volvió cinética: $K = U$. Esto contesta <em>"¿a qué altura $K = U$?"</em>: a $h/2$, sin importar la forma de la rampa.', state: { u: 0.2929 } },
           { text: 'Abajo, toda es cinética: $\\tfrac{1}{2}mv^2 = mgh$, así que $$v = \\sqrt{2gh}$$ La masa se cancela: la misma rapidez que en caída libre.', state: { u: 1 } }
+        ]
+      },
+      {
+        "type": "recipe",
+        "heading": "Receta: conservación de la energía",
+        "short": "Receta",
+        "steps": [
+          {
+            "text": "Elige el nivel cero de altura (suele ser el punto más bajo)."
+          },
+          {
+            "text": "Escribe la energía en el punto inicial: $K_0 + U_0$ (con $U_g = mgy$ y, si hay resorte, $U_e = \\tfrac{1}{2}kx^2$)."
+          },
+          {
+            "text": "Escribe la energía en el punto final: $K_f + U_f$."
+          },
+          {
+            "text": "Iguala. Si hay fricción, resta $f_kd$ del lado inicial.",
+            "tip": "La masa se cancela muchas veces: si todos los términos la tienen, no la necesitas."
+          },
+          {
+            "text": "Despeja lo que te piden (rapidez, altura, compresión)."
+          }
         ]
       },
       {
@@ -137,6 +181,36 @@
         body: [
           'Elige el nivel cero de altura. Escribe $K$ y $U$ en el estado inicial y en el final; si hay fricción, resta $f_k d$.',
           'Energía sirve para rapideces, alturas y compresiones. Si te preguntan un tiempo, necesitas cinemática o dinámica.'
+        ]
+      },
+      {
+        "type": "faq",
+        "heading": "Dudas comunes",
+        "short": "Dudas comunes",
+        "items": [
+          {
+            "q": "¿Importa dónde pongo el cero de altura?",
+            "a": "No para el resultado: solo importan las diferencias de altura. Elige el que haga las cuentas más fáciles."
+          },
+          {
+            "q": "¿Por qué la forma de la rampa no importa?",
+            "a": "Porque la energía solo depende de la altura y la rapidez en cada punto, no del camino (si no hay fricción)."
+          },
+          {
+            "q": "¿Qué pasa con la energía \"perdida\"?",
+            "a": "Se convierte en calor (y un poco en sonido). No desaparece, pero ya no puede devolverse como movimiento."
+          }
+        ]
+      },
+      {
+        "type": "recap",
+        "heading": "Lo que te llevas",
+        "short": "Resumen",
+        "points": [
+          "$U_g = mgy$, $U_e = \\tfrac{1}{2}kx^2$.",
+          "Sin fricción: $K_0 + U_0 = K_f + U_f$.",
+          "Con fricción: resta $f_kd$.",
+          "Solo importan el punto inicial y el final."
         ]
       }
     ],

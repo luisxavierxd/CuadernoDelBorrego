@@ -61,6 +61,27 @@
 
     lesson: [
       {
+        "type": "warmup",
+        "heading": "Antes de empezar",
+        "short": "Antes de empezar",
+        "idea": "La velocidad es qué tan rápido cambia la posición y la aceleración es qué tan rápido cambia la velocidad: <strong>derivadas</strong>.",
+        "recall": [
+          "Derivar polinomios (Cálculo S02).",
+          "La diferencia entre desplazamiento (cambio de posición) y distancia (lo que realmente recorres)."
+        ],
+        "why": "Con la posición $x(t)$ de algo puedes saber su velocidad y aceleración en cualquier instante. Es la base de todo el movimiento que sigue."
+      },
+      {
+        "type": "concept",
+        "heading": "Imagínalo así",
+        "short": "Imagínalo así",
+        "body": [
+          "Si tienes la posición de un carrito en cada instante, $x(t)$, la velocidad te dice cuántos metros avanza por segundo en ese instante: es la pendiente de la gráfica de $x$ contra $t$, o sea, su derivada.",
+          "La aceleración hace lo mismo con la velocidad: te dice cuántos m/s gana o pierde cada segundo. Por eso sus unidades son m/s².",
+          "En el <strong>movimiento rectilíneo uniforme</strong> (MRU) la velocidad no cambia: la gráfica de posición es una recta y la aceleración es cero. Es el caso más sencillo y sirve para practicar."
+        ]
+      },
+      {
         type: 'concept', heading: 'Posición, desplazamiento y distancia', short: 'Desplazamiento',
         body: [
           'En una línea recta, la <strong>posición</strong> $x$ se mide desde un origen y su signo dice de qué lado está. El <strong>desplazamiento</strong> es el cambio de posición, $\\Delta x = x_f - x_i$: puede ser negativo.',
@@ -88,6 +109,29 @@
           'Igual que la velocidad es la derivada de la posición, la <strong>aceleración</strong> es la derivada de la velocidad: $$v(t) = \\frac{dx}{dt} \\qquad a(t) = \\frac{dv}{dt} = \\frac{d^2x}{dt^2}$$',
           'El signo importa: si $v$ y $a$ tienen el mismo signo, el móvil <strong>acelera</strong> (su rapidez crece); si tienen signos opuestos, <strong>frena</strong>. Una aceleración negativa no significa que el objeto vaya frenando: depende del signo de $v$.',
           'Donde $v = 0$ y cambia de signo, el móvil <strong>da la vuelta</strong>.'
+        ]
+      },
+      {
+        "type": "recipe",
+        "heading": "Receta: de la posición a la velocidad y la aceleración",
+        "short": "Receta",
+        "steps": [
+          {
+            "text": "Escribe $x(t)$ con cuidado (unidades: m y s)."
+          },
+          {
+            "text": "Deriva una vez para obtener $v(t) = x'(t)$."
+          },
+          {
+            "text": "Deriva otra vez para obtener $a(t) = v'(t)$."
+          },
+          {
+            "text": "Sustituye el tiempo que te piden.",
+            "tip": "Un signo negativo en $v$ significa que se mueve hacia atrás (hacia $x$ negativas), no que hay un error."
+          },
+          {
+            "text": "En MRU usa directamente $x = x_0 + vt$."
+          }
         ]
       },
       {
@@ -141,6 +185,36 @@
         body: [
           'La velocidad tiene signo (o dirección); la rapidez es su magnitud. Un carro que da una vuelta completa a un circuito a 100 km/h tiene rapidez media de 100 km/h, pero velocidad media cero.',
           'El velocímetro de un auto mide rapidez instantánea.'
+        ]
+      },
+      {
+        "type": "faq",
+        "heading": "Dudas comunes",
+        "short": "Dudas comunes",
+        "items": [
+          {
+            "q": "¿Velocidad y rapidez son lo mismo?",
+            "a": "No. La rapidez es el tamaño de la velocidad, siempre positiva. La velocidad tiene signo (dirección)."
+          },
+          {
+            "q": "¿Desplazamiento y distancia?",
+            "a": "El desplazamiento es \"dónde terminaste menos dónde empezaste\" (puede ser cero si regresas). La distancia es todo lo que recorriste."
+          },
+          {
+            "q": "¿Velocidad media o instantánea?",
+            "a": "La media es $\\Delta x/\\Delta t$ entre dos momentos; la instantánea es la derivada en un momento."
+          }
+        ]
+      },
+      {
+        "type": "recap",
+        "heading": "Lo que te llevas",
+        "short": "Resumen",
+        "points": [
+          "$v = \\dfrac{dx}{dt}$, $a = \\dfrac{dv}{dt}$.",
+          "Velocidad con signo; rapidez sin signo.",
+          "Desplazamiento ≠ distancia recorrida.",
+          "MRU: $a = 0$ y $x = x_0 + vt$."
         ]
       }
     ],

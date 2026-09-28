@@ -20,6 +20,28 @@
 
     lesson: [
       {
+        "type": "warmup",
+        "heading": "Antes de empezar",
+        "short": "Antes de empezar",
+        "idea": "Cuando aparecen $\\sqrt{a^2 - x^2}$, $\\sqrt{a^2 + x^2}$ o $\\sqrt{x^2 - a^2}$, un <strong>triángulo</strong> y una sustitución trigonométrica quitan la raíz.",
+        "recall": [
+          "Teorema de Pitágoras.",
+          "Identidades: $1 - \\sin^2\\theta = \\cos^2\\theta$, $1 + \\tan^2\\theta = \\sec^2\\theta$.",
+          "Definir seno, coseno y tangente en un triángulo rectángulo."
+        ],
+        "why": "Estas raíces aparecen al calcular áreas de círculos y elipses, longitudes de arco y campos en física. Sin esta técnica no hay forma de integrarlas."
+      },
+      {
+        "type": "concept",
+        "heading": "Imagínalo así",
+        "short": "Imagínalo así",
+        "body": [
+          "Una raíz como $\\sqrt{9 - x^2}$ se parece a Pitágoras: es el cateto que falta en un triángulo de hipotenusa 3 y cateto $x$. Si escribes $x = 3\\sin\\theta$, la raíz se vuelve $3\\cos\\theta$ y desaparece.",
+          "Cada forma tiene su sustitución: $a^2 - x^2$ usa seno, $a^2 + x^2$ usa tangente, $x^2 - a^2$ usa secante. En los tres casos, una identidad convierte la suma o resta en un cuadrado perfecto.",
+          "Al final hay que regresar a $x$. Para eso se dibuja el triángulo con los lados que da la sustitución: de ahí se lee cualquier función trigonométrica de $\\theta$ en términos de $x$."
+        ]
+      },
+      {
         type: 'concept', heading: 'Tres formas, tres sustituciones', short: 'Las tres formas',
         body: [
           'Las raíces con $x^2$ adentro se simplifican con las identidades $1 - \\sin^2\\theta = \\cos^2\\theta$, $1 + \\tan^2\\theta = \\sec^2\\theta$ y $\\sec^2\\theta - 1 = \\tan^2\\theta$. Según la forma:'
@@ -39,6 +61,26 @@
           { text: 'Si $x = 3\\sin\\theta$, el cateto opuesto a $\\theta$ es $x$ y la hipotenusa es 3.', state: { theta: 0.4 } },
           { text: 'Por Pitágoras, el cateto adyacente es $\\sqrt{9 - x^2}$, que también es $3\\cos\\theta$.', state: { theta: 0.75 } },
           { text: 'Así la raíz desaparece: $\\sqrt{9 - x^2} = 3\\cos\\theta$. Y para regresar a $x$ lees del triángulo: $\\cos\\theta = \\tfrac{\\sqrt{9 - x^2}}{3}$.', state: { theta: 1.05 } }
+        ]
+      },
+      {
+        "type": "recipe",
+        "heading": "Receta: sustitución trigonométrica",
+        "short": "Receta",
+        "steps": [
+          {
+            "text": "Identifica la forma y el valor de $a$: $\\sqrt{a^2 - x^2}$ → $x = a\\sin\\theta$; $\\sqrt{a^2 + x^2}$ → $x = a\\tan\\theta$; $\\sqrt{x^2 - a^2}$ → $x = a\\sec\\theta$."
+          },
+          {
+            "text": "Calcula $dx$ y sustituye todo; simplifica la raíz con la identidad."
+          },
+          {
+            "text": "Integra en $\\theta$.",
+            "tip": "Suelen quedar integrales como $\\int\\cos^2\\theta\\,d\\theta$: usa $\\cos^2\\theta = \\tfrac{1 + \\cos 2\\theta}{2}$."
+          },
+          {
+            "text": "Dibuja el triángulo y regresa a $x$. En una definida, puedes cambiar los límites a $\\theta$."
+          }
         ]
       },
       {
@@ -86,6 +128,36 @@
       {
         type: 'callout', heading: 'Antes de sustituir, prueba un cambio de variable',
         body: '$\\int \\dfrac{x\\,dx}{\\sqrt{9 - x^2}}$ tiene la raíz de la primera forma, pero el $x$ de arriba es casi la derivada de lo de adentro: con $u = 9 - x^2$ sale en un paso, $-\\sqrt{9 - x^2} + C$. La sustitución trigonométrica es para cuando no hay ese atajo.'
+      },
+      {
+        "type": "faq",
+        "heading": "Dudas comunes",
+        "short": "Dudas comunes",
+        "items": [
+          {
+            "q": "¿Siempre que hay raíz uso sustitución trigonométrica?",
+            "a": "No. Primero revisa si es un cambio de variable simple: $\\int x\\sqrt{9 - x^2}\\,dx$ sale con $u = 9 - x^2$ porque afuera está la derivada de lo de adentro."
+          },
+          {
+            "q": "¿Para qué sirve el triángulo?",
+            "a": "Para regresar de $\\theta$ a $x$: si $\\sin\\theta = \\tfrac{x}{3}$, el triángulo tiene opuesto $x$ e hipotenusa 3, y de ahí sacas $\\cos\\theta$, $\\tan\\theta$, etc."
+          },
+          {
+            "q": "¿Qué pasa con $a$?",
+            "a": "Es la raíz del número: en $\\sqrt{25 - x^2}$, $a = 5$. Si hay un coeficiente con $x^2$ (como $4x^2$), primero factorízalo."
+          }
+        ]
+      },
+      {
+        "type": "recap",
+        "heading": "Lo que te llevas",
+        "short": "Resumen",
+        "points": [
+          "$a^2 - x^2$: seno; $a^2 + x^2$: tangente; $x^2 - a^2$: secante.",
+          "La identidad convierte la raíz en algo sin raíz.",
+          "El triángulo te regresa a $x$.",
+          "Antes, revisa si un cambio de variable simple basta."
+        ]
       }
     ],
 

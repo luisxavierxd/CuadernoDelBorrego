@@ -30,6 +30,28 @@
 
     lesson: [
       {
+        "type": "warmup",
+        "heading": "Antes de empezar",
+        "short": "Antes de empezar",
+        "idea": "Integrar es derivar al revés. El <strong>cambio de variable</strong> deshace la regla de la cadena.",
+        "recall": [
+          "La tabla de derivadas (leída de derecha a izquierda es una tabla de integrales).",
+          "La regla de la cadena (S05).",
+          "El Teorema Fundamental (S09)."
+        ],
+        "why": "Con la tabla y el cambio de variable se resuelve la gran mayoría de integrales que aparecen en física, economía y en el resto del curso."
+      },
+      {
+        "type": "concept",
+        "heading": "Imagínalo así",
+        "short": "Imagínalo así",
+        "body": [
+          "Si derivar $\\sin(x^2)$ da $2x\\cos(x^2)$ (regla de la cadena), entonces integrar $2x\\cos(x^2)$ tiene que dar $\\sin(x^2)$. El cambio de variable es la forma ordenada de reconocer ese patrón.",
+          "La pista es ver una función \"adentro\" de otra y, <em>afuera</em>, la derivada de lo de adentro (o casi, salvo un número). En $2x\\cos(x^2)$, lo de adentro es $x^2$ y afuera está $2x$, que es justo su derivada.",
+          "Al llamar $u$ a lo de adentro, la integral fea se convierte en una de la tabla, como $\\int \\cos u\\,du$."
+        ]
+      },
+      {
         type: 'concept', heading: 'Antiderivada e integral indefinida', short: 'Antiderivada',
         body: [
           'Una función $F$ es <strong>antiderivada</strong> de $f$ si $F\'(x) = f(x)$. Por ejemplo, $F(x) = x^3$ es antiderivada de $f(x) = 3x^2$.',
@@ -51,6 +73,32 @@
           '$\\int \\sin x\\,dx = -\\cos x + C$, $\\int \\cos x\\,dx = \\sin x + C$, $\\int \\sec^2 x\\,dx = \\tan x + C$',
           '$\\int \\dfrac{dx}{1 + x^2} = \\arctan x + C$ y $\\int \\dfrac{dx}{\\sqrt{1 - x^2}} = \\arcsin x + C$',
           '<strong>Linealidad:</strong> las constantes salen de la integral y una suma se integra término a término.'
+        ]
+      },
+      {
+        "type": "recipe",
+        "heading": "Receta: cambio de variable",
+        "short": "Receta",
+        "steps": [
+          {
+            "text": "Elige $u$: lo que está \"adentro\" (del paréntesis, la raíz, el exponente, el argumento)."
+          },
+          {
+            "text": "Calcula $du = u'\\,dx$."
+          },
+          {
+            "text": "Reescribe toda la integral en $u$: no debe quedar ninguna $x$.",
+            "tip": "Si sobra un número (por ejemplo tienes $x\\,dx$ y $du = 2x\\,dx$), ajusta: $x\\,dx = \\tfrac{1}{2}du$."
+          },
+          {
+            "text": "Integra con la tabla."
+          },
+          {
+            "text": "Regresa a $x$ sustituyendo $u$. En una definida, mejor cambia los límites a $u$ y ya no regreses."
+          },
+          {
+            "text": "Comprueba derivando."
+          }
         ]
       },
       {
@@ -126,6 +174,36 @@
         ],
         answer: '$\\displaystyle\\int_0^2 \\frac{x}{x^2+1}\\,dx = \\frac{\\ln 5}{2} \\approx ' + fx(halfLn5) + '$',
         verify: { lab: 'antiderivative', f: 'x/(x^2+1)', F: 'ln(x^2+1)/2', a: 0, b: 2, value: halfLn5 }
+      },
+      {
+        "type": "faq",
+        "heading": "Dudas comunes",
+        "short": "Dudas comunes",
+        "items": [
+          {
+            "q": "¿Cómo sé qué $u$ elegir?",
+            "a": "Busca una función cuya derivada también aparezca (salvo una constante). Si con tu $u$ sigue quedando $x$ después de sustituir, prueba con otra."
+          },
+          {
+            "q": "¿Puedo ajustar cualquier cosa que falte?",
+            "a": "Solo constantes. Si falta un número, se compensa; si falta una $x$, ese cambio no sirve."
+          },
+          {
+            "q": "¿Por qué hay que cambiar los límites?",
+            "a": "Porque los límites originales son valores de $x$. Si integras en $u$, necesitas los valores de $u$ correspondientes."
+          }
+        ]
+      },
+      {
+        "type": "recap",
+        "heading": "Lo que te llevas",
+        "short": "Resumen",
+        "points": [
+          "Integrar es derivar al revés; siempre puedes comprobar derivando.",
+          "Cambio de variable: $u$ = lo de adentro, $du = u'dx$.",
+          "Solo se ajustan constantes.",
+          "En una definida, cambia también los límites."
+        ]
       }
     ],
 

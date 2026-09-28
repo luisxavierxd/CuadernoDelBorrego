@@ -19,6 +19,27 @@
 
     lesson: [
       {
+        "type": "warmup",
+        "heading": "Antes de empezar",
+        "short": "Antes de empezar",
+        "idea": "Cuando dos funciones se <strong>multiplican</strong>, la derivada no es el producto de las derivadas: cada factor \"toma su turno\" para derivarse.",
+        "recall": [
+          "Las fórmulas directas de S02.",
+          "Factorizar un término común: $e^x\\sin x + e^x\\cos x = e^x(\\sin x + \\cos x)$."
+        ],
+        "why": "Muchas funciones reales son productos: ingreso = precio × cantidad, área = largo × ancho, una señal que oscila y se apaga ($e^{-t}\\cos t$). Sin esta regla no podrías derivarlas."
+      },
+      {
+        "type": "concept",
+        "heading": "Imagínalo así",
+        "short": "Imagínalo así",
+        "body": [
+          "Imagina un rectángulo cuyo largo y ancho crecen al mismo tiempo. El área crece por dos razones: porque el largo crece (mientras el ancho se queda) y porque el ancho crece (mientras el largo se queda). La derivada del área suma esas dos contribuciones.",
+          "Eso es exactamente la regla: $(f\\,g)' = f'g + f\\,g'$. En el primer término se deriva $f$ y $g$ se queda quieta; en el segundo, al revés. Una forma de recordarla: \"deriva el primero por el segundo, más el primero por la derivada del segundo\".",
+          "El error típico es escribir $(f\\,g)' = f'\\,g'$. Si pruebas con $x\\cdot x = x^2$ verás que no funciona: $f'g' = 1\\cdot 1 = 1$, pero la derivada de $x^2$ es $2x$. Con la regla correcta sale $1\\cdot x + x\\cdot 1 = 2x$."
+        ]
+      },
+      {
         type: 'concept', heading: 'La regla', short: 'La regla del producto',
         body: [
           'Si $u$ y $v$ son derivables, $$\\big(u\\,v\\big)\' = u\'\\,v + u\\,v\'.$$',
@@ -37,6 +58,28 @@
           { text: 'Si $v$ crece en $dv$, gana otra franja de $u\\,dv$.', state: { step: 2 } },
           { text: 'La esquina $du\\,dv$ es un producto de dos cambios pequeños: se desprecia. Queda $d(uv) = v\\,du + u\\,dv$.', state: { step: 3 } }
         ]
+      },
+      {
+        "type": "recipe",
+        "heading": "Receta: regla del producto",
+        "short": "Receta",
+        "intro": "Ordena el trabajo en una tablita; así no se te pierde ningún término.",
+        "steps": [
+          {
+            "text": "Identifica los dos factores y llámalos $f$ y $g$."
+          },
+          {
+            "text": "Deriva cada uno por separado y anótalo: $f'$ y $g'$.",
+            "tip": "Aquí usas las fórmulas de S02; si un factor es compuesto (S05), deríbalo con cadena."
+          },
+          {
+            "text": "Arma $f'g + f\\,g'$ copiando de tu tablita."
+          },
+          {
+            "text": "Simplifica: busca un factor común (muy útil con exponenciales) y agrupa términos semejantes."
+          }
+        ],
+        "note": "Con tres factores se repite la idea: cada uno toma su turno. $(fgh)' = f'gh + fg'h + fgh'$."
       },
       {
         type: 'example', heading: 'Polinomio por trigonométrica',
@@ -81,6 +124,36 @@
       {
         type: 'callout', heading: '¿Regla o desarrollo?',
         body: 'Si el producto es de dos polinomios, a veces es más rápido desarrollar: $(x^2 + 1)(x - 3) = x^3 - 3x^2 + x - 3$. La regla del producto es indispensable cuando hay exponenciales, logaritmos o trigonométricas.'
+      },
+      {
+        "type": "faq",
+        "heading": "Dudas comunes",
+        "short": "Dudas comunes",
+        "items": [
+          {
+            "q": "¿Importa el orden de los factores?",
+            "a": "No: $f'g + fg'$ es una suma, así que da igual cuál llames $f$. Lo que sí importa es no olvidar ninguno de los dos términos."
+          },
+          {
+            "q": "¿$3x^2$ necesita regla del producto?",
+            "a": "No. El 3 es una constante que multiplica: basta la regla de la potencia, $(3x^2)' = 6x$. La regla del producto es para cuando ambos factores tienen $x$."
+          },
+          {
+            "q": "¿Y si prefiero desarrollar el producto?",
+            "a": "Si los dos factores son polinomios, desarrollar y derivar es igual de válido y a veces más rápido. Con $\\sin$, $e^x$ o $\\ln$ no se puede desarrollar, y ahí la regla es indispensable."
+          }
+        ]
+      },
+      {
+        "type": "recap",
+        "heading": "Lo que te llevas",
+        "short": "Resumen",
+        "points": [
+          "$(f\\,g)' = f'g + f\\,g'$: cada factor se deriva por turnos.",
+          "Nunca es $f'\\,g'$.",
+          "Haz la tablita $f,\\ f',\\ g,\\ g'$ antes de armar el resultado.",
+          "Simplifica al final sacando factor común."
+        ]
       }
     ],
 

@@ -19,6 +19,27 @@
 
     lesson: [
       {
+        "type": "warmup",
+        "heading": "Antes de empezar",
+        "short": "Antes de empezar",
+        "idea": "Cuando una función está <strong>dentro</strong> de otra, se deriva la de afuera y se multiplica por la derivada de la de adentro.",
+        "recall": [
+          "Las fórmulas directas (S02).",
+          "Qué es una composición: en $\\sqrt{x^2 + 1}$, primero calculas $x^2 + 1$ y después sacas raíz."
+        ],
+        "why": "Es la regla más usada del curso: aparece en casi todas las derivadas \"reales\" ($e^{-0.1t}$, $\\sin(3t)$, $\\sqrt{25 - x^2}$…) y es la base del cambio de variable en integrales."
+      },
+      {
+        "type": "concept",
+        "heading": "Imagínalo así",
+        "short": "Imagínalo así",
+        "body": [
+          "Piensa en engranes: si el engrane grande gira 3 veces más rápido que el mediano, y el mediano 2 veces más rápido que el chico, el grande gira $3\\times 2 = 6$ veces más rápido que el chico. Las rapideces se <strong>multiplican</strong>.",
+          "Con funciones pasa igual. En $y = (x^2 + 1)^5$ hay una capa de afuera (elevar a la 5) y una de adentro ($x^2 + 1$). La derivada es \"qué tan rápido cambia la de afuera\" por \"qué tan rápido cambia la de adentro\": $5(x^2 + 1)^4\\cdot 2x$.",
+          "Lo importante: al derivar la de afuera, lo de adentro <strong>se copia igual</strong>. Solo después multiplicas por la derivada de adentro."
+        ]
+      },
+      {
         type: 'concept', heading: 'Funciones compuestas', short: 'Afuera y adentro',
         body: [
           'En $y = \\sin(x^2)$ hay dos capas: <strong>adentro</strong>, $u = x^2$; <strong>afuera</strong>, $y = \\sin u$.',
@@ -35,6 +56,29 @@
           { text: 'Empiezas con un cambio pequeño $dx$ en la entrada.', state: { stage: 0 } },
           { text: 'La capa de adentro lo estira por su razón de cambio: $du = h\'(x)\\,dx$.', state: { stage: 1 } },
           { text: 'La capa de afuera lo vuelve a estirar: $dy = g\'(u)\\,du$. En total $\\dfrac{dy}{dx} = g\'(u)\\cdot h\'(x)$.', state: { stage: 2 } }
+        ]
+      },
+      {
+        "type": "recipe",
+        "heading": "Receta: regla de la cadena",
+        "short": "Receta",
+        "steps": [
+          {
+            "text": "Encuentra la capa de adentro: lo que está dentro del paréntesis, la raíz, el exponente de $e$ o el argumento de $\\sin$. Llámala $u$."
+          },
+          {
+            "text": "Deriva la capa de afuera como si $u$ fuera una $x$, pero deja $u$ escrita tal cual.",
+            "tip": "Para $\\sin(3x^2)$: afuera es $\\sin u$, que deriva a $\\cos u = \\cos(3x^2)$."
+          },
+          {
+            "text": "Multiplica por $u'$, la derivada de lo de adentro."
+          },
+          {
+            "text": "Si hay más capas, repite hacia adentro: una multiplicación por cada capa."
+          },
+          {
+            "text": "Ordena el resultado: los números y potencias de $x$ adelante."
+          }
         ]
       },
       {
@@ -81,6 +125,36 @@
       {
         type: 'callout', heading: 'El error más común',
         body: 'Olvidar multiplicar por la derivada de adentro. Si tu resultado de $\\big(e^{5x}\\big)\'$ es $e^{5x}$, te falta el 5. El lab de esta sesión te dice “te falta un factor” cuando pasa.'
+      },
+      {
+        "type": "faq",
+        "heading": "Dudas comunes",
+        "short": "Dudas comunes",
+        "items": [
+          {
+            "q": "¿Cómo sé si necesito la cadena?",
+            "a": "Si adentro de algo (paréntesis con potencia, raíz, $e^{\\ldots}$, $\\ln(\\ldots)$, $\\sin(\\ldots)$) hay algo más que una $x$ sola, necesitas la cadena."
+          },
+          {
+            "q": "¿$e^{3x}$ deriva a $e^{3x}$?",
+            "a": "No: falta multiplicar por la derivada de $3x$, que es 3. Queda $3e^{3x}$."
+          },
+          {
+            "q": "¿Y si además hay un producto?",
+            "a": "Primero ve la estructura grande. En $x^2\\sin(3x)$ la operación principal es un producto: usas la regla del producto, y la cadena aparece al derivar $\\sin(3x)$."
+          }
+        ]
+      },
+      {
+        "type": "recap",
+        "heading": "Lo que te llevas",
+        "short": "Resumen",
+        "points": [
+          "$\\big(f(g(x))\\big)' = f'(g(x))\\cdot g'(x)$.",
+          "Afuera se deriva copiando lo de adentro; luego se multiplica por la derivada de adentro.",
+          "Una multiplicación por cada capa.",
+          "El error más común: olvidar multiplicar por la derivada de adentro."
+        ]
       }
     ],
 
