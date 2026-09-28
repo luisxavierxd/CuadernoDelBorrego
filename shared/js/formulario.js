@@ -129,6 +129,22 @@
 
     var scope = h('p', { class: 'form-scope mono' });
     var pageStyle = document.head.appendChild(h('style', { id: 'form-page-head' }));
+    // Marco impreso. Chrome/Edge 131+ lo dibujan con las cajas de margen de @page (formulario.css).
+    // Firefox y Safari no las soportan: ahí el marco son dos franjas fijas que el navegador repite
+    // en cada hoja, y la página va sin margen para que no imprima su propio encabezado.
+    var chrome = (navigator.userAgent.match(/Chrom(?:e|ium)\/(\d+)/) || [])[1];
+    var fallback = params.get('impresion') === 'simple' || !(+chrome >= 131);
+    var frameTitle = h('span', { class: 'print-frame__title' });
+    if (fallback) {
+      document.documentElement.classList.add('print-fallback');
+      document.head.appendChild(h('style', {}, ['@media print { @page { margin: 0; } }']));
+      document.body.appendChild(h('div', { class: 'print-frame print-frame--top', 'aria-hidden': 'true' }, [
+        h('span', { class: 'print-frame__brand' }, [h('img', { src: base + 'shared/img/marca-impresion.svg', alt: '' }), 'Cuaderno del Borrego']), frameTitle
+      ]));
+      document.body.appendChild(h('div', { class: 'print-frame print-frame--bottom', 'aria-hidden': 'true' }, [
+        h('span', {}, ['Clases universitarias · proyecto de alumnos, no oficial'])
+      ]));
+    }
     var grid = h('div', { class: 'form-grid' });
     root.appendChild(pick);
     root.appendChild(scope);
@@ -166,6 +182,7 @@
       // Encabezado impreso (caja de margen de @page): curso y temas de esta hoja.
       var head = (F.title || 'Formulario') + ' · ' + (isAll() ? 'todo el curso' : label);
       pageStyle.textContent = '@media print { @page { @top-right { content: "' + head.replace(/["\\]/g, '') + '"; } } }';
+      frameTitle.textContent = head;
       var q = new URLSearchParams(location.search);
       if (picked.length === all.length) q.delete('s'); else q.set('s', listToString(picked));
       if (hasBasics && !basics) q.set('b', '0'); else q.delete('b');
