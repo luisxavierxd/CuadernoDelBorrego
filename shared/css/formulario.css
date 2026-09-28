@@ -68,88 +68,49 @@ a.form-card:hover { border-color: var(--accent); }
 .form-pick .sess-chip__tag { font: 500 0.82rem/1.2 var(--font-body); }
 .form-pick .sess-chip:has(input:checked) { border-color: var(--accent); background: var(--accent-soft); color: var(--accent); }
 .form-scope { margin: 0 0 var(--space-2); font-size: 0.8rem; color: var(--text-muted); }
-.print-frame { display: none; }
 
-@media print {
-  /* Hoja carta (8.5 × 11 in), el tamaño que se usa en México. */
-  /* Marco de la hoja: marca arriba a la izquierda, curso y temas arriba a la derecha (lo pone
-     formulario.js), leyenda y número de página abajo. Al definir estas cajas, Chrome ya no
-     imprime su propio encabezado (fecha, título y URL pegados al borde). */
-  @page {
-    size: letter; margin: 20mm 12mm 16mm;
-    @top-left {
-      content: url("../img/marca-impresion.svg") "  Cuaderno del Borrego";
-      font: 800 10.5pt var(--font-display); color: var(--text); vertical-align: bottom;
-      padding-bottom: 2.2mm; border-bottom: 0.8pt solid var(--text); margin-bottom: 5mm;
-    }
-    @top-right {
-      content: "Formulario"; font: 500 8pt var(--font-mono); color: var(--text-muted); vertical-align: bottom;
-      padding-bottom: 2.6mm; border-bottom: 0.8pt solid var(--text); margin-bottom: 5mm;
-    }
-    @top-center { content: " "; vertical-align: bottom; padding-bottom: 2.2mm; border-bottom: 0.8pt solid var(--text); margin-bottom: 5mm; }
-    @bottom-center { content: " "; vertical-align: top; padding-top: 2mm; border-top: 0.5pt solid var(--line-strong); margin-top: 4mm; }
-    @bottom-left {
-      content: "Clases universitarias · proyecto de alumnos, no oficial"; font: 500 7pt var(--font-mono);
-      color: var(--text-muted); vertical-align: top; padding-top: 2mm; border-top: 0.5pt solid var(--line-strong); margin-top: 4mm;
-    }
-    @bottom-right {
-      content: "Página " counter(page) " de " counter(pages); font: 500 7pt var(--font-mono);
-      color: var(--text-muted); vertical-align: top; padding-top: 2mm; border-top: 0.5pt solid var(--line-strong); margin-top: 4mm;
-    }
-  }
-  .site-header, .site-footer, .skip-link, .form-print, .form-pick, .form-sessions, .form-sess { display: none !important; }
-  .form-page { padding: 0 !important; }
-  .sheet > .crumb { display: none; }
-  .form-scope { margin: 0 0 2mm; font-size: 8pt; }
-  body { background: none !important; }
-  /* Si se imprime durante la animación de entrada (anime.js pone estilos en línea), todo sale final. */
-  [data-intro], [data-intro] *, .reveal, .form-grid, .form-sec { opacity: 1 !important; transform: none !important; animation: none !important; transition: none !important; }
-  .sheet { box-shadow: none !important; background-image: none !important; padding: 0 !important; }
-  .form-head { margin-bottom: 4mm; }
-  .form-head h1 { font-size: 16pt; }
-  .form-head .lead { display: none; }
-  .form-grid { columns: 2; column-gap: 8mm; font-size: 8.2pt; }
-  /* Las secciones siguen en la otra columna para no dejar huecos; nunca se parte una fórmula
-     ni se separa el título de la sección (ni la etiqueta) de lo que sigue. */
-  .form-sec { break-inside: auto; margin-bottom: 3mm; padding-bottom: 2mm; }
-  .form-sec h2 { font-size: 10.5pt; margin-bottom: 1mm; break-after: avoid; break-inside: avoid; }
-  /* Chromium ignora break-after en columnas: el título reserva 18 mm para no quedar solo al fondo. */
-  .form-sec h2::after { content: ''; display: block; height: 18mm; margin-bottom: -18mm; }
-  .form-list { gap: 0.5mm; }
-  .form-tex__part { padding: 0.08em 0.2em 0.08em 0; }
-  .form-tex { row-gap: 0; }
-  /* Firefox parte grid y flex entre hojas: en papel, bloques y piezas inline-block, que no se cortan. */
-  .form-list { display: block; }
-  .form-list li { display: block; margin-bottom: 1mm; break-inside: avoid; page-break-inside: avoid; }
-  .form-label { display: block; }
-  .form-label .form-sess { display: none; }
-  .form-tex { display: block; }
-  .form-tex__part { display: inline-block; margin-right: 1.1em; vertical-align: baseline; break-inside: avoid; }
-  .form-sec h2 { page-break-after: avoid; }
-  .form-tex__part { overflow: visible; }
-  .form-label { font-size: 8pt; }
-}
 .form-subject[data-subject="mat"] { --accent: var(--mat-accent); --accent-soft: var(--mat-soft); }
 .form-subject[data-subject="fis"] { --accent: var(--fis-accent); --accent-soft: var(--fis-soft); }
 .form-subject h2 { color: var(--accent); }
 
-/* Marco impreso para navegadores sin cajas de margen de @page (Firefox, Safari).
-   formulario.js pone html.print-fallback y @page { margin: 0 }; las franjas fijas se repiten
-   en cada hoja y el margen de cada hoja lo da el relleno de la hoja, clonado en cada fragmento. */
+/* ===== Hojas impresas =====
+   formulario.js arma hojas carta explícitas (.print-page) con encabezado, pie y dos columnas,
+   y acomoda cada fórmula midiendo; el navegador ya no pagina nada. En pantalla están fuera de
+   la vista (pero con su tamaño real, para poder medir); al imprimir solo se muestran ellas. */
+.print-pages { position: absolute; left: -20000px; top: 0; visibility: hidden; pointer-events: none; }
+.print-page {
+  position: relative; width: 215.9mm; height: 279.4mm; overflow: hidden;
+  background: var(--panel); color: var(--text); font: 400 10pt/1.35 var(--font-body);
+}
+.print-page__head, .print-page__foot { position: absolute; left: 12mm; right: 12mm; display: flex; justify-content: space-between; gap: 6mm; }
+.print-page__head { top: 9mm; align-items: flex-end; padding-bottom: 2.2mm; border-bottom: 0.8pt solid var(--text); }
+.print-page__foot { bottom: 8mm; align-items: flex-start; padding-top: 2mm; border-top: 0.5pt solid var(--line-strong); font: 500 7pt/1.2 var(--font-mono); color: var(--text-muted); }
+.print-page__brand { display: inline-flex; align-items: center; gap: 2mm; font: 800 10.5pt/1 var(--font-display); color: var(--text); }
+.print-page__brand img { width: 4.2mm; height: 4.2mm; }
+.print-page__title { font: 500 8pt/1.2 var(--font-mono); color: var(--text-muted); }
+.print-page__body { position: absolute; left: 12mm; right: 12mm; top: 21mm; bottom: 16mm; display: flex; flex-direction: column; }
+.print-page__intro h1 { margin: 0 0 1.5mm; font: 800 16pt/1.1 var(--font-display); }
+.print-page__intro p { margin: 0 0 3mm; font: 500 8pt/1.2 var(--font-mono); color: var(--text-muted); }
+.print-page__cols { flex: 1; min-height: 0; display: flex; gap: 8mm; }
+.print-col { flex: 1 1 0; min-width: 0; overflow: hidden; font-size: 8.2pt; }
+.print-col .form-sec { margin: 0 0 3mm; padding-bottom: 2mm; border-bottom: 1px dashed var(--line-strong); }
+.print-col .form-sec h2 { margin: 0 0 1mm; font: 800 10.5pt/1.2 var(--font-display); color: var(--accent); }
+.print-col .form-sec--cont { padding-top: 0; }
+.print-col .form-sec--split { border-bottom: 0; margin-bottom: 0; }
+.print-col .form-list { display: block; }
+.print-col .form-list li { display: block; margin: 0 0 1.5mm; }
+.print-col .form-label { display: block; font-size: 8pt; }
+.print-col .form-label .form-sess { display: none; }
+.print-col .form-tex { display: block; }
+.print-col .form-tex__part { display: inline-block; margin-right: 1.1em; padding: 0.08em 0.2em 0.08em 0; overflow: visible; }
+
 @media print {
-  html.print-fallback .print-frame {
-    display: flex; justify-content: space-between; align-items: flex-end; gap: 6mm;
-    position: fixed; left: 12mm; right: 12mm; z-index: 5; background: var(--panel);
-  }
-  html.print-fallback .print-frame--top { top: 8mm; padding-bottom: 2.2mm; border-bottom: 0.8pt solid var(--text); }
-  html.print-fallback .print-frame--bottom { bottom: 7mm; padding-top: 2mm; border-top: 0.5pt solid var(--line-strong); font: 500 7pt var(--font-mono); color: var(--text-muted); }
-  html.print-fallback .print-frame__brand { display: inline-flex; align-items: center; gap: 2mm; font: 800 10.5pt var(--font-display); color: var(--text); }
-  html.print-fallback .print-frame__brand img { width: 4.2mm; height: 4.2mm; }
-  html.print-fallback .print-frame__title { font: 500 8pt var(--font-mono); color: var(--text-muted); }
-  html.print-fallback .form-page .sheet {
-    padding: 22mm 12mm 17mm !important;
-    -webkit-box-decoration-break: clone; box-decoration-break: clone;
-  }
-  /* El truco del título que reserva espacio al fondo de la columna es solo para Chromium. */
-  html.print-fallback .form-sec h2::after { display: none; }
+  /* Hoja carta sin margen: el margen, el marco y el número de página los trae cada .print-page,
+     y así ningún navegador imprime su propio encabezado (fecha, título y URL). */
+  @page { size: letter; margin: 0; }
+  body { display: block; background: none !important; }
+  body:has(> .print-pages) > *:not(.print-pages) { display: none !important; }
+  .print-pages { position: static; visibility: visible; }
+  .print-page { break-after: page; page-break-after: always; }
+  .print-page:last-child { break-after: auto; page-break-after: auto; }
 }

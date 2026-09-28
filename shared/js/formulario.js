@@ -128,22 +128,65 @@
     }
 
     var scope = h('p', { class: 'form-scope mono' });
-    var pageStyle = document.head.appendChild(h('style', { id: 'form-page-head' }));
-    // Marco impreso. Chrome/Edge 131+ lo dibujan con las cajas de margen de @page (formulario.css).
-    // Firefox y Safari no las soportan: ahí el marco son dos franjas fijas que el navegador repite
-    // en cada hoja, y la página va sin margen para que no imprima su propio encabezado.
-    var chrome = (navigator.userAgent.match(/Chrom(?:e|ium)\/(\d+)/) || [])[1];
-    var fallback = params.get('impresion') === 'simple' || !(+chrome >= 131);
-    var frameTitle = h('span', { class: 'print-frame__title' });
-    if (fallback) {
-      document.documentElement.classList.add('print-fallback');
-      document.head.appendChild(h('style', {}, ['@media print { @page { margin: 0; } }']));
-      document.body.appendChild(h('div', { class: 'print-frame print-frame--top', 'aria-hidden': 'true' }, [
-        h('span', { class: 'print-frame__brand' }, [h('img', { src: base + 'shared/img/marca-impresion.svg', alt: '' }), 'Cuaderno del Borrego']), frameTitle
-      ]));
-      document.body.appendChild(h('div', { class: 'print-frame print-frame--bottom', 'aria-hidden': 'true' }, [
-        h('span', {}, ['Clases universitarias · proyecto de alumnos, no oficial'])
-      ]));
+    var printHead = '';
+
+    /* ---------- Hojas impresas ----------
+       No se deja la paginación al navegador (Firefox parte y encima las columnas cuando hay marco
+       propio). Aquí se arman hojas carta explícitas, cada una con encabezado, pie y dos columnas,
+       y se acomoda fórmula por fórmula midiendo: si no cabe, pasa entera a la siguiente columna
+       u hoja. Al imprimir solo se muestran estas hojas, así sale igual en todos los navegadores. */
+    function paginate() {
+      var old = document.querySelector('.print-pages');
+      if (old) old.parentNode.removeChild(old);
+      var wrap = h('div', { class: 'print-pages', 'aria-hidden': 'true' });
+      document.body.appendChild(wrap);
+      var pages = [], cols, colIdx, col, sec, list;
+      function newPage(first) {
+        cols = [h('div', { class: 'print-col' }), h('div', { class: 'print-col' })];
+        var body = h('div', { class: 'print-page__body' }, [
+          first ? h('div', { class: 'print-page__intro' }, [h('h1', {}, [F.title || 'Formulario']), isAll() ? null : h('p', {}, [scope.textContent])]) : null,
+          h('div', { class: 'print-page__cols' }, cols)
+        ]);
+        var page = h('div', { class: 'print-page' }, [
+          h('div', { class: 'print-page__head' }, [
+            h('span', { class: 'print-page__brand' }, [h('img', { src: base + 'shared/img/marca-impresion.svg', alt: '' }), 'Cuaderno del Borrego']),
+            h('span', { class: 'print-page__title' }, [printHead])
+          ]),
+          body,
+          h('div', { class: 'print-page__foot' }, [h('span', {}, ['Clases universitarias · proyecto de alumnos, no oficial']), h('span', { class: 'print-page__num' })])
+        ]);
+        wrap.appendChild(page);
+        pages.push(page);
+        colIdx = 0; col = cols[0]; sec = null;
+      }
+      function fits() { return col.scrollHeight <= col.clientHeight + 1; }
+      function nextCol() {
+        if (colIdx === 0) { colIdx = 1; col = cols[1]; sec = null; } else newPage(false);
+      }
+      function openSec(title, cont) {
+        list = h('ul', { class: 'form-list' });
+        sec = h('section', { class: 'form-sec' + (cont ? ' form-sec--cont' : '') }, [cont ? null : h('h2', {}, [title]), list]);
+        col.appendChild(sec);
+      }
+      newPage(true);
+      Array.prototype.forEach.call(grid.querySelectorAll('.form-sec'), function (s) {
+        var title = s.querySelector('h2').textContent;
+        sec = null;
+        Array.prototype.forEach.call(s.querySelectorAll('.form-list > li'), function (li, i) {
+          var item = li.cloneNode(true);
+          if (!sec) openSec(title, i > 0);
+          list.appendChild(item);
+          if (fits()) return;
+          // No cabe: la fórmula (y el título, si iba sola con él) pasan a la siguiente columna.
+          list.removeChild(item);
+          if (!list.children.length) col.removeChild(sec);
+          else sec.classList.add('form-sec--split');   // sigue en la otra columna: sin línea de cierre
+          nextCol();
+          openSec(title, i > 0);
+          list.appendChild(item);
+        });
+      });
+      pages.forEach(function (p, i) { p.querySelector('.print-page__num').textContent = 'Página ' + (i + 1) + ' de ' + pages.length; });
     }
     var grid = h('div', { class: 'form-grid' });
     root.appendChild(pick);
@@ -179,19 +222,21 @@
       // En la hoja (y en papel) queda escrito qué temas trae cuando no es el curso completo.
       scope.textContent = isAll() ? '' : 'Temas: ' + label + (hasBasics ? (basics ? ' · con básicos' : ' · sin básicos') : '');
       scope.hidden = isAll();
-      // Encabezado impreso (caja de margen de @page): curso y temas de esta hoja.
-      var head = (F.title || 'Formulario') + ' · ' + (isAll() ? 'todo el curso' : label);
-      pageStyle.textContent = '@media print { @page { @top-right { content: "' + head.replace(/["\\]/g, '') + '"; } } }';
-      frameTitle.textContent = head;
+      // Encabezado de las hojas impresas: curso y temas.
+      printHead = (F.title || 'Formulario') + ' · ' + (isAll() ? 'todo el curso' : label);
       var q = new URLSearchParams(location.search);
       if (picked.length === all.length) q.delete('s'); else q.set('s', listToString(picked));
       if (hasBasics && !basics) q.set('b', '0'); else q.delete('b');
       var qs = q.toString();
       try { history.replaceState(null, '', location.pathname + (qs ? '?' + qs : '') + location.hash); } catch (e) { /* file:// */ }
       draw();
+      paginate();
     }
     if (!isAll()) pick.open = true;
     update();
+    // Las medidas dependen de las tipografías: se rearman cuando terminan de cargar y justo antes de imprimir.
+    if (document.fonts && document.fonts.ready) document.fonts.ready.then(paginate);
+    window.addEventListener('beforeprint', paginate);
   }
 
   // Imprimir siempre en tema claro: el pizarrón gasta tinta y se lee peor en papel.

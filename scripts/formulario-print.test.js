@@ -53,9 +53,9 @@ function serve() {
       for (const w of [1280, 390]) {
         await page.setViewportSize({ width: w, height: 900 });
         const r = await page.evaluate(() => ({
-          h: [...document.querySelectorAll('.form-tex__part')].filter((n) => n.scrollWidth > n.clientWidth + 1).length,
-          v: [...document.querySelectorAll('.form-tex__part')].filter((n) => getComputedStyle(n).overflowY !== 'hidden').length,
-          arrows: [...document.querySelectorAll('.form-tex .accent-body svg')].filter((s) => s.getBoundingClientRect().width < 1).length
+          h: [...document.querySelectorAll('.form-grid .form-tex__part')].filter((n) => n.scrollWidth > n.clientWidth + 1).length,
+          v: [...document.querySelectorAll('.form-grid .form-tex__part')].filter((n) => getComputedStyle(n).overflowY !== 'hidden').length,
+          arrows: [...document.querySelectorAll('.form-grid .form-tex .accent-body svg')].filter((s) => s.getBoundingClientRect().width < 1).length
         }));
         if (r.h) screen.push(r.h + ' fórmulas con desplazamiento horizontal a ' + w + ' px');
         if (r.v) screen.push(r.v + ' fórmulas que pueden desplazarse en vertical');
@@ -66,6 +66,15 @@ function serve() {
       if (!letter) bad.push('no es carta (' + box.join('×') + ' pt)');
       if (pages > MAX_PAGES) bad.push(pages + ' páginas (máx. ' + MAX_PAGES + ')');
       if (wide) bad.push(wide + ' fórmulas más anchas que su columna');
+      // Hojas armadas por formulario.js: nada se sale de su columna, ni a lo alto ni a lo ancho.
+      const sheets = await page.evaluate(() => ({
+        pages: document.querySelectorAll('.print-page').length,
+        tall: [...document.querySelectorAll('.print-col')].filter((c) => c.scrollHeight > c.clientHeight + 1).length,
+        wide: [...document.querySelectorAll('.print-col .form-tex__part')].filter((p) => p.getBoundingClientRect().right > p.closest('.print-col').getBoundingClientRect().right + 1).length
+      }));
+      if (sheets.pages !== pages) bad.push('el PDF tiene ' + pages + ' páginas y formulario.js armó ' + sheets.pages);
+      if (sheets.tall) bad.push(sheets.tall + ' columnas impresas desbordadas');
+      if (sheets.wide) bad.push(sheets.wide + ' fórmulas impresas más anchas que su columna');
       bad.push(...screen);
       if (bad.length) { fail++; console.log('✗ ' + c + ': ' + bad.join('; ')); }
       else console.log('✓ ' + c + ': carta, ' + pages + (pages === 1 ? ' página' : ' páginas'));
