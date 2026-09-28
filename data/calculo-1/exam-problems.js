@@ -676,4 +676,621 @@
       ]
     }
   ]);
+
+  /* ======== Más problemas por sesión: al menos 2 propios y 3 que la usen (examen de una sesión) ======== */
+  var PI = Math.PI;
+  ex.c1 = ex.c1.concat([
+    /* ---------- S01 · Razón de cambio ---------- */
+    {
+      id: 'c1-ex-pelota-altura', tags: ['c1.S01'], block: 'A', title: 'La altura de una pelota',
+      vars: { v0: [15, 30, 1] },
+      statement: function (v) { return '<p>Una pelota se lanza hacia arriba y su altura es $h(t) = ' + v.v0 + 't - 4.9t^2$ (m, con $t$ en s).</p>'; },
+      parts: [
+        { label: 'a', type: 'numeric', points: 3, unit: 'm/s',
+          prompt: function () { return '¿Cuál es la velocidad promedio entre $t = 1$ y $t = 2$ s?'; },
+          answer: function (v) { return v.v0 - 14.7; },
+          solution: function (v) { return '$\\dfrac{h(2) - h(1)}{1} = ' + fx(2 * v.v0 - 19.6) + ' - ' + fx(v.v0 - 4.9) + ' = ' + fx(v.v0 - 14.7) + '$ m/s.'; } },
+        { label: 'b', type: 'numeric', points: 3, unit: 'm/s',
+          prompt: function () { return '¿Cuál es la velocidad instantánea en $t = 1$ s?'; },
+          answer: function (v) { return v.v0 - 9.8; },
+          solution: function (v) { return '$h\'(t) = ' + v.v0 + ' - 9.8t$, así que $h\'(1) = ' + fx(v.v0 - 9.8) + '$ m/s.'; } },
+        { label: 'c', type: 'numeric', points: 2, unit: 'm/s',
+          prompt: function () { return 'Con tus resultados de a) y b), ¿cuánto mayor es la instantánea en $t = 1$ que la promedio?'; },
+          answer: function (v, prev) { return prev[1] - prev[0]; },
+          solution: function () { return '$' + '4.9' + '$ m/s: la pelota va frenando, así que al principio del intervalo va más rápido que en promedio.'; } },
+        { label: 'd', type: 'numeric', points: 2, unit: 'm',
+          prompt: function () { return 'Con tu velocidad de b), usa la recta tangente en $t = 1$ para estimar $h(1.5)$.'; },
+          answer: function (v, prev) { return (v.v0 - 4.9) + 0.5 * prev[1]; },
+          solution: function (v) { return '$h(1) + 0.5\\,h\'(1) = ' + fx(v.v0 - 4.9) + ' + 0.5(' + fx(v.v0 - 9.8) + ') = ' + fx(v.v0 - 4.9 + 0.5 * (v.v0 - 9.8)) + '$ m.'; } }
+      ]
+    },
+    {
+      id: 'c1-ex-costo-marginal', tags: ['c1.S01'], block: 'A', title: 'Costo de producir una unidad más',
+      vars: { F: [100, 500, 50], c: [2, 10, 1], k: [1, 9, 1] },
+      statement: function (v) { return '<p>Producir $q$ piezas cuesta $C(q) = ' + v.F + ' + ' + v.c + 'q + 0.00' + v.k + 'q^3$ pesos.</p>'; },
+      parts: [
+        { label: 'a', type: 'numeric', points: 3, unit: 'pesos/pieza',
+          prompt: function () { return '¿Cuál es la razón de cambio promedio del costo entre $q = 10$ y $q = 20$?'; },
+          answer: function (v) { return v.c + 0.001 * v.k * 700; },
+          solution: function (v) { return '$\\dfrac{C(20) - C(10)}{10} = ' + v.c + ' + 0.00' + v.k + '\\cdot\\dfrac{8000 - 1000}{10} = ' + fx(v.c + 0.7 * v.k) + '$.'; } },
+        { label: 'b', type: 'numeric', points: 3, unit: 'pesos/pieza',
+          prompt: function () { return '¿Cuánto vale el costo marginal $C\'(15)$?'; },
+          answer: function (v) { return v.c + 0.003 * v.k * 225; },
+          solution: function (v) { return '$C\'(q) = ' + v.c + ' + ' + fx(0.003 * v.k, 4) + 'q^2$; $C\'(15) = ' + fx(v.c + 0.675 * v.k) + '$.'; } },
+        { label: 'c', type: 'numeric', points: 2, unit: 'pesos',
+          prompt: function () { return 'Con tu costo marginal de b), estima $C(16)$ a partir de $C(15)$.'; },
+          answer: function (v, prev) { return v.F + 15 * v.c + 0.001 * v.k * 3375 + prev[1]; },
+          solution: function (v) { var C15 = v.F + 15 * v.c + 3.375 * v.k; return '$C(15) + C\'(15) = ' + fx(C15) + ' + ' + fx(v.c + 0.675 * v.k) + ' = ' + fx(C15 + v.c + 0.675 * v.k) + '$ pesos.'; } },
+        { label: 'd', type: 'numeric', points: 2, unit: 'pesos/pieza',
+          prompt: function () { return 'Con tus a) y b), ¿cuánto se aleja la razón promedio del costo marginal en $q = 15$?'; },
+          answer: function (v, prev) { return prev[0] - prev[1]; },
+          solution: function (v) { return '$' + fx(v.c + 0.7 * v.k) + ' - ' + fx(v.c + 0.675 * v.k) + ' = ' + fx(0.025 * v.k) + '$: casi iguales, porque 15 es el centro del intervalo.'; } }
+      ]
+    },
+    /* ---------- S02 · Fórmulas directas ---------- */
+    {
+      id: 'c1-ex-poblacion-exp', tags: ['c1.S02'], block: 'A', title: 'Una población que crece',
+      vars: { P0: [100, 1000, 100], r: [0.02, 0.1, 0.01], T: [5, 20, 5] },
+      statement: function (v) { return '<p>Una población crece como $P(t) = ' + v.P0 + 'e^{' + v.r + 't}$ (individuos, $t$ en años).</p>'; },
+      parts: [
+        { label: 'a', type: 'numeric', points: 3, unit: 'ind/año',
+          prompt: function (v) { return '¿A qué ritmo crece en $t = ' + v.T + '$?'; },
+          answer: function (v) { return v.r * v.P0 * Math.exp(v.r * v.T); },
+          solution: function (v) { return '$P\'(t) = ' + fx(v.r * v.P0) + 'e^{' + v.r + 't}$; en $t = ' + v.T + '$: $' + fx(v.r * v.P0 * Math.exp(v.r * v.T), 2) + '$.'; } },
+        { label: 'b', type: 'numeric', points: 2,
+          prompt: function (v) { return 'Con tu ritmo de a), divídelo entre $P(' + v.T + ')$. ¿Qué obtienes?'; },
+          answer: function (v, prev) { return prev[0] / (v.P0 * Math.exp(v.r * v.T)); },
+          solution: function (v) { return '$P\'/P = ' + v.r + '$: la tasa relativa es constante.'; } },
+        { label: 'c', type: 'numeric', points: 3, unit: 'años',
+          prompt: function () { return '¿En cuánto tiempo se duplica la población?'; },
+          answer: function (v) { return Math.log(2) / v.r; },
+          solution: function (v) { return '$e^{' + v.r + 't} = 2 \\Rightarrow t = \\dfrac{\\ln 2}{' + v.r + '} = ' + fx(Math.log(2) / v.r, 2) + '$ años.'; } },
+        { label: 'd', type: 'numeric', points: 2, unit: 'ind/año',
+          prompt: function () { return 'Con tu tiempo de c), ¿a qué ritmo crece en ese momento?'; },
+          answer: function (v, prev) { return v.r * v.P0 * Math.exp(v.r * Math.abs(prev[2])); },
+          solution: function (v) { return 'Ahí $P = ' + 2 * v.P0 + '$, así que $P\' = ' + v.r + '\\cdot ' + 2 * v.P0 + ' = ' + fx(2 * v.r * v.P0) + '$.'; } }
+      ]
+    },
+    {
+      id: 'c1-ex-cubica-log', tags: ['c1.S02'], block: 'A', title: 'Una curva con logaritmo',
+      vars: { a: [1, 5, 1], b: [2, 30, 2] },
+      where: function (v) { return Math.pow(v.b / (3 * v.a), 1 / 3) !== 2; },
+      statement: function (v) { return '<p>Sea $f(x) = ' + v.a + 'x^3 - ' + v.b + '\\ln x$ para $x > 0$.</p>'; },
+      parts: [
+        { label: 'a', type: 'numeric', points: 3,
+          prompt: function () { return '¿Cuánto vale $f\'(2)$?'; },
+          answer: function (v) { return 12 * v.a - v.b / 2; },
+          solution: function (v) { return '$f\'(x) = ' + 3 * v.a + 'x^2 - \\dfrac{' + v.b + '}{x}$; $f\'(2) = ' + fx(12 * v.a - v.b / 2) + '$.'; } },
+        { label: 'b', type: 'numeric', points: 2,
+          prompt: function () { return 'Con tu pendiente de a), ¿en qué valor corta al eje $y$ la tangente en $x = 2$?'; },
+          answer: function (v, prev) { return 8 * v.a - v.b * Math.log(2) - 2 * prev[0]; },
+          solution: function (v) { var f2 = 8 * v.a - v.b * Math.log(2); return '$y = f(2) + f\'(2)(x - 2)$; en $x = 0$: $' + fx(f2) + ' - 2(' + fx(12 * v.a - v.b / 2) + ') = ' + fx(f2 - 2 * (12 * v.a - v.b / 2)) + '$.'; } },
+        { label: 'c', type: 'numeric', points: 3,
+          prompt: function () { return '¿En qué $x$ tiene tangente horizontal?'; },
+          answer: function (v) { return Math.pow(v.b / (3 * v.a), 1 / 3); },
+          solution: function (v) { return '$' + 3 * v.a + 'x^3 = ' + v.b + ' \\Rightarrow x = \\sqrt[3]{' + fx(v.b / (3 * v.a)) + '} = ' + fx(Math.pow(v.b / (3 * v.a), 1 / 3)) + '$.'; } },
+        { label: 'd', type: 'numeric', points: 2,
+          prompt: function () { return 'Con tu $x$ de c), ¿cuánto vale $f$ ahí?'; },
+          answer: function (v, prev) { var p = Math.abs(prev[2]); return v.a * p * p * p - v.b * Math.log(p); },
+          solution: function (v) { var p = Math.pow(v.b / (3 * v.a), 1 / 3); return '$f(' + fx(p) + ') = ' + fx(v.a * p * p * p - v.b * Math.log(p)) + '$ (el mínimo de $f$).'; } }
+      ]
+    },
+    /* ---------- S03 · Regla del producto ---------- */
+    {
+      id: 'c1-ex-ingreso-producto', tags: ['c1.S03'], block: 'A', title: 'Ingreso con precio y ventas que cambian',
+      vars: { p0: [20, 60, 5], al: [1, 5, 1], q0: [200, 600, 50], be: [2, 10, 1], T: [1, 5, 1] },
+      where: function (v) { var t = (v.al * v.q0 - v.be * v.p0) / (2 * v.al * v.be); return t > v.T + 1 && t < 40 && v.q0 - v.be * t > 0; },
+      statement: function (v) { return '<p>El precio de un producto sube como $p(t) = ' + v.p0 + ' + ' + v.al + 't$ pesos y las ventas bajan como $q(t) = ' + v.q0 + ' - ' + v.be + 't$ piezas por semana. El ingreso es $R(t) = p(t)\\,q(t)$.</p>'; },
+      parts: [
+        { label: 'a', type: 'numeric', points: 3, unit: 'pesos/sem',
+          prompt: function (v) { return '¿A qué ritmo cambia el ingreso en $t = ' + v.T + '$?'; },
+          answer: function (v) { return v.al * (v.q0 - v.be * v.T) - v.be * (v.p0 + v.al * v.T); },
+          solution: function (v) { return '$R\' = p\'q + pq\' = ' + v.al + '(' + (v.q0 - v.be * v.T) + ') - ' + v.be + '(' + (v.p0 + v.al * v.T) + ') = ' + (v.al * (v.q0 - v.be * v.T) - v.be * (v.p0 + v.al * v.T)) + '$.'; } },
+        { label: 'b', type: 'numeric', points: 2, unit: '%',
+          prompt: function (v) { return 'Con tu ritmo de a), ¿en qué porcentaje del ingreso $R(' + v.T + ')$ cambia por semana en ese momento?'; },
+          answer: function (v, prev) { return 100 * prev[0] / ((v.p0 + v.al * v.T) * (v.q0 - v.be * v.T)); },
+          solution: function (v) { var R = (v.p0 + v.al * v.T) * (v.q0 - v.be * v.T), d = v.al * (v.q0 - v.be * v.T) - v.be * (v.p0 + v.al * v.T); return '$R(' + v.T + ') = ' + R + '$; $100\\cdot\\dfrac{' + d + '}{' + R + '} = ' + fx(100 * d / R, 2) + '$ %.'; } },
+        { label: 'c', type: 'numeric', points: 3, unit: 'semanas',
+          prompt: function () { return '¿En qué semana $t$ es máximo el ingreso?'; },
+          answer: function (v) { return (v.al * v.q0 - v.be * v.p0) / (2 * v.al * v.be); },
+          solution: function (v) { return '$R\'(t) = ' + v.al + '(' + v.q0 + ' - ' + v.be + 't) - ' + v.be + '(' + v.p0 + ' + ' + v.al + 't) = 0 \\Rightarrow t = ' + fx((v.al * v.q0 - v.be * v.p0) / (2 * v.al * v.be)) + '$.'; } },
+        { label: 'd', type: 'numeric', points: 2, unit: 'pesos',
+          prompt: function () { return 'Con tu $t$ de c), ¿cuál es el ingreso máximo?'; },
+          answer: function (v, prev) { return (v.p0 + v.al * prev[2]) * (v.q0 - v.be * prev[2]); },
+          solution: function (v) { var t = (v.al * v.q0 - v.be * v.p0) / (2 * v.al * v.be); return '$R = (' + fx(v.p0 + v.al * t) + ')(' + fx(v.q0 - v.be * t) + ') = ' + fx((v.p0 + v.al * t) * (v.q0 - v.be * t), 2) + '$ pesos.'; } }
+      ]
+    },
+    {
+      id: 'c1-ex-xekx', tags: ['c1.S03'], block: 'A', title: 'Una función por una exponencial',
+      vars: { k: [0.5, 3, 0.5] },
+      statement: function (v) { return '<p>Sea $f(x) = x\\,e^{-' + v.k + 'x}$.</p>'; },
+      parts: [
+        { label: 'a', type: 'numeric', points: 3,
+          prompt: function () { return '¿Cuánto vale $f\'(0.5)$?'; },
+          answer: function (v) { return Math.exp(-v.k * 0.5) * (1 - v.k * 0.5); },
+          solution: function (v) { return '$f\'(x) = e^{-' + v.k + 'x}(1 - ' + v.k + 'x)$; $f\'(0.5) = ' + fx(Math.exp(-v.k * 0.5) * (1 - v.k * 0.5)) + '$.'; } },
+        { label: 'b', type: 'numeric', points: 3,
+          prompt: function () { return '¿En qué $x$ tiene su máximo?'; },
+          answer: function (v) { return 1 / v.k; },
+          solution: function (v) { return '$1 - ' + v.k + 'x = 0 \\Rightarrow x = ' + fx(1 / v.k) + '$.'; } },
+        { label: 'c', type: 'numeric', points: 2,
+          prompt: function () { return 'Con tu $x$ de b), ¿cuál es el valor máximo?'; },
+          answer: function (v, prev) { return prev[1] * Math.exp(-v.k * prev[1]); },
+          solution: function (v) { return '$f(1/k) = \\dfrac{1}{' + v.k + 'e} = ' + fx(1 / (v.k * Math.E)) + '$.'; } },
+        { label: 'd', type: 'numeric', points: 2,
+          prompt: function () { return 'Con tu $x$ de b), ¿cuánto vale $f\'\'$ ahí? (Debe ser negativo.)'; },
+          answer: function (v, prev) { return Math.exp(-v.k * prev[1]) * (v.k * v.k * prev[1] - 2 * v.k); },
+          solution: function (v) { return '$f\'\'(x) = e^{-kx}(k^2x - 2k)$; en $1/k$: $-\\dfrac{' + v.k + '}{e} = ' + fx(-v.k / Math.E) + '$.'; } },
+        { label: 'e', type: 'numeric', points: 2,
+          prompt: function () { return 'Con tu pendiente de a), usa la tangente en $x = 0.5$ para estimar $f(0.7)$.'; },
+          answer: function (v, prev) { return 0.5 * Math.exp(-v.k * 0.5) + 0.2 * prev[0]; },
+          solution: function (v) { var f = 0.5 * Math.exp(-v.k * 0.5), d = Math.exp(-v.k * 0.5) * (1 - v.k * 0.5); return '$f(0.5) + 0.2f\'(0.5) = ' + fx(f) + ' + ' + fx(0.2 * d) + ' = ' + fx(f + 0.2 * d) + '$.'; } }
+      ]
+    },
+    {
+      id: 'c1-ex-x2sen', tags: ['c1.S03'], block: 'A', title: 'La pendiente de x² sen x',
+      vars: { x0: [0.5, 2.5, 0.5] },
+      statement: function (v) { return '<p>Sea $f(x) = x^2\\sin x$ ($x$ en radianes) y el punto $x_0 = ' + v.x0 + '$.</p>'; },
+      parts: [
+        { label: 'a', type: 'numeric', points: 3,
+          prompt: function () { return '¿Cuánto vale $f\'(x_0)$?'; },
+          answer: function (v) { return 2 * v.x0 * Math.sin(v.x0) + v.x0 * v.x0 * Math.cos(v.x0); },
+          solution: function (v) { return '$f\'(x) = 2x\\sin x + x^2\\cos x$; en $' + v.x0 + '$: $' + fx(2 * v.x0 * Math.sin(v.x0) + v.x0 * v.x0 * Math.cos(v.x0)) + '$.'; } },
+        { label: 'b', type: 'numeric', points: 3,
+          prompt: function () { return 'Con tu pendiente de a), usa la tangente para estimar $f(x_0 + 0.1)$.'; },
+          answer: function (v, prev) { return v.x0 * v.x0 * Math.sin(v.x0) + 0.1 * prev[0]; },
+          solution: function (v) { var f = v.x0 * v.x0 * Math.sin(v.x0), d = 2 * v.x0 * Math.sin(v.x0) + v.x0 * v.x0 * Math.cos(v.x0); return '$f(x_0) + 0.1f\'(x_0) = ' + fx(f) + ' + ' + fx(0.1 * d) + ' = ' + fx(f + 0.1 * d) + '$.'; } },
+        { label: 'c', type: 'numeric', points: 2, unit: '°',
+          prompt: function () { return 'Con tu pendiente de a), ¿qué ángulo forma la tangente con el eje $x$?'; },
+          answer: function (v, prev) { return Math.atan(prev[0]) * 180 / PI; }, tol: { abs: 0.3 },
+          solution: function (v) { return '$\\arctan(' + fx(2 * v.x0 * Math.sin(v.x0) + v.x0 * v.x0 * Math.cos(v.x0)) + ') = ' + fx(Math.atan(2 * v.x0 * Math.sin(v.x0) + v.x0 * v.x0 * Math.cos(v.x0)) * 180 / PI, 2) + '^\\circ$.'; } }
+      ]
+    },
+    /* ---------- S04 · Regla del cociente ---------- */
+    {
+      id: 'c1-ex-concentracion', tags: ['c1.S04'], block: 'A', title: 'Un medicamento en la sangre',
+      vars: { a: [5, 20, 1], b: [2, 16, 1] },
+      statement: function (v) { return '<p>La concentración de un medicamento es $C(t) = \\dfrac{' + v.a + 't}{t^2 + ' + v.b + '}$ (mg/L, $t$ en horas).</p>'; },
+      parts: [
+        { label: 'a', type: 'numeric', points: 3, unit: 'mg/L por h',
+          prompt: function () { return '¿A qué ritmo cambia en $t = 1$ h?'; },
+          answer: function (v) { return v.a * (v.b - 1) / Math.pow(1 + v.b, 2); },
+          solution: function (v) { return '$C\'(t) = \\dfrac{' + v.a + '(' + v.b + ' - t^2)}{(t^2 + ' + v.b + ')^2}$; $C\'(1) = ' + fx(v.a * (v.b - 1) / Math.pow(1 + v.b, 2)) + '$.'; } },
+        { label: 'b', type: 'numeric', points: 3, unit: 'h',
+          prompt: function () { return '¿A qué hora es máxima la concentración?'; },
+          answer: function (v) { return Math.sqrt(v.b); },
+          solution: function (v) { return '$' + v.b + ' - t^2 = 0 \\Rightarrow t = \\sqrt{' + v.b + '} = ' + fx(Math.sqrt(v.b)) + '$ h.'; } },
+        { label: 'c', type: 'numeric', points: 2, unit: 'mg/L',
+          prompt: function () { return 'Con tu hora de b), ¿cuál es la concentración máxima?'; },
+          answer: function (v, prev) { return v.a * prev[1] / (prev[1] * prev[1] + v.b); },
+          solution: function (v) { return '$C(\\sqrt b) = \\dfrac{' + v.a + '}{2\\sqrt{' + v.b + '}} = ' + fx(v.a / (2 * Math.sqrt(v.b))) + '$ mg/L.'; } },
+        { label: 'd', type: 'numeric', points: 2, unit: 'mg/L',
+          prompt: function () { return 'Con tu ritmo de a), estima la concentración en $t = 1.2$ h con la tangente en $t = 1$.'; },
+          answer: function (v, prev) { return v.a / (1 + v.b) + 0.2 * prev[0]; },
+          solution: function (v) { var C = v.a / (1 + v.b), d = v.a * (v.b - 1) / Math.pow(1 + v.b, 2); return '$C(1) + 0.2C\'(1) = ' + fx(C) + ' + ' + fx(0.2 * d) + ' = ' + fx(C + 0.2 * d) + '$ mg/L.'; } }
+      ]
+    },
+    {
+      id: 'c1-ex-costo-promedio-min', tags: ['c1.S04'], block: 'A', title: 'El costo promedio más bajo',
+      vars: { F: [100, 1000, 100], c: [1, 10, 1], k: [0.1, 2, 0.1], q0: [5, 20, 5] },
+      where: function (v) { var d = (v.k * v.q0 * v.q0 - v.F) / (v.q0 * v.q0); return Math.abs(Math.sqrt(v.F / v.k) - v.q0) > 2 && Math.abs(d + 2.7) > 0.4; },
+      statement: function (v) { return '<p>El costo total de producir $q$ piezas es $C(q) = ' + v.F + ' + ' + v.c + 'q + ' + v.k + 'q^2$ y el costo promedio es $A(q) = \\dfrac{C(q)}{q}$.</p>'; },
+      parts: [
+        { label: 'a', type: 'numeric', points: 3,
+          prompt: function (v) { return '¿Cuánto vale $A\'(' + v.q0 + ')$?'; },
+          answer: function (v) { return (v.k * v.q0 * v.q0 - v.F) / (v.q0 * v.q0); },
+          solution: function (v) { return '$A\'(q) = \\dfrac{C\'(q)\\,q - C(q)}{q^2} = \\dfrac{' + v.k + 'q^2 - ' + v.F + '}{q^2}$; en $' + v.q0 + '$: $' + fx((v.k * v.q0 * v.q0 - v.F) / (v.q0 * v.q0)) + '$.'; } },
+        { label: 'b', type: 'numeric', points: 3, unit: 'piezas',
+          prompt: function () { return '¿Qué $q$ minimiza el costo promedio?'; },
+          answer: function (v) { return Math.sqrt(v.F / v.k); },
+          solution: function (v) { return '$' + v.k + 'q^2 = ' + v.F + ' \\Rightarrow q = ' + fx(Math.sqrt(v.F / v.k)) + '$.'; } },
+        { label: 'c', type: 'numeric', points: 2, unit: 'pesos/pieza',
+          prompt: function () { return 'Con tu $q$ de b), ¿cuál es el costo promedio mínimo?'; },
+          answer: function (v, prev) { var q = Math.abs(prev[1]); return v.F / q + v.c + v.k * q; },
+          solution: function (v) { var q = Math.sqrt(v.F / v.k); return '$A = \\dfrac{' + v.F + '}{' + fx(q) + '} + ' + v.c + ' + ' + v.k + '(' + fx(q) + ') = ' + fx(v.F / q + v.c + v.k * q) + '$.'; } },
+        { label: 'd', type: 'numeric', points: 2, unit: 'pesos',
+          prompt: function () { return 'Con tus b) y c), ¿cuánto cuesta en total producir esa cantidad?'; },
+          answer: function (v, prev) { return prev[1] * prev[2]; },
+          solution: function (v) { var q = Math.sqrt(v.F / v.k); return '$qA = ' + fx(q * (v.F / q + v.c + v.k * q), 2) + '$ pesos.'; } },
+        { label: 'e', type: 'numeric', points: 2, unit: 'pesos/pieza',
+          prompt: function (v) { return 'Con tu $A\'(' + v.q0 + ')$ de a), ¿cuánto cambia (aprox.) el costo promedio si se producen 5 piezas más?'; },
+          answer: function (v, prev) { return 5 * prev[0]; },
+          solution: function (v) { return '$\\Delta A \\approx 5A\'(' + v.q0 + ') = ' + fx(5 * (v.k * v.q0 * v.q0 - v.F) / (v.q0 * v.q0)) + '$ (negativo: el promedio baja).'; } }
+      ]
+    },
+    /* ---------- S05 · Regla de la cadena ---------- */
+    {
+      id: 'c1-ex-resorte-oscila', tags: ['c1.S05'], block: 'A', title: 'Una masa que oscila',
+      vars: { A: [2, 10, 1], w: [1, 4, 0.5], T: [0.5, 3, 0.5] },
+      statement: function (v) { return '<p>La posición de una masa es $x(t) = ' + v.A + '\\sin(' + v.w + 't)$ (cm, $t$ en s).</p>'; },
+      parts: [
+        { label: 'a', type: 'numeric', points: 3, unit: 'cm/s',
+          prompt: function (v) { return '¿Qué velocidad tiene en $t = ' + v.T + '$ s?'; },
+          answer: function (v) { return v.A * v.w * Math.cos(v.w * v.T); },
+          solution: function (v) { return '$x\'(t) = ' + fx(v.A * v.w) + '\\cos(' + v.w + 't)$; en $' + v.T + '$: $' + fx(v.A * v.w * Math.cos(v.w * v.T)) + '$ cm/s.'; } },
+        { label: 'b', type: 'numeric', points: 3, unit: 'cm/s²',
+          prompt: function (v) { return '¿Qué aceleración tiene en $t = ' + v.T + '$ s?'; },
+          answer: function (v) { return -v.A * v.w * v.w * Math.sin(v.w * v.T); },
+          solution: function (v) { return '$x\'\'(t) = -' + fx(v.A * v.w * v.w) + '\\sin(' + v.w + 't) = ' + fx(-v.A * v.w * v.w * Math.sin(v.w * v.T)) + '$.'; } },
+        { label: 'c', type: 'numeric', points: 2, unit: 'cm/s',
+          prompt: function () { return '¿Cuál es su rapidez máxima?'; },
+          answer: function (v) { return v.A * v.w; },
+          solution: function (v) { return 'Cuando $\\cos = \\pm 1$: $' + fx(v.A * v.w) + '$ cm/s.'; } },
+        { label: 'd', type: 'numeric', points: 2, unit: '%',
+          prompt: function () { return 'Con tus a) y c), ¿qué porcentaje de la rapidez máxima lleva en ese instante?'; },
+          answer: function (v, prev) { return 100 * Math.abs(prev[0]) / Math.abs(prev[2]); },
+          solution: function (v) { return '$100\\,|\\cos(' + fx(v.w * v.T) + ')| = ' + fx(100 * Math.abs(Math.cos(v.w * v.T)), 1) + '$ %.'; } }
+      ]
+    },
+    {
+      id: 'c1-ex-globo', tags: ['c1.S05'], block: 'A', title: 'Un globo que se infla',
+      vars: { r0: [2, 10, 1], k: [5, 50, 5], T: [1, 10, 1] },
+      statement: function (v) { return '<p>El radio de un globo es $r(t) = \\sqrt{' + v.r0 * v.r0 + ' + ' + v.k + 't}$ (cm, $t$ en s) y su volumen es $V = \\tfrac{4}{3}\\pi r^3$.</p>'; },
+      parts: [
+        { label: 'a', type: 'numeric', points: 2, unit: 'cm',
+          prompt: function (v) { return '¿Cuánto mide el radio en $t = ' + v.T + '$ s?'; },
+          answer: function (v) { return Math.sqrt(v.r0 * v.r0 + v.k * v.T); },
+          solution: function (v) { return '$r = \\sqrt{' + (v.r0 * v.r0 + v.k * v.T) + '} = ' + fx(Math.sqrt(v.r0 * v.r0 + v.k * v.T)) + '$ cm.'; } },
+        { label: 'b', type: 'numeric', points: 3, unit: 'cm/s',
+          prompt: function () { return 'Con tu radio de a), ¿a qué ritmo crece el radio en ese instante?'; },
+          answer: function (v, prev) { return v.k / (2 * Math.abs(prev[0])); },
+          solution: function (v) { return '$r\'(t) = \\dfrac{' + v.k + '}{2\\sqrt{\\cdots}} = \\dfrac{' + v.k + '}{2r} = ' + fx(v.k / (2 * Math.sqrt(v.r0 * v.r0 + v.k * v.T))) + '$ cm/s.'; } },
+        { label: 'c', type: 'numeric', points: 3, unit: 'cm³/s',
+          prompt: function () { return 'Con tus a) y b), ¿a qué ritmo crece el volumen?'; },
+          answer: function (v, prev) { return 4 * PI * prev[0] * prev[0] * prev[1]; },
+          solution: function (v) { var r = Math.sqrt(v.r0 * v.r0 + v.k * v.T); return '$V\' = 4\\pi r^2 r\' = 4\\pi(' + fx(r) + ')^2(' + fx(v.k / (2 * r)) + ') = ' + fx(4 * PI * r * r * v.k / (2 * r), 2) + '$ cm³/s.'; } }
+      ]
+    },
+    /* ---------- S06 · Derivación implícita ---------- */
+    {
+      id: 'c1-ex-circulo-tangente', tags: ['c1.S06'], block: 'A', title: 'La tangente a un círculo',
+      vars: { R: [5, 13, 1], x0: [1, 4, 1] },
+      statement: function (v) { return '<p>Considera el círculo $x^2 + y^2 = ' + v.R * v.R + '$ y su punto de la mitad superior con $x = ' + v.x0 + '$.</p>'; },
+      parts: [
+        { label: 'a', type: 'numeric', points: 2,
+          prompt: function () { return '¿Cuánto vale $y$ en ese punto?'; },
+          answer: function (v) { return Math.sqrt(v.R * v.R - v.x0 * v.x0); },
+          solution: function (v) { return '$y = \\sqrt{' + (v.R * v.R - v.x0 * v.x0) + '} = ' + fx(Math.sqrt(v.R * v.R - v.x0 * v.x0)) + '$.'; } },
+        { label: 'b', type: 'numeric', points: 3,
+          prompt: function () { return 'Con tu $y$ de a), ¿cuánto vale $dy/dx$ ahí?'; },
+          answer: function (v, prev) { return -v.x0 / prev[0]; },
+          solution: function (v) { return '$2x + 2y\\,y\' = 0 \\Rightarrow y\' = -\\dfrac{x}{y} = ' + fx(-v.x0 / Math.sqrt(v.R * v.R - v.x0 * v.x0)) + '$.'; } },
+        { label: 'c', type: 'numeric', points: 3,
+          prompt: function () { return 'Con tus a) y b), ¿en qué valor corta la tangente al eje $y$?'; },
+          answer: function (v, prev) { return prev[0] - prev[1] * v.x0; },
+          solution: function (v) { var y = Math.sqrt(v.R * v.R - v.x0 * v.x0); return '$y = y_0 + m(x - x_0)$; en $x = 0$: $\\dfrac{R^2}{y_0} = ' + fx(v.R * v.R / y) + '$.'; } }
+      ]
+    },
+    {
+      id: 'c1-ex-escalera', tags: ['c1.S06'], block: 'A', title: 'La escalera que resbala',
+      vars: { L: [4, 10, 1], x0: [1, 3, 0.5], u: [0.2, 1, 0.1] },
+      statement: function (v) { return '<p>Una escalera de ' + v.L + ' m está apoyada en una pared. Su pie se aleja de la pared a ' + v.u + ' m/s. Sea $x$ la distancia del pie a la pared y $y$ la altura de la punta: $x^2 + y^2 = ' + v.L * v.L + '$.</p>'; },
+      parts: [
+        { label: 'a', type: 'numeric', points: 2, unit: 'm',
+          prompt: function (v) { return '¿A qué altura está la punta cuando $x = ' + v.x0 + '$ m?'; },
+          answer: function (v) { return Math.sqrt(v.L * v.L - v.x0 * v.x0); },
+          solution: function (v) { return '$y = \\sqrt{' + v.L * v.L + ' - ' + v.x0 * v.x0 + '} = ' + fx(Math.sqrt(v.L * v.L - v.x0 * v.x0)) + '$ m.'; } },
+        { label: 'b', type: 'numeric', points: 4, unit: 'm/s',
+          prompt: function () { return 'Con tu altura de a), ¿a qué velocidad baja la punta? (Con signo.)'; },
+          answer: function (v, prev) { return -v.x0 * v.u / prev[0]; },
+          solution: function (v) { return '$2x\\,x\' + 2y\\,y\' = 0 \\Rightarrow y\' = -\\dfrac{x\\,x\'}{y} = ' + fx(-v.x0 * v.u / Math.sqrt(v.L * v.L - v.x0 * v.x0)) + '$ m/s.'; } },
+        { label: 'c', type: 'numeric', points: 2, unit: 's',
+          prompt: function () { return 'Con tu velocidad de b), ¿cuánto tarda (aprox.) la punta en bajar 10 cm?'; },
+          answer: function (v, prev) { return 0.1 / Math.abs(prev[1]); },
+          solution: function (v) { return '$\\Delta t \\approx \\dfrac{0.1}{|y\'|} = ' + fx(0.1 * Math.sqrt(v.L * v.L - v.x0 * v.x0) / (v.x0 * v.u)) + '$ s.'; } }
+      ]
+    },
+    /* ---------- S07 · Extremos relativos ---------- */
+    {
+      id: 'c1-ex-cuartica', tags: ['c1.S07'], block: 'B', title: 'Una curva en forma de W',
+      vars: { a: [1, 4, 1], c: [0, 20, 2] },
+      statement: function (v) { return '<p>Sea $f(x) = x^4 - ' + 2 * v.a * v.a + 'x^2 + ' + v.c + '$.</p>'; },
+      parts: [
+        { label: 'a', type: 'numeric', points: 2,
+          prompt: function () { return '¿En qué $x > 0$ tiene un mínimo relativo?'; },
+          answer: function (v) { return v.a; },
+          solution: function (v) { return '$f\'(x) = 4x(x^2 - ' + v.a * v.a + ') = 0$: $x = 0, \\pm ' + v.a + '$; en $' + v.a + '$, $f\'\' > 0$.'; } },
+        { label: 'b', type: 'numeric', points: 3,
+          prompt: function () { return 'Con tu $x$ de a), ¿cuánto vale ese mínimo?'; },
+          answer: function (v, prev) { var p = prev[0]; return p * p * p * p - 2 * v.a * v.a * p * p + v.c; },
+          solution: function (v) { return '$f(' + v.a + ') = ' + (v.c - Math.pow(v.a, 4)) + '$.'; } },
+        { label: 'c', type: 'numeric', points: 3,
+          prompt: function () { return '¿En qué $x > 0$ tiene un punto de inflexión?'; },
+          answer: function (v) { return v.a / Math.sqrt(3); },
+          solution: function (v) { return '$f\'\'(x) = 12x^2 - ' + 4 * v.a * v.a + ' = 0 \\Rightarrow x = \\dfrac{' + v.a + '}{\\sqrt 3} = ' + fx(v.a / Math.sqrt(3)) + '$.'; } },
+        { label: 'd', type: 'numeric', points: 2,
+          prompt: function () { return 'Con tu $x$ de c), ¿cuánto vale $f$ en la inflexión?'; },
+          answer: function (v, prev) { var p = prev[2]; return p * p * p * p - 2 * v.a * v.a * p * p + v.c; },
+          solution: function (v) { var p = v.a / Math.sqrt(3); return '$f(' + fx(p) + ') = ' + fx(Math.pow(p, 4) - 2 * v.a * v.a * p * p + v.c) + '$.'; } }
+      ]
+    },
+    /* ---------- S09 · La integral y el TFC ---------- */
+    {
+      id: 'c1-ex-riemann-velocidad', tags: ['c1.S09'], block: 'C', title: 'Distancia con rectángulos',
+      vars: { a: [1, 5, 1], b: [0.5, 3, 0.5], T: [2, 6, 1] },
+      statement: function (v) { return '<p>Un carro va a $v(t) = ' + v.a + ' + ' + v.b + 't^2$ m/s entre $t = 0$ y $t = ' + v.T + '$ s.</p>'; },
+      parts: [
+        { label: 'a', type: 'numeric', points: 3, unit: 'm',
+          prompt: function () { return '¿Qué distancia recorre (integral exacta)?'; },
+          answer: function (v) { return v.a * v.T + v.b * Math.pow(v.T, 3) / 3; },
+          solution: function (v) { return '$\\int_0^{' + v.T + '}(' + v.a + ' + ' + v.b + 't^2)\\,dt = ' + fx(v.a * v.T + v.b * Math.pow(v.T, 3) / 3) + '$ m.'; } },
+        { label: 'b', type: 'numeric', points: 3, unit: 'm',
+          prompt: function () { return 'Aproxímala con 4 rectángulos de extremo izquierdo.'; },
+          answer: function (v) { var h = v.T / 4, s = 0; for (var i = 0; i < 4; i++) { var t = i * h; s += (v.a + v.b * t * t) * h; } return s; },
+          solution: function (v) { var h = v.T / 4, s = 0; for (var i = 0; i < 4; i++) { var t = i * h; s += (v.a + v.b * t * t) * h; } return '$\\Delta t = ' + fx(h) + '$; $\\sum v(t_i)\\Delta t = ' + fx(s) + '$ m.'; } },
+        { label: 'c', type: 'numeric', points: 2, unit: 'm',
+          prompt: function () { return 'Con tus a) y b), ¿cuánto se equivocan los rectángulos?'; },
+          answer: function (v, prev) { return prev[0] - prev[1]; },
+          solution: function () { return 'Exacta menos aproximada: la izquierda subestima porque $v$ crece.'; } },
+        { label: 'd', type: 'numeric', points: 2, unit: 'm/s',
+          prompt: function () { return 'Con tu distancia de a), ¿cuál es la velocidad promedio?'; },
+          answer: function (v, prev) { return prev[0] / v.T; },
+          solution: function (v) { return '$\\dfrac{' + fx(v.a * v.T + v.b * Math.pow(v.T, 3) / 3) + '}{' + v.T + '} = ' + fx(v.a + v.b * v.T * v.T / 3) + '$ m/s.'; } }
+      ]
+    },
+    /* ---------- S10 · Cambio de variable ---------- */
+    {
+      id: 'c1-ex-campana', tags: ['c1.S10'], block: 'C', title: 'El área bajo una campana',
+      vars: { b: [0.5, 2, 0.25] },
+      statement: function (v) { return '<p>Considera $\\displaystyle\\int_0^{' + v.b + '} x\\,e^{-x^2}\\,dx$ con el cambio $u = x^2$.</p>'; },
+      parts: [
+        { label: 'a', type: 'numeric', points: 2,
+          prompt: function () { return '¿Cuál es el nuevo límite superior en $u$?'; },
+          answer: function (v) { return v.b * v.b; },
+          solution: function (v) { return '$u = (' + v.b + ')^2 = ' + fx(v.b * v.b) + '$.'; } },
+        { label: 'b', type: 'numeric', points: 4,
+          prompt: function () { return 'Con tu límite de a), ¿cuánto vale la integral?'; },
+          answer: function (v, prev) { return (1 - Math.exp(-prev[0])) / 2; },
+          solution: function (v) { return '$\\tfrac{1}{2}\\int_0^{' + fx(v.b * v.b) + '} e^{-u}\\,du = \\tfrac{1}{2}(1 - e^{-' + fx(v.b * v.b) + '}) = ' + fx((1 - Math.exp(-v.b * v.b)) / 2, 4) + '$.'; } },
+        { label: 'c', type: 'numeric', points: 2, unit: '%',
+          prompt: function () { return 'Si el límite superior crece sin fin, la integral tiende a $\\tfrac{1}{2}$. Con tu b), ¿qué porcentaje de ese total llevas?'; },
+          answer: function (v, prev) { return 200 * prev[1]; },
+          solution: function (v) { return '$100\\,(1 - e^{-b^2}) = ' + fx(100 * (1 - Math.exp(-v.b * v.b)), 1) + '$ %.'; } }
+      ]
+    },
+    /* ---------- S11 · Por partes ---------- */
+    {
+      id: 'c1-ex-partes-exp', tags: ['c1.S11'], block: 'C', title: 'El tiempo promedio de espera',
+      vars: { k: [0.5, 2, 0.5], T: [1, 5, 1] },
+      statement: function (v) { return '<p>Considera $\\displaystyle I = \\int_0^{' + v.T + '} t\\,e^{-' + v.k + 't}\\,dt$.</p>'; },
+      parts: [
+        { label: 'a', type: 'numeric', points: 4,
+          prompt: function () { return 'Integra por partes. ¿Cuánto vale $I$?'; },
+          answer: function (v) { var e = Math.exp(-v.k * v.T); return -v.T * e / v.k - e / (v.k * v.k) + 1 / (v.k * v.k); },
+          solution: function (v) { var e = Math.exp(-v.k * v.T); return '$u = t$, $dv = e^{-kt}dt$: $\\left[-\\tfrac{t}{k}e^{-kt} - \\tfrac{1}{k^2}e^{-kt}\\right]_0^{' + v.T + '} = ' + fx(-v.T * e / v.k - e / (v.k * v.k) + 1 / (v.k * v.k), 4) + '$.'; } },
+        { label: 'b', type: 'numeric', points: 2,
+          prompt: function () { return 'Si el límite superior crece sin fin, ¿a qué valor tiende $I$?'; },
+          answer: function (v) { return 1 / (v.k * v.k); },
+          solution: function (v) { return 'Los términos con $e^{-kt}$ se van a 0: $\\tfrac{1}{k^2} = ' + fx(1 / (v.k * v.k), 4) + '$.'; } },
+        { label: 'c', type: 'numeric', points: 2, unit: '%',
+          prompt: function () { return 'Con tus a) y b), ¿qué porcentaje del total representa $I$?'; },
+          answer: function (v, prev) { return 100 * prev[0] / prev[1]; },
+          solution: function (v) { var e = Math.exp(-v.k * v.T); return '$100\\,(1 - (1 + kT)e^{-kT}) = ' + fx(100 * (1 - (1 + v.k * v.T) * e), 1) + '$ %.'; } }
+      ]
+    },
+    {
+      id: 'c1-ex-partes-ln', tags: ['c1.S11'], block: 'C', title: 'El promedio de un logaritmo',
+      vars: { b: [2, 8, 1] },
+      statement: function (v) { return '<p>Considera $\\displaystyle\\int_1^{' + v.b + '} \\ln x\\,dx$.</p>'; },
+      parts: [
+        { label: 'a', type: 'numeric', points: 4,
+          prompt: function () { return 'Integra por partes. ¿Cuánto vale la integral?'; },
+          answer: function (v) { return v.b * Math.log(v.b) - v.b + 1; },
+          solution: function (v) { return '$u = \\ln x$, $dv = dx$: $[x\\ln x - x]_1^{' + v.b + '} = ' + fx(v.b * Math.log(v.b) - v.b + 1, 4) + '$.'; } },
+        { label: 'b', type: 'numeric', points: 3,
+          prompt: function () { return 'Con tu integral de a), ¿cuál es el valor promedio de $\\ln x$ en ese intervalo?'; },
+          answer: function (v, prev) { return prev[0] / (v.b - 1); },
+          solution: function (v) { return '$\\dfrac{1}{' + (v.b - 1) + '}\\int = ' + fx((v.b * Math.log(v.b) - v.b + 1) / (v.b - 1), 4) + '$.'; } },
+        { label: 'c', type: 'numeric', points: 3,
+          prompt: function () { return 'Con tu promedio de b), ¿en qué $x$ vale $\\ln x$ exactamente ese promedio?'; },
+          answer: function (v, prev) { return Math.exp(prev[1]); },
+          solution: function (v) { return '$x = e^{\\text{promedio}} = ' + fx(Math.exp((v.b * Math.log(v.b) - v.b + 1) / (v.b - 1))) + '$ (el valor medio del TFC).'; } }
+      ]
+    },
+    /* ---------- S12 · Sustitución trigonométrica ---------- */
+    {
+      id: 'c1-ex-trig-circulo', tags: ['c1.S12'], block: 'C', title: 'Un pedazo de círculo',
+      vars: { R: [2, 10, 1], p: [2, 9, 1] },
+      statement: function (v) { var a = v.R * v.p / 10; return '<p>Considera $\\displaystyle\\int_0^{' + fx(a) + '} \\sqrt{' + v.R * v.R + ' - x^2}\\,dx$ con $x = ' + v.R + '\\sin\\theta$.</p>'; },
+      parts: [
+        { label: 'a', type: 'numeric', points: 3, unit: 'rad',
+          prompt: function () { return '¿Cuál es el límite superior en $\\theta$?'; },
+          answer: function (v) { return Math.asin(v.p / 10); },
+          solution: function (v) { return '$\\sin\\theta = ' + v.p / 10 + ' \\Rightarrow \\theta = ' + fx(Math.asin(v.p / 10), 4) + '$ rad.'; } },
+        { label: 'b', type: 'numeric', points: 4,
+          prompt: function () { return 'Con tu $\\theta$ de a), ¿cuánto vale la integral?'; },
+          answer: function (v, prev) { var t = prev[0]; return v.R * v.R / 2 * (t + Math.sin(t) * Math.cos(t)); },
+          solution: function (v) { var t = Math.asin(v.p / 10); return '$R^2\\int_0^{\\theta}\\cos^2 = \\tfrac{R^2}{2}(\\theta + \\sin\\theta\\cos\\theta) = ' + fx(v.R * v.R / 2 * (t + Math.sin(t) * Math.cos(t)), 4) + '$.'; } },
+        { label: 'c', type: 'numeric', points: 3, unit: '%',
+          prompt: function () { return 'Con tu b), ¿qué porcentaje es del cuarto de círculo completo, $\\tfrac{\\pi R^2}{4}$?'; },
+          answer: function (v, prev) { return 100 * prev[1] / (PI * v.R * v.R / 4); },
+          solution: function (v) { var t = Math.asin(v.p / 10); return '$' + fx(100 * (t + Math.sin(t) * Math.cos(t)) * 2 / PI, 1) + '$ %.'; } }
+      ]
+    },
+    {
+      id: 'c1-ex-trig-tan', tags: ['c1.S12'], block: 'C', title: 'Una integral con arcotangente',
+      vars: { c: [1, 5, 1], b: [1, 10, 1] },
+      where: function (v) { return v.b !== v.c; },
+      statement: function (v) { return '<p>Considera $\\displaystyle\\int_0^{' + v.b + '} \\frac{dx}{x^2 + ' + v.c * v.c + '}$ con $x = ' + v.c + '\\tan\\theta$.</p>'; },
+      parts: [
+        { label: 'a', type: 'numeric', points: 3, unit: 'rad',
+          prompt: function () { return '¿Cuál es el límite superior en $\\theta$?'; },
+          answer: function (v) { return Math.atan(v.b / v.c); },
+          solution: function (v) { return '$\\tan\\theta = \\dfrac{' + v.b + '}{' + v.c + '} \\Rightarrow \\theta = ' + fx(Math.atan(v.b / v.c), 4) + '$.'; } },
+        { label: 'b', type: 'numeric', points: 3,
+          prompt: function () { return 'Con tu $\\theta$ de a), ¿cuánto vale la integral?'; },
+          answer: function (v, prev) { return prev[0] / v.c; },
+          solution: function (v) { return '$\\int_0^\\theta \\tfrac{d\\theta}{' + v.c + '} = ' + fx(Math.atan(v.b / v.c) / v.c, 4) + '$.'; } },
+        { label: 'c', type: 'numeric', points: 2, unit: '%',
+          prompt: function () { return 'Con el límite superior infinito la integral vale $\\tfrac{\\pi}{2c}$. Con tu b), ¿qué porcentaje llevas?'; },
+          answer: function (v, prev) { return 100 * prev[1] / (PI / (2 * v.c)); },
+          solution: function (v) { return '$' + fx(200 * Math.atan(v.b / v.c) / PI, 1) + '$ %.'; } }
+      ]
+    },
+    {
+      id: 'c1-ex-trig-sec', tags: ['c1.S12'], block: 'C', title: 'Una integral con raíz de x² + c²',
+      vars: { c: [1, 5, 1], b: [1, 10, 1] },
+      statement: function (v) { return '<p>Considera $\\displaystyle\\int_0^{' + v.b + '} \\frac{dx}{\\sqrt{x^2 + ' + v.c * v.c + '}}$ con $x = ' + v.c + '\\tan\\theta$.</p>'; },
+      parts: [
+        { label: 'a', type: 'numeric', points: 2,
+          prompt: function () { return 'En el triángulo del cambio, ¿cuánto mide la hipotenusa cuando $x$ vale el límite superior?'; },
+          answer: function (v) { return Math.sqrt(v.b * v.b + v.c * v.c); },
+          solution: function (v) { return '$\\sqrt{' + v.b * v.b + ' + ' + v.c * v.c + '} = ' + fx(Math.sqrt(v.b * v.b + v.c * v.c)) + '$.'; } },
+        { label: 'b', type: 'numeric', points: 4,
+          prompt: function () { return 'Con tu hipotenusa de a), ¿cuánto vale la integral?'; },
+          answer: function (v, prev) { return Math.log((v.b + Math.abs(prev[0])) / v.c); },
+          solution: function (v) { return '$\\int\\sec\\theta = \\ln|\\sec\\theta + \\tan\\theta| = \\ln\\dfrac{x + \\sqrt{x^2 + c^2}}{c}$; vale $' + fx(Math.log((v.b + Math.sqrt(v.b * v.b + v.c * v.c)) / v.c), 4) + '$.'; } },
+        { label: 'c', type: 'numeric', points: 2,
+          prompt: function () { return 'Con tu b), ¿cuál es el valor promedio de la función en el intervalo?'; },
+          answer: function (v, prev) { return prev[1] / v.b; },
+          solution: function (v) { return '$\\dfrac{1}{' + v.b + '}\\int = ' + fx(Math.log((v.b + Math.sqrt(v.b * v.b + v.c * v.c)) / v.c) / v.b, 4) + '$.'; } }
+      ]
+    },
+    /* ---------- S13 · Fracciones parciales ---------- */
+    {
+      id: 'c1-ex-fp-diferencia', tags: ['c1.S13'], block: 'C', title: 'Una diferencia de cuadrados',
+      vars: { a: [1, 4, 1], d: [2, 10, 1] },
+      statement: function (v) { var L = v.a + 1, b = v.a + v.d; return '<p>Considera $\\displaystyle\\int_{' + L + '}^{' + b + '} \\frac{dx}{x^2 - ' + v.a * v.a + '}$ y escribe $\\dfrac{1}{x^2 - ' + v.a * v.a + '} = \\dfrac{A}{x - ' + v.a + '} - \\dfrac{A}{x + ' + v.a + '}$.</p>'; },
+      parts: [
+        { label: 'a', type: 'numeric', points: 3,
+          prompt: function () { return '¿Cuánto vale $A$?'; },
+          answer: function (v) { return 1 / (2 * v.a); },
+          solution: function (v) { return '$1 = A(x + ' + v.a + ') - A(x - ' + v.a + ') = ' + 2 * v.a + 'A \\Rightarrow A = ' + fx(1 / (2 * v.a), 4) + '$.'; } },
+        { label: 'b', type: 'numeric', points: 4,
+          prompt: function () { return 'Con tu $A$ de a), ¿cuánto vale la integral?'; },
+          answer: function (v, prev) { var L = v.a + 1, b = v.a + v.d; return prev[0] * (Math.log((b - v.a) / (b + v.a)) - Math.log((L - v.a) / (L + v.a))); },
+          solution: function (v) { var L = v.a + 1, b = v.a + v.d, val = (Math.log((b - v.a) / (b + v.a)) - Math.log((L - v.a) / (L + v.a))) / (2 * v.a); return '$A\\left[\\ln\\left|\\dfrac{x - ' + v.a + '}{x + ' + v.a + '}\\right|\\right]_{' + L + '}^{' + b + '} = ' + fx(val, 4) + '$.'; } },
+        { label: 'c', type: 'numeric', points: 3,
+          prompt: function () { return 'Con tu $A$ de a), ¿a qué valor tiende la integral si el límite superior crece sin fin?'; },
+          answer: function (v, prev) { var L = v.a + 1; return -prev[0] * Math.log((L - v.a) / (L + v.a)); },
+          solution: function (v) { var L = v.a + 1; return 'El término de arriba tiende a $\\ln 1 = 0$: $-A\\ln\\dfrac{1}{' + (L + v.a) + '} = ' + fx(Math.log(L + v.a) / (2 * v.a), 4) + '$.'; } }
+      ]
+    },
+    {
+      id: 'c1-ex-fp-producto', tags: ['c1.S13'], block: 'C', title: 'Dos factores lineales',
+      vars: { k: [1, 5, 1], b: [2, 10, 1] },
+      statement: function (v) { return '<p>Considera $\\displaystyle\\int_1^{' + v.b + '} \\frac{dx}{x(x + ' + v.k + ')}$ y escribe $\\dfrac{1}{x(x + ' + v.k + ')} = \\dfrac{A}{x} - \\dfrac{A}{x + ' + v.k + '}$.</p>'; },
+      parts: [
+        { label: 'a', type: 'numeric', points: 3,
+          prompt: function () { return '¿Cuánto vale $A$?'; },
+          answer: function (v) { return 1 / v.k; },
+          solution: function (v) { return 'Con $x = 0$: $1 = ' + v.k + 'A$, así que $A = ' + fx(1 / v.k, 4) + '$.'; } },
+        { label: 'b', type: 'numeric', points: 4,
+          prompt: function () { return 'Con tu $A$ de a), ¿cuánto vale la integral?'; },
+          answer: function (v, prev) { return prev[0] * Math.log(v.b * (1 + v.k) / (v.b + v.k)); },
+          solution: function (v) { return '$A\\left[\\ln\\dfrac{x}{x + ' + v.k + '}\\right]_1^{' + v.b + '} = ' + fx(Math.log(v.b * (1 + v.k) / (v.b + v.k)) / v.k, 4) + '$.'; } },
+        { label: 'c', type: 'numeric', points: 3,
+          prompt: function () { return 'Con tu $A$ de a), ¿a qué valor tiende si el límite superior crece sin fin?'; },
+          answer: function (v, prev) { return prev[0] * Math.log(1 + v.k); },
+          solution: function (v) { return '$\\tfrac{x}{x + k} \\to 1$: queda $A\\ln(1 + k) = ' + fx(Math.log(1 + v.k) / v.k, 4) + '$.'; } }
+      ]
+    },
+    {
+      id: 'c1-ex-fp-repetido', tags: ['c1.S13'], block: 'C', title: 'Un factor repetido',
+      vars: { k: [1, 4, 1], b: [2, 8, 1] },
+      statement: function (v) { return '<p>Considera $\\displaystyle\\int_1^{' + v.b + '} \\frac{dx}{x^2(x + ' + v.k + ')}$ con $\\dfrac{1}{x^2(x + ' + v.k + ')} = \\dfrac{A}{x} + \\dfrac{B}{x^2} + \\dfrac{C}{x + ' + v.k + '}$.</p>'; },
+      parts: [
+        { label: 'a', type: 'numeric', points: 2,
+          prompt: function () { return '¿Cuánto vale $B$?'; },
+          answer: function (v) { return 1 / v.k; },
+          solution: function (v) { return 'Con $x = 0$: $1 = ' + v.k + 'B$, $B = ' + fx(1 / v.k, 4) + '$.'; } },
+        { label: 'b', type: 'numeric', points: 2,
+          prompt: function () { return '¿Cuánto vale $C$? ($A = -C$.)'; },
+          answer: function (v) { return 1 / (v.k * v.k); },
+          solution: function (v) { return 'Con $x = -' + v.k + '$: $1 = ' + v.k * v.k + 'C$, $C = ' + fx(1 / (v.k * v.k), 4) + '$.'; } },
+        { label: 'c', type: 'numeric', points: 4,
+          prompt: function () { return 'Con tus $B$ y $C$ (y $A = -C$), ¿cuánto vale la integral?'; },
+          answer: function (v, prev) { var B = prev[0], C = prev[1]; return -C * Math.log(v.b) + B * (1 - 1 / v.b) + C * Math.log((v.b + v.k) / (1 + v.k)); },
+          solution: function (v) { var B = 1 / v.k, C = 1 / (v.k * v.k); return '$\\left[-C\\ln x - \\tfrac{B}{x} + C\\ln(x + ' + v.k + ')\\right]_1^{' + v.b + '} = ' + fx(-C * Math.log(v.b) + B * (1 - 1 / v.b) + C * Math.log((v.b + v.k) / (1 + v.k)), 4) + '$.'; } }
+      ]
+    },
+    /* ---------- S14 · Áreas y arcos ---------- */
+    {
+      id: 'c1-ex-dos-parabolas', tags: ['c1.S14'], block: 'C', title: 'Entre dos parábolas',
+      vars: { a: [1, 9, 1] },
+      where: function (v) { return v.a !== 4 && v.a !== 1; },
+      statement: function (v) { return '<p>Considera la región entre $y = ' + v.a + ' - x^2$ y $y = x^2 - ' + v.a + '$.</p>'; },
+      parts: [
+        { label: 'a', type: 'numeric', points: 2,
+          prompt: function () { return '¿En qué $x > 0$ se cortan?'; },
+          answer: function (v) { return Math.sqrt(v.a); },
+          solution: function (v) { return '$2x^2 = ' + 2 * v.a + ' \\Rightarrow x = \\sqrt{' + v.a + '} = ' + fx(Math.sqrt(v.a)) + '$.'; } },
+        { label: 'b', type: 'numeric', points: 4,
+          prompt: function () { return 'Con tu $x$ de a), ¿cuál es el área de la región?'; },
+          answer: function (v, prev) { var p = Math.abs(prev[0]); return 4 * (v.a * p - p * p * p / 3); },
+          solution: function (v) { var p = Math.sqrt(v.a); return '$\\int_{-p}^{p}(' + 2 * v.a + ' - 2x^2)\\,dx = 4\\left(' + v.a + 'p - \\tfrac{p^3}{3}\\right) = ' + fx(4 * (v.a * p - p * p * p / 3)) + '$.'; } },
+        { label: 'c', type: 'numeric', points: 2, unit: '%',
+          prompt: function (v) { return 'Con tus a) y b), ¿qué porcentaje ocupa del rectángulo $[-x, x]\\times[-' + v.a + ', ' + v.a + ']$ que la contiene?'; },
+          answer: function (v, prev) { return 100 * prev[1] / (4 * Math.abs(prev[0]) * v.a); },
+          solution: function () { return 'Siempre $\\tfrac{2}{3}$: $66.67$ %.'; } }
+      ]
+    },
+    {
+      id: 'c1-ex-arco-semicubica', tags: ['c1.S14'], block: 'C', title: 'El largo de una curva',
+      vars: { b: [1, 8, 1] },
+      statement: function (v) { return '<p>Considera la curva $y = \\tfrac{2}{3}x^{3/2}$ entre $x = 0$ y $x = ' + v.b + '$.</p>'; },
+      parts: [
+        { label: 'a', type: 'numeric', points: 2,
+          prompt: function () { return '¿Cuánto vale $y\'$ en el extremo derecho?'; },
+          answer: function (v) { return Math.sqrt(v.b); },
+          solution: function (v) { return '$y\' = \\sqrt{x}$; en $' + v.b + '$: $' + fx(Math.sqrt(v.b)) + '$.'; } },
+        { label: 'b', type: 'numeric', points: 4,
+          prompt: function () { return '¿Cuánto mide la curva?'; },
+          answer: function (v) { return 2 / 3 * (Math.pow(1 + v.b, 1.5) - 1); },
+          solution: function (v) { return '$\\int_0^{' + v.b + '}\\sqrt{1 + x}\\,dx = \\tfrac{2}{3}\\left[(1 + x)^{3/2}\\right]_0^{' + v.b + '} = ' + fx(2 / 3 * (Math.pow(1 + v.b, 1.5) - 1)) + '$.'; } },
+        { label: 'c', type: 'numeric', points: 2,
+          prompt: function () { return 'Con tu b), ¿cuánto más larga es la curva que el segmento que une sus extremos?'; },
+          answer: function (v, prev) { return prev[1] - Math.sqrt(v.b * v.b + Math.pow(2 / 3 * Math.pow(v.b, 1.5), 2)); },
+          solution: function (v) { var s = Math.sqrt(v.b * v.b + Math.pow(2 / 3 * Math.pow(v.b, 1.5), 2)); return 'El segmento mide $' + fx(s) + '$; la diferencia es $' + fx(2 / 3 * (Math.pow(1 + v.b, 1.5) - 1) - s) + '$.'; } },
+        { label: 'd', type: 'numeric', points: 2,
+          prompt: function () { return 'Con tu $y\'$ de a), ¿cuánto vale el integrando de la longitud, $\\sqrt{1 + (y\')^2}$, en el extremo derecho?'; },
+          answer: function (v, prev) { return Math.sqrt(1 + prev[0] * prev[0]); },
+          solution: function (v) { return '$\\sqrt{1 + ' + v.b + '} = ' + fx(Math.sqrt(1 + v.b)) + '$.'; } }
+      ]
+    },
+    /* ---------- S15 · Sólidos de revolución ---------- */
+    {
+      id: 'c1-ex-vaso', tags: ['c1.S15'], block: 'C', title: 'Un vaso parabólico',
+      vars: { k: [0.5, 3, 0.5], H: [2, 10, 1] },
+      statement: function (v) { return '<p>Un vaso tiene la forma que resulta de girar $y = ' + v.k + 'x^2$ alrededor del eje $y$, lleno hasta $y = ' + v.H + '$ cm.</p>'; },
+      parts: [
+        { label: 'a', type: 'numeric', points: 2, unit: 'cm',
+          prompt: function () { return '¿Qué radio tiene el borde del líquido?'; },
+          answer: function (v) { return Math.sqrt(v.H / v.k); },
+          solution: function (v) { return '$x = \\sqrt{' + v.H + '/' + v.k + '} = ' + fx(Math.sqrt(v.H / v.k)) + '$ cm.'; } },
+        { label: 'b', type: 'numeric', points: 4, unit: 'cm³',
+          prompt: function () { return '¿Cuánto líquido contiene? (Discos en $y$.)'; },
+          answer: function (v) { return PI * v.H * v.H / (2 * v.k); },
+          solution: function (v) { return '$\\pi\\int_0^{' + v.H + '}\\dfrac{y}{' + v.k + '}\\,dy = \\dfrac{\\pi(' + v.H + ')^2}{' + 2 * v.k + '} = ' + fx(PI * v.H * v.H / (2 * v.k), 2) + '$ cm³.'; } },
+        { label: 'c', type: 'numeric', points: 2, unit: 'cm³',
+          prompt: function () { return 'Con tu radio de a), ¿cuánto cabría en un cilindro de ese radio y la misma altura?'; },
+          answer: function (v, prev) { return PI * prev[0] * prev[0] * v.H; },
+          solution: function (v) { return '$\\pi r^2 H = ' + fx(PI * v.H * v.H / v.k, 2) + '$ cm³.'; } },
+        { label: 'd', type: 'numeric', points: 2,
+          prompt: function () { return 'Con tus b) y c), ¿qué fracción del cilindro ocupa el líquido?'; },
+          answer: function (v, prev) { return prev[1] / prev[2]; },
+          solution: function () { return 'Siempre $\\tfrac{1}{2}$ en un paraboloide.'; } }
+      ]
+    },
+    {
+      id: 'c1-ex-dona', tags: ['c1.S15'], block: 'C', title: 'El volumen de una dona',
+      vars: { R: [5, 20, 1], r: [1, 4, 1] },
+      statement: function (v) { return '<p>Un círculo de radio ' + v.r + ' cm, con centro a ' + v.R + ' cm del eje $y$, gira alrededor de ese eje y forma una dona.</p>'; },
+      parts: [
+        { label: 'a', type: 'numeric', points: 2, unit: 'cm²',
+          prompt: function () { return '¿Cuál es el área del círculo?'; },
+          answer: function (v) { return PI * v.r * v.r; },
+          solution: function (v) { return '$\\pi r^2 = ' + fx(PI * v.r * v.r, 2) + '$ cm².'; } },
+        { label: 'b', type: 'numeric', points: 4, unit: 'cm³',
+          prompt: function () { return 'Por capas, $V = 2\\pi\\int x\\,h(x)\\,dx$ da $2\\pi R\\cdot(\\text{área del círculo})$. Con tu a), ¿cuál es el volumen?'; },
+          answer: function (v, prev) { return 2 * PI * v.R * prev[0]; },
+          solution: function (v) { return '$V = 2\\pi R\\,\\pi r^2 = 2\\pi^2(' + v.R + ')(' + v.r * v.r + ') = ' + fx(2 * PI * PI * v.R * v.r * v.r, 2) + '$ cm³.'; } },
+        { label: 'c', type: 'numeric', points: 2, unit: 'L',
+          prompt: function () { return 'Con tu b), ¿cuántos litros son?'; },
+          answer: function (v, prev) { return prev[1] / 1000; },
+          solution: function (v) { return '$1\\ \\text{L} = 1000\\ \\text{cm}^3$: $' + fx(2 * PI * PI * v.R * v.r * v.r / 1000, 4) + '$ L.'; } }
+      ]
+    }
+  ]);
+
 })();

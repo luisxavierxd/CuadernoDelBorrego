@@ -156,6 +156,13 @@ a.dot:hover::before { background: var(--accent-soft); transform: scale(1.2); }
 .exercise__prompt { font-size: 1.02rem; }
 .exercise__prompt p:last-child { margin-bottom: 0; }
 .exercise__inputrow { display: flex; align-items: center; gap: 8px; max-width: 420px; }
+/* − y ×10ⁿ bajo las respuestas numéricas (el teclado decimal del celular no los trae). */
+.num-keys { display: flex; gap: 6px; margin-top: 6px; }
+.num-key {
+  min-width: 44px; min-height: 36px; padding: 0 12px; border: 1px solid var(--line-strong); border-radius: var(--radius);
+  background: var(--panel); color: var(--text); font: 500 0.95rem/1 var(--font-mono); cursor: pointer;
+}
+.num-key:hover { border-color: var(--accent); color: var(--accent); }
 .exercise__unit { font: 500 0.95rem/1 var(--font-mono); color: var(--text-muted); }
 .exercise__preview { min-height: 1.6em; margin-top: 6px; }
 .exercise__options { border: 0; margin: 0; padding: 0; display: grid; gap: 6px; }

@@ -3,6 +3,7 @@
    part.answer(v, prev): prev son las respuestas DEL ALUMNO en los incisos
    anteriores, para dar crédito por arrastre de error. g = 9.81 m/s².
    Bloque A (S01–S03): 6 problemas. Bloque B (S04–S07): 7. Bloque C (S08–S11): 6. Bloque D (S12–S13): 6. Bloque E (S14–S15): 6.
+   Más un lote para que cada sesión tenga al menos 2 problemas propios y 3 que la usen.
    ===================================================================== */
 (function () {
   var ex = (window.CB_EXAMS = window.CB_EXAMS || {});
@@ -842,6 +843,270 @@
           prompt: function () { return 'Con tus resultados de b) y c), ¿qué coeficiente de fricción estática mínimo necesita el piso?'; },
           answer: function (v, prev) { return prev[1] / prev[2]; }, tol: { abs: 0.005 },
           solution: function (v) { return '$\\mu_s = N_p/N = ' + fx((v.m / 2 + v.Mp * v.p / 100) / tn(v.th) / (v.m + v.Mp), 3) + '$.'; } }
+      ]
+    }
+  ]);
+
+  /* ======== Más problemas por sesión: al menos 2 propios y 3 que la usen (examen de una sesión) ======== */
+  ex.f1 = ex.f1.concat([
+    /* ---------- S01 · Unidades ---------- */
+    {
+      id: 'f1-ex-conversion-velocidad', tags: ['f1.S01'], block: 'A', title: 'De km/h a metros por segundo',
+      vars: { v: [36, 144, 18], t: [2, 20, 2], D: [5, 50, 5] },
+      statement: function (v) { return '<p>Un auto viaja a velocidad constante de ' + v.v + ' km/h.</p>'; },
+      parts: [
+        { label: 'a', type: 'numeric', points: 2, unit: 'm/s',
+          prompt: function () { return '¿Cuánto es su velocidad en m/s?'; },
+          answer: function (v) { return v.v / 3.6; },
+          solution: function (v) { return '$' + v.v + '\\cdot\\dfrac{1000}{3600} = ' + fx(v.v / 3.6) + '$ m/s.'; } },
+        { label: 'b', type: 'numeric', points: 3, unit: 'm',
+          prompt: function (v) { return 'Con tu velocidad de a), ¿cuántos metros recorre en ' + v.t + ' minutos?'; },
+          answer: function (v, prev) { return prev[0] * 60 * v.t; },
+          solution: function (v) { return '$' + fx(v.v / 3.6) + '\\cdot ' + 60 * v.t + '\\ \\text{s} = ' + fx(v.v / 3.6 * 60 * v.t, 1) + '$ m.'; } },
+        { label: 'c', type: 'numeric', points: 3, unit: 's',
+          prompt: function (v) { return 'Con tu velocidad de a), ¿cuántos segundos tarda en recorrer ' + v.D + ' km?'; },
+          answer: function (v, prev) { return v.D * 1000 / prev[0]; },
+          solution: function (v) { return '$\\dfrac{' + v.D * 1000 + '\\ \\text{m}}{' + fx(v.v / 3.6) + '\\ \\text{m/s}} = ' + fx(v.D * 3600 / v.v, 1) + '$ s.'; } }
+      ]
+    },
+    {
+      id: 'f1-ex-densidad', tags: ['f1.S01'], block: 'A', title: 'La densidad de un bloque',
+      vars: { a: [2, 10, 1], b: [2, 10, 1], c: [2, 10, 1], m: [50, 900, 50] },
+      statement: function (v) { return '<p>Un bloque mide ' + v.a + ' cm × ' + v.b + ' cm × ' + v.c + ' cm y tiene una masa de ' + v.m + ' g.</p>'; },
+      parts: [
+        { label: 'a', type: 'numeric', points: 3, unit: 'cm³',
+          prompt: function () { return '¿Cuál es su volumen en cm³?'; },
+          answer: function (v) { return v.a * v.b * v.c; },
+          solution: function (v) { return '$' + v.a + '\\cdot ' + v.b + '\\cdot ' + v.c + ' = ' + v.a * v.b * v.c + '$ cm³.'; } },
+        { label: 'b', type: 'numeric', points: 3, unit: 'kg/m³',
+          prompt: function () { return 'Con tu volumen de a), ¿cuál es su densidad en kg/m³?'; },
+          answer: function (v, prev) { return (v.m / 1000) / (prev[0] * 1e-6); },
+          solution: function (v) { return '$1\\ \\text{cm}^3 = 10^{-6}\\ \\text{m}^3$: $\\dfrac{' + fx(v.m / 1000) + '\\ \\text{kg}}{' + v.a * v.b * v.c + '\\times 10^{-6}\\ \\text{m}^3} = ' + fx(v.m * 1000 / (v.a * v.b * v.c), 1) + '$ kg/m³.'; } },
+        { label: 'c', type: 'numeric', points: 2, unit: 'kg',
+          prompt: function () { return 'Con tu densidad de b), ¿cuánta masa tendría un litro de ese material?'; },
+          answer: function (v, prev) { return prev[1] * 0.001; },
+          solution: function (v) { return '$1\\ \\text{L} = 10^{-3}\\ \\text{m}^3$: $' + fx(v.m / (v.a * v.b * v.c), 3) + '$ kg.'; } }
+      ]
+    },
+    /* ---------- S04 · Derivadas y MRU ---------- */
+    {
+      id: 'f1-ex-posicion-polinomio', tags: ['f1.S04'], block: 'B', title: 'Posición con un polinomio',
+      vars: { c3: [1, 3, 1], c2: [2, 9, 1], c1: [1, 10, 1], T: [1, 4, 1] },
+      where: function (v) { return Math.abs(3 * v.c3 * v.T * v.T - 2 * v.c2 * v.T + v.c1) > 0.5; },
+      statement: function (v) { return '<p>Un carrito se mueve sobre una recta con $x(t) = ' + v.c3 + 't^3 - ' + v.c2 + 't^2 + ' + v.c1 + 't$ (m, $t$ en s).</p>'; },
+      parts: [
+        { label: 'a', type: 'numeric', points: 3, unit: 'm/s',
+          prompt: function (v) { return '¿Qué velocidad tiene en $t = ' + v.T + '$ s?'; },
+          answer: function (v) { return 3 * v.c3 * v.T * v.T - 2 * v.c2 * v.T + v.c1; },
+          solution: function (v) { return '$v = ' + 3 * v.c3 + 't^2 - ' + 2 * v.c2 + 't + ' + v.c1 + ' = ' + (3 * v.c3 * v.T * v.T - 2 * v.c2 * v.T + v.c1) + '$ m/s.'; } },
+        { label: 'b', type: 'numeric', points: 3, unit: 'm/s²',
+          prompt: function (v) { return '¿Qué aceleración tiene en $t = ' + v.T + '$ s?'; },
+          answer: function (v) { return 6 * v.c3 * v.T - 2 * v.c2; },
+          solution: function (v) { return '$a = ' + 6 * v.c3 + 't - ' + 2 * v.c2 + ' = ' + (6 * v.c3 * v.T - 2 * v.c2) + '$ m/s².'; } },
+        { label: 'c', type: 'numeric', points: 2, unit: 'm',
+          prompt: function () { return 'Con tu velocidad de a), ¿cuánto se desplaza (aprox.) en los siguientes 0.1 s?'; },
+          answer: function (v, prev) { return prev[0] * 0.1; },
+          solution: function (v) { return '$\\Delta x \\approx v\\,\\Delta t = ' + fx(0.1 * (3 * v.c3 * v.T * v.T - 2 * v.c2 * v.T + v.c1)) + '$ m.'; } }
+      ]
+    },
+    {
+      id: 'f1-ex-encuentro', tags: ['f1.S04'], block: 'B', title: 'Dos autos que se encuentran',
+      vars: { D: [100, 1000, 50], v1: [10, 30, 1], v2: [10, 30, 1] },
+      statement: function (v) { return '<p>Dos autos salen al mismo tiempo de dos ciudades separadas ' + v.D + ' m y van uno hacia el otro: el primero a ' + v.v1 + ' m/s y el segundo a ' + v.v2 + ' m/s (MRU).</p>'; },
+      parts: [
+        { label: 'a', type: 'numeric', points: 3, unit: 's',
+          prompt: function () { return '¿Cuánto tardan en encontrarse?'; },
+          answer: function (v) { return v.D / (v.v1 + v.v2); },
+          solution: function (v) { return '$t = \\dfrac{D}{v_1 + v_2} = \\dfrac{' + v.D + '}{' + (v.v1 + v.v2) + '} = ' + fx(v.D / (v.v1 + v.v2)) + '$ s.'; } },
+        { label: 'b', type: 'numeric', points: 3, unit: 'm',
+          prompt: function () { return 'Con tu tiempo de a), ¿a qué distancia de la primera ciudad se encuentran?'; },
+          answer: function (v, prev) { return v.v1 * prev[0]; },
+          solution: function (v) { return '$v_1 t = ' + fx(v.v1 * v.D / (v.v1 + v.v2)) + '$ m.'; } },
+        { label: 'c', type: 'numeric', points: 2, unit: 'm',
+          prompt: function () { return 'Con tu b), ¿cuánto recorrió el segundo auto?'; },
+          answer: function (v, prev) { return v.D - prev[1]; },
+          solution: function (v) { return '$D - ' + fx(v.v1 * v.D / (v.v1 + v.v2)) + ' = ' + fx(v.v2 * v.D / (v.v1 + v.v2)) + '$ m.'; } }
+      ]
+    },
+    /* ---------- S05 · Caída libre ---------- */
+    {
+      id: 'f1-ex-pozo', tags: ['f1.S05'], block: 'B', title: 'Una piedra en un pozo',
+      vars: { h: [20, 120, 5] },
+      statement: function (v) { return '<p>Sueltas una piedra desde el reposo en un pozo de ' + v.h + ' m de profundidad (sin aire).</p>'; },
+      parts: [
+        { label: 'a', type: 'numeric', points: 3, unit: 's',
+          prompt: function () { return '¿Cuánto tarda en llegar al fondo?'; },
+          answer: function (v) { return Math.sqrt(2 * v.h / g); },
+          solution: function (v) { return '$t = \\sqrt{2h/g} = ' + fx(Math.sqrt(2 * v.h / g), 3) + '$ s.'; } },
+        { label: 'b', type: 'numeric', points: 3, unit: 'm/s',
+          prompt: function () { return 'Con tu tiempo de a), ¿con qué rapidez llega?'; },
+          answer: function (v, prev) { return g * prev[0]; },
+          solution: function (v) { return '$v = gt = ' + fx(Math.sqrt(2 * g * v.h)) + '$ m/s.'; } },
+        { label: 'c', type: 'numeric', points: 2, unit: 'm',
+          prompt: function () { return 'Con tu tiempo de a), ¿qué distancia recorre en su último segundo de caída?'; },
+          answer: function (v, prev) { return v.h - 0.5 * g * Math.pow(prev[0] - 1, 2); },
+          solution: function (v) { var t = Math.sqrt(2 * v.h / g); return '$h - \\tfrac{1}{2}g(t - 1)^2 = ' + fx(v.h - 0.5 * g * Math.pow(t - 1, 2)) + '$ m.'; } }
+      ]
+    },
+    /* ---------- S06 · Tiro parabólico ---------- */
+    {
+      id: 'f1-ex-rueda-mesa', tags: ['f1.S06'], block: 'B', title: 'Una pelota que sale de la mesa',
+      vars: { h: [0.5, 2, 0.1], u: [1, 6, 0.5] },
+      statement: function (v) { return '<p>Una pelota rueda sobre una mesa de ' + v.h + ' m de alto y sale del borde con ' + v.u + ' m/s horizontales.</p>'; },
+      parts: [
+        { label: 'a', type: 'numeric', points: 3, unit: 's',
+          prompt: function () { return '¿Cuánto tarda en llegar al piso?'; },
+          answer: function (v) { return Math.sqrt(2 * v.h / g); },
+          solution: function (v) { return 'Solo cuenta la caída vertical: $t = \\sqrt{2h/g} = ' + fx(Math.sqrt(2 * v.h / g), 3) + '$ s.'; } },
+        { label: 'b', type: 'numeric', points: 3, unit: 'm',
+          prompt: function () { return 'Con tu tiempo de a), ¿a qué distancia horizontal del borde cae?'; },
+          answer: function (v, prev) { return v.u * prev[0]; },
+          solution: function (v) { return '$x = ut = ' + fx(v.u * Math.sqrt(2 * v.h / g), 3) + '$ m.'; } },
+        { label: 'c', type: 'numeric', points: 2, unit: 'm/s',
+          prompt: function () { return 'Con tu tiempo de a), ¿con qué rapidez llega al piso?'; },
+          answer: function (v, prev) { return Math.sqrt(v.u * v.u + Math.pow(g * prev[0], 2)); },
+          solution: function (v) { return '$\\sqrt{u^2 + (gt)^2} = ' + fx(Math.sqrt(v.u * v.u + 2 * g * v.h)) + '$ m/s.'; } }
+      ]
+    },
+    /* ---------- S07 · Circular ---------- */
+    {
+      id: 'f1-ex-rueda-rpm', tags: ['f1.S07'], block: 'B', title: 'Una rueda que gira',
+      vars: { r: [0.2, 0.8, 0.1], rpm: [60, 600, 30] },
+      statement: function (v) { return '<p>Una rueda de ' + v.r + ' m de radio gira a ' + v.rpm + ' rpm.</p>'; },
+      parts: [
+        { label: 'a', type: 'numeric', points: 3, unit: 'rad/s',
+          prompt: function () { return '¿Cuál es su velocidad angular?'; },
+          answer: function (v) { return v.rpm * 2 * Math.PI / 60; },
+          solution: function (v) { return '$\\omega = ' + v.rpm + '\\cdot\\dfrac{2\\pi}{60} = ' + fx(v.rpm * 2 * Math.PI / 60) + '$ rad/s.'; } },
+        { label: 'b', type: 'numeric', points: 3, unit: 'm/s',
+          prompt: function () { return 'Con tu $\\omega$ de a), ¿qué rapidez tiene un punto del borde?'; },
+          answer: function (v, prev) { return prev[0] * v.r; },
+          solution: function (v) { return '$v = \\omega r = ' + fx(v.rpm * 2 * Math.PI / 60 * v.r) + '$ m/s.'; } },
+        { label: 'c', type: 'numeric', points: 2, unit: 'm/s²',
+          prompt: function () { return 'Con tu rapidez de b), ¿qué aceleración centrípeta tiene ese punto?'; },
+          answer: function (v, prev) { return prev[1] * prev[1] / v.r; },
+          solution: function (v) { var w = v.rpm * 2 * Math.PI / 60; return '$a_c = v^2/r = ' + fx(w * w * v.r, 1) + '$ m/s².'; } }
+      ]
+    },
+    /* ---------- S08 · Leyes de Newton ---------- */
+    {
+      id: 'f1-ex-hielo', tags: ['f1.S08'], block: 'C', title: 'Una caja sobre hielo',
+      vars: { F: [10, 100, 5], m: [2, 40, 1], t: [2, 10, 1] },
+      statement: function (v) { return '<p>Empujas horizontalmente con ' + v.F + ' N una caja de ' + v.m + ' kg que está en reposo sobre hielo (sin fricción).</p>'; },
+      parts: [
+        { label: 'a', type: 'numeric', points: 3, unit: 'm/s²',
+          prompt: function () { return '¿Qué aceleración tiene?'; },
+          answer: function (v) { return v.F / v.m; },
+          solution: function (v) { return '$a = F/m = ' + fx(v.F / v.m) + '$ m/s².'; } },
+        { label: 'b', type: 'numeric', points: 3, unit: 'm/s',
+          prompt: function (v) { return 'Con tu aceleración de a), ¿qué rapidez lleva a los ' + v.t + ' s?'; },
+          answer: function (v, prev) { return prev[0] * v.t; },
+          solution: function (v) { return '$v = at = ' + fx(v.F / v.m * v.t) + '$ m/s.'; } },
+        { label: 'c', type: 'numeric', points: 2, unit: 'm',
+          prompt: function () { return 'Con tu aceleración de a), ¿qué distancia recorrió en ese tiempo?'; },
+          answer: function (v, prev) { return 0.5 * prev[0] * v.t * v.t; },
+          solution: function (v) { return '$\\tfrac{1}{2}at^2 = ' + fx(0.5 * v.F / v.m * v.t * v.t) + '$ m.'; } }
+      ]
+    },
+    {
+      id: 'f1-ex-cohete', tags: ['f1.S08'], block: 'C', title: 'Un cohete de juguete',
+      vars: { T: [10, 60, 5], m: [0.5, 3, 0.5], t: [1, 4, 1] },
+      where: function (v) { return v.T / v.m - g > 1; },
+      statement: function (v) { return '<p>Un cohete de juguete de ' + v.m + ' kg despega verticalmente con un empuje de ' + v.T + ' N que dura ' + v.t + ' s (desprecia el aire y la masa del combustible).</p>'; },
+      parts: [
+        { label: 'a', type: 'numeric', points: 3, unit: 'm/s²',
+          prompt: function () { return '¿Qué aceleración tiene mientras empuja el motor?'; },
+          answer: function (v) { return v.T / v.m - g; },
+          solution: function (v) { return '$T - mg = ma \\Rightarrow a = ' + fx(v.T / v.m - g) + '$ m/s².'; } },
+        { label: 'b', type: 'numeric', points: 3, unit: 'm/s',
+          prompt: function () { return 'Con tu aceleración de a), ¿qué rapidez lleva cuando se apaga el motor?'; },
+          answer: function (v, prev) { return prev[0] * v.t; },
+          solution: function (v) { return '$v = at = ' + fx((v.T / v.m - g) * v.t) + '$ m/s.'; } },
+        { label: 'c', type: 'numeric', points: 2, unit: 'm',
+          prompt: function () { return 'Con tu aceleración de a), ¿a qué altura está en ese momento?'; },
+          answer: function (v, prev) { return 0.5 * prev[0] * v.t * v.t; },
+          solution: function (v) { return '$\\tfrac{1}{2}at^2 = ' + fx(0.5 * (v.T / v.m - g) * v.t * v.t) + '$ m.'; } }
+      ]
+    },
+    /* ---------- S09 · Tensiones ---------- */
+    {
+      id: 'f1-ex-dos-bloques', tags: ['f1.S09'], block: 'C', title: 'Dos bloques jalados',
+      vars: { F: [10, 100, 5], m1: [1, 10, 1], m2: [1, 10, 1], t: [1, 5, 1] },
+      statement: function (v) { return '<p>Dos bloques de ' + v.m1 + ' kg y ' + v.m2 + ' kg, unidos por una cuerda, están sobre una mesa sin fricción. Jalas el de ' + v.m2 + ' kg con ' + v.F + ' N horizontales.</p>'; },
+      parts: [
+        { label: 'a', type: 'numeric', points: 3, unit: 'm/s²',
+          prompt: function () { return '¿Qué aceleración tienen?'; },
+          answer: function (v) { return v.F / (v.m1 + v.m2); },
+          solution: function (v) { return 'Como un solo cuerpo: $a = \\dfrac{F}{m_1 + m_2} = ' + fx(v.F / (v.m1 + v.m2)) + '$ m/s².'; } },
+        { label: 'b', type: 'numeric', points: 3, unit: 'N',
+          prompt: function () { return 'Con tu aceleración de a), ¿qué tensión tiene la cuerda entre los bloques?'; },
+          answer: function (v, prev) { return v.m1 * prev[0]; },
+          solution: function (v) { return 'La cuerda solo jala al primero: $T = m_1 a = ' + fx(v.m1 * v.F / (v.m1 + v.m2)) + '$ N.'; } },
+        { label: 'c', type: 'numeric', points: 2, unit: 'm',
+          prompt: function (v) { return 'Con tu aceleración de a), ¿qué distancia recorren en ' + v.t + ' s desde el reposo?'; },
+          answer: function (v, prev) { return 0.5 * prev[0] * v.t * v.t; },
+          solution: function (v) { return '$\\tfrac{1}{2}at^2 = ' + fx(0.5 * v.F / (v.m1 + v.m2) * v.t * v.t) + '$ m.'; } }
+      ]
+    },
+    /* ---------- S10 · Resortes y fricción ---------- */
+    {
+      id: 'f1-ex-resorte-friccion', tags: ['f1.S10'], block: 'C', title: 'Un resorte que jala una caja',
+      vars: { k: [100, 1000, 50], x: [0.05, 0.3, 0.05], m: [1, 10, 1], mu: [0.1, 0.5, 0.05] },
+      where: function (v) { return v.k * v.x - v.mu * v.m * g > 2; },
+      statement: function (v) { return '<p>Un resorte de $k = ' + v.k + '$ N/m, estirado ' + v.x + ' m, jala horizontalmente una caja de ' + v.m + ' kg que ya se desliza por un piso con $\\mu_k = ' + v.mu + '$.</p>'; },
+      parts: [
+        { label: 'a', type: 'numeric', points: 2, unit: 'N',
+          prompt: function () { return '¿Con qué fuerza jala el resorte?'; },
+          answer: function (v) { return v.k * v.x; },
+          solution: function (v) { return '$F = kx = ' + fx(v.k * v.x) + '$ N.'; } },
+        { label: 'b', type: 'numeric', points: 2, unit: 'N',
+          prompt: function () { return '¿Cuánto vale la fricción?'; },
+          answer: function (v) { return v.mu * v.m * g; },
+          solution: function (v) { return '$f_k = \\mu_k mg = ' + fx(v.mu * v.m * g) + '$ N.'; } },
+        { label: 'c', type: 'numeric', points: 4, unit: 'm/s²',
+          prompt: function () { return 'Con tus a) y b), ¿qué aceleración tiene la caja en ese instante?'; },
+          answer: function (v, prev) { return (prev[0] - prev[1]) / v.m; },
+          solution: function (v) { return '$a = \\dfrac{kx - f_k}{m} = ' + fx((v.k * v.x - v.mu * v.m * g) / v.m) + '$ m/s².'; } }
+      ]
+    },
+    {
+      id: 'f1-ex-deslizar-frenar', tags: ['f1.S10'], block: 'C', title: 'Una caja que se frena sola',
+      vars: { v0: [2, 15, 1], mu: [0.1, 0.6, 0.05] },
+      statement: function (v) { return '<p>Una caja se desliza a ' + v.v0 + ' m/s por un piso horizontal con $\\mu_k = ' + v.mu + '$ y nadie la empuja.</p>'; },
+      parts: [
+        { label: 'a', type: 'numeric', points: 3, unit: 'm/s²',
+          prompt: function () { return '¿Qué desaceleración tiene?'; },
+          answer: function (v) { return v.mu * g; },
+          solution: function (v) { return '$\\mu_k mg = ma \\Rightarrow a = \\mu_k g = ' + fx(v.mu * g) + '$ m/s².'; } },
+        { label: 'b', type: 'numeric', points: 3, unit: 'm',
+          prompt: function () { return 'Con tu desaceleración de a), ¿qué distancia recorre hasta detenerse?'; },
+          answer: function (v, prev) { return v.v0 * v.v0 / (2 * Math.abs(prev[0])); },
+          solution: function (v) { return '$d = \\dfrac{v_0^2}{2a} = ' + fx(v.v0 * v.v0 / (2 * v.mu * g)) + '$ m.'; } },
+        { label: 'c', type: 'numeric', points: 2, unit: 's',
+          prompt: function () { return 'Con tu desaceleración de a), ¿cuánto tarda en detenerse?'; },
+          answer: function (v, prev) { return v.v0 / Math.abs(prev[0]); },
+          solution: function (v) { return '$t = v_0/a = ' + fx(v.v0 / (v.mu * g)) + '$ s.'; } }
+      ]
+    },
+    /* ---------- S14 · Equilibrio de la partícula ---------- */
+    {
+      id: 'f1-ex-lampara-simetrica', tags: ['f1.S14'], block: 'E', title: 'Una lámpara colgada del centro',
+      vars: { m: [1, 30, 1], th: [15, 75, 5] },
+      where: function (v) { return v.th !== 30; },
+      statement: function (v) { return '<p>Una lámpara de ' + v.m + ' kg cuelga del centro de un cable; cada mitad del cable forma $' + v.th + '^\\circ$ con la horizontal.</p>'; },
+      parts: [
+        { label: 'a', type: 'numeric', points: 2, unit: 'N',
+          prompt: function () { return '¿Cuánto pesa la lámpara?'; },
+          answer: function (v) { return v.m * g; },
+          solution: function (v) { return '$mg = ' + fx(v.m * g) + '$ N.'; } },
+        { label: 'b', type: 'numeric', points: 4, unit: 'N',
+          prompt: function () { return 'Con tu peso de a), ¿qué tensión tiene cada mitad del cable?'; },
+          answer: function (v, prev) { return prev[0] / (2 * sn(v.th)); },
+          solution: function (v) { return '$2T\\sin\\theta = mg \\Rightarrow T = ' + fx(v.m * g / (2 * sn(v.th))) + '$ N.'; } },
+        { label: 'c', type: 'numeric', points: 2, unit: 'N',
+          prompt: function () { return 'Con tu tensión de b), ¿cuánto vale su componente horizontal?'; },
+          answer: function (v, prev) { return prev[1] * cs(v.th); },
+          solution: function (v) { return '$T\\cos\\theta = ' + fx(v.m * g / (2 * tn(v.th))) + '$ N.'; } }
       ]
     }
   ]);

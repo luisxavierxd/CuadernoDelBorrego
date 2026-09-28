@@ -173,7 +173,33 @@
       (consts.length ? ' Toma ' + consts.join(' y ') + '.' : '');
   }
 
-  var api = { instance: instance, grade: grade, parseNumber: parseNumber, sameExpr: sameExpr, withinTol: withinTol, numberHint: numberHint };
+  /* Teclas extra para respuestas numéricas. En celular el teclado decimal no trae el signo menos
+     ni la e, así que no se podía escribir -3 ni 8.3×10^-5. Insertan en el cursor sin cerrar el
+     teclado (mousedown sin robar el foco). */
+  function numberKeys(input) {
+    function key(label, text, aria) {
+      var b = document.createElement('button');
+      b.type = 'button'; b.className = 'num-key'; b.textContent = label; b.setAttribute('aria-label', aria);
+      b.addEventListener('mousedown', function (e) { e.preventDefault(); });
+      b.addEventListener('click', function () {
+        if (input.readOnly || input.disabled) return;
+        var s = input.selectionStart != null ? input.selectionStart : input.value.length;
+        var e = input.selectionEnd != null ? input.selectionEnd : s;
+        input.value = input.value.slice(0, s) + text + input.value.slice(e);
+        try { input.setSelectionRange(s + text.length, s + text.length); } catch (err) { /* sin cursor */ }
+        input.focus();
+        input.dispatchEvent(new Event('input', { bubbles: true }));
+      });
+      return b;
+    }
+    var row = document.createElement('div');
+    row.className = 'num-keys';
+    row.appendChild(key('−', '-', 'Escribir signo menos'));
+    row.appendChild(key('×10ⁿ', '×10^', 'Escribir por diez a la potencia'));
+    return row;
+  }
+
+  var api = { instance: instance, grade: grade, parseNumber: parseNumber, sameExpr: sameExpr, withinTol: withinTol, numberHint: numberHint, numberKeys: numberKeys };
   window.CBExercises = api;
 
   /* ------------------------------ UI ------------------------------ */
@@ -256,6 +282,7 @@
       answer.appendChild(h('div', { class: 'lab-field' }, [
         h('label', { for: inputId, class: 'lab-field__label' }, ['Tu resultado']),
         h('div', { class: 'exercise__inputrow' }, [inp, ex.unit ? h('span', { class: 'exercise__unit' }, [ex.unit]) : null]),
+        numberKeys(inp),
         h('p', { id: inputId + '-help', class: 'lab-field__hint', html: numberHint({ fis: /^f\d/.test(ex.id || ''), parts: [ex.prompt, ex.answer, ex.solution] }) })
       ]));
       inp.addEventListener('keydown', function (e) { if (e.key === 'Enter') { e.preventDefault(); check(); } });
