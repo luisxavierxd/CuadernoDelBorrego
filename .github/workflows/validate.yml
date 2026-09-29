@@ -1,0 +1,76 @@
+name: validate
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  schedule:
+    - cron: '0 12 * * 1'   # lunes 06:00 en CDMX: links externos
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: validate-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  validate:
+    # Todo npm run validate (esquemas, contraste, bancos, ejemplos, formularios y QA en navegador)
+    # sin links externos: un sitio de terceros caído no pone el CI en rojo.
+    if: github.event_name != 'schedule'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: lts/*
+          cache: npm
+
+      - run: npm ci
+
+      - name: Caché de Playwright
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
+
+      - run: npx playwright install --with-deps chromium
+
+      # Lo que el QA baja de CDN (KaTeX, MathLive, fuentes…) lleva versión fija; guardarlo evita
+      # cientos de descargas por corrida.
+      - name: Caché de CDN
+        uses: actions/cache@v4
+        with:
+          path: node_modules/.cache/cuaderno/cdn
+          key: cdn-${{ hashFiles('**/*.html') }}
+          restore-keys: cdn-
+
+      - name: npm run validate -- --offline
+        run: npm run validate -- --offline 2>&1 | tee validate.log
+
+      - name: Subir el log si falla
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: validate-log
+          path: validate.log
+          retention-days: 14
+
+  links:
+    # Revisión semanal de links externos (bibliografía de OpenStax, CDN, créditos).
+    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: lts/*
+          cache: npm
+      - run: npm ci
+      - run: node scripts/check.js

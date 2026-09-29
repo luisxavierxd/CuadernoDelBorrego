@@ -1,10 +1,32 @@
 # Cuaderno del Borrego
 
+[![validate](https://github.com/luisxavierxd/CuadernoDelBorrego/actions/workflows/validate.yml/badge.svg)](https://github.com/luisxavierxd/CuadernoDelBorrego/actions/workflows/validate.yml)
+[![Código: MIT](https://img.shields.io/badge/c%C3%B3digo-MIT-blue)](LICENSE)
+[![Contenido: CC BY-NC-SA 4.0](https://img.shields.io/badge/contenido-CC%20BY--NC--SA%204.0-lightgrey)](LICENSE-CONTENT.md)
+
+**[▶ Ver el sitio](https://luisxavierxd.github.io/CuadernoDelBorrego/)**
+
+![Lab «¿Es tu antiderivada?»: el alumno escribe e^(2x), el lab detecta que sobra un factor de 2; con e^(2x)/2 confirma que F′(x) = f(x) y anima el Teorema Fundamental](docs/media/lab-demo.gif)
+
+| Hub | Lección | Simulacro de examen |
+|---|---|---|
+| ![Portada del sitio en tema pizarrón](docs/media/hub.png) | ![Sesión 5 de Cálculo 1, regla de la cadena](docs/media/sesion.png) | ![Simulacro de examen de Física 1 con reloj sugerido](docs/media/examen.png) |
+
 Clases universitarias de cálculo y física, autogestionadas y pensadas para quien batalla con la materia.
 Ya están completos los dos primeros cursos (15 sesiones cada uno); Cálculo 2 y 3 (ecuaciones diferenciales)
 y Física 2 y 3 están en el plan. Cada sesión trae una lección explicada paso a paso, un lab que compara tu
 respuesta contra la real, ejercicios parametrizados y quiz; cada curso tiene banco de preguntas, simulacros
 de examen y formulario imprimible. Sitio estático para GitHub Pages. **Proyecto de alumnos, no oficial.**
+
+### Qué lo hace distinto
+
+Los labs no solo dicen «mal»: comparan tu respuesta con la real y te dicen en qué te equivocaste
+(el signo, un factor, el dominio) mientras lo dibujan. Cada sesión tiene un banco de 100 preguntas
+parametrizadas, y los simulacros arman parciales con problemas de incisos encadenados. Todo se valida
+en cada push: esquemas, cientos de instancias de ejemplos y ejercicios, contraste WCAG AA en ambos temas
+y Playwright a 360, 1024 y 1440 px.
+
+Diseño instruccional, arquitectura de datos y estrategia de validación: Luis Xavier. Implementación asistida por IA (Claude Code).
 
 HTML/CSS/JS vanilla, **sin build step ni framework**. Librerías por CDN con versión fija:
 KaTeX 0.16.47, math.js 15.2.0, MathLive 0.110.0, anime.js 3.2.1 y manim-web 0.3.24 (3D solo en PC).
@@ -45,6 +67,8 @@ data/<curso>/exam-problems.js      Problemas de examen con incisos encadenados y
 data/<curso>/formulario.js         Fórmulas del formulario, con comprobación numérica
 reference/lab-antiderivada.html    Demo aprobada que se portó a antiderivative-check
 scripts/                           Validación en Node
+.github/workflows/validate.yml     CI: npm run validate en cada push y PR; links externos cada semana
+docs/media/                        GIF y capturas de este README
 ```
 
 ## Cómo es una sesión
@@ -78,7 +102,9 @@ npm run test:formulario         # fórmulas comprobadas; hojas carta, ≤ 2 hoja
 npm run qa                      # Playwright: 360/1024/1440 px, ambos temas, reduced-motion, labs montados
 ```
 
-`npm run validate:all` ignora la caché. `node scripts/check.js --offline` omite la revisión de links externos.
+`npm run validate:all` ignora la caché. `npm run validate -- --offline` (o `node scripts/check.js --offline`) omite
+la revisión de links externos; así corre el CI en cada push y PR, y una vez por semana revisa también los externos
+([`.github/workflows/validate.yml`](.github/workflows/validate.yml)).
 Para publicar una sesión nueva: escribe `data/<curso>/sesion-NN.js`, marca `ready: true` en su
 `course-meta.js` y corre `node scripts/make-shell.js <curso> NN`.
 
@@ -90,4 +116,7 @@ Para publicar una sesión nueva: escribe `data/<curso>/sesion-NN.js`, marca `rea
 - Todo lo imprimible, en hoja carta.
 - Todo concepto sale de una fuente verificable (OpenStax, CC BY-NC-SA 4.0) y va en la bibliografía de la sesión; ejercicios y problemas son propios.
 
-Código bajo licencia MIT.
+## Licencia
+
+- **Código:** MIT, ver [`LICENSE`](LICENSE).
+- **Contenido educativo** (lecciones adaptadas de OpenStax y ejercicios, problemas y bancos propios): CC BY-NC-SA 4.0, ver [`LICENSE-CONTENT.md`](LICENSE-CONTENT.md).

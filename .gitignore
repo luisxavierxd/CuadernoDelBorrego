@@ -1,5 +1,7 @@
 # Documentación de trabajo y archivos del asistente (no se publican)
-docs/
+docs/*
+!docs/media/
+review/
 BRIEF*.md
 CLAUDE.md
 .claude/
