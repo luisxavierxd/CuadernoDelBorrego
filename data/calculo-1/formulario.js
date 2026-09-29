@@ -68,7 +68,7 @@
           { label: 'Criterio de la segunda derivada', tex: "f'(c) = 0:\\ \\ f''(c) < 0 \\Rightarrow \\text{máx},\\ \\ f''(c) > 0 \\Rightarrow \\text{mín}", s: 7 },
           { label: 'Concavidad', tex: "f'' > 0: \\cup\\qquad f'' < 0: \\cap", s: 7 },
           { label: 'Inflexión', tex: "f'' \\text{ cambia de signo}", s: 7 },
-          { label: 'Óptimo en [a, b]', tex: "\\text{compara } f \\text{ en los críticos, en } a \\text{ y en } b", s: 8 }
+          { label: 'Óptimo en [a, b]', tex: "\\text{compara } f \\text{ en los críticos},\\quad \\text{en } a \\text{ y en } b", s: 8 }
         ]
       },
       {
