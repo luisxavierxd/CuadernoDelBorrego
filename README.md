@@ -1,6 +1,6 @@
 # Cuaderno del Borrego
 
-[![validate](https://github.com/luisxavierxd/CuadernoDelBorrego/actions/workflows/validate.yml/badge.svg)](https://github.com/luisxavierxd/CuadernoDelBorrego/actions/workflows/validate.yml)
+[![validate](https://github.com/luisxavierxd/CuadernoDelBorrego/actions/workflows/validate.yml/badge.svg?branch=main&event=push)](https://github.com/luisxavierxd/CuadernoDelBorrego/actions/workflows/validate.yml)
 [![Código: MIT](https://img.shields.io/badge/c%C3%B3digo-MIT-blue)](LICENSE)
 [![Contenido: CC BY-NC-SA 4.0](https://img.shields.io/badge/contenido-CC%20BY--NC--SA%204.0-lightgrey)](LICENSE-CONTENT.md)
 
@@ -119,4 +119,4 @@ Para publicar una sesión nueva: escribe `data/<curso>/sesion-NN.js`, marca `rea
 ## Licencia
 
 - **Código:** MIT, ver [`LICENSE`](LICENSE).
-- **Contenido educativo** (lecciones adaptadas de OpenStax y ejercicios, problemas y bancos propios): CC BY-NC-SA 4.0, ver [`LICENSE-CONTENT.md`](LICENSE-CONTENT.md).
+- **Contenido educativo** (lecciones adaptadas de OpenStax; ejemplos, ejercicios, problemas, bancos y formularios propios): CC BY-NC-SA 4.0, ver [`LICENSE-CONTENT.md`](LICENSE-CONTENT.md).

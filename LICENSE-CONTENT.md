@@ -1,7 +1,7 @@
 # Licencia del contenido
 
-El **código** de este repositorio (HTML, CSS, JavaScript y scripts de validación) está bajo la
-licencia MIT; ver [`LICENSE`](LICENSE).
+El **código** de este repositorio (HTML, CSS, JavaScript de `shared/` y `scripts/`, incluidos labs
+y diagramas) está bajo la licencia MIT; ver [`LICENSE`](LICENSE).
 
 El **contenido educativo** está bajo la licencia
 [Creative Commons Atribución-NoComercial-CompartirIgual 4.0 Internacional (CC BY-NC-SA 4.0)](https://creativecommons.org/licenses/by-nc-sa/4.0/deed.es).
@@ -15,8 +15,11 @@ El **contenido educativo** está bajo la licencia
 | Lecciones: conceptos, explicaciones, recetas, dudas comunes y resúmenes | `data/<curso>/sesion-NN.js` | Adaptado de OpenStax (ver abajo) |
 | Ejemplos resueltos, ejercicios parametrizados y errores comunes | `data/<curso>/sesion-NN.js` | Propio |
 | Bancos de preguntas (100 por sesión) | `data/<curso>/bank/` | Propio |
-| Problemas de examen y sus figuras | `data/<curso>/exam-problems.js`, `shared/js/diagrams/` | Propio |
+| Problemas de examen | `data/<curso>/exam-problems.js` | Propio |
 | Formularios imprimibles | `data/<curso>/formulario.js` | Propio |
+
+Aunque viven en archivos `.js` dentro de `data/`, lo que cubre esta licencia son los textos,
+enunciados, datos y soluciones; el código que los muestra y califica sigue siendo MIT.
 
 Todo lo anterior, propio o adaptado, se publica bajo CC BY-NC-SA 4.0. Las lecciones lo requieren
 por ser obra derivada de OpenStax; los ejercicios, problemas, bancos y formularios propios usan la
