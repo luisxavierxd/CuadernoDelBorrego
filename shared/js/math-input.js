@@ -4,7 +4,7 @@
    (fracciones, exponentes, raíces) y se convierte a math.js con CBLatex.
    Si MathLive no carga, queda un campo de texto normal con la misma API.
 
-   CBMathInput.create({ label, hint, palette: 'calculo'|'fisica', onEnter })
+   CBMathInput.create({ label, hint, palette: 'calculo'|'fisica'|'multi', onEnter })
      → { node, get(), setMath(expr), setLatex(tex), focus(), lock() }
    get() devuelve la expresión en sintaxis de math.js ('' si está vacío) y
    lanza un Error con mensaje en español si falta completar algo.
@@ -67,6 +67,8 @@
     ['tan<sup>−1</sup>', '\\arctan\\left(#0\\right)', 'Arcotangente']
   ];
   var FISICA = [['°', '^{\\circ}', 'Grados']];
+  // Varias variables (Cálculo 2): ángulos y radio esférico.
+  var MULTI = [['θ', '\\theta', 'Theta'], ['φ', '\\phi', 'Phi'], ['ρ', '\\rho', 'Rho']];
 
   function create(opts) {
     opts = opts || {};
@@ -83,7 +85,7 @@
     var locked = false;
 
     var palette = h('div', { class: 'math-palette', role: 'toolbar', 'aria-label': 'Símbolos para ' + (opts.label || 'tu respuesta') });
-    BASE.concat(opts.palette === 'fisica' ? FISICA : []).forEach(function (b) {
+    BASE.concat(opts.palette === 'fisica' ? FISICA : opts.palette === 'multi' ? MULTI : []).forEach(function (b) {
       var btn = h('button', { type: 'button', class: 'math-palette__btn', title: b[2], 'aria-label': b[2], html: b[0] });
       btn.addEventListener('mousedown', function (e) { e.preventDefault(); });     // no robar el foco
       btn.addEventListener('click', function () {

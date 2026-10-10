@@ -9,6 +9,9 @@
      answer(v) → número | expresión (string)
      unit?, tol?: { rel } | { abs }              (numeric; por omisión rel 1 %)
      integrand?(v) → string, domain?: [a, b]     (expr: la respuesta es una antiderivada, se acepta + C)
+     exprVars?: ['x', 'y', …]                    (expr en varias variables; domain: [a, b] para todas
+                                                  o { x: [a, b], y: [c, d] })
+     partialOf?(v) → { f, wrt }                  (expr: la respuesta es ∂f/∂wrt; se compara con math.derivative)
      options?(v) → [{ text, correct?, say? }]    (choice)
      mistakes?: { clave: v → valor típico erróneo }
      feedback?: [{ when: 'clave', say: string | v → string }]   mensaje "casi"
@@ -68,20 +71,43 @@
     return d <= tol.rel * Math.max(Math.abs(ans), 1e-9);
   }
 
+  // 'x, y y z' para el aviso del editor (con letras griegas donde toque).
+  var GREEK = { theta: 'θ', phi: 'φ', rho: 'ρ', lambda: 'λ' };
+  function varList(names) {
+    var n = names.map(function (k) { return GREEK[k] || k; });
+    return n.length > 1 ? n.slice(0, -1).join(', ') + ' y ' + n[n.length - 1] : n[0];
+  }
+
   function sayFor(ex, key, v) {
     var fb = (ex.feedback || []).filter(function (f) { return f.when === key; })[0];
     if (!fb) return null;
     return typeof fb.say === 'function' ? fb.say(v) : fb.say;
   }
 
-  // ¿Dos expresiones en x son iguales en `n` puntos del dominio? (upToC: se permite una constante)
-  function sameExpr(math, e1, e2, dom, upToC) {
+  // Punto i de n en el dominio. Con una variable, una malla en x; con varias, una sucesión de
+  // Halton (bases 2, 3, 5, 7) para cubrir la caja sin alinear los puntos.
+  var HALTON = [2, 3, 5, 7, 11];
+  function halton(i, b) { var f = 1, r = 0; while (i > 0) { f /= b; r += f * (i % b); i = Math.floor(i / b); } return r; }
+  function samplePoint(names, dom, i, n) {
+    var scope = {};
+    names.forEach(function (k, j) {
+      var r = Array.isArray(dom) ? dom : (dom[k] || [0.2, 2.2]);
+      var u = names.length === 1 ? (i + 0.5) / n : 0.02 + 0.96 * halton(i + 1, HALTON[j % HALTON.length]);
+      scope[k] = r[0] + (r[1] - r[0]) * u;
+    });
+    return scope;
+  }
+
+  // ¿Dos expresiones son iguales en `n` puntos del dominio? (upToC: se permite una constante)
+  // names: variables de la expresión (por omisión solo x).
+  function sameExpr(math, e1, e2, dom, upToC, names) {
     var prep = window.LabMath && window.LabMath.antiderivative ? window.LabMath.antiderivative.prep : function (s) { return s; };
     var c1 = math.parse(prep(e1)).compile(), c2 = math.parse(prep(e2)).compile();
-    var a = dom[0], b = dom[1], diffs = [], n = 30;
+    names = names && names.length ? names : ['x'];
+    var diffs = [], n = names.length > 1 ? 40 : 30;
     for (var i = 0; i < n; i++) {
-      var x = a + (b - a) * (i + 0.5) / n, y1, y2;
-      try { y1 = c1.evaluate({ x: x }); y2 = c2.evaluate({ x: x }); } catch (e) { continue; }
+      var sc = samplePoint(names, dom, i, n), y1, y2;
+      try { y1 = c1.evaluate(Object.assign({}, sc)); y2 = c2.evaluate(Object.assign({}, sc)); } catch (e) { continue; }
       if (typeof y1 !== 'number' || typeof y2 !== 'number' || !isFinite(y1) || !isFinite(y2)) continue;
       diffs.push({ d: y1 - y2, s: 1 + Math.abs(y2) });
     }
@@ -111,8 +137,18 @@
     if (ex.check === 'expr') {
       if (!math) return { kind: 'invalid', say: 'Cargando el verificador…' };
       if (!String(input || '').trim()) return { kind: 'invalid', say: 'Escribe una expresión.' };
-      var dom = ex.domain || [0.2, 2.2];
+      var dom = ex.domain || [0.2, 2.2], names = ex.exprVars;
       try {
+        // Derivada parcial ∂f/∂wrt: la referencia sale de math.derivative, no de answer().
+        if (ex.partialOf) {
+          var po = ex.partialOf(v), want = math.derivative(LM.antiderivative.prep(po.f), po.wrt).toString();
+          if (sameExpr(math, input, want, dom, false, names)) return { kind: 'ok' };
+          for (var pm in (ex.mistakes || {})) {
+            if (sameExpr(math, input, ex.mistakes[pm](v), dom, false, names)) return { kind: 'warn', key: pm, say: sayFor(ex, pm, v) };
+          }
+          if (sameExpr(math, '-(' + input + ')', want, dom, false, names)) return { kind: 'warn', key: 'sign', say: sayFor(ex, 'sign', v) || 'Casi: tu signo está invertido.' };
+          return { kind: 'bad' };
+        }
         // La respuesta es la derivada de derivativeOf(v): se compara con math.derivative.
         if (ex.derivativeOf) {
           var rd = LM.derivative.verify(math, ex.derivativeOf(v), input, dom[0], dom[1]);
@@ -146,9 +182,9 @@
           if (r.reason === 'domain') return { kind: 'invalid', say: 'No pude evaluar tu expresión en el intervalo; revisa paréntesis y dominio.' };
           return { kind: 'bad' };
         }
-        if (sameExpr(math, input, ex.answer(v), dom, false)) return { kind: 'ok' };
+        if (sameExpr(math, input, ex.answer(v), dom, false, names)) return { kind: 'ok' };
         for (var q in (ex.mistakes || {})) {
-          if (sameExpr(math, input, ex.mistakes[q](v), dom, false)) return { kind: 'warn', key: q, say: sayFor(ex, q, v) };
+          if (sameExpr(math, input, ex.mistakes[q](v), dom, false, names)) return { kind: 'warn', key: q, say: sayFor(ex, q, v) };
         }
         return { kind: 'bad' };
       } catch (e) {
@@ -199,7 +235,7 @@
     return row;
   }
 
-  var api = { instance: instance, grade: grade, parseNumber: parseNumber, sameExpr: sameExpr, withinTol: withinTol, numberHint: numberHint, numberKeys: numberKeys };
+  var api = { instance: instance, grade: grade, parseNumber: parseNumber, sameExpr: sameExpr, varList: varList, withinTol: withinTol, numberHint: numberHint, numberKeys: numberKeys };
   window.CBExercises = api;
 
   /* ------------------------------ UI ------------------------------ */
@@ -267,7 +303,8 @@
       if (ex.check === 'expr' && window.CBMathInput) {
         var mi = window.CBMathInput.create({
           label: ex.integrand ? 'Tu antiderivada F(x)' : 'Tu respuesta',
-          hint: ex.integrand ? 'Escribe como en papel: la barra “/” hace una fracción y “^” un exponente. La constante C es opcional.' : 'Escribe como en papel; usa la paleta para fracciones, raíces y funciones.',
+          hint: ex.integrand ? 'Escribe como en papel: la barra “/” hace una fracción y “^” un exponente. La constante C es opcional.' : ex.exprVars ? 'Puedes usar ' + varList(ex.exprVars) + '. Escribe como en papel.' : 'Escribe como en papel; usa la paleta para fracciones, raíces y funciones.',
+          palette: ex.palette || (ex.exprVars ? 'multi' : undefined),
           onEnter: check
         });
         answer.appendChild(mi.node);
@@ -283,7 +320,7 @@
         h('label', { for: inputId, class: 'lab-field__label' }, ['Tu resultado']),
         h('div', { class: 'exercise__inputrow' }, [inp, ex.unit ? h('span', { class: 'exercise__unit' }, [ex.unit]) : null]),
         numberKeys(inp),
-        h('p', { id: inputId + '-help', class: 'lab-field__hint', html: numberHint({ fis: /^f\d/.test(ex.id || ''), parts: [ex.prompt, ex.answer, ex.solution] }) })
+        h('p', { id: inputId + '-help', class: 'lab-field__hint', html: numberHint({ fis: /^f1/.test(ex.id || ''), parts: [ex.prompt, ex.answer, ex.solution] }) })
       ]));
       inp.addEventListener('keydown', function (e) { if (e.key === 'Enter') { e.preventDefault(); check(); } });
       get = function () { return inp.value; };

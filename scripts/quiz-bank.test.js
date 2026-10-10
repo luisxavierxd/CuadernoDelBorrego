@@ -158,7 +158,7 @@ if (!isMainThread) {
 } else {
   (async () => {
     const jobs = [];
-    for (const course of ['calculo-1', 'fisica-1']) {
+    for (const course of require('./lib/courses').courses()) {
       const dir = path.join(ROOT, 'data', course, 'bank');
       if (!fs.existsSync(dir)) continue;
       fs.readdirSync(dir).filter((x) => /^sesion-\d\d\.js$/.test(x)).forEach((f) => jobs.push({ course, f }));

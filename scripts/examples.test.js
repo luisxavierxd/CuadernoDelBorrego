@@ -15,6 +15,8 @@ const LIBS = ['labs/registry', 'labs/antiderivative-check', 'labs/projectile-che
   'labs/units', 'labs/vector-sum', 'labs/dot-cross', 'labs/motion-graphs', 'labs/kinematics-check', 'labs/circular-vectors',
   'labs/fbd-builder', 'labs/atwood', 'labs/spring-friction', 'labs/incline', 'labs/work-area', 'labs/energy-bars', 'labs/particle-equilibrium', 'labs/beam-equilibrium', 'exercises']
   .map((n) => path.join(ROOT, 'shared/js', n + '.js'));
+// Labs nuevos (N2 en adelante): se agregan antes de exercises.js para que sus ejemplos se verifiquen.
+LIBS.splice(LIBS.length - 1, 0, ...require('./lib/courses').extraLabs(LIBS.map((p) => path.basename(p, '.js'))).map((n) => path.join(ROOT, 'shared/js/labs', n + '.js')));
 const N_FAST = 200, N_EXPR = 50;
 
 let pass = 0, fail = 0;
@@ -32,7 +34,7 @@ function rng(seed) {                                   // mulberry32: instancias
 
 function sessionFiles() {
   const out = [];
-  for (const course of ['calculo-1', 'fisica-1']) {
+  for (const course of require('./lib/courses').courses()) {
     const dir = path.join(ROOT, 'data', course);
     for (const f of fs.readdirSync(dir)) if (/^sesion-\d\d\.js$/.test(f)) out.push(path.join(dir, f));
   }

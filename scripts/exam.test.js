@@ -24,9 +24,10 @@ const clean = (s) => typeof s === 'string' && s.length > 5 && !/undefined|NaN|In
   // La página del examen carga las figuras de ambos cursos y las comunes: un nombre repetido
   // haría que un curso dibujara la figura del otro (pasó con exam-dron).
   const own = {};
-  for (const c of ['calculo-1', 'fisica-1']) own[c] = Object.keys(loadData(path.join(ROOT, 'shared/js/diagrams', c + '.js'), {}).Diagrams || {});
-  own['calculo-1'].filter((id) => own['fisica-1'].includes(id)).forEach((id) => ok(false, `la figura ${id} existe en ambos cursos`));
-  for (const course of ['calculo-1', 'fisica-1']) {
+  const COURSES = require('./lib/courses').courses();
+  for (const c of COURSES) own[c] = Object.keys(loadData(path.join(ROOT, 'shared/js/diagrams', c + '.js'), {}).Diagrams || {});
+  COURSES.forEach((a, i) => COURSES.slice(i + 1).forEach((b) => own[a].filter((id) => own[b].includes(id)).forEach((id) => ok(false, `la figura ${id} existe en ${a} y ${b}`))));
+  for (const course of COURSES) {
     const file = path.join(ROOT, 'data', course, 'exam-problems.js');
     if (!fs.existsSync(file)) continue;
     const W = loadData(LIBS, {});

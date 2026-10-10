@@ -16,7 +16,7 @@ function ok(cond, msg) { if (cond) pass++; else { fail++; console.log('✗ ' + m
   const math = await loadMathjs();
   const W = loadData(LIBS, {});
   const LM = W.LabMath;
-  for (const course of ['calculo-1', 'fisica-1']) {
+  for (const course of require('./lib/courses').courses()) {
     const file = path.join(ROOT, 'data', course, 'formulario.js');
     if (!fs.existsSync(file)) continue;
     const F = loadData(file, {}).FORMULARIO;

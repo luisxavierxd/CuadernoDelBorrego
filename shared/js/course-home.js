@@ -1,7 +1,8 @@
 /* =====================================================================
    Portada de curso (§7.1, §7.5) — todo sale de window.COURSE_META.
    - Firma animada del hero: Cálculo = secante que se vuelve tangente;
-     Física = proyectil con sus vectores v y a.
+     Física = proyectil con sus vectores v y a. En N2: Cálculo = subir por el
+     gradiente entre curvas de nivel; Física = carga de prueba en un dipolo.
    - Contadores calculados desde los datos.
    - Línea de tiempo de 15 semanas con marcas de quiz (Q) y parcial (P).
    - Temario por bloque; la tarjeta enlaza solo si la sesión ya existe (ready).
@@ -116,10 +117,98 @@
     return { draw: draw, from: 0, to: 0.74 };
   }
 
+  /* ---------- Firma N2 de Cálculo: subir por el gradiente ---------- */
+  // Curvas de nivel de f = x²/4 + y² (elipses) y un punto que sube por −∇ hacia afuera:
+  // el vector ∇f siempre cruza las curvas de nivel en ángulo recto.
+  function signGradient(svg) {
+    var X = function (x) { return 300 + x * 62; };
+    var Y = function (y) { return 205 - y * 62; };
+    var g = el('g', { 'class': 'sketch' }, svg);
+    el('path', { d: 'M' + X(-4.4) + ' ' + Y(0) + 'H' + X(4.4) + 'M' + X(0) + ' ' + Y(-2.6) + 'V' + Y(2.6), 'class': 'axis', 'stroke-width': 1.4, fill: 'none' }, g);
+    [0.5, 1, 1.5, 2, 2.5].forEach(function (c, i) {
+      var d = '';
+      for (var k = 0; k <= 96; k++) { var t = 2 * Math.PI * k / 96; d += (k ? 'L' : 'M') + X(2 * c * Math.cos(t)).toFixed(1) + ' ' + Y(c * Math.sin(t)).toFixed(1); }
+      el('path', { d: d + 'Z', 'class': i % 2 ? 'aux' : 'ref', 'stroke-width': 2.4, fill: 'none', opacity: 0.55 + 0.1 * i }, g);
+    });
+    var trace = el('path', { 'class': 'trace', 'stroke-width': 3, fill: 'none', 'stroke-linecap': 'round' }, g);
+    var grad = el('path', { 'class': 'error', 'stroke-width': 3.2, fill: 'none', 'stroke-linecap': 'round', 'stroke-linejoin': 'round' }, g);
+    var dot = el('circle', { r: 8, 'class': 'dot-trace' }, g);
+    var lab = el('text', { 'class': 'ann', 'font-size': 26 }, g);
+    lab.textContent = '∇f';
+    var cap = el('text', { 'class': 'ann', 'font-size': 21, x: 300, y: 400, 'text-anchor': 'middle' }, g);
+    cap.textContent = '∇f ⟂ curvas de nivel';
+    // Línea de gradiente: dx/dt = x/2, dy/dt = 2y → y = y0 (x/x0)⁴, desde (0.6, 0.08) hasta y = 2.3.
+    var x0 = 0.6, y0 = 0.08, xe = x0 * Math.pow(2.3 / y0, 0.25);
+    function at(u) { var x = x0 + (xe - x0) * u; return { x: x, y: y0 * Math.pow(x / x0, 4) }; }
+    function draw(u) {
+      var d = '';
+      for (var i = 0; i <= 40; i++) { var p = at(u * i / 40); d += (i ? 'L' : 'M') + X(p.x).toFixed(1) + ' ' + Y(p.y).toFixed(1); }
+      trace.setAttribute('d', d);
+      var q = at(u), gx = q.x / 2, gy = 2 * q.y, L = Math.hypot(gx, gy) || 1, len = 70;
+      var sx = X(q.x), sy = Y(q.y), ex = sx + gx / L * len, ey = sy - gy / L * len, ux = (ex - sx) / len, uy = (ey - sy) / len, hh = 11;
+      grad.setAttribute('d', 'M' + sx + ' ' + sy + 'L' + ex + ' ' + ey + 'M' + (ex - ux * hh - uy * hh * 0.6) + ' ' + (ey - uy * hh + ux * hh * 0.6) + 'L' + ex + ' ' + ey + 'L' + (ex - ux * hh + uy * hh * 0.6) + ' ' + (ey - uy * hh - ux * hh * 0.6));
+      dot.setAttribute('cx', sx); dot.setAttribute('cy', sy);
+      lab.setAttribute('x', ex + 8); lab.setAttribute('y', ey - 8);
+    }
+    return { draw: draw, from: 0, to: 0.72 };
+  }
+
+  /* ---------- Firma N2 de Física: dipolo y carga de prueba ---------- */
+  function signDipole(svg) {
+    var A = { x: 200, y: 200, q: 1 }, B = { x: 400, y: 200, q: -1 };
+    var g = el('g', { 'class': 'sketch' }, svg);
+    function E(x, y) {
+      var ex = 0, ey = 0;
+      [A, B].forEach(function (c) { var dx = x - c.x, dy = y - c.y, r = Math.hypot(dx, dy) || 1; ex += c.q * dx / (r * r * r); ey += c.q * dy / (r * r * r); });
+      return [ex, ey];
+    }
+    // Desde c, siguiendo E (dir = 1) o −E (dir = −1), hasta la otra carga o el borde.
+    function line(c, ang, dir) {
+      var o = c === A ? B : A, x = c.x + 20 * Math.cos(ang), y = c.y + 20 * Math.sin(ang), pts = [[x, y]], hit = false;
+      for (var i = 0; i < 400; i++) {
+        var e = E(x, y), L = Math.hypot(e[0], e[1]) || 1;
+        x += 4 * dir * e[0] / L; y += 4 * dir * e[1] / L;
+        if (x < 30 || x > 570 || y < 30 || y > 390) break;
+        if (Math.hypot(x - o.x, y - o.y) < 20) { hit = true; break; }
+        pts.push([x, y]);
+      }
+      return { pts: pts, hit: hit };
+    }
+    function draw1(pts) { el('path', { d: pts.map(function (p, i) { return (i ? 'L' : 'M') + p[0].toFixed(1) + ' ' + p[1].toFixed(1); }).join(''), 'class': 'ref', 'stroke-width': 2.2, fill: 'none', opacity: 0.7 }, g); }
+    var lines = [];
+    for (var k = 0; k < 12; k++) {
+      var ang = Math.PI * 2 * (k + 0.5) / 12, a = line(A, ang, 1);
+      lines.push(a.pts); draw1(a.pts);
+      // Las que llegan a − desde lejos (simétricas de las que se van de +).
+      if (!a.hit) draw1(line(B, Math.PI - ang, -1).pts);
+    }
+    [A, B].forEach(function (c) {
+      el('circle', { cx: c.x, cy: c.y, r: 18, 'class': c.q > 0 ? 'box-err' : 'box-aux' }, g);
+      var t = el('text', { 'class': 'ann', 'font-size': 30, x: c.x, y: c.y + 10, 'text-anchor': 'middle' }, g);
+      t.textContent = c.q > 0 ? '+' : '−';
+    });
+    var path = lines[2];
+    var vec = el('path', { 'class': 'error', 'stroke-width': 3.2, fill: 'none', 'stroke-linecap': 'round', 'stroke-linejoin': 'round' }, g);
+    var dot = el('circle', { r: 7, 'class': 'dot-trace' }, g);
+    var lab = el('text', { 'class': 'ann', 'font-size': 26 }, g);
+    lab.textContent = 'E';
+    function draw(u) {
+      var p = path[Math.max(0, Math.min(path.length - 1, Math.round(u * (path.length - 1))))];
+      var e = E(p[0], p[1]), L = Math.hypot(e[0], e[1]) || 1, len = 58, ux = e[0] / L, uy = e[1] / L, ex = p[0] + ux * len, ey = p[1] + uy * len, hh = 11;
+      vec.setAttribute('d', 'M' + p[0] + ' ' + p[1] + 'L' + ex + ' ' + ey + 'M' + (ex - ux * hh - uy * hh * 0.6) + ' ' + (ey - uy * hh + ux * hh * 0.6) + 'L' + ex + ' ' + ey + 'L' + (ex - ux * hh + uy * hh * 0.6) + ' ' + (ey - uy * hh - ux * hh * 0.6));
+      dot.setAttribute('cx', p[0]); dot.setAttribute('cy', p[1]);
+      // La E va del lado de afuera de la línea (lejos del eje del dipolo).
+      var nx = -uy, ny = ux; if (ny * (ey - A.y) < 0) { nx = -nx; ny = -ny; }
+      lab.setAttribute('x', ex - ux * 20 + nx * 22 - 8); lab.setAttribute('y', ey - uy * 20 + ny * 22 + 9);
+    }
+    return { draw: draw, from: 0.1, to: 0.5 };
+  }
+
   function mountSign(meta) {
     var svg = document.getElementById('course-sign');
     if (!svg) return;
-    var sign = meta.subject === 'fis' ? signPhysics(svg) : signCalculus(svg);
+    var n2 = meta.level === 'N2';
+    var sign = meta.subject === 'fis' ? (n2 ? signDipole(svg) : signPhysics(svg)) : (n2 ? signGradient(svg) : signCalculus(svg));
     var anim = window.CBAnim;
     if (!anim || !anim.canAnimate()) { sign.draw(sign.to); return; }
     var p = { v: sign.from };

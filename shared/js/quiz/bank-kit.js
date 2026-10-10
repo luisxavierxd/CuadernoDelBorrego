@@ -6,6 +6,8 @@
      K.C(id, subtema, dificultad, enunciado, correcta, [[incorrecta, explicación]], why, opts)  opción múltiple
      K.IM(id, subtema, dificultad, vars, enunciado(v), implicita(v), respuesta(v), why)          dy/dx implícita
      K.I(id, subtema, dificultad, vars, texF(v), integrando(v), antiderivada(v), why, opts)      antiderivada (+ C)
+     K.E(id, subtema, dificultad, vars, enunciado(v), respuesta(v), why, opts)      expresión escrita
+         opts: exprVars ['x','y'], domain, partialOf(v) → { f, wrt }, mistakes, feedback, where
      K.register(subtemas, preguntas)
    Todas las preguntas son propias (source: 'propia').
    ===================================================================== */
@@ -52,6 +54,14 @@
         return Object.assign(base(id, sub, d, 'expr', vars), {
           prompt: function (v) { return '<p>' + (o.lead ? o.lead(v, tex(v)) : 'Calcula $\\displaystyle\\int ' + tex(v) + '\\,dx$.') + '</p>'; },
           integrand: integrand, answer: answer, domain: o.domain, where: o.where, mistakes: o.mistakes, feedback: o.feedback, why: why
+        });
+      },
+      // Expresión escrita en una o varias variables. Con partialOf, la referencia es math.derivative.
+      E: function (id, sub, d, vars, prompt, answer, why, o) {
+        o = o || {};
+        return Object.assign(base(id, sub, d, 'expr', vars), {
+          prompt: function (v) { return '<p>' + prompt(v) + '</p>'; },
+          answer: answer, exprVars: o.exprVars, partialOf: o.partialOf, domain: o.domain, where: o.where, mistakes: o.mistakes, feedback: o.feedback, why: why
         });
       },
       IM: function (id, sub, d, vars, prompt, implicit, answer, why, o) {

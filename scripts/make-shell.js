@@ -9,7 +9,7 @@ const { loadData } = require('./lib/load');
 
 const ROOT = path.join(__dirname, '..');
 const [course, num] = process.argv.slice(2);
-if (!course || !num) { console.error('Uso: node scripts/make-shell.js <calculo-1|fisica-1> <NN>'); process.exit(1); }
+if (!course || !num) { console.error('Uso: node scripts/make-shell.js <calculo-1|fisica-1|calculo-2|fisica-2> <NN>'); process.exit(1); }
 const NN = String(num).padStart(2, '0');
 const meta = loadData(path.join(ROOT, 'data', course, 'course-meta.js')).COURSE_META;
 const s = meta.groups.flatMap((g) => g.sessions).find((x) => x.n === +num);

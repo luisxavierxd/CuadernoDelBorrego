@@ -52,7 +52,7 @@
   // { tags, parts } para un inciso de problema de examen.
   function hintCtx(q) {
     q = q || {};
-    return { fis: /^f\d/.test((q.tags && q.tags[0]) || ''), parts: q.parts || [q.prompt, q.answer, q.why] };
+    return { fis: /^f1/.test((q.tags && q.tags[0]) || ''), parts: q.parts || [q.prompt, q.answer, q.why] };
   }
   function answerInput(kind, opts, v, unit, q) {
     var id = uid('qa');
@@ -72,7 +72,8 @@
       var anti = !!(q && q.integrand);
       var mi = window.CBMathInput.create({
         label: anti ? 'Tu antiderivada F(x)' : (q && q.implicit ? 'Tu dy/dx' : 'Tu respuesta'),
-        hint: anti ? 'Escribe como en papel; la constante C es opcional.' : (q && q.implicit ? 'Puedes usar x y y. Escribe como en papel.' : 'Escribe como en papel; usa la paleta para fracciones, raíces y funciones.')
+        hint: anti ? 'Escribe como en papel; la constante C es opcional.' : (q && q.implicit ? 'Puedes usar x y y. Escribe como en papel.' : q && q.exprVars ? 'Puedes usar ' + window.CBExercises.varList(q.exprVars) + '. Escribe como en papel.' : 'Escribe como en papel; usa la paleta para fracciones, raíces y funciones.'),
+        palette: q && (q.palette || (q.exprVars ? 'multi' : undefined))
       });
       return { node: mi.node, get: mi.get, lock: mi.lock, input: null, set: function (val) { if (val) mi.setMath(val); } };
     }

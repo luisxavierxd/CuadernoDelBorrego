@@ -1,0 +1,126 @@
+<!doctype html>
+<html lang="es-MX">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Física 2: sistemas eléctricos · Cuaderno del Borrego</title>
+    <meta name="description" content="Física 2 en 15 sesiones: carga, campo y potencial eléctrico, ley de Gauss, capacitores, ley de Ohm, Kirchhoff y circuitos RC, con explicaciones gráficas, labs y quizzes. Proyecto de alumnos, no oficial.">
+    <link rel="icon" type="image/svg+xml" href="../shared/img/favicon.svg">
+    <script>(function(){var t;try{t=localStorage.getItem('cb-theme');}catch(e){}if(t!=='light'&&t!=='dark'){t=window.matchMedia&&matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light';}document.documentElement.setAttribute('data-theme',t);})();</script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Archivo:wght@700;800&family=IBM+Plex+Mono:wght@500&family=IBM+Plex+Sans:wght@400;500;600&family=Kalam:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../shared/css/tokens.css">
+    <link rel="stylesheet" href="../shared/css/base.css">
+    <link rel="stylesheet" href="../shared/css/theme.css">
+    <link rel="stylesheet" href="../shared/css/course.css">
+</head>
+
+<body data-subject="fis">
+    <a class="visually-hidden skip-link" href="#temario">Saltar al temario</a>
+
+    <header class="site-header">
+        <div class="container">
+            <a class="brand" href="../">
+                <svg viewBox="-12 -12 24 24" fill="currentColor" aria-hidden="true"><path d="M-1.4 -9 C-6.2 -9 -7.8 -2 -7.2 3.4 C-6.6 7.8 -3.8 9.8 -1.6 8.8 C-0.8 4.4 -0.6 -3.4 -1.4 -9 Z M1.4 -9 C6.2 -9 7.8 -2 7.2 3.4 C6.6 7.8 3.8 9.8 1.6 8.8 C0.8 4.4 0.6 -3.4 1.4 -9 Z"/></svg>
+                <span>Cuaderno del Borrego<small>Física 2 · N2</small></span>
+            </a>
+            <nav class="site-nav" aria-label="Principal">
+                <a class="nav-link" href="#temario">Temario</a>
+                <a class="nav-link" href="#ritmo">Ritmo</a>
+                <a class="nav-link" href="../quiz/?curso=f2">Practicar</a>
+                <button class="theme-toggle" type="button" data-theme-toggle aria-pressed="false" aria-label="Cambiar a pizarrón (tema oscuro)">
+                    <span class="to-dark"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="13" rx="1.5"/><path d="M7 21h10M9 17v4M15 17v4M7 9c2-2 4 2 6 0s3-1 4 0"/></svg><span class="label">Pizarrón</span></span>
+                    <span class="to-light"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="3" width="15" height="18" rx="1.5"/><path d="M9 3v18M3 7h4M3 12h4M3 17h4M12 8h5M12 12h5"/></svg><span class="label">Cuaderno</span></span>
+                </button>
+            </nav>
+        </div>
+    </header>
+
+    <main id="contenido">
+        <section class="course-hero" aria-labelledby="course-title">
+            <div class="container">
+                <div class="sheet course-hero__sheet">
+                    <div class="course-hero__copy" data-intro>
+                        <p class="crumb">Física 2 · N2 · 15 sesiones</p>
+                        <h1 id="course-title">Física 2: <span class="accent">sistemas eléctricos</span></h1>
+                        <p class="lead">Electrostática, ley de Gauss, capacitores y circuitos. Cada sesión trae la idea dibujada paso a paso, derivaciones completas, ejemplos resueltos, un lab que compara tu respuesta contra la simulación y un quiz.</p>
+                        <div class="course-hero__actions">
+                            <a class="btn btn--primary" href="#temario">Ver el temario</a>
+                            <a class="btn btn--ghost" href="../quiz/?curso=f2">Practicar</a>
+                        </div>
+                    </div>
+                    <figure class="course-hero__figure">
+                        <figcaption class="sheet__title">Una carga de prueba en un dipolo</figcaption>
+                        <svg id="course-sign" class="course-hero__art" viewBox="0 0 600 420" role="img" aria-label="Líneas de campo de un dipolo, de la carga positiva a la negativa; una carga de prueba avanza por una línea y su vector E es tangente a ella."></svg>
+                    </figure>
+                </div>
+            </div>
+        </section>
+
+        <section class="section section--tight" aria-label="El curso en números">
+            <div class="container"><div class="stats" id="course-stats"></div></div>
+        </section>
+
+        <section class="section" id="ritmo" aria-labelledby="ritmo-title">
+            <div class="container">
+                <div class="section-head reveal">
+                    <p class="eyebrow">Ritmo sugerido · semestre de 15 semanas</p>
+                    <h2 id="ritmo-title">Una sesión por semana</h2>
+                    <p>Algunas sesiones son largas, y está bien. Si tu clase dura 5 o 10 semanas, ve a tu ritmo: nada se bloquea por fecha.</p>
+                </div>
+                <div class="timeline reveal" id="course-timeline"></div>
+            </div>
+        </section>
+
+        <section class="section" id="temario" aria-labelledby="temario-title">
+            <div class="container">
+                <div class="section-head reveal">
+                    <p class="eyebrow">Temario</p>
+                    <h2 id="temario-title">Quince sesiones por bloque</h2>
+                </div>
+                <div id="course-syllabus"></div>
+            </div>
+        </section>
+
+        <section class="next-level" aria-label="Siguiente nivel">
+            <div class="container" id="course-next"></div>
+        </section>
+    </main>
+
+    <footer class="site-footer">
+        <div class="container">
+            <div class="site-footer__row">
+                <a class="site-footer__brand" href="../">Cuaderno del Borrego</a>
+                <nav aria-label="Pie de página">
+                    <a href="../#biblioteca">Cursos</a>
+                    <a href="../quiz/">Practicar</a>
+                    <a href="../formularios/">Formularios</a>
+                    <a href="../creditos/">Créditos y licencias</a>
+                    <a href="https://github.com/luisxavierxd/CuadernoDelBorrego">Código</a>
+                </nav>
+            </div>
+            <div class="site-footer__row">
+                <p class="site-footer__note">Proyecto de alumnos, no oficial</p>
+                <p>Código bajo licencia MIT. Contenido bajo CC BY-NC-SA 4.0; las lecciones adaptan OpenStax.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/animejs@3.2.1/lib/anime.min.js"></script>
+    <script src="../shared/js/theme.js"></script>
+    <script src="../shared/js/site-menu.js"></script>
+    <script src="../shared/js/sketch-filters.js"></script>
+    <script src="../shared/js/animations.js"></script>
+    <script src="../data/quiz-presets.js"></script>
+    <script src="../data/fisica-2/course-meta.js"></script>
+    <script src="../shared/js/course-home.js"></script>
+    <script>
+        CBTheme.init();
+        CourseHome.render(window.COURSE_META);
+        CBAnim.init({ noticeWhat: 'la gráfica del inicio se muestra' });
+    </script>
+</body>
+
+</html>

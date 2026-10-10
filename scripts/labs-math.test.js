@@ -10,7 +10,12 @@ const ROOT = path.join(__dirname, '..');
 const LABS = ['registry', 'antiderivative-check', 'projectile-check', 'secant-tangent', 'derivative-check', 'chain-composition', 'implicit-tangent', 'f-fprime-fsecond', 'optimize-slider', 'riemann', 'area-between', 'solid-revolution',
   'units', 'vector-sum', 'dot-cross', 'motion-graphs', 'kinematics-check', 'circular-vectors',
   'fbd-builder', 'atwood', 'spring-friction', 'incline', 'work-area', 'energy-bars', 'particle-equilibrium', 'beam-equilibrium']
-  .map((n) => path.join(ROOT, 'shared/js/labs', n + '.js'));
+  .concat([]).map((n) => path.join(ROOT, 'shared/js/labs', n + '.js'));
+// Labs que no están en la lista (los de N2 en adelante) se cargan al final; sus pruebas van en
+// scripts/labs-math/<lab>.js: module.exports = ({ test, eq, near, LM, math, win }) => { … }.
+LABS.push(...require('./lib/courses').extraLabs(LABS.map((p) => path.basename(p, '.js'))).map((n) => path.join(ROOT, 'shared/js/labs', n + '.js')));
+const fs = require('fs');
+const EXTRA_TESTS = path.join(__dirname, 'labs-math');
 
 let pass = 0, fail = 0;
 function test(name, fn) {
@@ -615,6 +620,12 @@ function near(got, want, tol, msg) {
     eq(In.diagnoseA(p, 9.81 * (0.5 + 0.3 * Math.cos(Math.PI / 6))), 'frictionWrongSide');
     eq(In.diagnoseV(60, 15, 0.3, In.banked(60, 15, 0.3).max), 'ok'); eq(In.diagnoseV(60, 15, 0.3, In.banked(60, 15, 0.3).ideal), 'ideal');
   });
+  if (fs.existsSync(EXTRA_TESTS)) {
+    for (const f of fs.readdirSync(EXTRA_TESTS).filter((x) => x.endsWith('.js')).sort()) {
+      try { require(path.join(EXTRA_TESTS, f))({ test, eq, near, LM, math, win }); }
+      catch (e) { fail++; console.log(`✗ scripts/labs-math/${f} no cargó\n    ${e.message}`); }
+    }
+  }
   console.log(`\nlabs-math.test.js: ${pass} ok, ${fail} fallan.`);
   process.exit(fail ? 1 : 0);
 })().catch((e) => { console.error(e); process.exit(1); });

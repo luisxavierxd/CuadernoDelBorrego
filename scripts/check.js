@@ -9,7 +9,7 @@ const { loadData } = require('./lib/load');
 
 const ROOT = path.join(__dirname, '..');
 const OFFLINE = process.argv.includes('--offline');
-const COURSE_DIRS = ['calculo-1', 'fisica-1'];
+const COURSE_DIRS = require('./lib/courses').courses();
 const FOOTER = 'Proyecto de alumnos, no oficial';
 const IGNORE_DIRS = new Set(['.git', 'node_modules', 'docs', 'notes', 'scripts', 'reference', '.claude', 'design-system', 'test-results']);
 
@@ -105,7 +105,7 @@ function checkCourse(course) {
   if (!m) return err(where, 'no define window.COURSE_META');
   if (m.slug !== course) err(where, `slug "${m.slug}" ≠ ${course}`);
   if (!['mat', 'fis'].includes(m.subject)) err(where, 'subject debe ser mat o fis');
-  if (m.level !== 'N1') err(where, 'level debe ser N1');
+  if (!/^N[1-3]$/.test(m.level)) err(where, 'level debe ser N1, N2 o N3');
   if (m.sessions !== 15) err(where, 'sessions debe ser 15');
   if (!m.code) err(where, 'falta code (prefijo de etiquetas)');
   const all = (m.groups || []).flatMap((g) => {

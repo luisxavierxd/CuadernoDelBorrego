@@ -14,7 +14,8 @@
     ln: 'log', log: 'log10', exp: 'exp'
   };
   var INVERSE = { sin: 'asin', cos: 'acos', tan: 'atan', sec: 'asec', csc: 'acsc', cot: 'acot' };
-  var SYMBOLS = { pi: 'pi', infty: 'Infinity', exponentialE: 'e', theta: 'theta', alpha: 'alpha', beta: 'beta', omega: 'omega', mu: 'mu' };
+  var SYMBOLS = { pi: 'pi', infty: 'Infinity', exponentialE: 'e', theta: 'theta', alpha: 'alpha', beta: 'beta', omega: 'omega', mu: 'mu',
+    rho: 'rho', phi: 'phi', varphi: 'phi', lambda: 'lambda', sigma: 'sigma', epsilon: 'epsilon', varepsilon: 'epsilon', vartheta: 'theta' };
   var SKIP = { ',': 1, ';': 1, ':': 1, '!': 1, ' ': 1, '~': 1, quad: 1, qquad: 1, displaystyle: 1, textstyle: 1, limits: 1, mleft: 0, mright: 0 };
 
   function tokenize(src) {
