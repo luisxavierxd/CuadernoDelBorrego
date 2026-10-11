@@ -202,7 +202,7 @@ function bankOracles(F) {
   // E en P por unidad de carga fuente (para despejar q o r de un valor de campo).
   const unit = (r) => mag([Q(1, 0, 0)], r, 0);
   const o = {
-    'd-alfa': (v) => F.force(2 * F.e, [Q(1, 0, 0)], 1, 0).mag / unit(1) * v.E * 1e5 * 1e15,
+    'd-alfa': (v) => F.force(2 * F.e, [Q(1, 0, 0)], 1, 0).mag / unit(1) * v.E * 1e5,
     'd-Fneg': (v) => F.force(-v.q * nC, [Q(v.E * 100 / unit(1), 0, 0)], 1, 0).x * 1e6,
     'd-Edea': (v) => v.a * 1e10 / F.plates({ q: F.e, m: F.mp, E: 1, v0: 1, L: 1 }).a,
     'd-gravedad': (v) => elec(v.E * 100, 1, 1).a / 9.81,
@@ -218,7 +218,7 @@ function bankOracles(F) {
     'p-Ey': (v) => F.field([Q(-v.q * nC, 0, 0)], v.x * cm, v.y * cm).y,
     'p-bohr': (v) => mag([Q(F.e, 0, 0)], v.r * 1e-11, 0),
     'p-ang': (v) => F.field([Q((v.s ? 3 : -3) * nC, v.a * cm, v.b * cm)], 0, 0).ang,
-    'p-Fe': (v) => F.force(-F.e, [Q(v.q * nC, 0, 0)], v.r * cm, 0).mag * 1e15,
+    'p-Fe': (v) => F.force(-F.e, [Q(v.q * nC, 0, 0)], v.r * cm, 0).mag,
     'p-factor': (v) => v.E0 * 100 * mag([Q(1, 0, 0)], v.n, 0) / unit(1),
     'p-dosr': (v) => v.E1 * 100 * unit(v.r2) / unit(v.r1),
     's-colineal': (v) => F.field([Q(v.q1 * nC, 0, 0), Q(v.q2 * nC, v.d * cm, 0)], (v.d + v.c) * cm, 0).x,
@@ -241,7 +241,7 @@ function bankOracles(F) {
     'n-micro': (v) => F.nullPoint(v.a * 1e-6, 0, v.b * 1e-6, v.d),
     'n-fuera': (v) => { const x = F.nullPoint(v.a, 0, -v.b, v.d); return v.a < v.b ? -x : x - v.d; },
     'n-cada': (v) => mag([Q(v.a * nC, 0, 0)], F.nullPoint(v.a, 0, 4 * v.a, v.d) * cm, 0),
-    'u-F': (v) => F.plates({ q: -F.e, m: F.me, E: v.E * 1e4, v0: 1, L: 1 }).F * 1e15,
+    'u-F': (v) => F.plates({ q: -F.e, m: F.me, E: v.E * 1e4, v0: 1, L: 1 }).F,
     'u-a': (v) => elec(v.E * 100, 1, 1).a,
     'u-ap': (v) => prot(v.E * 1e3, 1, 1).a,
     'u-t': (v) => elec(1, v.v0 * 1e6, v.L * cm).t * 1e9,

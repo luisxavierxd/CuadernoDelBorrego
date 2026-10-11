@@ -167,7 +167,7 @@
         type: 'callout', heading: '¿Cuándo conviene cada sistema?',
         body: [
           'Usa el sistema que respeta la <strong>simetría</strong> del problema. Cajas y planos: rectangulares. Algo con un eje (tubos, cilindros, conos de revolución, paraboloides $z = x^2 + y^2$): cilíndricas. Algo con un centro (esferas, conos desde el origen, una carga puntual): esféricas.',
-          'Esa misma idea la usa la ley de Gauss en Física 2 (sesión 8): para un alambre largo se elige un cilindro alrededor del alambre y para una carga puntual, una esfera. Y en el bloque C de este curso integrarás en estos sistemas.'
+          'Esa misma idea la usa la <a href="../../../fisica-2/sesiones/sesion-08/">ley de Gauss en Física 2 (sesión 8)</a>: para un alambre largo se elige un cilindro alrededor del alambre y para una carga puntual, una esfera. Y en el bloque C de este curso integrarás en estos sistemas.'
         ]
       },
       {
