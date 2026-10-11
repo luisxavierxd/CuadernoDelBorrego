@@ -19,11 +19,11 @@ window.COURSE_META = {
     {
       id: 'A', label: 'Espacio y derivada parcial',
       sessions: [
-        { n: 1,  tag: 'Espacio 3D', title: 'Rectangulares en 3D: puntos, distancia, planos, cuádricas y curvas de nivel', short: 'Espacio 3D y curvas de nivel', lab: 'surface-contour', ready: false, bank: false },
-        { n: 2,  tag: 'Coordenadas polares', title: 'Coordenadas polares: conversión y curvas polares', short: 'Coordenadas polares', lab: 'polar-check', ready: false, bank: false },
-        { n: 3,  tag: 'Cilíndricas y esféricas', title: 'Coordenadas cilíndricas y esféricas: conversión entre los cuatro sistemas y superficies típicas', short: 'Cilíndricas y esféricas', lab: 'coord-convert', ready: false, bank: false },
-        { n: 4,  tag: 'Derivada parcial', title: 'Derivadas parciales, incluidas las de orden superior', short: 'Derivadas parciales', lab: 'partial-slice', ready: false, bank: false },
-        { n: 5,  tag: 'Diferencial total', title: 'Diferencial total: plano tangente, aproximación lineal y propagación de error', short: 'Diferencial total', lab: 'tangent-plane', ready: false, bank: false }
+        { n: 1,  tag: 'Espacio 3D', title: 'Rectangulares en 3D: puntos, distancia, planos, cuádricas y curvas de nivel', short: 'Espacio 3D y curvas de nivel', lab: 'surface-contour', ready: true, bank: true },
+        { n: 2,  tag: 'Coordenadas polares', title: 'Coordenadas polares: conversión y curvas polares', short: 'Coordenadas polares', lab: 'polar-check', ready: true, bank: true },
+        { n: 3,  tag: 'Cilíndricas y esféricas', title: 'Coordenadas cilíndricas y esféricas: conversión entre los cuatro sistemas y superficies típicas', short: 'Cilíndricas y esféricas', lab: 'coord-convert', ready: true, bank: true },
+        { n: 4,  tag: 'Derivada parcial', title: 'Derivadas parciales, incluidas las de orden superior', short: 'Derivadas parciales', lab: 'partial-slice', ready: true, bank: true },
+        { n: 5,  tag: 'Diferencial total', title: 'Diferencial total: plano tangente, aproximación lineal y propagación de error', short: 'Diferencial total', lab: 'tangent-plane', ready: true, bank: true }
       ]
     },
     {
