@@ -48,14 +48,17 @@ module.exports = ({ test, near, LM, math }) => {
     return (lo + hi) / 2;
   }
 
-  test('examen c2: 8 problemas del bloque A, cada sesión S01–S05 en ≥ 2', () => {
-    near(list.length, 8, 0, 'problemas');
-    const count = {};
+  test('examen c2: 8 problemas por bloque (A y B); cada sesión S01–S10 en ≥ 2', () => {
+    const blocks = { A: 0, B: 0 }, count = {};
     list.forEach((p) => {
-      if (p.block !== 'A') throw new Error(p.id + ' no es del bloque A');
+      if (!(p.block in blocks)) throw new Error(p.id + ' tiene bloque ' + p.block);
+      blocks[p.block]++;
+      const n = +p.tags[0].slice(4);
+      if (p.block === 'A' ? n > 5 : n < 6 || n > 10) throw new Error(p.id + ': su sesión principal no es de su bloque');
       p.tags.forEach((t) => { count[t] = (count[t] || 0) + 1; });
     });
-    ['c2.S01', 'c2.S02', 'c2.S03', 'c2.S04', 'c2.S05'].forEach((t) => { if (!(count[t] >= 2)) throw new Error(t + ' tiene ' + (count[t] || 0)); });
+    near(blocks.A, 8, 0, 'bloque A'); near(blocks.B, 8, 0, 'bloque B');
+    ['c2.S01', 'c2.S02', 'c2.S03', 'c2.S04', 'c2.S05', 'c2.S06', 'c2.S07', 'c2.S08', 'c2.S09', 'c2.S10'].forEach((t) => { if (!(count[t] >= 2)) throw new Error(t + ' tiene ' + (count[t] || 0)); });
   });
 
   test('examen c2 esfera: surface.sphere, traza por bisección, área por polígono, distancia muestreada', () => {
@@ -183,6 +186,124 @@ module.exports = ({ test, near, LM, math }) => {
       const h = 1e-4, sg = Math.sign(v.y0);
       const yOf = (x) => bisect((y) => T(x, sg * y) - k, 0, Math.abs(v.y0) * 3) * sg;
       near(t[4], (yOf(v.x0 + h) - yOf(v.x0 - h)) / (2 * h), 1e-5 * Math.max(1, Math.abs(t[4])), at + ' e');
+    });
+  });
+
+  /* ---------------- Bloque B ---------------- */
+  test('examen c2 cadena: chainTree (composición y Ridders sin regla de la cadena) y z(t0 + 0.1) real', () => {
+    const CT = LM.chainTree, PS = LM.partial;
+    each('c2-ex-cadena', (v, t, at) => {
+      const spec = { f: v.p + '*x*y^2 + ' + v.q + '*x^2', inner: { x: 't^2 + ' + v.m, y: v.k + '*t' } }, P = { t: v.t0 };
+      const pt = CT.point(math, spec, P);
+      rel(t[0], CT.value(math, spec, P), 1e-12, at + ' a');
+      rel(t[1], PS.central(PS.fn2(math, spec.f), pt.x, pt.y, 'x'), 1e-6, at + ' b');
+      rel(t[2], PS.central(PS.fn2(math, spec.f), pt.x, pt.y, 'y'), 1e-6, at + ' c');
+      rel(t[3], CT.numDeriv(math, spec, P, 't'), 1e-8, at + ' d');
+      const real = CT.value(math, spec, { t: v.t0 + 0.1 });
+      if (!(Math.abs(real - t[4]) < 0.2 * Math.abs(real - t[0]) + 0.05 * Math.abs(real) + 0.5)) throw new Error(at + ' e lejos del valor real');
+    });
+  });
+
+  // Barrido de direcciones con el cociente de diferencias (sin gradiente): 720 ángulos y un
+  // afinado de ±0.5° en el mejor. sg = 1 busca el máximo de D_u f; −1, el mínimo. → { th (rad), val }
+  function sweep(f, P, sg) {
+    const DD = LM.directional, D = (th) => sg * DD.limit(f, P, [Math.cos(th), Math.sin(th)]);
+    let th = 0, best = -Infinity;
+    for (let i = 0; i < 720; i++) { const a = 2 * Math.PI * i / 720, d = D(a); if (d > best) { best = d; th = a; } }
+    const c = th;
+    for (let i = -200; i <= 200; i++) { const a = c + i * (Math.PI / 360) / 200, d = D(a); if (d > best) { best = d; th = a; } }
+    return { th: ((th % (2 * Math.PI)) + 2 * Math.PI) % (2 * Math.PI), val: sg * best };
+  }
+
+  test('examen c2 direccional: directional.limitAt (cociente) y barrido de direcciones', () => {
+    const DD = LM.directional;
+    each('c2-ex-direccional', (v, t, at) => {
+      const src = v.p + '*x^2 + ' + v.q + '*x*y + ' + v.r + '*y^2', P = { x: v.x0, y: v.y0 }, dir = [v.x1 - v.x0, v.y1 - v.y0];
+      const g = DD.numGrad(DD.fn2(math, src), [v.x0, v.y0]);
+      rel(t[0], g[0], 1e-6, at + ' a'); rel(t[1], g[1], 1e-6, at + ' b');
+      rel(t[2], DD.limitAt(math, src, P, dir), 1e-6, at + ' c');
+      const S = sweep(DD.fn2(math, src), [v.x0, v.y0], 1);
+      near(t[3], S.val, 1e-5 * Math.max(1, S.val), at + ' d');
+      let ang = (Math.abs(Math.atan2(dir[1], dir[0]) - S.th) * 180 / Math.PI) % 360; if (ang > 180) ang = 360 - ang;
+      near(t[4], ang, 0.01, at + ' e');
+    });
+  });
+
+  test('examen c2 enfriamiento: grad.gradient (descentDeg, minRate) y el mínimo de D_u T en un barrido', () => {
+    const GR = LM.grad, DD = LM.directional;
+    each('c2-ex-enfriamiento', (v, t, at) => {
+      const src = v.T0 + ' + ' + v.c + '*x - ' + v.a + '*x^2 - ' + v.b + '*y^2', G = GR.gradient(math, src, v.x0, v.y0);
+      near(t[0], G.fx, 1e-9, at + ' a'); near(t[1], G.fy, 1e-9, at + ' b');
+      near(t[2], G.descentDeg, 1e-9, at + ' c');
+      near(t[3], G.minRate, 1e-9, at + ' d');
+      const S = sweep(DD.fn2(math, src), [v.x0, v.y0], -1), lo = S.val;
+      near(t[2], S.th * 180 / Math.PI, 0.01, at + ' c barrido');
+      near(t[3], lo, 1e-5 * Math.max(1, -lo), at + ' d barrido');
+      rel(t[4], lo * v.s, 1e-5, at + ' e');
+    });
+  });
+
+  test('examen c2 curva de nivel: chainTree.implicitNum (y(x) resuelta y derivada) y grad.levelLine', () => {
+    const CT = LM.chainTree, GR = LM.grad;
+    each('c2-ex-curva-nivel', (v, t, at) => {
+      const src = v.a + '*x^2 + ' + v.b + '*x*y + y^2', k = v.a * v.x0 * v.x0 + v.b * v.x0 * v.y0 + v.y0 * v.y0, LL = GR.levelLine(math, src, v.x0, v.y0);
+      near(t[0], LL.fx, 1e-9, at + ' a'); near(t[1], LL.fy, 1e-9, at + ' b');
+      rel(t[2], CT.implicitNum(math, src + ' - ' + k, { x: v.x0, y: v.y0 }, 'x', 'y'), 1e-6, at + ' c');
+      near(t[2] * t[3], -1, 1e-9, at + ' d perpendicular');
+      rel(t[3], LL.normalSlope, 1e-12, at + ' d');
+      rel(t[4], LL.intercept, 1e-12, at + ' e');
+    });
+  });
+
+  test('examen c2 cerca: lagrange.optimum sobre la recta, λ por diferencias finitas (lambdaFD)', () => {
+    const LG = LM.lagrange;
+    each('c2-ex-cerca', (v, t, at) => {
+      const spec = { kind: 'line', a: v.k + 1, b: 2, c: v.L }, O = LG.optimum(math, 'x*y', spec, 6000);
+      near(t[0], O.xMax, 1e-6 * v.L, at + ' a'); near(t[1], O.yMax, 1e-6 * v.L, at + ' b');
+      rel(t[2], O.max, 1e-9, at + ' c');
+      rel(t[3], LG.lambdaFD(math, 'x*y', spec, 'max'), 1e-5, at + ' d');
+      rel(t[3], O.lambdaMax, 1e-6, at + ' d en el punto');
+      const big = LG.optimum(math, 'x*y', Object.assign({}, spec, { c: v.L + v.dL }), 6000).max;
+      // A*(L) = L²/(8K) es cuadrática: lo que λ·ΔL no ve es exactamente ΔL²/(8K).
+      near(big - t[4], v.dL * v.dL / (8 * (v.k + 1)), 1e-6 * big, at + ' e (resto de segundo orden)');
+    });
+  });
+
+  test('examen c2 canal: lagrange.optimum sobre la parábola (mínimo de la distancia) y λ en el punto', () => {
+    const LG = LM.lagrange;
+    each('c2-ex-canal', (v, t, at) => {
+      const src = 'x^2 + (y - ' + v.d + ')^2', spec = { kind: 'parabola', a: v.a, c: 0, t: [-6, 6] }, O = LG.optimum(math, src, spec, 8000);
+      near(t[0], O.lambdaMin, 1e-6, at + ' a');
+      near(t[1], O.yMin, 1e-6, at + ' b');
+      near(t[2], Math.abs(O.xMin), 1e-6, at + ' c');
+      near(t[3], Math.sqrt(O.min), 1e-7, at + ' d');
+      near(t[4], v.d - Math.sqrt(O.min), 1e-7, at + ' e');
+    });
+  });
+
+  test('examen c2 plano ∩ cilindro: lagr2.optimize (búsqueda densa sobre la elipse) con λ y μ', () => {
+    const L2 = LM.lagr2;
+    each('c2-ex-plano-cilindro', (v, t, at) => {
+      const r = L2.optimize(math, 'z', { type: 'plane', n: [v.a, v.b, 1], c: v.c }, { type: 'cyl', c: v.R * v.R });
+      near(t[0], r.max.x, 1e-6, at + ' a'); near(t[1], r.max.y, 1e-6, at + ' b');
+      near(t[2], r.max.value, 1e-9, at + ' c');
+      near(r.max.lam, 1, 1e-6, at + ' λ = 1');
+      near(t[3], r.max.mu, 1e-6, at + ' d');
+      near(t[4], r.min.value, 1e-9, at + ' e');
+    });
+  });
+
+  test('examen c2 recta: lagr2.optimize (búsqueda densa sobre la recta) y Newton-Lagrange de 5 ecuaciones', () => {
+    const L2 = LM.lagr2;
+    each('c2-ex-recta-origen', (v, t, at) => {
+      const g = { type: 'plane', n: [1, 1, v.k], c: v.c1 }, h = { type: 'plane', n: [1, -1, 0], c: v.c2 };
+      const r = L2.optimize(math, 'x^2 + y^2 + z^2', g, h, { L: 12 });
+      near(t[0], r.min.lam, 1e-6, at + ' a'); near(t[1], r.min.mu, 1e-6, at + ' b');
+      near(t[2], r.min.x, 1e-6, at + ' c'); near(t[3], r.min.z, 1e-6, at + ' d');
+      near(t[4], Math.sqrt(r.min.value), 1e-7, at + ' e');
+      const s = L2.solve(math, 'x^2 + y^2 + z^2', g, h);
+      near(t[0], s.min.lam, 1e-7, at + ' a (Newton)'); near(t[1], s.min.mu, 1e-7, at + ' b (Newton)');
+      near(t[4], Math.sqrt(s.min.value), 1e-7, at + ' e (Newton)');
     });
   });
 };

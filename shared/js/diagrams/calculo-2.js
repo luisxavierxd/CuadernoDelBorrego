@@ -807,22 +807,694 @@
   /* ══════════════════════ fin S05 ══════════════════════ */
 
   /* ══════════════════════ S06 ══════════════════════ */
+  // Forma del árbol de dependencias. kind: 'one' (z → x, y → t), 'two' (x(s, t), y(s, t)),
+  // 'three' (w → x, y, z → t) o 'imp' (F → x; F → y → x). w: hoja que se recorre ('s' o 't').
+  // Devuelve nodos { x, y, t, lv, off }, aristas { a, b, t, lv, off } y caminos (índices de aristas).
+  function c2s06Shape(kind, w) {
+    var r = kind === 'three' ? 'w' : kind === 'imp' ? 'F' : 'z', N = [], E = [], P = [];
+    N.push({ x: 300, y: 40, t: r, lv: 0 });
+    if (kind === 'imp') {
+      N.push({ x: 150, y: 250, t: 'x', lv: 1 }, { x: 450, y: 145, t: 'y', lv: 1 }, { x: 450, y: 250, t: 'x', lv: 2 });
+      E.push({ a: 0, b: 1, t: '∂F/∂x', lv: 1 }, { a: 0, b: 2, t: '∂F/∂y', lv: 1 }, { a: 2, b: 3, t: 'dy/dx', lv: 2 });
+      P.push([0], [1, 2]);
+      return { N: N, E: E, P: P, r: r };
+    }
+    var us = kind === 'three' ? ['x', 'y', 'z'] : ['x', 'y'], xs = us.length === 3 ? [100, 300, 500] : [150, 450];
+    var ps = kind === 'two' ? ['s', 't'] : ['t'], d = ps.length === 1 ? 'd' : '∂';
+    us.forEach(function (u, i) {
+      N.push({ x: xs[i], y: 145, t: u, lv: 1 });
+      var ui = N.length - 1, top = E.length;
+      E.push({ a: 0, b: ui, t: '∂' + r + '/∂' + u, lv: 1 });
+      ps.forEach(function (p, j) {
+        var off = p !== (w || 't');
+        N.push({ x: ps.length === 1 ? xs[i] : xs[i] + (j ? 70 : -70), y: 250, t: p, lv: 2, off: off });
+        E.push({ a: ui, b: N.length - 1, t: d + u + '/' + d + p, lv: 2, off: off });
+        if (!off) P.push([top, E.length - 1]);
+      });
+    });
+    return { N: N, E: E, P: P, r: r };
+  }
+  // S06 · El árbol que se arma y se recorre.
+  // state: { kind, w, lv: 0…2 (niveles visibles), h1, h2, h3: 0…1 (camino resaltado), f1, f2, f3: 0…1 (términos de la fórmula) }.
+  D['c2s06-tree'] = function (st) {
+    var kind = st && st.kind ? st.kind : 'one', w = st && st.w === 's' ? 's' : 't', S = c2s06Shape(kind, w);
+    var lv = num(st, 'lv', 2), hs = [num(st, 'h1', 0), num(st, 'h2', 0), num(st, 'h3', 0)], fs = [num(st, 'f1', 1), num(st, 'f2', 1), num(st, 'f3', 1)];
+    var BW = 50, BH = 34, o = '', pts = [], boxes = [];
+    function op(l) { return clamp01(lv - l + 1); }
+    function ends(e) { var A = S.N[e.a], B = S.N[e.b]; return [A.x, A.y + BH / 2, B.x, B.y - BH / 2]; }
+    // Aristas (tenues las que no llegan a la variable que se deriva).
+    S.E.forEach(function (e) {
+      var q = ends(e), a = op(e.lv) * (e.off ? 0.35 : 1);
+      o += fade(seg('axis', q[0], q[1], q[2], q[3], 1.8), a);
+      if (a > 0.001) pts = pts.concat(segPts(q[0], q[1], q[2], q[3]));
+    });
+    // Caminos resaltados.
+    S.P.forEach(function (p, i) {
+      if (hs[i] <= 0.001) return;
+      p.forEach(function (k) { var q = ends(S.E[k]); o += fade(seg('error', q[0], q[1], q[2], q[3], 4.2), hs[i] * op(S.E[k].lv)); });
+    });
+    // Nodos.
+    S.N.forEach(function (n) {
+      var a = op(n.lv) * (n.off ? 0.35 : 1);
+      boxes.push([n.x - BW / 2 - 4, n.y - BH / 2 - 4, n.x + BW / 2 + 4, n.y + BH / 2 + 4]);
+      o += fade('<rect class="box-base" x="' + r1(n.x - BW / 2) + '" y="' + r1(n.y - BH / 2) + '" width="' + BW + '" height="' + BH + '" rx="8"/>' +
+        text(n.x, n.y + 7, n.t, ' text-anchor="middle" font-size="20"'), a);
+    });
+    // Etiquetas de las aristas: posiciones a los lados de la arista que no tocan trazos, cajas ni otras etiquetas.
+    boxes.forEach(function (b) { pts = pts.concat(segPts(b[0], b[1], b[2], b[1]), segPts(b[0], b[3], b[2], b[3]), segPts(b[0], b[1], b[0], b[3]), segPts(b[2], b[1], b[2], b[3])); });
+    var FS = 17, used = pts.slice();
+    S.E.forEach(function (e) {
+      if (e.off) return;
+      var q = ends(e), dx = q[2] - q[0], dy = q[3] - q[1], L = Math.hypot(dx, dy) || 1, nx = -dy / L, ny = dx / L, c = [];
+      [0.5, 0.42, 0.58, 0.34, 0.66].forEach(function (f) {
+        [14, 22, 32].forEach(function (k) {
+          [-1, 1].forEach(function (sd) {
+            var sx = sd * nx;
+            c.push([q[0] + dx * f + sd * nx * k, q[1] + dy * f + sd * ny * k + 6, e.t, sx > 0.25 ? 'start' : sx < -0.25 ? 'end' : 'middle']);
+          });
+        });
+      });
+      var best = spot(c, used, FS, [0, 0, 600, 300]);
+      var wd = e.t.length * FS * 0.6, x0 = best[3] === 'end' ? best[0] - wd : best[3] === 'middle' ? best[0] - wd / 2 : best[0];
+      used = used.concat(segPts(x0, best[1] - FS * 0.8, x0 + wd, best[1] - FS * 0.8), segPts(x0, best[1], x0 + wd, best[1]));
+      o += fade(label(best, FS), op(e.lv));
+    });
+    // Fórmula que se arma término por término.
+    var lhs = kind === 'imp' ? '' : kind === 'two' ? '∂z/∂' + w + ' = ' : 'd' + S.r + '/dt = ';
+    var terms = S.P.map(function (p) { return p.map(function (k) { return S.E[k].t; }).join(' · '); });
+    if (kind === 'imp') terms[0] += ' · 1';
+    var show = fs.slice(0, terms.length), any = Math.max.apply(null, show);
+    var line = '<tspan fill-opacity="' + clamp01(any).toFixed(2) + '">' + lhs + '</tspan>';
+    terms.forEach(function (t, i) {
+      line += '<tspan fill-opacity="' + clamp01(show[i]).toFixed(2) + '">' + (i ? ' + ' : '') + t + '</tspan>';
+    });
+    if (kind === 'imp') line += '<tspan fill-opacity="' + clamp01(Math.min.apply(null, show)).toFixed(2) + '"> = 0</tspan>';
+    if (any > 0.001) o += text(300, 296, line, ' text-anchor="middle" font-size="' + (kind === 'three' ? 15 : 17) + '"');
+    var desc = { one: 'z depende de x y y; las dos dependen de t. Dos caminos de z a t.', two: 'z depende de x y y; cada una depende de s y t. Dos caminos de z a ' + w + '.', three: 'w depende de x, y y z; las tres dependen de t. Tres caminos.', imp: 'F depende de x y de y, y y depende de x: un camino directo de F a x y otro que pasa por y.' };
+    return svgBox('0 0 600 310', 'Árbol de dependencias de la regla de la cadena: ' + desc[kind] + ' Dentro de un camino se multiplica; entre caminos se suma.', o);
+  };
 
+  // S06 · El globo sobre el cerro: isotermas de T = 30 − x² − 2y², la trayectoria x = 1 + t,
+  // y = 2t y, en t = 0.5, el avance hacia el este (dx/dt) y hacia el norte (dy/dt).
+  D['c2s06-hill'] = function () {
+    var X = function (x) { return 190 + x * 44; }, Y = function (y) { return 168 - y * 44; };
+    var o = '', used = [];
+    o += poly('axis', [[X(-3.8), Y(-3)], [X(3.8), Y(-3)], [X(3.8), Y(3)], [X(-3.8), Y(3)]], 1.4, true);
+    [2, 6, 11, 17].forEach(function (c) {
+      var pts = [];
+      for (var i = 0; i <= 72; i++) { var t = 2 * Math.PI * i / 72; pts.push([X(Math.sqrt(c) * Math.cos(t)), Y(Math.sqrt(c / 2) * Math.sin(t))]); }
+      o += poly('ref', pts, 1.6, true, '5 5');
+      used = used.concat(polyPts(pts));
+    });
+    o += text(X(0), Y(0) + 6, '30 °C', ' text-anchor="middle" font-size="15"');
+    // Trayectoria del globo (t de 0 a 1.25) y el punto en t = 0.5.
+    var tr = [];
+    for (var k = 0; k <= 20; k++) { var t = 1.25 * k / 20; tr.push([X(1 + t), Y(2 * t)]); }
+    o += poly('trace', tr, 3);
+    used = used.concat(polyPts(tr));
+    var px = X(1.5), py = Y(1), s = 26;
+    o += arrow('aux', px, py, s, 0, 3) + arrow('error', px + s, py, 0, -2 * s, 3);
+    used = used.concat(arrowPts(px, py, s, 0), arrowPts(px + s, py, 0, -2 * s));
+    o += dot('dot-trace', px, py, 6);
+    var vb = [X(-3.8), Y(3), X(3.8), Y(-3)];
+    // El rótulo del centro también cuenta como ocupado.
+    used = used.concat(segPts(X(0) - 26, Y(0) - 6, X(0) + 26, Y(0) - 6), segPts(X(0) - 26, Y(0) + 4, X(0) + 26, Y(0) + 4));
+    o += label(spot(around(px, py, 'globo'), used, 15, vb), 15);
+    // Panel de la derecha: qué aporta cada dirección.
+    o += text(392, 52, 'T(x, y) = 30 − x² − 2y²', ' font-size="16"');
+    o += seg('trace', 392, 82, 420, 82, 3) + text(430, 88, 'ruta del globo', ' font-size="16"');
+    o += arrow('aux', 392, 124, 28, 0, 3) + text(430, 130, 'hacia el este:', ' font-size="16"');
+    o += text(392, 156, '∂T/∂x · dx/dt', ' font-size="16"');
+    o += arrow('error', 406, 212, 0, -28, 3) + text(430, 204, 'hacia el norte:', ' font-size="16"');
+    o += text(392, 236, '∂T/∂y · dy/dt', ' font-size="16"');
+    o += text(392, 280, 'dT/dt = suma de las dos', ' font-size="16"');
+    return svgBox('0 0 640 340', 'Mapa de un cerro con curvas de igual temperatura. Un globo avanza hacia el este y hacia el norte; cada dirección aporta su parte al cambio de temperatura, y dT/dt es la suma.', o);
+  };
+
+  // S06 · La curva x²y + y³ = 10 (y como función de x) con su tangente en (3, 1), pendiente −1/2.
+  D['c2s06-curve'] = function () {
+    var X = function (x) { return 300 + x * 60; }, Y = function (y) { return 252 - y * 80; };
+    function yOf(x) { var y = 1.5; for (var i = 0; i < 40; i++) y -= (y * y * y + x * x * y - 10) / (3 * y * y + x * x); return y; }
+    var o = '', used = [], pts = [];
+    o += arrow('axis', X(-4.7), Y(0), X(4.7) - X(-4.7), 0, 1.6) + arrow('axis', X(0), Y(-0.2), 0, Y(2.85) - Y(-0.2), 1.6);
+    used = used.concat(segPts(X(-4.7), Y(0), X(4.7), Y(0)), segPts(X(0), Y(-0.2), X(0), Y(2.85)));
+    o += text(X(4.7) + 4, Y(0) + 22, 'x', ' text-anchor="end" font-size="17"') + text(X(0) + 10, Y(2.85) + 12, 'y', ' font-size="17"');
+    for (var k = 0; k <= 90; k++) { var x = -4.5 + 9 * k / 90; pts.push([X(x), Y(yOf(x))]); }
+    o += poly('ref', pts, 3);
+    used = used.concat(polyPts(pts));
+    var m = -0.5, T0 = [X(1.7), Y(1 + m * (1.7 - 3))], T1 = [X(4.4), Y(1 + m * (4.4 - 3))];
+    o += seg('error', T0[0], T0[1], T1[0], T1[1], 3);
+    used = used.concat(segPts(T0[0], T0[1], T1[0], T1[1]));
+    o += dot('dot-trace', X(3), Y(1), 6);
+    o += label(spot(around(X(3), Y(1), '(3, 1)'), used, 16, [0, 0, 600, 290]), 16);
+    o += text(590, 30, 'x²y + y³ = 10', ' text-anchor="end" font-size="17"');
+    o += text(590, 56, 'pendiente en (3, 1): −1/2', ' text-anchor="end" font-size="16"');
+    return svgBox('0 0 600 290', 'La curva x²y + y³ = 10 y su recta tangente en el punto (3, 1), con pendiente −1/2.', o);
+  };
   /* ══════════════════════ fin S06 ══════════════════════ */
 
   /* ══════════════════════ S07 ══════════════════════ */
+  function c2s07sub(s, t) { return s + '<tspan baseline-shift="sub" font-size="12">' + t + '</tspan>'; }
+  function c2s07ell(X, Y, a, b) {
+    var pts = [];
+    for (var i = 0; i <= 72; i++) { var t = 2 * Math.PI * i / 72; pts.push([X(a * Math.cos(t)), Y(b * Math.sin(t))]); }
+    return pts;
+  }
+
+  // S07 · Brújula sobre el mapa de contorno: desde P, hacia +x (pendiente f_x), hacia +y (f_y),
+  // hacia u (D_u f) y muchas direcciones a la vez. state: { e, n, u, fan } (0…1) y th (grados).
+  D['c2s07-compass'] = function (st) {
+    var oE = clamp01(num(st, 'e', 1)), oN = clamp01(num(st, 'n', 1)), oU = clamp01(num(st, 'u', 1)), oF = clamp01(num(st, 'fan', 0)), th = num(st, 'th', 55);
+    var X = function (x) { return 190 + 38 * x; }, Y = function (y) { return 172 - 38 * y; };
+    var o = '', used = [], vb = [X(-4.4), Y(3.9), X(4.4), Y(-3.9)];
+    o += poly('axis', [[vb[0], vb[1]], [vb[2], vb[1]], [vb[2], vb[3]], [vb[0], vb[3]]], 1.2, true);
+    [2, 9, 17].forEach(function (c) {
+      var pts = c2s07ell(X, Y, Math.sqrt(c), Math.sqrt(c / 2));
+      o += poly('ref', pts, 1.5, true, '5 5');
+      used = used.concat(polyPts(pts));
+    });
+    o += text(X(0), Y(0) + 6, 'cima', ' text-anchor="middle" font-size="15"');
+    var px = X(1.5), py = Y(1.05), Lr = 70, ux = Math.cos(th * RAD), uy = -Math.sin(th * RAD), k;
+    // Abanico de direcciones (todas tienen su pendiente).
+    var fan = '';
+    for (k = 1; k < 8; k++) {                          // sin la de 22.5°: ahí va la etiqueta de θ
+      var t = k * 45 * RAD + 22.5 * RAD;
+      fan += arrow('trace', px, py, 50 * Math.cos(t), -50 * Math.sin(t), 2);
+      used = used.concat(arrowPts(px, py, 50 * Math.cos(t), -50 * Math.sin(t)));
+    }
+    o += fade('<g opacity="0.6">' + fan + '</g>', oF);
+    o += fade(arrow('error', px, py, Lr, 0, 3.2), oE);
+    o += fade(arrow('aux', px, py, 0, -Lr, 3.2), oN);
+    o += fade(arrow('trace', px, py, Lr * ux, Lr * uy, 3.6), oU);
+    used = used.concat(arrowPts(px, py, Lr, 0), arrowPts(px, py, 0, -Lr), arrowPts(px, py, Lr * ux, Lr * uy));
+    // Ángulo θ desde +x.
+    if (th > 3) {
+      o += fade(arc(px, py, 26, 0, th, 'axis', 1.4), oU);
+      var cs = [];
+      [38, 44, 50, 56, 62].forEach(function (r) { [0.5, 0.35, 0.65].forEach(function (fr) { cs.push([px + r * Math.cos(th * fr * RAD), py - r * Math.sin(th * fr * RAD) + 6, 'θ', 'middle']); }); });
+      o += fade(label(spot(cs, used, 18, vb), 18), oU);
+    }
+    o += label(spot(around(px, py, 'P'), used, 18, vb), 18);
+    o += dot('dot-trace', px, py, 6);
+    // Leyenda a la derecha del mapa.
+    var lx = 400;
+    o += text(lx, 44, 'Vista desde arriba', ' font-size="17"');
+    o += fade(arrow('error', lx, 88, 34, 0, 3) + text(lx + 46, 94, 'hacia +x: pendiente ' + c2s07sub('f', 'x'), ' font-size="16"'), oE);
+    o += fade(arrow('aux', lx + 17, 152, 0, -28, 3) + text(lx + 46, 146, 'hacia +y: pendiente ' + c2s07sub('f', 'y'), ' font-size="16"'), oN);
+    o += fade(arrow('trace', lx + 2, 208, 30, -20, 3) + text(lx + 46, 200, 'hacia u: pendiente ' + c2s07sub('D', 'u') + ' f', ' font-size="16"'), oU);
+    o += fade(text(lx + 46, 228, 'u = (cos θ, sen θ)', ' font-size="16"'), oU);
+    o += fade(text(lx, 280, 'Cada dirección tiene', ' font-size="16"') + text(lx, 302, 'su propia pendiente.', ' font-size="16"'), oF);
+    return svgBox('0 0 680 340', 'Mapa de contorno de un cerro visto desde arriba con un punto P. Hacia +x la pendiente es fx, hacia +y es fy y hacia un vector unitario u, a un ángulo θ de +x, es la derivada direccional.', o);
+  };
+
+  // S07 · Corte vertical en la dirección de u: el plano vertical que contiene a u corta la colina
+  // en una traza; su tangente en P tiene pendiente D_u f. state: { u, plane, trace, tan } (0…1).
+  D['c2s07-slice'] = function (st) {
+    var oU = clamp01(num(st, 'u', 1)), oP = clamp01(num(st, 'plane', 1)), oT = clamp01(num(st, 'trace', 1)), oG = clamp01(num(st, 'tan', 1));
+    var L = 2.5, a = -1, b = -0.9, th = 40 * RAD, u = [Math.cos(th), Math.sin(th)], KZ = 1.15, ZT = 3.7;
+    var f = function (x, y) { return 3 - 0.15 * x * x - 0.2 * y * y + 0.2 * x; };
+    var m = (-0.3 * a + 0.2) * u[0] + (-0.4 * b) * u[1];
+    var P0 = view3({ cx: 360, cy: 262, s: 42, az: -32, el: 22 });
+    var P = function (x, y, z) { return P0([x, y, z * KZ]); };
+    var o = '', i, j, k, n = 10, N = 30, q, pts;
+    o += poly('axis', [P(-L, -L, 0), P(L, -L, 0), P(L, L, 0), P(-L, L, 0)], 1.2, true, '4 5');
+    for (i = 0; i <= n; i++) {
+      var w = -L + 2 * L * i / n, l1 = [], l2 = [];
+      for (j = 0; j <= N; j++) { var t = -L + 2 * L * j / N; l1.push(P(w, t, f(w, t))); l2.push(P(t, w, f(t, w))); }
+      o += poly('ref', l1, 1.2) + poly('ref', l2, 1.2);
+    }
+    o = '<g opacity="0.55">' + o + '</g>';
+    // Hasta dónde llega la recta P + t u dentro del piso.
+    var t0 = 0, t1 = 0;
+    for (q = 0; q <= 8; q += 0.01) { if (Math.abs(a + q * u[0]) <= L && Math.abs(b + q * u[1]) <= L) t1 = q; else break; }
+    for (q = 0; q >= -8; q -= 0.01) { if (Math.abs(a + q * u[0]) <= L && Math.abs(b + q * u[1]) <= L) t0 = q; else break; }
+    var at = function (t, z) { return P(a + t * u[0], b + t * u[1], z); };
+    o += fade(fill('rect-fill', [at(t0, 0), at(t1, 0), at(t1, ZT), at(t0, ZT)]), oP * 0.9);
+    var z0 = f(a, b), A = P(a, b, 0), B = P(a, b, z0);
+    o += seg('axis', A[0], A[1], B[0], B[1], 1.4, '4 4') + dot('dot-ref', A[0], A[1], 4);
+    // u en el piso.
+    var U1 = at(1.3, 0);
+    o += fade(arrow('trace', A[0], A[1], U1[0] - A[0], U1[1] - A[1], 3.2), oU);
+    pts = [];
+    for (k = 0; k <= 60; k++) { q = t0 + (t1 - t0) * k / 60; pts.push(at(q, f(a + q * u[0], b + q * u[1]))); }
+    o += fade(poly('aux', pts, 4), oT);
+    var d = 1.1, T0 = at(-d, z0 - m * d), T1 = at(d, z0 + m * d);
+    o += fade(seg('error', T0[0], T0[1], T1[0], T1[1], 3), oG);
+    o += dot('dot-trace', B[0], B[1], 6);
+    var c0 = P(-L, -L, 0), ex = P(L + 0.9, -L, 0), ey = P(-L, L + 0.9, 0), ez = P(-L, -L, 3.9);
+    [[ex, 'x'], [ey, 'y'], [ez, 'z']].forEach(function (e) {
+      o += arrow('axis', c0[0], c0[1], e[0][0] - c0[0], e[0][1] - c0[1], 1.6);
+      var dx = e[0][0] - c0[0], dy = e[0][1] - c0[1], mm = Math.hypot(dx, dy) || 1;
+      o += text(e[0][0] + dx / mm * 14, e[0][1] + dy / mm * 14 + 6, e[1], ' text-anchor="middle" font-size="18"');
+    });
+    o += text(16, 30, 'z = f(x, y)', ' font-size="17"');
+    o += fade(text(16, 56, 'u: dirección en el piso', ' font-size="17"'), oU);
+    o += fade(text(16, 82, 'corte: plano vertical', ' font-size="17"'), oP);
+    o += fade(text(16, 108, 'traza: z = f(P + tu)', ' font-size="17"'), oT);
+    o += fade(text(16, 134, 'pendiente: ' + c2s07sub('D', 'u') + ' f', ' font-size="17"'), oG);
+    return svgBox('0 0 600 360', 'Colina z = f(x, y) con un punto P. Un plano vertical que pasa por P y contiene la dirección u corta la colina en una curva; la pendiente de su tangente en P es la derivada direccional.', o);
+  };
+
+  // S07 · Normalizar: v = ⟨3, 4⟩ mide 5; u = v/|v| = ⟨0.6, 0.8⟩ mide 1 y apunta igual.
+  D['c2s07-unit'] = function () {
+    var ox = 70, oy = 282, s = 50, o = '';
+    var X = function (x) { return ox + s * x; }, Y = function (y) { return oy - s * y; };
+    o += arrow('axis', X(0), Y(0), s * 4.5, 0, 1.6) + arrow('axis', X(0), Y(0), 0, -s * 4.9, 1.6);
+    o += text(X(4.5) + 14, Y(0) + 6, 'x', ' font-size="17"') + text(X(0), Y(4.9) - 10, 'y', ' text-anchor="middle" font-size="17"');
+    o += arc(X(0), Y(0), s, 0, 90, 'aux', 1.6);
+    o += arrow('ref', X(0), Y(0), s * 3, -s * 4, 3.2);
+    o += arrow('trace', X(0), Y(0), s * 0.6, -s * 0.8, 4);
+    o += dot('dot-ref', X(0), Y(0), 4);
+    o += text(X(3) + 12, Y(4) - 16, 'v', ' font-size="20"');
+    o += text(X(1) + 6, Y(0) + 24, '1', ' text-anchor="middle" font-size="15"');
+    var lx = 330;
+    o += seg('ref', lx, 58, lx + 28, 58, 3.2) + text(lx + 38, 64, 'v = ⟨3, 4⟩, |v| = 5', ' font-size="17"');
+    o += seg('trace', lx, 98, lx + 28, 98, 4) + text(lx + 38, 104, 'u = v / |v| = ⟨0.6, 0.8⟩', ' font-size="17"');
+    o += seg('aux', lx, 138, lx + 28, 138, 1.6) + text(lx + 38, 144, 'círculo de radio 1', ' font-size="17"');
+    o += text(lx, 196, 'Misma dirección, largo 1.', ' font-size="16"');
+    o += text(lx, 222, 'Con v en lugar de u, el', ' font-size="16"');
+    o += text(lx, 246, 'resultado sale 5 veces', ' font-size="16"');
+    o += text(lx, 270, 'más grande.', ' font-size="16"');
+    return svgBox('0 0 600 320', 'El vector v = ⟨3, 4⟩ mide 5. Dividido entre su largo da u = ⟨0.6, 0.8⟩, que apunta igual pero mide 1 y termina sobre el círculo unitario.', o);
+  };
+
+  // S07 · Varias direcciones en el mismo punto: a la izquierda, desde P, la dirección de máximo
+  // crecimiento, la de máximo decrecimiento y las dos tangentes a la curva de nivel; a la derecha,
+  // D_u f contra θ: la sinusoide |∇f| cos(θ − θ₀).
+  D['c2s07-wave'] = function () {
+    var o = '', used = [], g0 = 50, px = 130, py = 178, Lr = 70, R = 120;
+    var gx = Math.cos(g0 * RAD), gy = -Math.sin(g0 * RAD), vbL = [8, 20, 280, 320];
+    // Curva de nivel por P (convexa hacia la cima, que queda en la dirección de ∇f).
+    var cx = px + R * gx, cy = py + R * gy, lv = [];
+    for (var k = 0; k <= 40; k++) { var ph = (180 + g0 - 50 + 100 * k / 40) * RAD; lv.push([cx + R * Math.cos(ph), cy - R * Math.sin(ph)]); }
+    o += poly('ref', lv, 2, false, '6 5');
+    used = used.concat(polyPts(lv));
+    var dirs = [[gx, gy, 'error', 'máx'], [-gx, -gy, 'aux', 'mín'], [-gy, gx, 'trace', '0'], [gy, -gx, 'trace', '0']];
+    dirs.forEach(function (d) { o += arrow(d[2], px, py, Lr * d[0], Lr * d[1], 3); used = used.concat(arrowPts(px, py, Lr * d[0], Lr * d[1])); });
+    dirs.forEach(function (d) {
+      var c = spot(around(px + Lr * d[0], py + Lr * d[1], d[3]), used, 17, vbL);
+      o += label(c, 17);
+      var w = d[3].length * 17 * 0.6;
+      used = used.concat(segPts(c[3] === 'end' ? c[0] - w : c[3] === 'middle' ? c[0] - w / 2 : c[0], c[1] - 8, c[3] === 'end' ? c[0] : c[3] === 'middle' ? c[0] + w / 2 : c[0] + w, c[1] - 8));
+    });
+    o += label(spot(around(px, py, 'P'), used, 18, vbL), 18);
+    o += dot('dot-trace', px, py, 6);
+    // Sinusoide.
+    var X = function (t) { return 330 + 320 * t / 360; }, Y = function (v) { return 170 - 92 * v; }, cur = [];
+    o += arrow('axis', 330, 170, 335, 0, 1.6) + arrow('axis', 330, 278, 0, -240, 1.6);
+    o += text(674, 176, 'θ', ' text-anchor="middle" font-size="18"');
+    o += text(342, 42, c2s07sub('D', 'u') + ' f', ' font-size="17"');
+    [90, 180, 270, 360].forEach(function (t) { o += seg('axis', X(t), 165, X(t), 175, 1.4) + text(X(t), 306, t + '°', ' text-anchor="middle" font-size="15"'); });
+    o += seg('axis', X(0), Y(1), X(360), Y(1), 1, '3 5') + seg('axis', X(0), Y(-1), X(360), Y(-1), 1, '3 5');
+    for (var i = 0; i <= 120; i++) { var t = 360 * i / 120; cur.push([X(t), Y(Math.cos((t - g0) * RAD))]); }
+    o += poly('ref', cur, 3);
+    var pts2 = polyPts(cur).concat(segPts(330, 170, 665, 170), segPts(330, 38, 330, 278), segPts(X(0), Y(1), X(360), Y(1)), segPts(X(0), Y(-1), X(360), Y(-1)));
+    o += dot('dot-error', X(g0), Y(1), 6) + dot('dot-aux', X(g0 + 180), Y(-1), 6) + dot('dot-trace', X(g0 + 90), Y(0), 5) + dot('dot-trace', X(g0 + 270), Y(0), 5);
+    var vbR = [336, 20, 680, 290];
+    o += label(spot([[X(g0) + 14, Y(1) - 12, 'máx = |∇f|', 'start'], [X(g0) + 14, Y(1) + 24, 'máx = |∇f|', 'start']], pts2, 16, vbR), 16);
+    o += label(spot([[X(g0 + 180) + 14, Y(-1) + 24, 'mín = −|∇f|', 'start'], [X(g0 + 180) - 14, Y(-1) + 24, 'mín = −|∇f|', 'end'], [X(g0 + 180) + 14, Y(-1) - 10, 'mín = −|∇f|', 'start']], pts2, 16, vbR), 16);
+    o += label(spot([[X(g0 + 90) + 10, Y(0) - 12, '0', 'start'], [X(g0 + 90) - 10, Y(0) + 24, '0', 'end'], [X(g0 + 90) + 10, Y(0) + 24, '0', 'start']], pts2, 16, vbR), 16);
+    o += label(spot([[X(g0 + 270) - 10, Y(0) - 12, '0', 'end'], [X(g0 + 270) + 10, Y(0) + 24, '0', 'start'], [X(g0 + 270) - 10, Y(0) + 24, '0', 'end']], pts2, 16, vbR), 16);
+    return svgBox('0 0 690 320', 'Izquierda: desde P, la dirección de máximo crecimiento, la de máximo decrecimiento y las dos tangentes a la curva de nivel, donde la derivada direccional es 0. Derecha: la derivada direccional contra el ángulo θ es una sinusoide con máximo |∇f| y mínimo −|∇f|.', o);
+  };
+
+  // S07 · Caminar de P a Q sobre una placa caliente T = 80 − x² − 3y² (°C, cm).
+  D['c2s07-walk'] = function () {
+    var X = function (x) { return 190 + 36 * x; }, Y = function (y) { return 172 - 36 * y; };
+    var vb = [X(-4.4), Y(3.8), X(4.4), Y(-3.8)], o = '', used = [];
+    o += fill('area-fill', [[vb[0], vb[1]], [vb[2], vb[1]], [vb[2], vb[3]], [vb[0], vb[3]]]);
+    o += poly('axis', [[vb[0], vb[1]], [vb[2], vb[1]], [vb[2], vb[3]], [vb[0], vb[3]]], 1.4, true);
+    [3, 8, 14, 19].forEach(function (c) {
+      var pts = c2s07ell(X, Y, Math.sqrt(c), Math.sqrt(c / 3));
+      o += poly('ref', pts, 1.5, true, '5 5');
+      used = used.concat(polyPts(pts));
+    });
+    o += text(X(0), Y(0) + 6, '80 °C', ' text-anchor="middle" font-size="15"');
+    used = used.concat(segPts(X(0) - 22, Y(0), X(0) + 22, Y(0)));
+    var px = X(2), py = Y(1), qx = X(-1), qy = Y(-3);
+    o += seg('aux', px, py, qx, qy, 2, '6 5');
+    o += arrow('trace', px, py, -0.6 * 70, 0.8 * 70, 3.6);
+    used = used.concat(segPts(px, py, qx, qy), arrowPts(px, py, -42, 56));
+    o += dot('dot-trace', px, py, 6) + dot('dot-ref', qx, qy, 6);
+    var cP = spot(around(px, py, 'P'), used, 18, vb); o += label(cP, 18);
+    used = used.concat(segPts(cP[0] - 10, cP[1] - 6, cP[0] + 10, cP[1] - 6));
+    o += label(spot(around(qx, qy, 'Q'), used, 18, vb), 18);
+    o += label(spot(around(px - 21, py + 28, 'u'), used, 18, vb), 18);
+    var lx = 392;
+    o += text(lx, 40, 'T(x, y) = 80 − x² − 3y²', ' font-size="16"');
+    o += text(lx, 72, 'De P(2, 1) hacia Q(−1, −3):', ' font-size="15"');
+    o += text(lx, 100, 'PQ = ⟨−3, −4⟩, |PQ| = 5', ' font-size="15"');
+    o += text(lx, 128, 'u = ⟨−0.6, −0.8⟩', ' font-size="15"');
+    o += text(lx, 156, c2s07sub('T', 'x') + ' = −4, ' + c2s07sub('T', 'y') + ' = −6 (°C/cm)', ' font-size="15"');
+    o += text(lx, 190, c2s07sub('D', 'u') + 'T = (−4)(−0.6) + (−6)(−0.8)', ' font-size="15"');
+    o += text(lx, 216, '= 2.4 + 4.8 = 7.2 °C/cm', ' font-size="15"');
+    o += text(lx, 256, 'Al arrancar hacia Q, la temperatura', ' font-size="14"');
+    o += text(lx, 280, 'sube 7.2 °C por cm. Es la razón de', ' font-size="14"');
+    o += text(lx, 304, 'cambio en P: más adelante baja.', ' font-size="14"');
+    return svgBox('0 0 700 340', 'Placa con isotermas elípticas y centro a 80 °C. Desde P(2, 1) se camina hacia Q(−1, −3); el vector unitario u apunta de P a Q y la temperatura sube 7.2 °C por cada cm.', o);
+  };
 
   /* ══════════════════════ fin S07 ══════════════════════ */
 
   /* ══════════════════════ S08 ══════════════════════ */
+  function c2s08sub(s, t) { return s + '<tspan baseline-shift="sub" font-size="12">' + t + '</tspan>'; }
+  // Renglón de leyenda: muestra del trazo y su texto (se desvanece con op).
+  function c2s08Key(x, y, cls, s, op, dash) {
+    return fade(seg(cls, x, y - 6, x + 26, y - 6, 3, dash) + text(x + 34, y, s, ' font-size="16"'), op == null ? 1 : op);
+  }
+
+  // S08 · El cerro f = 4 − x² − 2y² visto desde arriba: curvas de nivel (elipses x² + 2y² = 4 − c),
+  // el punto P = (1, 1) sobre la curva f = 1, la recta tangente a esa curva, ∇f(P) = ⟨−2, −4⟩ ⟂ a
+  // ella, el agua que sigue −∇f por y = x² y el campo de gradientes. state: { t, g, w, f } (0…1).
+  D['c2s08-hill'] = function (st) {
+    var oT = clamp01(num(st, 't', 1)), oG = clamp01(num(st, 'g', 1)), oW = clamp01(num(st, 'w', 1)), oF = clamp01(num(st, 'f', 1));
+    var k = 56, X = function (x) { return 300 + k * x; }, Y = function (y) { return 182 - k * y; };
+    var o = '', used = [], i;
+    o += seg('axis', X(-3.3), Y(0), X(3.3), Y(0), 1.2) + seg('axis', X(0), Y(2.75), X(0), Y(-2.75), 1.2);
+    used = used.concat(segPts(X(-3.3), Y(0), X(3.3), Y(0)), segPts(X(0), Y(2.75), X(0), Y(-2.75)));
+    o += text(X(3.3) + 8, Y(0) + 6, 'x', ' font-size="17"') + text(X(0) + 9, Y(2.75) + 6, 'y', ' font-size="17"');
+    // Curvas de nivel f = 3, 2, 1, 0, −2, −4; la de P (f = 1) más gruesa.
+    [1, 2, 3, 4, 6, 8].forEach(function (r2) {
+      var pts = [];
+      for (i = 0; i <= 96; i++) { var t = 2 * Math.PI * i / 96; pts.push([X(Math.sqrt(r2) * Math.cos(t)), Y(Math.sqrt(r2 / 2) * Math.sin(t))]); }
+      o += poly('ref', pts, r2 === 3 ? 3.2 : 1.5, true);
+      used = used.concat(polyPts(pts));
+    });
+    // Campo de gradientes ∇f = ⟨−2x, −4y⟩ (flechas centradas en la malla, largo acotado).
+    var fl = '';
+    [-2.5, -1.5, -0.5, 0.5, 1.5, 2.5].forEach(function (x) {
+      [-2.25, -0.75, 0.75, 2.25].forEach(function (y) {
+        if (Math.hypot(x - 1, y - 1) < 0.7) return;
+        var gx = -2 * x, gy = -4 * y, m = Math.hypot(gx, gy), L = Math.min(0.72, 0.12 * m), ux = gx / m, uy = gy / m;
+        var x0 = X(x - ux * L / 2), y0 = Y(y - uy * L / 2), dx = k * ux * L, dy = -k * uy * L;
+        fl += arrow('axis', x0, y0, dx, dy, 1.6);
+        used = used.concat(arrowPts(x0, y0, dx, dy));
+      });
+    });
+    o += fade(fl, oF);
+    var P = [X(1), Y(1)];
+    // Recta tangente a la curva f = 1 en P: dirección ⟨2, −1⟩.
+    var tx = 2 / Math.sqrt(5), ty = -1 / Math.sqrt(5), hl = 1.15, T0 = [X(1 - tx * hl), Y(1 - ty * hl)], T1 = [X(1 + tx * hl), Y(1 + ty * hl)];
+    o += fade(seg('aux', T0[0], T0[1], T1[0], T1[1], 3, '8 6'), oT);
+    used = used.concat(segPts(T0[0], T0[1], T1[0], T1[1]));
+    // El agua: −∇f y su recorrido y = x² (de x = 1 a 1.55).
+    var wp = [];
+    for (i = 0; i <= 30; i++) { var xw = 1 + 0.55 * i / 30; wp.push([X(xw), Y(xw * xw)]); }
+    var Wv = [k * 0.56, -k * 1.12], Gv = [-k * 0.56, k * 1.12];
+    o += fade(poly('trace', wp, 2.6, false, '2 7') + arrow('trace', P[0], P[1], Wv[0], Wv[1], 3.4), oW);
+    used = used.concat(polyPts(wp), arrowPts(P[0], P[1], Wv[0], Wv[1]));
+    o += fade(arrow('error', P[0], P[1], Gv[0], Gv[1], 3.8), oG);
+    used = used.concat(arrowPts(P[0], P[1], Gv[0], Gv[1]));
+    o += dot('dot-trace', P[0], P[1], 6);
+    var vb = [0, 0, 600, 350];
+    o += label(spot(around(P[0], P[1], 'P'), used, 18, vb), 18);
+    var gt = [P[0] + Gv[0], P[1] + Gv[1]], wt = [P[0] + Wv[0], P[1] + Wv[1]];
+    o += fade(label(spot(around(gt[0], gt[1], '∇f'), used, 18, vb), 18), oG);
+    o += fade(label(spot(around(wt[0], wt[1], '−∇f'), used, 18, vb), 18), oW);
+    // Leyenda abajo, en dos columnas.
+    o += c2s08Key(20, 378, 'ref', 'curvas de nivel f = c');
+    o += c2s08Key(20, 406, 'error', '∇f(P): cuesta arriba', oG);
+    o += c2s08Key(20, 434, 'axis', 'campo de gradientes', oF);
+    o += c2s08Key(320, 378, 'aux', 'tangente: f no cambia', oT, '8 6');
+    o += c2s08Key(320, 406, 'trace', '−∇f: baja el agua', oW);
+    return svgBox('0 0 600 450', 'Mapa de contorno del cerro f = 4 − x² − 2y²: elipses concéntricas con la cima al centro. En P = (1, 1), sobre la curva f = 1, la recta tangente a la curva va en la dirección (2, −1); el gradiente (−2, −4) es perpendicular a ella y apunta hacia la cima; −∇f apunta hacia afuera y el agua baja por la parábola y = x², cruzando cada curva en ángulo recto. El campo de gradientes es perpendicular a todas las curvas.', o);
+  };
+
+  // S08 · D_u f = |∇f| cos α: el vector u gira alrededor de P; la proyección de ∇f sobre u es la
+  // razón de cambio. A la derecha, la gráfica de D_u f contra α. state: { a } (grados, 0…360).
+  D['c2s08-rate'] = function (st) {
+    var al = num(st, 'a', 0), a = al * RAD, g0 = 28 * RAD, cx = 150, cy = 180, G = 105, R = 72, o = '', used = [];
+    o += text(20, 34, c2s08sub('D', 'u') + 'f = |∇f| cos α', ' font-size="19"');
+    o += '<circle class="axis" fill="none" stroke-width="1.3" stroke-dasharray="4 5" cx="' + cx + '" cy="' + cy + '" r="' + R + '"/>';
+    for (var i = 0; i < 48; i++) { var t = 2 * Math.PI * i / 48; used.push([cx + R * Math.cos(t), cy + R * Math.sin(t)]); }
+    var gx = G * Math.cos(g0), gy = -G * Math.sin(g0), ua = g0 + a, ux = Math.cos(ua), uy = -Math.sin(ua), pr = G * Math.cos(a);
+    var L = 1.35 * R;
+    o += seg('axis', cx - ux * L, cy - uy * L, cx + ux * L, cy + uy * L, 1.2, '3 5');
+    used = used.concat(segPts(cx - ux * L, cy - uy * L, cx + ux * L, cy + uy * L));
+    var fx = cx + ux * pr, fy = cy + uy * pr;
+    if (Math.abs(pr) > 1) o += seg('trace', cx, cy, fx, fy, 7);
+    o += seg('axis', cx + gx, cy + gy, fx, fy, 1.4, '4 4');
+    used = used.concat(segPts(cx + gx, cy + gy, fx, fy));
+    o += arrow('aux', cx, cy, ux * R, uy * R, 3);
+    o += arrow('error', cx, cy, gx, gy, 3.6);
+    used = used.concat(arrowPts(cx, cy, ux * R, uy * R), arrowPts(cx, cy, gx, gy));
+    var am = al % 360;
+    if (am > 4 && am < 356) o += arc(cx, cy, 28, 28, 28 + am, 'axis', 1.6);
+    o += dot('dot-trace', cx, cy, 5);
+    var vb = [0, 50, 330, 300];
+    o += label(spot(around(cx + gx, cy + gy, '∇f'), used, 18, vb), 18);
+    o += label(spot(around(cx + ux * R, cy + uy * R, 'u'), used, 18, vb), 18);
+    o += label(spot(around(cx, cy, 'P'), used, 18, vb), 18);
+    // Gráfica de D_u f contra α.
+    var x0 = 345, x1 = 580, y0 = 170, A = 82, pts = [];
+    o += seg('axis', x0, y0, x1 + 6, y0, 1.4) + seg('axis', x0, y0 - A - 10, x0, y0 + A + 10, 1.4);
+    for (i = 0; i <= 120; i++) { var q = 2 * Math.PI * i / 120; pts.push([x0 + (x1 - x0) * i / 120, y0 - A * Math.cos(q)]); }
+    o += poly('ref', pts, 2.6);
+    [0, 90, 180, 270, 360].forEach(function (d) { o += text(x0 + (x1 - x0) * d / 360, 66, d + '°', ' text-anchor="middle" font-size="14"'); });
+    o += text(x0 - 8, y0 - A + 5, '|∇f|', ' text-anchor="end" font-size="15"');
+    o += text(x0 - 8, y0 + 5, '0', ' text-anchor="end" font-size="15"');
+    o += text(x0 - 8, y0 + A + 5, '−|∇f|', ' text-anchor="end" font-size="15"');
+    o += text(x1 + 9, y0 + 6, 'α', ' font-size="17"');
+    var am2 = ((al % 360) + 360) % 360, dx = x0 + (x1 - x0) * am2 / 360, dy = y0 - A * Math.cos(a);
+    o += seg('axis', dx, y0, dx, dy, 1.3, '3 4') + dot('dot-trace', dx, dy, 6);
+    var c = Math.cos(a), cs = (Math.abs(c) < 0.005 ? 0 : c).toFixed(2).replace('-', '−');
+    o += text(20, 320, 'α = ' + Math.round(am2) + '°  →  ' + c2s08sub('D', 'u') + 'f = ' + cs + ' |∇f|', ' font-size="16"');
+    return svgBox('0 0 600 335', 'A la izquierda, el gradiente desde P y un vector unitario u que forma un ángulo α con él; la sombra de ∇f sobre u mide la razón de cambio D_u f = |∇f| cos α. A la derecha, la gráfica de D_u f contra α: vale |∇f| en α = 0, cero en 90° y 270° y −|∇f| en 180°.', o);
+  };
+
+  // S08 · Superficie de nivel x² + y² + z² = 14 con P = (1, 2, 3), su normal ∇F(P) = ⟨2, 4, 6⟩ y
+  // el plano tangente x + 2y + 3z = 14.
+  D['c2s08-sphere'] = function () {
+    var R = Math.sqrt(14), s = 36, ccx = 185, ccy = 196, az = -35, elv = 25;
+    var P0 = view3({ cx: ccx, cy: ccy, s: s, az: az, el: elv }), o = '', used = [], i;
+    var ca = Math.cos(az * RAD), sa = Math.sin(az * RAD), ce = Math.cos(elv * RAD), se = Math.sin(elv * RAD);
+    function depth(p) { return (p[0] * ca - p[1] * sa) * ce + p[2] * se; }
+    // Un círculo de la esfera: la parte de enfrente sólida, la de atrás punteada.
+    function circ(f) {
+      var front = '', back = '', run = [], side = null;
+      function flush() { if (run.length > 1) { if (side) front += poly('ref', run, 1.6); else back += poly('ref', run, 1.1, false, '4 5'); } }
+      for (var j = 0; j <= 120; j++) {
+        var p = f(2 * Math.PI * j / 120), sd = depth(p) >= 0, q = P0(p);
+        if (side !== null && sd !== side) { flush(); run = [run[run.length - 1]]; }
+        side = sd; run.push(q);
+        used.push(q);
+      }
+      flush();
+      return { front: front, back: back };
+    }
+    var eq = circ(function (t) { return [R * Math.cos(t), R * Math.sin(t), 0]; });
+    var lt = circ(function (t) { return [Math.sqrt(5) * Math.cos(t), Math.sqrt(5) * Math.sin(t), 3]; });
+    o += eq.back + lt.back;
+    o += '<circle class="ref" fill="none" stroke-width="2.6" cx="' + ccx + '" cy="' + ccy + '" r="' + r1(s * R) + '"/>';
+    for (i = 0; i < 90; i++) { var t = 2 * Math.PI * i / 90; used.push([ccx + s * R * Math.cos(t), ccy + s * R * Math.sin(t)]); }
+    o += eq.front + lt.front;
+    // Plano tangente: un parche alrededor de P, con lados en e1 = ⟨2, −1, 0⟩/√5 y e2 = n × e1.
+    var n = [1 / R, 2 / R, 3 / R], e1 = [2 / Math.sqrt(5), -1 / Math.sqrt(5), 0];
+    var e2 = [n[1] * e1[2] - n[2] * e1[1], n[2] * e1[0] - n[0] * e1[2], n[0] * e1[1] - n[1] * e1[0]], hs = 1.5;
+    var Pp = [1, 2, 3], corner = function (u, v) { return P0([Pp[0] + hs * (u * e1[0] + v * e2[0]), Pp[1] + hs * (u * e1[1] + v * e2[1]), Pp[2] + hs * (u * e1[2] + v * e2[2])]); };
+    var patch = [corner(-1, -1), corner(1, -1), corner(1, 1), corner(-1, 1)];
+    o += fill('box-trace', patch) + poly('trace', patch, 1.6, true);
+    used = used.concat(polyPts(patch.concat([patch[0]])));
+    // Normal ∇F(P) (dibujada a escala 0.37).
+    var B = P0(Pp), E = P0([Pp[0] + 0.74, Pp[1] + 1.48, Pp[2] + 2.22]);
+    o += arrow('error', B[0], B[1], E[0] - B[0], E[1] - B[1], 3.6);
+    used = used.concat(arrowPts(B[0], B[1], E[0] - B[0], E[1] - B[1]));
+    o += dot('dot-trace', B[0], B[1], 6);
+    o += label(spot(around(B[0], B[1], 'P'), used, 18, [0, 0, 360, 350]), 18);
+    // Leyenda a la derecha.
+    var lx = 372;
+    o += seg('ref', lx, 74, lx + 26, 74, 3) + text(lx + 34, 80, 'x² + y² + z² = 14', ' font-size="16"');
+    o += text(lx + 34, 104, '(superficie de nivel)', ' font-size="14"');
+    o += seg('error', lx, 150, lx + 26, 150, 3) + text(lx + 34, 156, '∇F(P) = ⟨2, 4, 6⟩', ' font-size="16"');
+    o += '<rect class="box-trace" x="' + lx + '" y="194" width="26" height="16" rx="2"/>' + text(lx + 34, 208, 'plano tangente:', ' font-size="16"');
+    o += text(lx + 34, 234, 'x + 2y + 3z = 14', ' font-size="16"');
+    o += text(lx, 290, 'P = (1, 2, 3)', ' font-size="16"');
+    return svgBox('0 0 600 350', 'Esfera x² + y² + z² = 14 vista en perspectiva, con el punto P = (1, 2, 3). El gradiente ∇F(P) = (2, 4, 6) sale de P perpendicular a la esfera, y el plano tangente en P, x + 2y + 3z = 14, toca la esfera solo en P.', o);
+  };
 
   /* ══════════════════════ fin S08 ══════════════════════ */
 
   /* ══════════════════════ S09 ══════════════════════ */
+  function c2s09sub(s, t) { return s + '<tspan baseline-shift="sub" font-size="12">' + t + '</tspan>'; }
+  // Renglón de leyenda: muestra del trazo (o flecha) y su texto.
+  function c2s09Key(x, y, cls, s, op, kind) {
+    var sw = kind === 'arrow' ? arrow(cls, x, y - 6, 26, 0, 2.6) : seg(cls, x, y - 6, x + 26, y - 6, kind === 'thin' ? 1.6 : 3, kind === 'dash' ? '6 5' : null);
+    return fade(sw + text(x + 34, y, s, ' font-size="16"'), op == null ? 1 : op);
+  }
+
+  // S09 · Tres tipos de punto crítico: tazón (mínimo), domo (máximo) y silla, con su criterio D.
+  D['c2s09-critical'] = function () {
+    var o = '', L = 1.5, n = 8, N = 24;
+    var kinds = [
+      [110, function (x, y) { return 0.45 * (x * x + y * y); }, 'mínimo local', 'D > 0, ' + c2s09sub('f', 'xx') + ' > 0'],
+      [320, function (x, y) { return 2 - 0.45 * (x * x + y * y); }, 'máximo local', 'D > 0, ' + c2s09sub('f', 'xx') + ' < 0'],
+      [530, function (x, y) { return 1 + 0.45 * (x * x - y * y); }, 'punto silla', 'D < 0']
+    ];
+    kinds.forEach(function (k) {
+      var P0 = view3({ cx: k[0], cy: 150, s: 30, az: -35, el: 25 }), f = k[1], P = function (x, y) { return P0([x, y, f(x, y)]); }, m = '', i, j;
+      for (i = 0; i <= n; i++) {
+        var u = -L + 2 * L * i / n, l1 = [], l2 = [];
+        for (j = 0; j <= N; j++) { var t = -L + 2 * L * j / N; l1.push(P(u, t)); l2.push(P(t, u)); }
+        m += poly('ref', l1, 1.2) + poly('ref', l2, 1.2);
+      }
+      o += '<g opacity="0.6">' + m + '</g>';
+      var c = P(0, 0);
+      o += dot('dot-trace', c[0], c[1], 6);
+      o += text(k[0], 250, k[2], ' text-anchor="middle" font-size="17"');
+      o += text(k[0], 278, k[3], ' text-anchor="middle" font-size="16"');
+    });
+    return svgBox('0 0 640 300', 'Tres superficies con un punto crítico marcado: un tazón (mínimo local, D > 0 y fxx > 0), un domo (máximo local, D > 0 y fxx < 0) y una silla (D < 0).', o);
+  };
+
+  // S09 · La recta x + 2y = 8 y las curvas de nivel xy = k. El punto P = (t, (8 − t)/2) se mueve
+  // por la recta; en t = 4 la curva xy = 8 es tangente y ∇f ∥ ∇g.
+  // state: { t: x de P, lv: curvas (0…1), gr: gradientes (0…1) }.
+  D['c2s09-tangent'] = function (st) {
+    var t = Math.max(0.4, Math.min(7.6, num(st, 't', 4))), oL = clamp01(num(st, 'lv', 1)), oG = clamp01(num(st, 'gr', 1));
+    var X = function (x) { return 46 + 58 * x; }, Y = function (y) { return 318 - 58 * y; };
+    var o = '', pts = [], used = [];
+    // Ejes.
+    o += arrow('axis', X(0), Y(0), X(9.1) - X(0), 0, 1.6) + arrow('axis', X(0), Y(0), 0, Y(4.75) - Y(0), 1.6);
+    o += text(X(9.1) + 12, Y(0) + 6, 'x', ' text-anchor="middle" font-size="18"') + text(X(0), Y(4.75) - 10, 'y', ' text-anchor="middle" font-size="18"');
+    used = used.concat(segPts(X(0), Y(0), X(9.1), Y(0)), segPts(X(0), Y(0), X(0), Y(4.75)));
+    // Curvas de nivel xy = k.
+    var y0 = t > 0 ? (8 - t) / 2 : 0, fP = t * y0, lv = '';
+    [2, 4, 6, 8, 10, 12].forEach(function (k) {
+      var c = [];
+      for (var i = 0; i <= 80; i++) { var x = k / 4.6 + (9 - k / 4.6) * i / 80; c.push([X(x), Y(k / x)]); }
+      lv += poly('aux', c, 1.5);
+      used = used.concat(polyPts(c));
+    });
+    o += fade(lv, oL);
+    // El nivel que pasa por P.
+    var hc = [];
+    for (var i2 = 0; i2 <= 90; i2++) { var xx = fP / 4.6 + (9 - fP / 4.6) * i2 / 90; hc.push([X(xx), Y(fP / xx)]); }
+    o += fade(poly('trace', hc, 3), oL);
+    used = used.concat(polyPts(hc));
+    // La restricción.
+    o += seg('ref', X(0), Y(4), X(8), Y(0), 3.4);
+    used = used.concat(segPts(X(0), Y(4), X(8), Y(0)));
+    // Gradientes en P: ∇f = ⟨y, x⟩ (largo 1.6) y ∇g = ⟨1, 2⟩ (largo 1).
+    var px = X(t), py = Y(y0), nf = Math.hypot(y0, t), ng = Math.sqrt(5);
+    var fdx = 1.6 * 58 * y0 / nf, fdy = -1.6 * 58 * t / nf, gdx = 58 / ng, gdy = -2 * 58 / ng;
+    o += fade(arrow('error', px, py, fdx, fdy, 3) + arrow('ref', px, py, gdx, gdy, 3), oG);
+    if (oG > 0.01) used = used.concat(arrowPts(px, py, fdx, fdy), arrowPts(px, py, gdx, gdy));
+    o += dot('dot-trace', px, py, 6);
+    // Leyenda y números de P.
+    var ang = Math.acos(Math.max(-1, Math.min(1, (y0 + 2 * t) / (nf * ng)))) * 180 / Math.PI;
+    var lx = 372;
+    o += c2s09Key(lx, 24, 'ref', 'x + 2y = 8');
+    o += c2s09Key(lx, 48, 'aux', 'nivel xy = k', oL, 'thin');
+    o += c2s09Key(lx, 72, 'trace', 'nivel que pasa por P', oL);
+    o += c2s09Key(lx, 96, 'error', '∇f = ⟨y, x⟩', oG, 'arrow');
+    o += c2s09Key(lx, 120, 'ref', '∇g = ⟨1, 2⟩', oG, 'arrow');
+    o += dot('dot-trace', lx + 13, 140, 6) + text(lx + 34, 146, 'P: f = ' + fP.toFixed(2), ' font-size="16"');
+    o += fade(text(lx + 34, 170, 'ángulo: ' + Math.round(ang) + '°', ' font-size="16"'), oG);
+    return svgBox('0 0 600 350', 'Recta x + 2y = 8 sobre las curvas de nivel xy = k. El punto P se mueve por la recta; donde la recta toca la curva xy = 8, en (4, 2), los gradientes de f y de g son paralelos.', o);
+  };
+
+  // S09 · Significado de λ: si la restricción pasa de c a c + Δc, el máximo de f = 3x + 4y
+  // sobre el círculo x² + y² = c sube Δmáx ≈ λ·Δc.
+  D['c2s09-lambda'] = function () {
+    var cx = 190, cy = 185, R1 = 100, R2 = 125, ux = 0.6, uy = -0.8, o = '';
+    o += '<circle class="ref" fill="none" stroke-width="3" cx="' + cx + '" cy="' + cy + '" r="' + R1 + '"/>';
+    o += '<circle class="ref" fill="none" stroke-width="2" stroke-dasharray="7 6" cx="' + cx + '" cy="' + cy + '" r="' + R2 + '"/>';
+    var M1 = [cx + R1 * ux, cy + R1 * uy], M2 = [cx + R2 * ux, cy + R2 * uy], d = 95;
+    o += seg('trace', M1[0] - d * 0.8, M1[1] - d * 0.6, M1[0] + d * 0.8, M1[1] + d * 0.6, 3);
+    o += seg('aux', M2[0] - d * 0.8, M2[1] - d * 0.6, M2[0] + d * 0.8, M2[1] + d * 0.6, 2.4, '8 6');
+    o += dot('dot-trace', M1[0], M1[1], 6) + dot('dot-aux', M2[0], M2[1], 6) + dot('dot-ref', cx, cy, 4);
+    var lx = 352;
+    o += c2s09Key(lx, 40, 'ref', 'g = c');
+    o += c2s09Key(lx, 68, 'ref', 'g = c + Δc', 1, 'dash');
+    o += c2s09Key(lx, 96, 'trace', 'nivel f = máx(c)');
+    o += c2s09Key(lx, 124, 'aux', 'nivel f = máx(c + Δc)', 1, 'dash');
+    o += text(lx, 172, 'Al aflojar la restricción,', ' font-size="16"');
+    o += text(lx, 196, 'el máximo sube:', ' font-size="16"');
+    o += text(lx, 232, 'Δmáx ≈ λ · Δc', ' font-size="19"');
+    return svgBox('0 0 600 330', 'Dos circunferencias, g = c y g = c + Δc, con las rectas de nivel de f tangentes en sus puntos de máximo. Al pasar de c a c + Δc el máximo sube aproximadamente λ por Δc.', o);
+  };
 
   /* ══════════════════════ fin S09 ══════════════════════ */
 
   /* ══════════════════════ S10 ══════════════════════ */
+  // Elipse común de S10: cilindro x² + y² = 2 cortado por el plano x + y + z = 4.
+  var C2S10R = Math.SQRT2;
+  function c2s10Pt(t) { var x = C2S10R * Math.cos(t), y = C2S10R * Math.sin(t); return [x, y, 4 - x - y]; }
+  function c2s10Unit(v) { var L = Math.hypot(v[0], v[1], v[2]) || 1; return [v[0] / L, v[1] / L, v[2] / L]; }
+  // Flecha 3D proyectada: desde p, en la dirección v, con largo L (unidades del mundo).
+  function c2s10Arrow(P, p, v, L, cls, w) {
+    var u = c2s10Unit(v), a = P(p), b = P([p[0] + L * u[0], p[1] + L * u[1], p[2] + L * u[2]]);
+    return arrow(cls, a[0], a[1], b[0] - a[0], b[1] - a[1], w);
+  }
+  // Renglón de la leyenda: muestra del trazo y su texto (se desvanece con op).
+  function c2s10Key(y, cls, s, op, dash) {
+    return fade(seg(cls, 16, y - 6, 40, y - 6, 3, dash) + text(48, y, s, ' font-size="16"'), op == null ? 1 : op);
+  }
+
+  // S10 · El plano x + y + z = 4 y el cilindro x² + y² = 2 se cortan en una elipse; en P se ven
+  // ∇g, ∇h, T = ∇g × ∇h y ∇f = ⟨0, 0, 1⟩. state: { k: 0…4 (etapa), t: parámetro de P }.
+  D['c2s10-curve'] = function (st) {
+    var k = num(st, 'k', 4), t = num(st, 't', 3.927);
+    var o1 = clamp01(k), o2 = clamp01(k - 1), o3 = clamp01(k - 2), o4 = clamp01(k - 3);
+    var P = view3({ cx: 430, cy: 330, s: 36, az: 40, el: 22 }), o = '', i, j;
+    // Cilindro: generatrices y dos anillos.
+    var cy = '';
+    for (i = 0; i < 12; i++) { var a = 2 * Math.PI * i / 12, p0 = P([C2S10R * Math.cos(a), C2S10R * Math.sin(a), 0]), p1 = P([C2S10R * Math.cos(a), C2S10R * Math.sin(a), 7.6]); cy += seg('aux', p0[0], p0[1], p1[0], p1[1], 1.1); }
+    [0, 7.6].forEach(function (z) { var ring = []; for (j = 0; j <= 48; j++) { var b = 2 * Math.PI * j / 48; ring.push(P([C2S10R * Math.cos(b), C2S10R * Math.sin(b), z])); } cy += poly('aux', ring, 1.3); });
+    o += '<g opacity="0.55">' + cy + '</g>';
+    // Plano: parche sobre el cuadrado |x|, |y| ≤ 1.8.
+    var L = 1.8, patch = [[-L, -L], [L, -L], [L, L], [-L, L]].map(function (q) { return P([q[0], q[1], 4 - q[0] - q[1]]); });
+    o += fill('box-ref', patch) + poly('ref', patch, 1.4, true);
+    // La elipse.
+    var el = [];
+    for (j = 0; j <= 96; j++) el.push(P(c2s10Pt(2 * Math.PI * j / 96)));
+    o += fade(poly('trace', el, 3.6), 0.35 + 0.65 * o1);
+    // El punto P y sus vectores.
+    var p = c2s10Pt(t), gg = [1, 1, 1], gh = [2 * p[0], 2 * p[1], 0];
+    var T = [gg[1] * gh[2] - gg[2] * gh[1], gg[2] * gh[0] - gg[0] * gh[2], gg[0] * gh[1] - gg[1] * gh[0]];
+    var Tu = c2s10Unit(T), A = P(p), Tb = P([p[0] - 1.5 * Tu[0], p[1] - 1.5 * Tu[1], p[2] - 1.5 * Tu[2]]);
+    var Ta = P([p[0] + 1.5 * Tu[0], p[1] + 1.5 * Tu[1], p[2] + 1.5 * Tu[2]]);
+    // Plano de ∇g y ∇h en P (al final).
+    var ug = c2s10Unit(gg), uh = c2s10Unit(gh), s = 1.05;
+    var par = [p, [p[0] + s * ug[0], p[1] + s * ug[1], p[2] + s * ug[2]], [p[0] + s * (ug[0] + uh[0]), p[1] + s * (ug[1] + uh[1]), p[2] + s * (ug[2] + uh[2])], [p[0] + s * uh[0], p[1] + s * uh[1], p[2] + s * uh[2]]].map(P);
+    o += fade(fill('area-fill area-fill--aux', par), o4);
+    o += fade(seg('axis', Tb[0], Tb[1], Ta[0], Ta[1], 2.6, '6 5'), o3);
+    o += fade(c2s10Arrow(P, p, gg, 1.3, 'ref', 3) + c2s10Arrow(P, p, gh, 1.3, 'aux', 3), o3);
+    var oF = clamp01((k - 2.5) * 2);
+    o += fade(c2s10Arrow(P, p, [0, 0, 1], 1.3, 'error', 3.4), oF);
+    o += fade(dot('dot-trace', A[0], A[1], 6), o2);
+    // Leyenda con la componente de ∇f a lo largo de la curva.
+    var tc = T[2] / (Math.hypot(T[0], T[1], T[2]) || 1);
+    if (Math.abs(tc) < 0.005) tc = 0;
+    o += '<rect class="box-ref" x="16" y="16" width="24" height="14" rx="2"/>' + text(48, 29, 'plano g: x + y + z = 4', ' font-size="16"');
+    o += c2s10Key(56, 'aux', 'cilindro h: x² + y² = 2');
+    o += c2s10Key(82, 'trace', 'curva: la elipse', o1);
+    o += c2s10Key(108, 'ref', '∇g (normal al plano)', o3);
+    o += c2s10Key(134, 'aux', '∇h (normal al cilindro)', o3);
+    o += c2s10Key(160, 'axis', 'tangente T = ∇g × ∇h', o3, '6 5');
+    o += c2s10Key(186, 'error', '∇f = ⟨0, 0, 1⟩', oF);
+    o += fade(text(16, 216, '∇f · T̂ = ' + tc.toFixed(2).replace('-', '−'), ' font-size="17"'), oF);
+    o += fade('<rect class="area-fill area-fill--aux" x="16" y="232" width="24" height="14" rx="2"/>' + text(48, 245, 'plano de ∇g y ∇h', ' font-size="16"'), o4);
+    return svgBox('0 0 600 380', 'El plano x + y + z = 4 corta al cilindro x² + y² = 2 en una elipse. En un punto P de la elipse se dibujan los gradientes de g y h, la tangente T = ∇g × ∇h y el gradiente de f = z. En el punto más alto, ∇f no tiene componente a lo largo de T y queda en el plano de ∇g y ∇h.', o);
+  };
+
+  // S10 · z(t) = 4 − √2 (cos t + sin t) a lo largo de la elipse, con su máximo y su mínimo.
+  D['c2s10-param'] = function () {
+    var X = function (t) { return 70 + t / (2 * Math.PI) * 480; }, Y = function (z) { return 250 - z * 30; }, o = '', pts = [], i;
+    o += arrow('axis', 70, Y(0), 510, 0, 1.6) + arrow('axis', 70, 262, 0, -240, 1.6);
+    o += text(592, Y(0) + 26, 't', ' font-size="18" text-anchor="end"') + text(80, 30, 'z', ' font-size="18"');
+    [[Math.PI / 2, 'π/2'], [Math.PI, 'π'], [1.5 * Math.PI, '3π/2'], [2 * Math.PI, '2π']].forEach(function (q) {
+      o += seg('axis', X(q[0]), Y(0) - 5, X(q[0]), Y(0) + 5, 1.4) + text(X(q[0]), Y(0) + 24, q[1], ' font-size="16" text-anchor="middle"');
+    });
+    [2, 4, 6].forEach(function (z) { o += seg('axis', 65, Y(z), 75, Y(z), 1.4) + text(58, Y(z) + 5, String(z), ' font-size="16" text-anchor="end"'); });
+    for (i = 0; i <= 120; i++) { var t = 2 * Math.PI * i / 120; pts.push([X(t), Y(4 - Math.SQRT2 * (Math.cos(t) + Math.sin(t)))]); }
+    o += poly('ref', pts, 3.2);
+    var tM = 1.25 * Math.PI, tm = 0.25 * Math.PI;
+    o += dot('dot-error', X(tM), Y(6), 6) + dot('dot-aux', X(tm), Y(2), 6);
+    o += text(X(tM), Y(6) - 16, 'máximo: z = 6 en t = 5π/4', ' font-size="16" text-anchor="middle"');
+    o += text(150, Y(2) + 28, 'mínimo: z = 2 en t = π/4', ' font-size="16"');
+    return svgBox('0 0 600 290', 'Gráfica de z(t) = 4 − √2 (cos t + sin t) para t entre 0 y 2π: máximo 6 en t = 5π/4 y mínimo 2 en t = π/4.', o);
+  };
 
   /* ══════════════════════ fin S10 ══════════════════════ */
 
@@ -1081,6 +1753,181 @@
       [[548, 40, 'V = πr²h/3', 'end'], [548, 330, 'V = πr²h/3', 'end'], [12, 330, 'V = πr²h/3']]
     ], pts, 18, [0, 0, 560, 360]);
     return svgBox('0 0 560 360', 'Embudo cónico con la boca arriba: radio r = ' + r + ' cm y altura h = ' + h + ' cm.', o);
+  };
+
+  /* ---------- Bloque B ---------- */
+  // Segmentos de la curva de nivel G = c en una malla (nx + 1) × (ny + 1) (cuadrados marchantes);
+  // P(i, j) lleva índices de la malla (fraccionarios) a pantalla.
+  function c2exIso(G, nx, ny, c, P) {
+    var out = [];
+    for (var i = 0; i < nx; i++) for (var j = 0; j < ny; j++) {
+      var q = [[i, j], [i + 1, j], [i + 1, j + 1], [i, j + 1]], hit = [];
+      for (var e = 0; e < 4; e++) {
+        var p = q[e], r = q[(e + 1) % 4], a = G[p[0]][p[1]] - c, b = G[r[0]][r[1]] - c;
+        if ((a < 0) !== (b < 0)) { var t = a / (a - b); hit.push(P(p[0] + t * (r[0] - p[0]), p[1] + t * (r[1] - p[1]))); }
+      }
+      if (hit.length === 2) out.push(hit);
+      else if (hit.length === 4) out.push([hit[0], hit[1]], [hit[2], hit[3]]);
+    }
+    return out;
+  }
+  function c2exSegsD(list) { return list.map(function (s) { return 'M' + r1(s[0][0]) + ' ' + r1(s[0][1]) + 'L' + r1(s[1][0]) + ' ' + r1(s[1][1]); }).join(''); }
+  // Pone cada etiqueta solo si cabe libre (si no, la omite): marcas de los ejes.
+  function c2exTry(list, pts, fs, vb) {
+    var o = '';
+    list.forEach(function (c) { if (c2exFree(c, pts, fs, vb)) { o += label(c, fs); pts.push.apply(pts, c2exBox(c, fs)); } });
+    return o;
+  }
+
+  // Mapa de curvas de nivel de f en la ventana s.x × s.y (misma escala en x y en y): la curva de nivel
+  // s.hl gruesa, otras delgadas (salvo s.only), puntos con su letra, segmentos punteados y una leyenda a la derecha.
+  // s = { f, x: [a, b], y: [c, d], hl, only, pts: [{ x, y, label }], segs: [{ a: [x, y], b: [x, y], label }], hlLabel, otherLabel, label }
+  D['c2exam-mapa'] = function (s) {
+    s = s || {};
+    var f = typeof s.f === 'function' ? s.f : function (x, y) { return x * x + y * y; };
+    var PB = [14, 14, 380, 346], xa = (s.x || [-3, 3])[0], xb = (s.x || [-3, 3])[1], ya = (s.y || [-3, 3])[0], yb = (s.y || [-3, 3])[1];
+    var k = Math.min((PB[2] - PB[0]) / (xb - xa), (PB[3] - PB[1]) / (yb - ya)), cx = (xa + xb) / 2, cy = (ya + yb) / 2;
+    xa = cx - (PB[2] - PB[0]) / (2 * k); xb = cx + (PB[2] - PB[0]) / (2 * k); ya = cy - (PB[3] - PB[1]) / (2 * k); yb = cy + (PB[3] - PB[1]) / (2 * k);
+    var X = function (x) { return PB[0] + (x - xa) * k; }, Y = function (y) { return PB[3] - (y - ya) * k; };
+    var nx = 64, ny = Math.round(nx * (yb - ya) / (xb - xa)), hx = (xb - xa) / nx, hy = (yb - ya) / ny, G = [], lo = Infinity, hi = -Infinity, i, j;
+    for (i = 0; i <= nx; i++) { G.push([]); for (j = 0; j <= ny; j++) { var g = f(xa + i * hx, ya + j * hy); G[i].push(g); lo = Math.min(lo, g); hi = Math.max(hi, g); } }
+    var toS = function (a, b) { return [X(xa + a * hx), Y(ya + b * hy)]; };
+    var o = '', pts = [], hl = typeof s.hl === 'number' ? s.hl : (lo + hi) / 2;
+    // Ejes (si pasan por la ventana) con marcas en los enteros.
+    var x0 = X(0), y0 = Y(0), st = Math.max(1, Math.ceil((xb - xa) / 9)), tl = [];
+    if (xa < 0 && xb > 0) { o += seg('axis', x0, PB[1], x0, PB[3], 1.2); pts.push.apply(pts, segPts(x0, PB[1], x0, PB[3])); }
+    if (ya < 0 && yb > 0) { o += seg('axis', PB[0], y0, PB[2], y0, 1.2); pts.push.apply(pts, segPts(PB[0], y0, PB[2], y0)); }
+    if (ya < 0 && yb > 0) for (i = Math.ceil(xa / st) * st; i <= xb; i += st) if (i) { o += seg('axis', X(i), y0 - 4, X(i), y0 + 4, 1.2); tl.push([X(i), y0 + 19, String(i).replace('-', '−'), 'middle']); }
+    if (xa < 0 && xb > 0) for (j = Math.ceil(ya / st) * st; j <= yb; j += st) if (j) { o += seg('axis', x0 - 4, Y(j), x0 + 4, Y(j), 1.2); tl.push([x0 - 8, Y(j) + 5, String(j).replace('-', '−'), 'end']); }
+    // Curvas de nivel: la de s.hl y, salvo only, otras repartidas en el rango de f.
+    if (!s.only && hi > lo) {
+      var step = (hi - lo) / 6, others = [];
+      for (var m = -6; m <= 6; m++) { var c = hl + m * step; if (m && c > lo + step * 0.3 && c < hi - step * 0.3) others.push(c); }
+      var os = [];
+      others.forEach(function (c) { os = os.concat(c2exIso(G, nx, ny, c, toS)); });
+      o += '<path class="aux" fill="none" stroke-width="1.4" stroke-linecap="round" d="' + c2exSegsD(os) + '"/>';
+      os.forEach(function (q) { pts.push(q[0], q[1], [(q[0][0] + q[1][0]) / 2, (q[0][1] + q[1][1]) / 2]); });
+    }
+    var hs = c2exIso(G, nx, ny, hl, toS);
+    o += '<path class="ref" fill="none" stroke-width="3" stroke-linecap="round" d="' + c2exSegsD(hs) + '"/>';
+    hs.forEach(function (q) { pts.push(q[0], q[1], [(q[0][0] + q[1][0]) / 2, (q[0][1] + q[1][1]) / 2]); });
+    (s.segs || []).forEach(function (q) {
+      var A = [X(q.a[0]), Y(q.a[1])], B = [X(q.b[0]), Y(q.b[1])];
+      o += seg('error', A[0], A[1], B[0], B[1], 2.6, '8 6');
+      pts.push.apply(pts, segPts(A[0], A[1], B[0], B[1]));
+    });
+    o += poly('axis', [[PB[0], PB[1]], [PB[2], PB[1]], [PB[2], PB[3]], [PB[0], PB[3]]], 1.2, true);
+    pts.push.apply(pts, polyPts([[PB[0], PB[1]], [PB[2], PB[1]], [PB[2], PB[3]], [PB[0], PB[3]], [PB[0], PB[1]]]));
+    var labs = [];
+    (s.pts || []).forEach(function (p) {
+      var q = [X(p.x), Y(p.y)];
+      o += dot('dot-ref', q[0], q[1], 5.5);
+      pts.push(q, [q[0] - 5, q[1]], [q[0] + 5, q[1]], [q[0], q[1] - 5], [q[0], q[1] + 5]);
+      if (p.label) labs.push(around(q[0], q[1], p.label));
+    });
+    // Leyenda a la derecha.
+    var ly = 48, leg = [];
+    leg.push(['ref', 3, null, s.hlLabel || 'nivel de P']);
+    if (!s.only) leg.push(['aux', 1.4, null, s.otherLabel || 'otros niveles']);
+    (s.segs || []).forEach(function (q) { if (q.label) leg.push(['error', 2.6, '8 6', q.label]); });
+    leg.forEach(function (e) { o += seg(e[0], 394, ly - 6, 422, ly - 6, e[1], e[2]) + text(430, ly, e[3], ' font-size="16"'); ly += 32; });
+    var vbP = [2, 0, PB[2] + 4, 360];
+    o += c2exPlace(labs, pts, 18, vbP);
+    // Letras de los ejes y marcas: solo si caben libres dentro del mapa.
+    var inB = [PB[0], PB[1], PB[2], PB[3]], first = function (cands) {
+      for (var q = 0; q < cands.length; q++) if (c2exFree(cands[q], pts, 17, inB)) return c2exTry([cands[q]], pts, 17, inB);
+      return '';
+    };
+    if (ya < 0 && yb > 0) o += first([[PB[2] - 8, y0 - 8, 'x', 'end'], [PB[2] - 8, y0 + 22, 'x', 'end'], [PB[2] - 40, y0 - 8, 'x', 'end'], [PB[2] - 40, y0 + 22, 'x', 'end']]);
+    if (xa < 0 && xb > 0) o += first([[x0 + 8, PB[1] + 20, 'y'], [x0 - 8, PB[1] + 20, 'y', 'end'], [x0 + 8, PB[1] + 48, 'y'], [x0 - 8, PB[1] + 48, 'y', 'end']]);
+    o += c2exTry(tl, pts, 13, inB);
+    return svgBox('0 0 560 360', s.label || 'Mapa de curvas de nivel.', o);
+  };
+
+  function c2exCross(u, v) { return [u[1] * v[2] - u[2] * v[1], u[2] * v[0] - u[0] * v[2], u[0] * v[1] - u[1] * v[0]]; }
+  function c2exUnit(u) { var L = Math.hypot(u[0], u[1], u[2]) || 1; return [u[0] / L, u[1] / L, u[2] / L]; }
+  function c2exAdd(p, u, t) { return [p[0] + t * u[0], p[1] + t * u[1], p[2] + t * u[2]]; }
+
+  // El plano a x + b y + z = c corta al cilindro x² + y² = R² en una elipse; sus puntos más alto y más bajo.
+  D['c2exam-plano-cil'] = function (s) {
+    var a = num(s, 'a', 1), b = num(s, 'b', 1), c = num(s, 'c', 4), R = num(s, 'R', 2), N = Math.hypot(a, b) || 1;
+    var zp = function (x, y) { return c - a * x - b * y; }, top = [-R * a / N, -R * b / N], hi = c + R * N, lo = c - R * N;
+    var zb = Math.min(0, lo) - 0.6, zt = Math.max(0, hi) + 0.6, el = 20;
+    // Giro: que el punto más alto y el más bajo no queden sobre el eje z en pantalla y que el plano
+    // no se vea de canto (la elipse sería una raya).
+    var az = -35, best = -1, nn = Math.hypot(a, b, 1);
+    [-35, -55, -15, -75, 5, 25, 45, -100, 65, -125, 90, 120, 150, 180, -150].some(function (g) {
+      var d = Math.abs(top[0] * Math.sin(g * RAD) + top[1] * Math.cos(g * RAD)) / R;
+      var ce = Math.cos(el * RAD), cs = Math.abs(a * ce * Math.cos(g * RAD) - b * ce * Math.sin(g * RAD) + Math.sin(el * RAD)) / nn;
+      var sc = Math.min(d / 0.6, cs / 0.3);
+      if (sc > best) { best = sc; az = g; }
+      return sc >= 1;
+    });
+    var Lp = [R + 1.4, R + 1.4, zt + 0.8], Ln = [0.5, 0.5, Math.max(0.6, -zb + 0.3)], box3 = [];
+    for (var i = 0; i < 24; i++) { var t = i * Math.PI / 12; box3.push([R * Math.cos(t), R * Math.sin(t), zb], [R * Math.cos(t), R * Math.sin(t), zt]); }
+    [0, 1, 2].forEach(function (q) { var e = [0, 0, 0], g = [0, 0, 0]; e[q] = Lp[q]; g[q] = -Ln[q]; box3.push(e, g); });
+    var F = c2exFit(box3, [40, 30, 520, 332], az, el), P = F.P, pts = [], labs = [], o = '';
+    var sa = Math.sin(az * RAD), ca = Math.cos(az * RAD);
+    var ringB = c2exRing(function (t) { return P([R * Math.cos(t), R * Math.sin(t), zb]); }, 72);
+    var ringT = c2exRing(function (t) { return P([R * Math.cos(t), R * Math.sin(t), zt]); }, 72);
+    var E = c2exRing(function (t) { var x = R * Math.cos(t), y = R * Math.sin(t); return P([x, y, zp(x, y)]); }, 96);
+    o += fill('area-fill', E);
+    o += c2exAxes(P, Lp, Ln, pts, labs);
+    o += poly('aux', ringB, 1.4, false, '5 5') + poly('aux', ringT, 1.6);
+    pts.push.apply(pts, polyPts(ringB).concat(polyPts(ringT)));
+    [1, -1].forEach(function (sg) {
+      var A = P([sg * R * sa, sg * R * ca, zb]), B = P([sg * R * sa, sg * R * ca, zt]);
+      o += seg('aux', A[0], A[1], B[0], B[1], 1.6);
+      pts.push.apply(pts, segPts(A[0], A[1], B[0], B[1]));
+    });
+    o += poly('trace', E, 3);
+    pts.push.apply(pts, polyPts(E));
+    var H = P([top[0], top[1], hi]), Lo = P([-top[0], -top[1], lo]);
+    o += dot('dot-error', H[0], H[1], 6) + dot('dot-ref', Lo[0], Lo[1], 6);
+    pts.push(H, Lo);
+    o += c2exPlace([around(H[0], H[1], 'máx'), around(Lo[0], Lo[1], 'mín')].concat(labs), pts, 18, [0, 0, 560, 360]);
+    return svgBox('0 0 560 360', 'El cilindro de eje z y la elipse donde lo corta el plano inclinado, con su punto más alto (máx) y su punto más bajo (mín).', o);
+  };
+
+  // Los planos x + y + k z = c1 y x − y = c2 se cortan en una recta; M es su punto más cercano al origen O.
+  D['c2exam-recta'] = function (s) {
+    var k = num(s, 'k', 1), c1 = num(s, 'c1', 4), c2 = num(s, 'c2', 1);
+    var n1 = [1, 1, k], n2 = [1, -1, 0], lam = 2 * c1 / (2 + k * k), M = [(lam + c2) / 2, (lam - c2) / 2, k * lam / 2];
+    var u = c2exUnit(c2exCross(n1, n2)), v1 = c2exUnit(c2exCross(n1, u)), v2 = c2exUnit(c2exCross(n2, u));
+    var T = 2.6, W = 1.3, dM = Math.hypot(M[0], M[1], M[2]) || 1;
+    var A0 = c2exAdd(M, u, -T), A1 = c2exAdd(M, u, T);
+    var patch = function (w) { return [c2exAdd(c2exAdd(M, u, -T), w, -W), c2exAdd(c2exAdd(M, u, T), w, -W), c2exAdd(c2exAdd(M, u, T), w, W), c2exAdd(c2exAdd(M, u, -T), w, W)]; };
+    var p1 = patch(v1), p2 = patch(v2), all = p1.concat(p2, [A0, A1, M, [0, 0, 0]]);
+    var Lp = [0, 1, 2].map(function (q) { return Math.max(1.5, Math.max.apply(null, all.map(function (p) { return p[q]; })) + 0.6); });
+    var Ln = [0, 1, 2].map(function (q) { return Math.max(0.8, -Math.min.apply(null, all.map(function (p) { return p[q]; })) + 0.4); });
+    var box3 = all.slice();
+    [0, 1, 2].forEach(function (q) { var e = [0, 0, 0], g = [0, 0, 0]; e[q] = Lp[q]; g[q] = -Ln[q]; box3.push(e, g); });
+    // Giro: el segmento OM bien visible (no de frente) y lejos de los ejes en pantalla.
+    var az = -35, best = -1;
+    [-35, -55, -15, -75, 5, 25, 45, 65, -100, -125, 90, 120, 150, 180, -150].some(function (g) {
+      var V0 = view3({ cx: 0, cy: 0, s: 1, az: g }), q = V0(M), d = Math.hypot(q[0], q[1]) / dM, am = 180;
+      [[1, 0, 0], [0, 1, 0], [0, 0, 1]].forEach(function (e) {
+        var w = V0(e), c = Math.abs(w[0] * q[0] + w[1] * q[1]) / ((Math.hypot(w[0], w[1]) || 1) * (Math.hypot(q[0], q[1]) || 1));
+        am = Math.min(am, Math.acos(Math.min(1, c)) / RAD);
+      });
+      // …y la recta no se ve encimada con OM (en 3D son perpendiculares; en pantalla, que lo parezcan).
+      var w = V0(u), cu = Math.abs(w[0] * q[0] + w[1] * q[1]) / ((Math.hypot(w[0], w[1]) || 1e-9) * (Math.hypot(q[0], q[1]) || 1e-9));
+      var sc = Math.min(d / 0.85, am / 20, Math.acos(Math.min(1, cu)) / RAD / 50);
+      if (sc > best) { best = sc; az = g; }
+      return sc >= 1;
+    });
+    var F = c2exFit(box3, [40, 30, 520, 332], az), P = F.P, pts = [], labs = [], o = '';
+    // Los dos planos, solo con relleno: donde se enciman se ve más oscuro, a lo largo de la recta.
+    [p1, p2].forEach(function (pp) { o += fill('area-fill', pp.map(P)); });
+    o += c2exAxes(P, Lp, Ln, pts, labs);
+    var a0 = P(A0), a1 = P(A1), O = P([0, 0, 0]), Ms = P(M);
+    o += seg('trace', a0[0], a0[1], a1[0], a1[1], 3.2);
+    o += seg('error', O[0], O[1], Ms[0], Ms[1], 2.6, '8 5');
+    o += dot('dot-ref', O[0], O[1], 4.5) + dot('dot-error', Ms[0], Ms[1], 6);
+    pts.push.apply(pts, segPts(a0[0], a0[1], a1[0], a1[1]).concat(segPts(O[0], O[1], Ms[0], Ms[1]), [O, Ms]));
+    var mid = [(O[0] + Ms[0]) / 2, (O[1] + Ms[1]) / 2];
+    o += c2exPlace([around(Ms[0], Ms[1], 'M'), around(O[0], O[1], 'O'), around(mid[0], mid[1], 'd')].concat(labs), pts, 18, [0, 0, 560, 360]);
+    return svgBox('0 0 560 360', 'Dos planos que se cortan en una recta; el segmento d une el origen O con M, el punto de la recta más cercano a O.', o);
   };
 
 

@@ -29,11 +29,11 @@ window.COURSE_META = {
     {
       id: 'B', label: 'Gradiente y optimización',
       sessions: [
-        { n: 6,  tag: 'Regla de la cadena', title: 'Regla de la cadena: árbol de dependencias y derivación implícita', short: 'Regla de la cadena', lab: 'chain-tree', ready: false, bank: false },
-        { n: 7,  tag: 'Derivada direccional', title: 'Derivada direccional', lab: 'directional-derivative', ready: false, bank: false },
-        { n: 8,  tag: 'Gradiente', title: 'Gradiente: dirección de máximo crecimiento y normal a curvas y superficies de nivel', short: 'Gradiente', lab: 'gradient-field', ready: false, bank: false },
-        { n: 9,  tag: 'Lagrange', title: 'Multiplicadores de Lagrange con una restricción', short: 'Lagrange con una restricción', lab: 'lagrange-one', ready: false, bank: false },
-        { n: 10, tag: 'Varias restricciones', title: 'Multiplicadores de Lagrange con dos o más restricciones', short: 'Lagrange con varias restricciones', lab: 'lagrange-two', ready: false, bank: false }
+        { n: 6,  tag: 'Regla de la cadena', title: 'Regla de la cadena: árbol de dependencias y derivación implícita', short: 'Regla de la cadena', lab: 'chain-tree', ready: true, bank: true },
+        { n: 7,  tag: 'Derivada direccional', title: 'Derivada direccional', lab: 'directional-derivative', ready: true, bank: true },
+        { n: 8,  tag: 'Gradiente', title: 'Gradiente: dirección de máximo crecimiento y normal a curvas y superficies de nivel', short: 'Gradiente', lab: 'gradient-field', ready: true, bank: true },
+        { n: 9,  tag: 'Lagrange', title: 'Multiplicadores de Lagrange con una restricción', short: 'Lagrange con una restricción', lab: 'lagrange-one', ready: true, bank: true },
+        { n: 10, tag: 'Varias restricciones', title: 'Multiplicadores de Lagrange con dos o más restricciones', short: 'Lagrange con varias restricciones', lab: 'lagrange-two', ready: true, bank: true }
       ]
     },
     {
