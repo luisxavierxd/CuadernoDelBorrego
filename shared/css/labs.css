@@ -161,3 +161,60 @@ math-field::part(menu-toggle), math-field::part(virtual-keyboard-toggle) { displ
 /* Labs con dos modos: selector arriba y un panel a la vez */
 .lab-mode { max-width: 420px; margin-bottom: var(--space-2); }
 .lab-grid[hidden] { display: none; }
+
+/* ---- lab coulomb-check ---- */
+.coulomb-table { display: grid; gap: 6px; }
+.coulomb-table__row { display: grid; grid-template-columns: 2.2rem repeat(3, minmax(0, 1fr)); gap: 6px; align-items: center; }
+.coulomb-table__row[hidden] { display: none; }
+.coulomb-table__row .lab-input { padding: 8px 6px; min-width: 0; }
+.coulomb-table__name { font: 600 0.95rem/1 var(--font-mono); color: var(--text); }
+.coulomb-table__head { font: 600 0.8rem/1.2 var(--font-body); color: var(--text-muted); }   /* sin mayúsculas: μ se volvía M */
+.coulomb-board, .lab-stage--drag, .pw-stage { -webkit-user-select: none; user-select: none; }   /* arrastrar no selecciona texto */
+.coulomb-board .coulomb-charge { cursor: grab; touch-action: none; }
+.coulomb-board .coulomb-charge:active { cursor: grabbing; }
+.coulomb-board .coulomb-hit { fill: none; stroke: none; pointer-events: all; }
+
+/* ---- lab field-lines ---- */
+.lab-controls[hidden] { display: none; }
+.lab-stage--drag { touch-action: none; cursor: grab; }
+.lab-stage--drag:active { cursor: grabbing; }
+.lab-stage--drag:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+
+/* ---- lab potential-work ---- */
+.pw-stage { touch-action: none; }
+.pw-live { font-size: 0.82rem; overflow-wrap: anywhere; }
+.pw-details summary { cursor: pointer; font-weight: 600; color: var(--text-muted); }
+
+/* ---- lab tangent-plane ---- */
+.tp-cuts { display: grid; gap: var(--space-1); }
+.tp-cuts .lab-plot { width: 100%; height: auto; }
+@media (min-width: 1200px) { .tp-cuts { grid-template-columns: 1fr 1fr; } }
+.tp-check { display: flex; align-items: center; gap: 8px; font-size: 0.9rem; color: var(--text-muted); cursor: pointer; }
+.tp-check input { width: 18px; height: 18px; accent-color: var(--accent); flex: none; }
+.tp-board dt { overflow-wrap: anywhere; }
+@media (max-width: 560px) {
+  .tp-board { grid-template-columns: 1fr; gap: 0; }
+  .tp-board dd { margin-bottom: 6px; }
+}
+
+/* ---- lab surface-contour ---- */
+.sc-wrap { container-type: inline-size; min-width: 0; }
+.sc-views { display: grid; gap: var(--space-1); align-items: start; min-width: 0; }
+.sc-views .lab-stack { min-width: 0; }
+.sc-views .lab-stack__label[hidden] { display: none; }
+@container (min-width: 760px) { .sc-views { grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr); } }
+
+/* ---- lab coord-convert ---- */
+.cc-row3 { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--space-1); }
+.cc-row3 .lab-input { min-width: 0; padding: 8px 6px; }
+.cc-row3 .lab-field__label { text-transform: none; letter-spacing: 0; font-size: 0.85rem; }   /* sin mayúsculas: ρ se volvía Ρ */
+.cc-flat { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-1); }
+.cc-flat[hidden] { display: none; }
+@media (max-width: 960px) { .cc-flat { grid-template-columns: minmax(0, 1fr); } }
+.cc-pane { display: grid; gap: 4px; min-width: 0; }
+.cc-3d { touch-action: pan-y; cursor: grab; }
+.cc-3d:active { cursor: grabbing; }
+.cc-board .cc-handle { cursor: grab; touch-action: none; }
+.cc-board .cc-handle:active { cursor: grabbing; }
+.cc-board .cc-hit { fill: none; stroke: none; pointer-events: all; }
+.cc-board { -webkit-user-select: none; user-select: none; }   /* arrastrar no selecciona texto */

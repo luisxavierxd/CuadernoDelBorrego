@@ -19,11 +19,11 @@ window.COURSE_META = {
     {
       id: 'A', label: 'Electrostática',
       sessions: [
-        { n: 1,  tag: 'Carga eléctrica', title: 'Carga eléctrica: cuantización, conservación, conductores, aislantes e inducción', short: 'Carga eléctrica', lab: 'induction', ready: false, bank: false },
-        { n: 2,  tag: 'Ley de Coulomb', title: 'Ley de Coulomb y superposición de fuerzas', short: 'Ley de Coulomb', lab: 'coulomb-check', ready: false, bank: false },
-        { n: 3,  tag: 'Campo eléctrico', title: 'Campo eléctrico de cargas puntuales, líneas de campo y carga en un campo uniforme', short: 'Campo eléctrico', lab: 'field-lines', ready: false, bank: false },
-        { n: 4,  tag: 'Distribuciones continuas', title: 'Campo eléctrico de distribuciones continuas de carga', short: 'Distribuciones continuas', lab: 'charge-integral', ready: false, bank: false },
-        { n: 5,  tag: 'Potencial eléctrico', title: 'Energía potencial eléctrica y potencial de cargas puntuales', short: 'Potencial eléctrico', lab: 'potential-work', ready: false, bank: false }
+        { n: 1,  tag: 'Carga eléctrica', title: 'Carga eléctrica: cuantización, conservación, conductores, aislantes e inducción', short: 'Carga eléctrica', lab: 'induction', ready: true, bank: true },
+        { n: 2,  tag: 'Ley de Coulomb', title: 'Ley de Coulomb y superposición de fuerzas', short: 'Ley de Coulomb', lab: 'coulomb-check', ready: true, bank: true },
+        { n: 3,  tag: 'Campo eléctrico', title: 'Campo eléctrico de cargas puntuales, líneas de campo y carga en un campo uniforme', short: 'Campo eléctrico', lab: 'field-lines', ready: true, bank: true },
+        { n: 4,  tag: 'Distribuciones continuas', title: 'Campo eléctrico de distribuciones continuas de carga', short: 'Distribuciones continuas', lab: 'charge-integral', ready: true, bank: true },
+        { n: 5,  tag: 'Potencial eléctrico', title: 'Energía potencial eléctrica y potencial de cargas puntuales', short: 'Potencial eléctrico', lab: 'potential-work', ready: true, bank: true }
       ]
     },
     {
