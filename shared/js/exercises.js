@@ -68,7 +68,8 @@
     var d = Math.abs(val - ans);
     if (Math.abs(ans) >= 0.1 && d <= ROUND2) return true;
     if (tol.abs != null) return d <= tol.abs;
-    return d <= tol.rel * Math.max(Math.abs(ans), 1e-9);
+    // Relativa al tamaño real de la respuesta (8.3e-17 kg incluido); el piso solo cubre ans = 0.
+    return d <= tol.rel * (Math.abs(ans) || 1e-12);
   }
 
   // 'x, y y z' para el aviso del editor (con letras griegas donde toque).
