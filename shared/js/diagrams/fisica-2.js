@@ -1000,22 +1000,956 @@
   /* ══════════════════════ fin S05 ══════════════════════ */
 
   /* ══════════════════════ S06 ══════════════════════ */
+  /* Potencial de distribuciones, equipotenciales y E = −∇V. Los explainers usan state.k = paso
+     (1…6); f2s06-slope anima la posición z y f2s06-equip cambia de escena (state.scene). */
+  function s06lab(x, y, s, anchor, fs) { return text(x, y, s, ' text-anchor="' + (anchor || 'middle') + '" font-size="' + (fs || 19) + '"'); }
+  function s06Q(x, y, sign, r) {
+    r = r || 18;
+    return '<circle class="' + (sign > 0 ? 'box-err' : 'box-aux') + '" cx="' + r1(x) + '" cy="' + r1(y) + '" r="' + r + '"/>' +
+      text(x, y + r * 0.4, sign > 0 ? '+' : '−', ' text-anchor="middle" font-size="' + Math.round(r * 1.15) + '"');
+  }
+  function s06rect(x0, y0, x1, y1) { return poly('aux', [[x0, y0], [x1, y0], [x1, y1], [x0, y1]], 2.4, true); }
+  function s06dim(x0, y0, x1, y1) {
+    var dx = x1 - x0, dy = y1 - y0, L = Math.hypot(dx, dy) || 1, nx = -dy / L * 7, ny = dx / L * 7;
+    return seg('aux', x0, y0, x1, y1, 1.6) + seg('aux', x0 - nx, y0 - ny, x0 + nx, y0 + ny, 1.6) + seg('aux', x1 - nx, y1 - ny, x1 + nx, y1 + ny, 1.6);
+  }
+  function s06ell(cx, cy, rx, ry, a0, a1, n) {
+    var o = [];
+    n = n || 60;
+    for (var i = 0; i <= n; i++) { var a = (a0 + (a1 - a0) * i / n) * RAD; o.push([cx + rx * Math.cos(a), cy - ry * Math.sin(a)]); }
+    return o;
+  }
+  function s06svg(h, label, body) { return svgBox('0 0 640 ' + h, label, body); }
+  // Curvas de nivel de f (en píxeles) con marching squares sobre una rejilla de paso h.
+  function s06contour(f, x0, y0, x1, y1, h, level) {
+    var nx = Math.ceil((x1 - x0) / h), ny = Math.ceil((y1 - y0) / h), d = '';
+    var G = [];
+    for (var j = 0; j <= ny; j++) { G.push([]); for (var i = 0; i <= nx; i++) G[j].push(f(x0 + i * h, y0 + j * h)); }
+    var T = { 1: [[3, 0]], 2: [[0, 1]], 3: [[3, 1]], 4: [[1, 2]], 5: [[3, 0], [1, 2]], 6: [[0, 2]], 7: [[3, 2]], 8: [[2, 3]], 9: [[0, 2]], 10: [[0, 1], [2, 3]], 11: [[1, 2]], 12: [[3, 1]], 13: [[0, 1]], 14: [[3, 0]] };
+    for (j = 0; j < ny; j++) for (i = 0; i < nx; i++) {
+      var v = [G[j][i], G[j][i + 1], G[j + 1][i + 1], G[j + 1][i]];
+      if (!v.every(isFinite)) continue;
+      var c = (v[0] > level ? 1 : 0) | (v[1] > level ? 2 : 0) | (v[2] > level ? 4 : 0) | (v[3] > level ? 8 : 0);
+      if (!T[c]) continue;
+      var cx = [x0 + i * h, x0 + (i + 1) * h, x0 + (i + 1) * h, x0 + i * h], cy = [y0 + j * h, y0 + j * h, y0 + (j + 1) * h, y0 + (j + 1) * h];
+      T[c].forEach(function (pr) {
+        var p = pr.map(function (e) { var t = (e + 1) % 4, u = (level - v[e]) / (v[t] - v[e]); return [cx[e] + (cx[t] - cx[e]) * u, cy[e] + (cy[t] - cy[e]) * u]; });
+        d += 'M' + r1(p[0][0]) + ' ' + r1(p[0][1]) + 'L' + r1(p[1][0]) + ' ' + r1(p[1][1]);
+      });
+    }
+    return d;
+  }
+
+  /* ---------- Campo (vectores) contra potencial (números) ---------- */
+  D['f2s06-scalar'] = function () {
+    var b = '';
+    b += seg('axis', 320, 20, 320, 290, 1.2, '4 6');
+    [[0, 'Campo: flechas']].concat([[320, 'Potencial: números']]).forEach(function (t) { b += s06lab(160 + t[0], 36, t[1]); });
+    [0, 320].forEach(function (o) {
+      b += '<rect class="box-err" x="' + (40 + o) + '" y="219" width="240" height="22" rx="4"/>';
+      b += s06rect(80 + o, 213, 100 + o, 247) + s06rect(220 + o, 213, 240 + o, 247);
+      b += seg('axis', 90 + o, 213, 160 + o, 110, 1.2, '4 5') + seg('axis', 230 + o, 213, 160 + o, 110, 1.2, '4 5');
+      b += dot('dot-trace', 160 + o, 110, 6);
+    });
+    // Izquierda: dos dE inclinadas que hay que proyectar.
+    b += arrow('error', 160, 110, 0.504 * 46, -0.864 * 46, 3) + arrow('error', 160, 110, -0.504 * 46, -0.864 * 46, 3);
+    b += s06lab(190, 82, 'dE₁', 'start', 17) + s06lab(130, 82, 'dE₂', 'end', 17);
+    b += s06lab(160, 284, 'se proyectan (cos θ)', 'middle', 17);
+    // Derecha: dos números que se suman tal cual.
+    b += s06lab(434, 160, 'k dq₁/r₁', 'end', 17) + s06lab(530, 160, 'k dq₂/r₂', 'start', 17);
+    b += s06lab(480, 76, 'V = V₁ + V₂ + …', 'middle', 17);
+    b += s06lab(480, 284, 'se suman directo', 'middle', 17);
+    return s06svg(300, 'A la izquierda, dos elementos de una varilla dan en P flechas dE que hay que proyectar; a la derecha, los mismos elementos aportan números k dq/r que se suman directo.', b);
+  };
+
+  /* ---------- Varilla: potencial en su eje ---------- */
+  D['f2s06-rod'] = function (s) {
+    var k = num(s, 'k', 1), b = '', Y = 170, xa = 60, xb = 340, PX = 500, dq = 230;
+    b += seg('axis', 24, Y, xa - 4, Y, 1.2, '4 6') + seg('axis', xb + 4, Y, 616, Y, 1.2, '4 6');
+    b += '<rect class="box-err" x="' + xa + '" y="' + (Y - 11) + '" width="' + (xb - xa) + '" height="22" rx="4"/>';
+    [80, 110, 140, 170, 290, 320].forEach(function (x) { if (k !== 3 || (x !== 110 && x !== 290)) b += s06lab(x, Y + 6, '+', 'middle', 17); });
+    b += dot('dot-trace', PX, Y, 6) + s06lab(PX, Y - 22, 'P');
+    if (k <= 5) b += s06dim(xa, 262, xb, 262) + s06lab(200, 290, 'L') + s06dim(xb, 262, PX, 262) + s06lab(420, 290, 'd');
+    if (k <= 4) b += s06rect(dq - 10, Y - 17, dq + 10, Y + 17) + s06lab(dq, 136, 'dq = λ dx');
+    if (k === 1) b += s06dim(xa, 214, dq, 214) + s06lab(145, 238, 'x');
+    if (k === 2 || k === 3) b += s06dim(dq, 104, PX, 104) + s06lab(365, 90, 'r = L + d − x');
+    if (k === 2) b += s06lab(330, 44, 'dV = k dq / r  (un número)');
+    if (k === 3) {
+      b += s06rect(100, Y - 17, 120, Y + 17) + s06rect(280, Y - 17, 300, Y + 17);
+      b += s06lab(330, 44, 'cada dq suma un número positivo');
+    }
+    if (k === 4) b += s06dim(xa, 112, xb, 112) + s06lab(200, 98, 'x de 0 a L');
+    if (k === 5) b += s06lab(330, 70, 'V = (kQ/L) ln(1 + L/d)');
+    if (k >= 6) b += s06lab(330, 70, 'd ≫ L:  V → kQ/d');
+    return s06svg(310, 'Varilla con carga positiva sobre el eje x y un punto P en su mismo eje, a una distancia d del extremo; se marca un elemento dq y su distancia r a P.', b);
+  };
+
+  /* ---------- Anillo: potencial en su eje ---------- */
+  D['f2s06-ring'] = function (s) {
+    var k = num(s, 'k', 1), b = '', C = [170, 170], RX = 46, RY = 130, PX = 470;
+    var top = [C[0], C[1] - RY], bot = [C[0], C[1] + RY];
+    function band(a0, a1, w) { return fill('box-err', s06ell(C[0], C[1], RX + 9, RY + 11, a0, a1, 72).concat(s06ell(C[0], C[1], RX - 9, RY - 11, a1, a0, 72))); }
+    function elem(a) { return poly('aux', s06ell(C[0], C[1], RX + 12, RY + 14, a - 10, a + 10, 6).concat(s06ell(C[0], C[1], RX - 12, RY - 14, a + 10, a - 10, 6)), 2.2, true); }
+    b += seg('axis', 24, C[1], 616, C[1], 1.2, '4 6');
+    b += band(0, 360);
+    [35, 145, 215, 325].forEach(function (a) { b += s06lab(C[0] + RX * Math.cos(a * RAD), C[1] - RY * Math.sin(a * RAD) + 5, '+', 'middle', 15); });
+    b += dot('dot-trace', PX, C[1], 6) + s06lab(490, 204, 'P', 'start');
+    if (k <= 4) b += elem(90) + s06lab(196, 26, 'dq', 'start');
+    if (k === 1) b += seg('aux', C[0], C[1], C[0], top[1] + 12, 1.6, '5 5') + s06lab(156, 112, 'R', 'end') + s06dim(C[0], 226, PX, 226) + s06lab(320, 252, 'z');
+    if (k >= 2 && k <= 3) b += seg('aux', top[0], top[1], PX, C[1], 1.6, '5 5') + s06lab(340, 70, 'r = √(z² + R²)', 'start');
+    if (k === 2) b += s06lab(612, 300, 'dV = k dq / r', 'end');
+    if (k === 3) b += elem(270) + seg('aux', bot[0], bot[1], PX, C[1], 1.6, '5 5') + s06lab(612, 300, 'el de enfrente suma lo mismo', 'end', 18);
+    if (k === 4) b += poly('aux', s06ell(C[0], C[1], RX + 14, RY + 16, 0, 360, 72), 2.2, true) + s06lab(240, 322, '∮ dq = Q', 'start');
+    if (k === 5) b += s06lab(612, 300, 'V = kQ / √(z² + R²)', 'end');
+    if (k >= 6) b += s06lab(612, 300, 'z ≫ R:  V → kQ/z', 'end');
+    return s06svg(340, 'Anillo con carga positiva visto en perspectiva y un punto P sobre su eje, a una distancia z del centro; todos los elementos dq están a la misma distancia r de P.', b);
+  };
+
+  /* ---------- Disco: suma de anillos ---------- */
+  D['f2s06-disk'] = function (s) {
+    var k = num(s, 'k', 1), b = '', C = [170, 180], RX = 52, RY = 150, PX = 470, f = 0.6;
+    b += fill('box-err', s06ell(C[0], C[1], RX, RY, 0, 360, 96));
+    b += seg('axis', 24, C[1], 616, C[1], 1.2, '4 6');
+    [50, 130, 230, 310].forEach(function (a) { b += s06lab(C[0] + 0.85 * RX * Math.cos(a * RAD), C[1] - 0.85 * RY * Math.sin(a * RAD) + 5, '+', 'middle', 15); });
+    b += dot('dot-trace', PX, C[1], 6) + s06lab(488, 214, 'P', 'start');
+    var ring = poly('aux', s06ell(C[0], C[1], RX * (f + 0.06), RY * (f + 0.06), 0, 360, 72), 2, true) + poly('aux', s06ell(C[0], C[1], RX * (f - 0.06), RY * (f - 0.06), 0, 360, 72), 2, true);
+    if (k <= 4) b += ring;
+    if (k <= 2) b += s06lab(232, 40, 'dq = σ · 2πr dr', 'start', 18);
+    if (k === 1) b += seg('aux', C[0], C[1], C[0], C[1] - RY * f, 1.6, '5 5') + s06lab(158, 150, 'r', 'end') + s06dim(C[0], 300, PX, 300) + s06lab(320, 326, 'z');
+    if (k === 2) {
+      b += seg('aux', C[0], C[1] - RY * f, PX, C[1], 1.4, '5 5') + seg('aux', C[0], C[1] + RY * f, PX, C[1], 1.4, '5 5');
+      b += s06lab(620, 300, 'dV = k dq / √(z² + r²)', 'end', 18);
+    }
+    if (k === 3) {
+      [0.25, 0.4].forEach(function (ff) { b += poly('aux', s06ell(C[0], C[1], RX * ff, RY * ff, 0, 360, 72), 1.6, true, '4 4'); });
+      b += s06lab(620, 300, 'todos los anillos suman', 'end', 18);
+    }
+    if (k === 4) b += seg('aux', C[0], C[1], C[0], C[1] - RY, 1.6, '5 5') + s06lab(240, 348, 'r de 0 a R', 'start', 18);
+    if (k === 5) b += s06lab(620, 300, 'V = 2πkσ (√(z² + R²) − z)', 'end', 18);
+    if (k >= 6) b += s06lab(620, 300, 'z ≫ R:  V → kQ/z', 'end');
+    return s06svg(360, 'Disco con carga positiva visto en perspectiva, partido en anillos de radio r y ancho dr, y un punto P sobre su eje a una distancia z.', b);
+  };
+
+  /* ---------- De V a E: la pendiente de V(z) en el eje del anillo ---------- */
+  D['f2s06-slope'] = function (s) {
+    var z = Math.max(-2.8, Math.min(2.8, num(s, 'z', 0.9))), t = clamp01(num(s, 't', 0)), b = '';
+    var X = function (u) { return 330 + 90 * u; }, Yv = function (u) { return 250 - 190 / Math.sqrt(u * u + 1); };
+    b += arrow('axis', 40, 250, 580, 0, 1.6) + arrow('axis', 330, 250, 0, -222, 1.6);
+    b += s06lab(624, 274, 'z', 'end', 18) + s06lab(342, 40, 'V', 'start', 18);
+    var pts = [];
+    for (var i = 0; i <= 120; i++) { var u = -3 + 6 * i / 120; pts.push([X(u), Yv(u)]); }
+    b += poly('ref', pts, 3);
+    b += s06lab(620, 40, 'V = kQ / √(z² + R²)', 'end', 18);
+    var px = X(z), py = Yv(z);
+    b += seg('axis', px, 250, px, py, 1.2, '4 4') + dot('dot-trace', px, py, 6);
+    if (t > 0.5) {
+      var m = 190 * z / Math.pow(z * z + 1, 1.5) / 90, dx = 60;     // pendiente en píxeles
+      b += seg('trace', px - dx, py - m * dx, px + dx, py + m * dx, 2.4);
+      var E = 120 * z / Math.pow(z * z + 1, 1.5);
+      if (Math.abs(E) > 4) b += arrow('error', px, 278, E * 1.2, 0, 3) + s06lab(px + E * 1.2 + (E > 0 ? 10 : -10), 284, 'E', E > 0 ? 'start' : 'end', 18);
+      else b += s06lab(px + 12, 290, 'E = 0', 'start', 18);
+      b += s06lab(620, 70, 'E = −dV/dz', 'end', 18);
+    }
+    return s06svg(310, 'Gráfica del potencial sobre el eje de un anillo contra z, con la recta tangente en un punto; el campo es menos la pendiente.', b);
+  };
+
+  /* ---------- Equipotenciales: carga puntual, dipolo, placas y trabajo cero ---------- */
+  D['f2s06-equip'] = function (s) {
+    var sc = (s && s.scene) || 'point', b = '', C = [320, 170];
+    if (sc === 'point' || sc === 'work') {
+      [25, 30, 37.5, 50, 75, 150].forEach(function (r) { b += '<circle class="aux" fill="none" stroke-width="1.8" cx="' + C[0] + '" cy="' + C[1] + '" r="' + r + '"/>'; });
+      if (sc === 'point') for (var i = 0; i < 12; i++) {
+        var a = (15 + 30 * i) * RAD, c = Math.cos(a), sn = -Math.sin(a);
+        b += seg('ref', C[0] + 22 * c, C[1] + 22 * sn, C[0] + 165 * c, C[1] + 165 * sn, 1.8);
+        b += arrow('ref', C[0] + 100 * c, C[1] + 100 * sn, 12 * c, 12 * sn, 1.8);
+      }
+      b += s06Q(C[0], C[1], 1, 16);
+      if (sc === 'point') b += s06lab(20, 325, 'equipotenciales', 'start', 17) + s06lab(620, 325, 'líneas de campo', 'end', 17);
+      else {
+        var A = 30 * RAD, p = [C[0] + 75 * Math.cos(A), C[1] - 75 * Math.sin(A)];
+        b += arrow('error', p[0], p[1], 46 * Math.cos(A), -46 * Math.sin(A), 3) + arrow('trace', p[0], p[1], -46 * Math.sin(A), -46 * Math.cos(A), 3);
+        var ux = Math.cos(A), uy = -Math.sin(A), tx = -Math.sin(A), ty = -Math.cos(A), q = 10;
+        b += '<path class="axis" fill="none" stroke-width="1.5" d="M' + r1(p[0] + q * ux) + ' ' + r1(p[1] + q * uy) + 'l' + r1(q * tx) + ' ' + r1(q * ty) + 'l' + r1(-q * ux) + ' ' + r1(-q * uy) + '"/>';
+        b += dot('dot-trace', p[0], p[1], 6);
+        b += s06lab(p[0] + 52 * ux + 6, p[1] + 52 * uy + 2, 'E', 'start', 18) + s06lab(p[0] + 50 * tx - 4, p[1] + 50 * ty - 2, 'ds', 'end', 18);
+        b += s06lab(20, 325, 'E ⟂ ds:  W = qE·ds = 0', 'start', 18);
+      }
+    } else if (sc === 'dipole') {
+      var cs = [{ x: 220, y: 170, q: 1 }, { x: 420, y: 170, q: -1 }];
+      var f = function (x, y) { return 1 / Math.hypot(x - 220, y - 170) - 1 / Math.hypot(x - 420, y - 170); };
+      var d = '';
+      [0.005, 0.01, 0.015, 0.02, 0.03].forEach(function (L) { d += s06contour(f, 0, 0, 640, 340, 4, L) + s06contour(f, 0, 0, 640, 340, 4, -L); });
+      b += '<path class="aux" fill="none" stroke-width="1.8" d="' + d + '"/>';
+      b += seg('aux', 320, 14, 320, 326, 2, '7 6');
+      b += f2s03Lines(cs, [0, 0, 640, 340], 10, 18);
+      b += s06Q(220, 170, 1) + s06Q(420, 170, -1);
+      b += s06lab(326, 24, 'V = 0', 'start', 17);
+    } else {
+      b += '<rect class="box-err" x="130" y="50" width="20" height="250" rx="4"/><rect class="box-aux" x="490" y="50" width="20" height="250" rx="4"/>';
+      [80, 140, 200, 260].forEach(function (y) { b += s06lab(140, y + 6, '+', 'middle', 17) + s06lab(500, y + 6, '−', 'middle', 17); });
+      [218, 286, 354, 422].forEach(function (x) { b += seg('aux', x, 56, x, 294, 1.8); });
+      [110, 175, 240].forEach(function (y) { b += seg('ref', 156, y, 484, y, 1.8) + arrow('ref', 300, y, 14, 0, 1.8); });
+      b += s06lab(140, 36, 'V alto', 'middle', 17) + s06lab(500, 36, 'V bajo', 'middle', 17);
+      b += s06lab(320, 326, 'planos igualmente separados', 'middle', 17);
+    }
+    return s06svg(340, 'Equipotenciales y líneas de campo: alrededor de una carga puntual, de un dipolo o entre placas paralelas; las líneas cruzan las equipotenciales en ángulo recto.', b);
+  };
+
+  /* ---------- Conductor en equilibrio con una punta ---------- */
+  D['f2s06-conductor'] = function () {
+    var b = '', cx = 280, cy = 170;
+    var P = function (t) { return [cx + 170 * Math.cos(t), cy - 110 * Math.sin(t) * Math.pow(Math.abs(Math.sin(t / 2)), 0.9)]; };
+    var pts = [];
+    for (var i = 0; i <= 160; i++) pts.push(P(-Math.PI + 2 * Math.PI * i / 160));
+    b += '<path class="box-base" d="' + pts.map(function (p, j) { return (j ? 'L' : 'M') + r1(p[0]) + ' ' + r1(p[1]); }).join('') + 'Z"/>';
+    function normal(t) {
+      var a = P(t - 0.01), c = P(t + 0.01), dx = c[0] - a[0], dy = c[1] - a[1], L = Math.hypot(dx, dy) || 1;
+      return [-dy / L, dx / L];      // hacia afuera (t crece: de la punta hacia arriba, antihorario a la vista)
+    }
+    // Campo afuera: perpendicular a la superficie, más largo en la punta.
+    [[0, 92], [0.35, 64], [-0.35, 64], [1.1, 40], [-1.1, 40], [2.0, 32], [-2.0, 32], [Math.PI, 30]].forEach(function (a) {
+      var p = P(a[0]), n = a[0] === 0 ? [1, 0] : normal(a[0]);
+      b += arrow('ref', p[0] + 3 * n[0], p[1] + 3 * n[1], a[1] * n[0], a[1] * n[1], 2.4);
+    });
+    // Cargas en la superficie: más juntas en la punta.
+    [0.55, -0.55, 0.75, -0.75, 1.0, -1.0, 1.5, -1.5, 2.35, -2.35].forEach(function (t) {
+      var p = P(t), n = normal(t);
+      b += s06lab(p[0] - 11 * n[0], p[1] - 11 * n[1] + 5, '+', 'middle', 15);
+    });
+    b += s06lab(230, 160, 'E = 0', 'middle', 19) + s06lab(230, 196, 'V = cte', 'middle', 19);
+    b += s06lab(620, 236, 'en la punta, E', 'end', 17) + s06lab(620, 258, 'es más fuerte', 'end', 17);
+    return s06svg(340, 'Conductor metálico cargado con una punta: adentro el campo es cero y el potencial constante; afuera el campo sale perpendicular a la superficie y es más intenso en la punta, donde se juntan las cargas.', b);
+  };
+
+  /* ---------- Campo uniforme: ΔV = −E d cos θ ---------- */
+  D['f2s06-uniform'] = function (s) {
+    var plain = !!(s && s.plain), b = '';
+    b += '<rect class="box-err" x="70" y="50" width="20" height="280" rx="4"/><rect class="box-aux" x="550" y="50" width="20" height="280" rx="4"/>';
+    [100, 190, 280].forEach(function (y) { b += s06lab(80, y + 6, '+', 'middle', 17) + s06lab(560, y + 6, '−', 'middle', 17); });
+    b += seg('ref', 98, 80, 542, 80, 1.8) + arrow('ref', 400, 80, 16, 0, 1.8) + s06lab(320, 66, 'E');
+    if (plain) {
+      b += s06lab(80, 36, '120 V', 'middle', 17) + s06lab(560, 36, '0 V', 'middle', 17);
+      [176, 272, 368, 464].forEach(function (x) { b += seg('aux', x, 96, x, 300, 1.6, '6 5'); });
+      b += s06dim(90, 312, 550, 312) + s06lab(320, 300, 'd = 5 mm', 'middle', 17);
+      b += dot('dot-trace', 272, 230, 6) + s06lab(260, 236, 'P', 'end', 18);
+      b += arrow('trace', 464, 250, 0, -110, 3) + s06lab(452, 196, 'paralelo:', 'end', 17) + s06lab(452, 218, 'W = 0', 'end', 17);
+      return s06svg(340, 'Dos placas paralelas a 120 V y 0 V separadas 5 mm, con su campo uniforme, las equipotenciales paralelas a las placas y un desplazamiento paralelo a ellas.', b);
+    }
+    var A = [220, 230], th = 40 * RAD, L = 170, B = [A[0] + L * Math.cos(th), A[1] - L * Math.sin(th)];
+    b += s06lab(320, 30, 'ΔV = −E d cos θ', 'middle', 19);
+    b += seg('aux', A[0], 96, A[0], 300, 1.6, '6 5') + seg('aux', B[0], 96, B[0], 300, 1.6, '6 5');
+    b += seg('axis', A[0], A[1], A[0] + 90, A[1], 1.4, '4 4');
+    b += arrow('trace', A[0], A[1], B[0] - A[0], B[1] - A[1], 3);
+    b += arc(A[0], A[1], 42, 0, 40, 'aux', 1.6) + s06lab(A[0] + 58 * Math.cos(20 * RAD) + 2, A[1] - 58 * Math.sin(20 * RAD) + 6, 'θ', 'start', 18);
+    b += dot('dot-trace', A[0], A[1], 6) + s06lab(A[0] - 10, A[1] + 22, 'A', 'end', 18) + s06lab(B[0] + 12, B[1] - 4, 'B', 'start', 18);
+    b += s06lab(268, 160, 'd', 'end', 19);
+    b += s06dim(A[0], 268, B[0], 268) + s06lab((A[0] + B[0]) / 2, 296, 'd cos θ', 'middle', 17);
+    b += s06lab(A[0] - 10, 322, f2s05Sub('V', 'A'), 'end', 17) + s06lab(B[0] + 10, 322, f2s05Sub('V', 'B'), 'start', 17);
+    return s06svg(340, 'Campo uniforme entre placas; un desplazamiento d de A a B forma un ángulo theta con el campo y solo su parte d cos theta cambia el potencial.', b);
+  };
 
   /* ══════════════════════ fin S06 ══════════════════════ */
 
   /* ══════════════════════ S07 ══════════════════════ */
+  /* Flujo eléctrico. Las líneas de campo llenan la figura, así que las etiquetas que caen entre
+     ellas abren un hueco en las líneas (f2s07Rows) en lugar de encimarse. */
+  function f2s07Lab(x, y, s, fs, anchor) {
+    var w = String(s).replace(/[̀-ͯ]/g, '').length * fs * 0.6, a = anchor || 'middle';
+    var l = a === 'end' ? x - w : a === 'middle' ? x - w / 2 : x;
+    return { svg: text(x, y, s, ' text-anchor="' + a + '" font-size="' + fs + '"'), gap: [l - 6, y - fs * 0.85 - 6, l + w + 6, y + fs * 0.3 + 6] };
+  }
+  // Líneas horizontales de campo (hacia +x) con huecos donde hay etiquetas; on(y) las resalta.
+  function f2s07Rows(ys, x0, x1, gaps, on) {
+    var b = '';
+    ys.forEach(function (y) {
+      var cuts = gaps.filter(function (g) { return y >= g[1] - 2 && y <= g[3] + 2; }).map(function (g) { return [g[0], g[2]]; }).sort(function (p, q) { return p[0] - q[0]; });
+      var segs = [], x = x0;
+      cuts.forEach(function (c) { if (c[1] <= x || c[0] >= x1) return; if (c[0] > x) segs.push([x, c[0]]); x = Math.max(x, c[1]); });
+      if (x < x1) segs.push([x, x1]);
+      var hi = on ? on(y) : true, w = hi ? 2.4 : 1.4, body = '';
+      segs.forEach(function (s, i) {
+        if (i === segs.length - 1 && s[1] === x1 && s[1] - s[0] > 16) body += seg('ref', s[0], y, s[1] - 2, y, w) + arrow('ref', s[1] - 12, y, 12, 0, w);
+        else if (s[1] - s[0] > 2) body += seg('ref', s[0], y, s[1], y, w);
+      });
+      b += hi ? body : fade(body, 0.4);
+    });
+    return b;
+  }
+  function f2s07Ys(y0, y1, dy) { var o = []; for (var y = y0; y <= y1 + 1e-9; y += dy) o.push(y); return o; }
+  // Llave del campo en una esquina: flecha y la letra E a su izquierda.
+  function f2s07Key(x, y) { return arrow('ref', x + 28, y - 6, 52, 0, 3) + text(x + 14, y, 'E', ' text-anchor="middle" font-size="20"'); }
+
+  /* ---------- Imagínalo: un aro bajo la lluvia ---------- */
+  D['f2s07-hoop'] = function () {
+    var b = '', cx = [110, 320, 530], tilt = [0, 52, 90], words = ['de frente: mucha', 'inclinado: menos', 'de canto: nada'];
+    cx.forEach(function (c, i) {
+      var f = tilt[i] * RAD, half = 60 * Math.abs(Math.cos(f)) + 14 * Math.abs(Math.sin(f)) * 0.2;
+      for (var k = -6; k <= 6; k++) {
+        var x = c + k * 14, on = Math.abs(x - c) <= half - 2;
+        var l = seg('ref', x, 18, x, 236, on ? 2.4 : 1.4, '9 6');
+        b += on ? l : fade(l, 0.35);
+      }
+      var u = [Math.cos(f), -Math.sin(f)], v = [Math.sin(f), Math.cos(f)], pts = [];
+      for (var t = 0; t <= 48; t++) { var a = 2 * Math.PI * t / 48; pts.push([c + 60 * Math.cos(a) * u[0] + 14 * Math.sin(a) * v[0], 128 + 60 * Math.cos(a) * u[1] + 14 * Math.sin(a) * v[1]]); }
+      b += poly('student', pts, 4.5, true);
+      b += text(c, 272, words[i], ' text-anchor="middle" font-size="18"');
+    });
+    return svgBox('0 0 640 290', 'Tres aros bajo una lluvia vertical: de frente los cruzan muchas gotas, inclinado menos y de canto ninguna.', b);
+  };
+
+  /* ---------- Vector área: plana y cerrada ---------- */
+  D['f2s07-area-vector'] = function () {
+    var b = '', P = view3({ cx: 165, cy: 168, s: 48 }), Q = view3({ cx: 470, cy: 158, s: 50 });
+    var R = [[-1.6, -1.1, 0], [1.6, -1.1, 0], [1.6, 1.1, 0], [-1.6, 1.1, 0]].map(P);
+    b += fill('box-ref', R) + poly('ref', R, 2.2, true);
+    var o = P([0, 0, 0]), t = P([0, 0, 2.1]);
+    b += dot('dot-ref', o[0], o[1], 4) + arrow('error', o[0], o[1], t[0] - o[0], t[1] - o[1], 3.4);
+    b += text(t[0] + 16, t[1] + 14, 'n̂', ' font-size="20"');
+    b += text(165, 272, 'A = A n̂', ' text-anchor="middle" font-size="20"');
+    // Caja cerrada: caras visibles y su normal hacia afuera.
+    var faces3 = [
+      { c: [1, 0, 0], v: [[1, -1, -1], [1, 1, -1], [1, 1, 1], [1, -1, 1]] },
+      { c: [0, 1, 0], v: [[-1, 1, -1], [1, 1, -1], [1, 1, 1], [-1, 1, 1]] },
+      { c: [0, 0, 1], v: [[-1, -1, 1], [1, -1, 1], [1, 1, 1], [-1, 1, 1]] }
+    ];
+    faces3.forEach(function (f) { var pts = f.v.map(Q); b += fill('box-ref', pts) + poly('ref', pts, 2, true); });
+    faces3.forEach(function (f) {
+      var a = Q(f.c), e = Q([f.c[0] * 1.95, f.c[1] * 1.95, f.c[2] * 1.95]);
+      b += dot('dot-ref', a[0], a[1], 3.5) + arrow('error', a[0], a[1], e[0] - a[0], e[1] - a[1], 3);
+    });
+    b += text(470, 272, 'n̂ siempre hacia afuera', ' text-anchor="middle" font-size="18"');
+    return svgBox('0 0 640 290', 'A la izquierda, un rectángulo con su vector normal n hat; el vector área es A por n hat. A la derecha, una caja cerrada con la normal de cada cara apuntando hacia afuera.', b);
+  };
+
+  /* ---------- Explainer: girar la superficie (vista de canto) ---------- */
+  D['f2s07-tilt'] = function (s) {
+    var th = num(s, 'th', 0), k = num(s, 'k', 1), C = [320, 175], L = 100, b = '', gaps = [], lab = [];
+    var tr = th * RAD, n = [Math.cos(tr), -Math.sin(tr)], t = [Math.sin(tr), Math.cos(tr)];
+    var reach = L * Math.abs(Math.cos(tr));
+    function put(o) { lab.push(o.svg); gaps.push(o.gap); }
+    put(f2s07Lab(C[0] + n[0] * 112, C[1] + n[1] * 112 + 7, 'n̂', 20));
+    if (th > 4) put(f2s07Lab(C[0] + 60 * Math.cos(tr / 2), C[1] - 60 * Math.sin(tr / 2) + 7, 'θ', 20));
+    if (k === 3) put(f2s07Lab(C[0] + 70 * Math.cos(-15 * RAD) + 6, C[1] - 70 * Math.sin(-15 * RAD) + 7, '30°', 18, 'start'));
+    b += f2s07Rows(f2s07Ys(45, 305, 20), 20, 612, gaps, function (y) { return Math.abs(y - C[1]) <= reach - 1; });
+    // Superficie de canto y su normal.
+    b += seg('student', C[0] - L * t[0], C[1] - L * t[1], C[0] + L * t[0], C[1] + L * t[1], 7);
+    b += arrow('error', C[0], C[1], n[0] * 88, n[1] * 88, 3.6);
+    if (th > 4) b += arc(C[0], C[1], 40, 0, th, 'aux', 2.2);
+    if (k === 3) b += arc(C[0], C[1], 52, -30, 0, 'error', 2.2);
+    // Lo que «ve» el campo: la altura A cos θ, a la derecha.
+    if (reach > 6) b += seg('aux', 627, C[1] - reach, 627, C[1] + reach, 2.4) + seg('aux', 621, C[1] - reach, 633, C[1] - reach, 2.4) + seg('aux', 621, C[1] + reach, 633, C[1] + reach, 2.4);
+    b += lab.join('');
+    var say = ['θ = 0°: todas las líneas cruzan, Φ = EA', 'θ = 60°: cruzan la mitad, Φ = EA cos 60°', 'Ojo: 30° es con la superficie; θ = 60°', 'θ = 90°: ninguna cruza, Φ = 0', 'θ = 135°: cruzan contra n̂, Φ < 0'][Math.max(0, Math.min(4, k - 1))];
+    b += text(320, 352, say, ' text-anchor="middle" font-size="19"');
+    b += f2s07Key(24, 26);
+    return svgBox('0 0 640 370', 'Campo uniforme hacia la derecha y una superficie vista de canto que gira; la normal n hat forma el ángulo theta con el campo y se resaltan las líneas que la cruzan.', b);
+  };
+
+  /* ---------- Explainer: cubo en un campo uniforme ---------- */
+  D['f2s07-cube'] = function (s) {
+    var k = num(s, 'k', 1), P = view3({ cx: 330, cy: 180, s: 62 }), b = '';
+    var F = {
+      in: [[-1, -1, -1], [1, -1, -1], [1, -1, 1], [-1, -1, 1]],
+      out: [[-1, 1, -1], [1, 1, -1], [1, 1, 1], [-1, 1, 1]],
+      xp: [[1, -1, -1], [1, 1, -1], [1, 1, 1], [1, -1, 1]],
+      zp: [[-1, -1, 1], [1, -1, 1], [1, 1, 1], [-1, 1, 1]],
+      xm: [[-1, -1, -1], [-1, 1, -1], [-1, 1, 1], [-1, -1, 1]],
+      zm: [[-1, -1, -1], [1, -1, -1], [1, 1, -1], [-1, 1, -1]]
+    };
+    function face(id, cls, hi) { var p = F[id].map(P); return (hi ? fill(cls, p) : '') + poly(hi ? 'ref' : 'axis', p, hi ? 2.4 : 1.4, true, id === 'in' || id === 'xm' || id === 'zm' ? '6 5' : null); }
+    var grid = [];
+    [-0.55, 0.55].forEach(function (x) { [-0.55, 0.55].forEach(function (z) { grid.push([x, z]); }); });
+    grid.forEach(function (g) { var a = P([g[0], -3, g[1]]), c = P([g[0], -1, g[1]]); b += seg('ref', a[0], a[1], c[0], c[1], 2.2); });
+    b += face('xm', 'box-ref', k === 3) + face('zm', 'box-ref', k === 3) + face('in', 'box-aux', k === 1 || k === 4);
+    grid.forEach(function (g) { var a = P([g[0], -1, g[1]]), c = P([g[0], 1, g[1]]); b += seg('ref', a[0], a[1], c[0], c[1], 1.4, '4 5'); });
+    b += face('xp', 'box-ref', k === 3) + face('zp', 'box-ref', k === 3) + face('out', 'box-err', k === 2 || k === 4);
+    grid.forEach(function (g) { var a = P([g[0], 1, g[1]]), c = P([g[0], 3, g[1]]); b += arrow('ref', a[0], a[1], c[0] - a[0], c[1] - a[1], 2.2); });
+    function normal(c, d) { var a = P(c), e = P([c[0] + d[0], c[1] + d[1], c[2] + d[2]]); return arrow('error', a[0], a[1], e[0] - a[0], e[1] - a[1], 3); }
+    if (k === 1 || k === 4) b += normal([0, -1, 0], [0, -0.9, 0]);
+    if (k === 2 || k === 4) b += normal([0, 1, 0], [0, 0.9, 0]);
+    if (k === 3) b += normal([1, 0, 0], [0.9, 0, 0]) + normal([0, 0, 1], [0, 0, 0.9]);
+    var say = ['Cara de entrada: n̂ contra E, Φ = −EA', 'Cara de salida: n̂ con E, Φ = +EA', 'Las otras cuatro: E paralelo a la cara, Φ = 0', 'Total: −EA + EA + 0 = 0'][Math.max(0, Math.min(3, k - 1))];
+    b += text(320, 340, say, ' text-anchor="middle" font-size="19"');
+    b += f2s07Key(24, 30);
+    return svgBox('0 0 640 360', 'Cubo en un campo eléctrico uniforme que lo atraviesa de izquierda a derecha; se resaltan la cara de entrada, la de salida y las cuatro caras paralelas al campo, con sus normales hacia afuera.', b);
+  };
+
+  /* ---------- Prisma triangular (de canto) ---------- */
+  D['f2s07-prism'] = function () {
+    var O = [200, 290], B = [440, 290], T = [200, 110], b = '', gaps = [], lab = [];
+    function put(o) { lab.push(o.svg); gaps.push(o.gap); }
+    put(f2s07Lab(150, 156, 'pared: Φ < 0', 18, 'end'));
+    put(f2s07Lab(392, 128, 'inclinada: Φ > 0', 18, 'start'));
+    b += f2s07Rows(f2s07Ys(70, 270, 20), 20, 612, gaps, function (y) { return y > T[1] && y < O[1]; });
+    b += fill('box-ref', [O, B, T]) + poly('student', [O, B, T], 4, true);
+    b += arrow('error', 200, 200, -46, 0, 3) + arrow('error', 320, 200, 0.6 * 52, -0.8 * 52, 3) + arrow('error', 320, 290, 0, 40, 3);
+    b += lab.join('');
+    b += text(338, 326, 'base: Φ = 0', ' font-size="18"');
+    b += f2s07Key(24, 30);
+    return svgBox('0 0 640 345', 'Prisma triangular visto de canto en un campo horizontal: el campo entra por la pared vertical, sale por la cara inclinada y corre paralelo a la base.', b);
+  };
+
+  /* ---------- Explainer: campo no uniforme, franjas ---------- */
+  D['f2s07-strips'] = function (s) {
+    var k = num(s, 'k', 1), b = '', x0 = 150, x1 = 430, yb = 290, yt = 60, ys = 168;
+    b += arrow('axis', 120, 305, 0, -262, 1.8) + text(104, 52, 'y', ' text-anchor="middle" font-size="20"');
+    b += arrow('axis', 120, 305, 340, 0, 1.8) + text(476, 312, 'z', ' font-size="20"');
+    b += poly('student', [[x0, yb], [x1, yb], [x1, yt], [x0, yt]], 3, true);
+    if (k >= 2) b += '<rect class="rect-fill" x="' + x0 + '" y="' + (ys - 10) + '" width="' + (x1 - x0) + '" height="20"/>';
+    for (var r = 0; r < 5; r++) {
+      var y = yb - 30 - r * 46, m = 2.5 + r * 2;
+      for (var c = 0; c < 5; c++) {
+        var x = x0 + 28 + c * 56;
+        b += '<circle class="ref" fill="none" stroke-width="2" cx="' + x + '" cy="' + y + '" r="' + r1(m + 4) + '"/>' + dot('dot-ref', x, y, 2.5);
+      }
+    }
+    if (k >= 2) b += text(440, ys + 7, 'dy', ' font-size="18"');
+    b += text(80, 180, 's', ' text-anchor="middle" font-size="20"') + seg('aux', 92, yt, 92, yb, 1.6) + seg('aux', 86, yt, 98, yt, 1.6) + seg('aux', 86, yb, 98, yb, 1.6);
+    b += text(290, 343, 'L', ' text-anchor="middle" font-size="20"') + seg('aux', x0, 316, x1, 316, 1.6);
+    var rows = ['E = c y','dA = L dy', 'dΦ = c y L dy', 'Φ = c L s²/2'];
+    for (var i = 0; i < Math.min(k, 4); i++) b += text(492, 96 + i * 44, rows[i], ' font-size="18"');
+    return svgBox('0 0 640 350', 'Rectángulo en el plano de la hoja con un campo que sale de la hoja y crece con la altura y (círculos con punto cada vez más grandes); se marca una franja horizontal de alto dy.', b);
+  };
+
+  /* ---------- Adelanto de Gauss: dos esferas, las mismas líneas ---------- */
+  D['f2s07-gauss'] = function () {
+    var C = [250, 175], b = '';
+    for (var i = 0; i < 12; i++) {
+      var a = i * 30 * RAD, c = Math.cos(a), sn = -Math.sin(a);
+      b += arrow('ref', C[0] + 20 * c, C[1] + 20 * sn, 140 * c, 140 * sn, 2);
+    }
+    b += poly('student', f2s07Circ(C, 62), 3, true) + poly('student', f2s07Circ(C, 124), 3, true, '8 6');
+    b += '<circle class="box-err" cx="' + C[0] + '" cy="' + C[1] + '" r="14"/>' + text(C[0], C[1] + 7, '+', ' text-anchor="middle" font-size="22"');
+    b += text(452, 150, 'Φ = q/ε₀', ' font-size="22"') + text(452, 190, 'en las dos', ' font-size="18"');
+    return svgBox('0 0 640 350', 'Una carga positiva en el centro de dos esferas, una chica y otra del doble de radio; las mismas doce líneas de campo atraviesan las dos.', b);
+  };
+  function f2s07Circ(C, r) { var o = []; for (var i = 0; i < 72; i++) o.push([C[0] + r * Math.cos(i * Math.PI / 36), C[1] + r * Math.sin(i * Math.PI / 36)]); return o; }
 
   /* ══════════════════════ fin S07 ══════════════════════ */
 
   /* ══════════════════════ S08 ══════════════════════ */
+  /* Ley de Gauss. Los explainers usan state.g (geometría), state.k (paso, texto '1'…'6', para que
+     no se interpole) y state.r (tamaño de la superficie gaussiana en unidades de R; sí se anima). */
+  function f2s08Q(x, y, sign, r, fs) {
+    r = r || 14; fs = fs || 18;
+    return '<circle class="' + (sign > 0 ? 'box-err' : 'box-aux') + '" cx="' + r1(x) + '" cy="' + r1(y) + '" r="' + r + '"/>' +
+      text(x, y + fs * 0.35, sign > 0 ? '+' : '−', ' text-anchor="middle" font-size="' + fs + '"');
+  }
+  function f2s08Lab(x, y, s, anchor, fs) { return text(x, y, s, ' text-anchor="' + (anchor || 'start') + '" font-size="' + (fs || 22) + '"'); }
+  function f2s08Plus(x, y, fs) { return text(x, y + (fs || 15) * 0.35, '+', ' text-anchor="middle" font-size="' + (fs || 15) + '"'); }
+  var f2s08QE = 'q<tspan baseline-shift="sub" font-size="70%">enc</tspan>';
+  function f2s08Ell(cx, cy, rx, ry, n) {
+    var o = [];
+    n = n || 64;
+    for (var i = 0; i <= n; i++) { var a = 2 * Math.PI * i / n; o.push([cx + rx * Math.cos(a), cy - ry * Math.sin(a)]); }
+    return o;
+  }
+  // Corona (anillo grueso) entre dos círculos: relleno de carga.
+  function f2s08Ring(cls, cx, cy, a, b) {
+    function c(r) { return 'M' + r1(cx - r) + ' ' + r1(cy) + 'A' + r + ' ' + r + ' 0 1 0 ' + r1(cx + r) + ' ' + r1(cy) + 'A' + r + ' ' + r + ' 0 1 0 ' + r1(cx - r) + ' ' + r1(cy) + 'Z'; }
+    return '<path class="' + cls + '" fill-rule="evenodd" d="' + c(b) + c(a) + '"/>';
+  }
+  function f2s08Step(s) { var k = s && s.k != null ? parseInt(s.k, 10) : 1; return isFinite(k) ? k : 1; }
+  // Dos renglones de anotación del paso, a la derecha.
+  function f2s08Note(lines, x, y0) {
+    var b = '';
+    (lines || []).forEach(function (t, i) { if (t) b += f2s08Lab(x || 350, (y0 || 42) + i * 36, t, 'start', 26); });
+    return b;
+  }
+  // Gráfica E contra r a la derecha: f(r) con E(R) = 1; marca R y el punto actual.
+  function f2s08Plot(f, r, markR) {
+    var O = [380, 300], sx = 100, sy = 90, top = 118, b = '';
+    b += arrow('axis', O[0], O[1], 236, 0, 1.6) + arrow('axis', O[0], O[1], 0, -186, 1.6);
+    b += f2s08Lab(370, 128, 'E', 'end') + f2s08Lab(606, 328, 'r', 'middle');
+    if (markR) b += seg('axis', O[0] + sx, O[1] - 5, O[0] + sx, O[1] + 5, 1.6) + f2s08Lab(O[0] + sx, 328, 'R', 'middle', 20);
+    var pts = [], prev = null;
+    for (var i = 1; i <= 220; i++) {
+      var t = 2.25 * i / 220, y = O[1] - sy * f(t);
+      if (prev != null && Math.abs(f(t) - prev) > 0.3) { b += poly('ref', pts, 2.6); pts = []; }
+      prev = f(t);
+      if (y < top) { if (pts.length) b += poly('ref', pts, 2.6); pts = []; continue; }
+      pts.push([O[0] + sx * t, y]);
+    }
+    if (pts.length) b += poly('ref', pts, 2.6);
+    var yd = O[1] - sy * f(r);
+    if (yd >= top) b += dot('dot-trace', O[0] + sx * r, yd, 6);
+    return b;
+  }
+  function f2s08Svg(h, label, body) { return svgBox('0 0 640 ' + h, label, body); }
+
+  /* ---------- La ley: solo cuenta lo de adentro ---------- */
+  D['f2s08-law'] = function () {
+    var b = '', C = [220, 170], q3 = [520, 60];
+    var blob = [];
+    for (var i = 0; i <= 96; i++) { var a = 2 * Math.PI * i / 96, m = 1 + 0.08 * Math.sin(3 * a); blob.push([C[0] + 150 * m * Math.cos(a), C[1] - 105 * m * Math.sin(a)]); }
+    b += poly('trace', blob, 3, true, '10 7');
+    // Líneas de campo de la carga de afuera: entran a la superficie y vuelven a salir.
+    [200, 210, 220].forEach(function (deg) {
+      var ux = Math.cos(deg * RAD), uy = -Math.sin(deg * RAD), t1 = 20, t2 = 1000;
+      t2 = Math.min(t2, (q3[0] - 22) / -ux, (288 - q3[1]) / uy);
+      b += seg('aux', q3[0] + ux * t1, q3[1] + uy * t1, q3[0] + ux * t2, q3[1] + uy * t2, 2);
+      [0.25, 0.75].forEach(function (f) { var t = t1 + (t2 - t1) * f; b += arrow('aux', q3[0] + ux * (t - 10), q3[1] + uy * (t - 10), ux * 12, uy * 12, 2); });
+    });
+    b += f2s08Q(120, 130, 1) + f2s08Q(230, 120, -1) + f2s08Q(q3[0], q3[1], 1);
+    b += f2s08Lab(120, 172, 'q₁', 'middle') + f2s08Lab(230, 96, 'q₂', 'middle') + f2s08Lab(544, 66, 'q₃');
+    b += f2s08Lab(20, 30, 'q₃ queda afuera: lo que entra, sale');
+    b += f2s08Lab(620, 284, 'Φ = (q₁ + q₂)/ε₀', 'end');
+    return f2s08Svg(300, 'Superficie cerrada con dos cargas adentro y una afuera; las líneas de la carga de afuera entran a la superficie y vuelven a salir.', b);
+  };
+
+  /* ---------- Tres simetrías, tres superficies ---------- */
+  D['f2s08-symmetry'] = function () {
+    var b = '', i;
+    // Esférica
+    b += poly('trace', f2s08Ell(110, 110, 60, 60), 2.6, true, '8 6');
+    for (i = 0; i < 8; i++) { var a = (22.5 + 45 * i) * RAD; b += arrow('ref', 110 + 60 * Math.cos(a), 110 - 60 * Math.sin(a), 22 * Math.cos(a), -22 * Math.sin(a), 2.4); }
+    b += f2s08Q(110, 110, 1, 12, 16);
+    // Cilíndrica
+    b += '<rect class="box-err" x="315" y="14" width="10" height="190" rx="3"/>';
+    b += poly('trace', [[280, 50], [280, 170]], 2.6, false, '8 6') + poly('trace', [[360, 50], [360, 170]], 2.6, false, '8 6');
+    b += poly('trace', f2s08Ell(320, 50, 40, 9), 2, true, '6 5') + poly('trace', f2s08Ell(320, 170, 40, 9), 2, true, '6 5');
+    [85, 110, 135].forEach(function (y) { b += arrow('ref', 280, y, -24, 0, 2.4) + arrow('ref', 360, y, 24, 0, 2.4); });
+    // Plana
+    b += '<rect class="box-err" x="524" y="14" width="12" height="190" rx="3"/>';
+    b += f2s08Plus(530, 36, 13) + f2s08Plus(530, 182, 13);
+    b += poly('trace', [[480, 80], [580, 80]], 2.6, false, '8 6') + poly('trace', [[480, 140], [580, 140]], 2.6, false, '8 6');
+    b += poly('trace', f2s08Ell(480, 110, 8, 30), 2, true, '6 5') + poly('trace', f2s08Ell(580, 110, 8, 30), 2, true, '6 5');
+    [100, 120].forEach(function (y) { b += arrow('ref', 472, y, -24, 0, 2.4) + arrow('ref', 588, y, 24, 0, 2.4); });
+    // Nombres
+    [[110, 'esférica', 'esfera'], [320, 'cilíndrica', 'cilindro'], [530, 'plana', 'cilindro o caja']].forEach(function (c) {
+      b += f2s08Lab(c[0], 228, 'simetría ' + c[1], 'middle', 21) + f2s08Lab(c[0], 252, '→ ' + c[2], 'middle', 21);
+    });
+    return f2s08Svg(262, 'Tres simetrías: una carga puntual dentro de una esfera gaussiana, una línea dentro de un cilindro coaxial y un plano atravesado por un cilindro corto; en cada una el campo sale perpendicular a la superficie.', b);
+  };
+
+  /* ---------- Esferas: carga puntual, esfera sólida, cascarón y conductor ---------- */
+  var F2S08_SPH = {
+    point: [['simetría esférica:', 'E radial, igual a igual r'], ['esfera gaussiana', 'de radio r'], ['E ⊥ y constante:', 'Φ = E · 4πr²'],
+      [f2s08QE + ' = q', 'toda la carga'], ['E · 4πr² = q/ε₀', 'E = q/(4πε₀r²)'], ['= kq/r²: Coulomb', 'de nuevo (S03)']],
+    solid: [['ρ uniforme:', 'simetría esférica'], ['esfera gaussiana', 'adentro: r < R'], ['E ⊥ y constante:', 'Φ = E · 4πr²'],
+      [f2s08QE + ' = Q r³/R³', 'solo lo sombreado'], ['E = kQr/R³', 'crece con r'], ['afuera: ' + f2s08QE + ' = Q', 'E = kQ/r²; en R, igual']],
+    shell: [['carga solo en r = R:', 'simetría esférica'], ['esfera gaussiana', 'adentro: r < R'], ['E ⊥ y constante:', 'Φ = E · 4πr²'],
+      [f2s08QE + ' = 0', 'la carga queda afuera'], ['E · 4πr² = 0', 'E = 0 adentro'], ['afuera: ' + f2s08QE + ' = Q', 'E = kQ/r²']],
+    conductor: [['conductor en equilibrio:', 'la carga, en la orilla'], ['esfera gaussiana', 'dentro del metal'], ['E ⊥ y constante:', 'Φ = E · 4πr²'],
+      [f2s08QE + ' = 0', 'el metal es neutro'], ['E = 0 en el metal', 'nada se mueve ya'], ['afuera: E = kQ/r²', 'como carga puntual']]
+  };
+  function f2s08SphF(g, t) {
+    if (g === 'point') return 1 / (t * t);
+    if (g === 'solid') return t < 1 ? t : 1 / (t * t);
+    return t < 1 ? 0 : 1 / (t * t);
+  }
+  D['f2s08-sphere'] = function (s) {
+    var g = (s && s.g) || 'point', k = f2s08Step(s), r = Math.max(0.3, Math.min(1.5, num(s, 'r', 1))), C = [180, 175], RP = 80, rp = r * RP, b = '', i, a;
+    if (g === 'solid') b += '<circle class="box-err" cx="' + C[0] + '" cy="' + C[1] + '" r="' + RP + '"/>';
+    if (g === 'shell') b += f2s08Ring('box-err', C[0], C[1], RP - 8, RP + 8);
+    if (g === 'conductor') b += '<circle class="box-ref" cx="' + C[0] + '" cy="' + C[1] + '" r="' + RP + '"/>';
+    // q_enc sombreada (otra capa encima de lo encerrado).
+    if (k >= 4 && g === 'solid') b += '<circle class="box-err" cx="' + C[0] + '" cy="' + C[1] + '" r="' + r1(Math.min(rp, RP)) + '"/>';
+    if (k >= 4 && g === 'shell' && r >= 1) b += f2s08Ring('box-err', C[0], C[1], RP - 8, RP + 8);
+    if (g === 'point') b += f2s08Q(C[0], C[1], 1, 18, 22);
+    if (g === 'solid') for (i = 0; i < 4; i++) { a = i * 90 * RAD; b += f2s08Plus(C[0] + 0.3 * RP * Math.cos(a), C[1] - 0.3 * RP * Math.sin(a)) + f2s08Plus(C[0] + 0.86 * RP * Math.cos(a), C[1] - 0.86 * RP * Math.sin(a)); }
+    if (g === 'shell') for (i = 0; i < 4; i++) { a = i * 90 * RAD; b += f2s08Plus(C[0] + RP * Math.cos(a), C[1] - RP * Math.sin(a), 14); }
+    if (g === 'conductor') for (i = 0; i < 8; i++) { a = i * 45 * RAD; b += f2s08Plus(C[0] + (RP - 11) * Math.cos(a), C[1] - (RP - 11) * Math.sin(a), 14); }
+    if (k >= 2) b += '<circle class="trace" fill="none" stroke-width="3" stroke-dasharray="9 6" cx="' + C[0] + '" cy="' + C[1] + '" r="' + r1(rp) + '"/>';
+    var f = f2s08SphF(g, r);
+    if (k >= 3 && f > 0) for (i = 0; i < 8; i++) {
+      a = (22.5 + 45 * i) * RAD;
+      var L = 34 * Math.min(1, f);
+      b += arrow('ref', C[0] + rp * Math.cos(a), C[1] - rp * Math.sin(a), L * Math.cos(a), -L * Math.sin(a), 2.6);
+    }
+    b += f2s08Note((F2S08_SPH[g] || F2S08_SPH.point)[Math.min(6, Math.max(1, k)) - 1]);
+    if (k >= 5) b += f2s08Plot(function (t) { return f2s08SphF(g, t); }, r, g !== 'point');
+    return f2s08Svg(340, 'Corte de una distribución con simetría esférica y una esfera gaussiana de radio r; a la derecha, la gráfica del campo E contra r.', b);
+  };
+
+  /* ---------- Línea y cilindro infinitos ---------- */
+  var F2S08_CYL = {
+    line: [['simetría cilíndrica:', 'E radial, ⊥ a la línea'], ['cilindro gaussiano:', 'radio r, largo L'], ['lado: Φ = E · 2πrL', 'tapas: Φ = 0'],
+      [f2s08QE + ' = λL', 'lo que hay en el largo L'], ['E · 2πrL = λL/ε₀', 'E = λ/(2πε₀r)'], ['= 2kλ/r', 'igual que en S04']],
+    cyl: [['cilindro sólido:', 'simetría cilíndrica'], ['cilindro gaussiano', 'adentro: r < R'], ['lado: Φ = E · 2πrL', 'tapas: Φ = 0'],
+      [f2s08QE + ' = λL · r²/R²', 'solo lo sombreado'], ['E = λr/(2πε₀R²)', 'crece con r'], ['afuera: E = λ/(2πε₀r)', 'como la línea']]
+  };
+  function f2s08CylF(g, t) { return g === 'line' ? 1 / t : t < 1 ? t : 1 / t; }
+  D['f2s08-line'] = function (s) {
+    var g = (s && s.g) || 'line', k = f2s08Step(s), r = Math.max(0.3, Math.min(1.7, num(s, 'r', 1.6))), X = 170, RP = 45, rp = r * RP, y0 = 85, y1 = 265, b = '';
+    if (g === 'line') {
+      b += '<rect class="box-err" x="' + (X - 8) + '" y="18" width="16" height="314" rx="4"/>';
+      if (k >= 4) b += '<rect class="box-err" x="' + (X - 8) + '" y="' + y0 + '" width="16" height="' + (y1 - y0) + '"/>';
+      [45, 140, 215, 318].forEach(function (y) { b += f2s08Plus(X, y); });
+    } else {
+      b += '<rect class="box-err" x="' + (X - RP) + '" y="18" width="' + 2 * RP + '" height="314"/>';
+      if (k >= 4) { var w = Math.min(rp, RP); b += '<rect class="box-err" x="' + r1(X - w) + '" y="' + y0 + '" width="' + r1(2 * w) + '" height="' + (y1 - y0) + '"/>'; }
+      [45, 140, 215, 318].forEach(function (y) { b += f2s08Plus(X, y); });
+      [45, 318].forEach(function (y) { b += f2s08Plus(X - 33, y) + f2s08Plus(X + 33, y); });
+    }
+    if (k >= 2) {
+      b += poly('trace', [[X - rp, y0], [X - rp, y1]], 3, false, '9 6') + poly('trace', [[X + rp, y0], [X + rp, y1]], 3, false, '9 6');
+      b += poly('trace', f2s08Ell(X, y0, rp, rp * 0.25), 2.2, true, '7 5') + poly('trace', f2s08Ell(X, y1, rp, rp * 0.25), 2.2, true, '7 5');
+    }
+    var f = f2s08CylF(g, r);
+    if (k >= 3) [130, 175, 220].forEach(function (y) { var L = 34 * Math.min(1, f); b += arrow('ref', X - rp, y, -L, 0, 2.6) + arrow('ref', X + rp, y, L, 0, 2.6); });
+    b += f2s08Note((F2S08_CYL[g] || F2S08_CYL.line)[Math.min(6, Math.max(1, k)) - 1]);
+    if (k >= 5) b += f2s08Plot(function (t) { return f2s08CylF(g, t); }, r, g !== 'line');
+    return f2s08Svg(340, 'Vista de lado de una distribución infinita a lo largo de un eje, rodeada por un cilindro gaussiano coaxial de radio r; a la derecha, la gráfica de E contra r.', b);
+  };
+
+  /* ---------- Plano infinito y placa conductora ---------- */
+  var F2S08_PLA = {
+    sheet: [['simetría plana:', 'E ⊥ al plano'], ['cilindro corto que', 'cruza el plano'], ['tapas: Φ = 2EA', 'lado: Φ = 0'],
+      [f2s08QE + ' = σA', 'el círculo sombreado'], ['2EA = σA/ε₀', 'E = σ/(2ε₀)'], ['no depende de x:', 'el disco de S04, R → ∞']],
+    plate: [['placa conductora:', 'σ en cada cara'], ['una tapa dentro', 'del metal'], ['adentro E = 0:', 'sale por una sola tapa'],
+      [f2s08QE + ' = σA', 'la carga de esa cara'], ['EA = σA/ε₀', 'E = σ/ε₀'], ['el doble que una', 'hoja sola de carga']]
+  };
+  D['f2s08-plane'] = function (s) {
+    var g = (s && s.g) || 'sheet', k = f2s08Step(s), b = '', Y0 = 95, Y1 = 205, xa = g === 'plate' ? 200 : 110, xb = 290;
+    if (g === 'sheet') {
+      b += '<rect class="box-err" x="194" y="15" width="12" height="270" rx="3"/>';
+      if (k >= 4) b += '<rect class="box-err" x="194" y="' + Y0 + '" width="12" height="' + (Y1 - Y0) + '"/>';
+      [40, 72, 228, 262].forEach(function (y) { b += f2s08Plus(200, y, 13); });
+    } else {
+      b += '<rect class="box-ref" x="170" y="15" width="60" height="270"/>';
+      if (k >= 4) b += '<rect class="box-err" x="222" y="' + Y0 + '" width="8" height="' + (Y1 - Y0) + '"/>';
+      [40, 72, 228, 262].forEach(function (y) { b += f2s08Plus(179, y, 14) + f2s08Plus(221, y, 14); });
+    }
+    if (k >= 2) {
+      b += poly('trace', [[xa, Y0], [xb, Y0]], 3, false, '9 6') + poly('trace', [[xa, Y1], [xb, Y1]], 3, false, '9 6');
+      b += poly('trace', f2s08Ell(xa, 150, 13, 55), 2.2, true, '7 5') + poly('trace', f2s08Ell(xb, 150, 13, 55), 2.2, true, '7 5');
+    }
+    if (k >= 3) [125, 150, 175].forEach(function (y) {
+      b += arrow('ref', xb + 13, y, 34, 0, 2.6);
+      if (g === 'sheet') b += arrow('ref', xa - 13, y, -34, 0, 2.6);
+    });
+    b += f2s08Note((F2S08_PLA[g] || F2S08_PLA.sheet)[Math.min(6, Math.max(1, k)) - 1]);
+    return f2s08Svg(300, g === 'sheet' ? 'Plano infinito con carga positiva, de lado, atravesado por un cilindro gaussiano corto; el campo sale perpendicular por las dos tapas.' : 'Placa conductora gruesa con carga en sus caras y un cilindro gaussiano con una tapa dentro del metal; el campo solo sale por la tapa de afuera.', b);
+  };
+
+  /* ---------- Conductor con una cavidad ---------- */
+  D['f2s08-conductor'] = function () {
+    var b = '', C = [210, 150], cav = [200, 150], i, a;
+    var out = f2s08Ell(C[0], C[1], 175, 128, 96);
+    function ring(cx, cy, r, ccw) {
+      var o = [];
+      for (var j = 0; j <= 64; j++) { var t = (ccw ? -1 : 1) * 2 * Math.PI * j / 64; o.push([cx + r * Math.cos(t), cy - r * Math.sin(t)]); }
+      return o;
+    }
+    var d = out.map(function (p, j) { return (j ? 'L' : 'M') + r1(p[0]) + ' ' + r1(p[1]); }).join('') + 'Z' +
+      ring(cav[0], cav[1], 52, true).map(function (p, j) { return (j ? 'L' : 'M') + r1(p[0]) + ' ' + r1(p[1]); }).join('') + 'Z';
+    b += '<path class="box-ref" fill-rule="evenodd" d="' + d + '"/>';
+    b += f2s08Q(cav[0], cav[1], 1, 15, 18);
+    for (i = 0; i < 6; i++) { a = (30 + 60 * i) * RAD; b += text(cav[0] + 64 * Math.cos(a), cav[1] - 64 * Math.sin(a) + 6, '−', ' text-anchor="middle" font-size="18"'); }
+    for (i = 0; i < 10; i++) { a = (18 + 36 * i) * RAD; b += f2s08Plus(C[0] + 158 * Math.cos(a), C[1] - 112 * Math.sin(a), 15); }
+    b += '<circle class="trace" fill="none" stroke-width="3" stroke-dasharray="9 6" cx="' + cav[0] + '" cy="' + cav[1] + '" r="88"/>';
+    b += f2s08Lab(408, 52, 'E = 0 en el metal') + f2s08Lab(408, 84, 'gaussiana: Φ = 0');
+    b += f2s08Lab(408, 116, '→ ' + f2s08QE + ' = 0') + f2s08Lab(408, 192, 'pared: −q') + f2s08Lab(408, 224, 'orilla de afuera: +q');
+    return f2s08Svg(300, 'Conductor con una cavidad que tiene una carga positiva q; en la pared de la cavidad se acumula −q y en la orilla de afuera +q. Una superficie gaussiana dentro del metal encierra carga neta cero.', b);
+  };
+
 
   /* ══════════════════════ fin S08 ══════════════════════ */
 
   /* ══════════════════════ S09 ══════════════════════ */
+  function f2s09Sub(main, sub) { return main + '<tspan baseline-shift="sub" font-size="70%">' + sub + '</tspan>'; }
+  // Flecha con la punta a la mitad (para líneas de campo curvas).
+  function f2s09Mid(pts, cls) {
+    var i = Math.floor(pts.length / 2), a = pts[i - 1], b = pts[i + 1];
+    var dx = b[0] - a[0], dy = b[1] - a[1], L = Math.hypot(dx, dy) || 1, ux = dx / L, uy = dy / L, c = pts[i], hh = 9;
+    return '<path class="' + cls + '" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M' +
+      r1(c[0] - ux * hh - uy * hh * 0.6) + ' ' + r1(c[1] - uy * hh + ux * hh * 0.6) + 'L' + r1(c[0]) + ' ' + r1(c[1]) + 'L' + r1(c[0] - ux * hh + uy * hh * 0.6) + ' ' + r1(c[1] - uy * hh - ux * hh * 0.6) + '"/>';
+  }
+  function f2s09Bez(p0, p1, p2, n) {
+    var o = [];
+    for (var i = 0; i <= n; i++) { var t = i / n, a = (1 - t) * (1 - t), b = 2 * (1 - t) * t, c = t * t; o.push([a * p0[0] + b * p1[0] + c * p2[0], a * p0[1] + b * p1[1] + c * p2[1]]); }
+    return o;
+  }
+  // Anillo (cascarón visto en corte) con regla par-impar.
+  function f2s09Ring(cx, cy, r0, r1_, cls) {
+    var c = function (r, sw) { return 'M' + r1(cx + r) + ' ' + r1(cy) + 'A' + r + ' ' + r + ' 0 1 ' + sw + ' ' + r1(cx - r) + ' ' + r1(cy) + 'A' + r + ' ' + r + ' 0 1 ' + sw + ' ' + r1(cx + r) + ' ' + r1(cy); };
+    return '<path class="' + cls + '" fill-rule="evenodd" d="' + c(r1_, 0) + c(r0, 1) + 'Z"/>';
+  }
 
+  // Dos conductores cualesquiera con +Q y −Q y las líneas de campo entre ellos.
+  D['f2s09-conductors'] = function () {
+    var L = [[70, 150], [96, 92], [150, 84], [196, 112], [204, 168], [172, 222], [112, 226], [76, 196]];
+    var R = [[436, 120], [480, 82], [540, 96], [566, 150], [548, 214], [490, 232], [446, 204]];
+    var smooth = function (P) {
+      var d = '';
+      for (var i = 0; i < P.length; i++) {
+        var p = P[i], q = P[(i + 1) % P.length], m = [(p[0] + q[0]) / 2, (p[1] + q[1]) / 2];
+        if (i === 0) d += 'M' + r1((P[P.length - 1][0] + p[0]) / 2) + ' ' + r1((P[P.length - 1][1] + p[1]) / 2);
+        d += 'Q' + r1(p[0]) + ' ' + r1(p[1]) + ' ' + r1(m[0]) + ' ' + r1(m[1]);
+      }
+      return d + 'Z';
+    };
+    var b = '';
+    [[[204, 140], [320, 110], [440, 130]], [[206, 166], [320, 166], [446, 170]], [[190, 200], [320, 230], [452, 210]], [[150, 90], [300, 30], [470, 88]], [[150, 224], [300, 290], [490, 228]]]
+      .forEach(function (c) { var pts = f2s09Bez(c[0], c[1], c[2], 40); b += poly('ref', pts, 2) + f2s09Mid(pts, 'ref'); });
+    b += '<path class="box-err" d="' + smooth(L) + '"/>' + '<path class="box-aux" d="' + smooth(R) + '"/>';
+    [[110, 130], [160, 120], [130, 185], [176, 175]].forEach(function (p) { b += text(p[0], p[1], '+', ' text-anchor="middle" font-size="20"'); });
+    [[480, 130], [530, 135], [495, 190], [535, 185]].forEach(function (p) { b += text(p[0], p[1], '−', ' text-anchor="middle" font-size="20"'); });
+    b += text(60, 80, '+Q', ' text-anchor="end" font-size="18"') + text(580, 80, '−Q', ' font-size="18"') +
+      text(320, 300, 'V = V₊ − V₋     C = Q / V', ' text-anchor="middle" font-size="17"');
+    return svgBox('0 0 640 320', 'Dos conductores de forma cualquiera, uno con carga +Q y otro con −Q, y las líneas de campo que van del positivo al negativo', b);
+  };
+
+  // Explainer: placas paralelas, de Q a C.
+  D['f2s09-plates'] = function (s) {
+    var k = num(s, 'k', 1), b = '', xl = 230, xr = 410, T = 14, top = 50, bot = 270;
+    if (k === 2) b += '<rect class="aux" fill="none" stroke-width="2" stroke-dasharray="6 5" x="206" y="132" width="86" height="56"/>';
+    var ys = k === 4 ? [80, 120, 200, 240] : [80, 120, 160, 200, 240];
+    if (k >= 3) ys.forEach(function (y) { b += arrow('ref', xl + 6, y, xr - xl - 12, 0, 2); });
+    if (k === 2) b += arrow('ref', 292, 160, 52, 0, 2.5) + text(318, 150, 'E', ' text-anchor="middle" font-size="17"');
+    b += '<rect class="box-err" x="' + (xl - T) + '" y="' + top + '" width="' + T + '" height="' + (bot - top) + '"/>' +
+      '<rect class="box-aux" x="' + xr + '" y="' + top + '" width="' + T + '" height="' + (bot - top) + '"/>';
+    for (var i = 0; i < 7; i++) { var y = top + 22 + i * 30; b += text(xl - T / 2, y, '+', ' text-anchor="middle" font-size="15"') + text(xr + T / 2, y, '−', ' text-anchor="middle" font-size="15"'); }
+    b += text(xl - T / 2, 38, '+Q', ' text-anchor="middle" font-size="17"') + text(xr + T / 2, 38, '−Q', ' text-anchor="middle" font-size="17"');
+    if (k === 1) b += text(200, 165, 'área A', ' text-anchor="end" font-size="16"');
+    if (k === 2) b += text(196, 126, 'caja gaussiana', ' text-anchor="end" font-size="16"');
+    if (k === 3) b += text(150, 165, 'E = 0', ' text-anchor="middle" font-size="16"') + text(500, 165, 'E = 0', ' text-anchor="middle" font-size="16"');
+    if (k === 4) b += arrow('trace', xl + 10, 160, xr - xl - 20, 0, 3) + text(320, 150, 'dx', ' text-anchor="middle" font-size="16"');
+    if (k === 1 || k >= 4) b += seg('axis', xl, 288, xr, 288, 1.4) + seg('axis', xl, 281, xl, 295, 1.4) + seg('axis', xr, 281, xr, 295, 1.4) + text(320, 306, 'd', ' text-anchor="middle" font-size="16"');
+    var f = {
+      1: 'σ = Q / A en cada placa',
+      2: 'E·A' + '<tspan baseline-shift="sub" font-size="70%">caja</tspan> = σA<tspan baseline-shift="sub" font-size="70%">caja</tspan> / ε₀  →  E = σ / ε₀',
+      3: 'campo uniforme, de la placa + a la −',
+      4: 'V = V₊ − V₋ = ∫ E dx, de 0 a d',
+      5: 'V = E d = Q d / (ε₀ A)',
+      6: 'C = Q / V = ε₀ A / d'
+    }[k];
+    if (f) b += text(320, 332, f, ' text-anchor="middle" font-size="17"');
+    return svgBox('0 0 640 345', 'Dos placas paralelas vistas de lado, la izquierda con +Q y la derecha con −Q, separadas una distancia d, con el campo uniforme entre ellas.', b);
+  };
+
+  // Explainer: coaxial o esférico visto en corte, con la cadena a la derecha.
+  function f2s09Radial(s, sph) {
+    var k = num(s, 'k', 1), b = '', cx = 190, cy = 160, a = 38, B = 108, T = 24, rg = 74;
+    if (sph) b += '<ellipse class="axis" fill="none" stroke-width="1.2" stroke-dasharray="4 5" cx="' + cx + '" cy="' + cy + '" rx="' + (B + T / 2) + '" ry="' + ((B + T / 2) * 0.3).toFixed(1) + '"/>';
+    if (k >= 3) for (var j = 0; j < 8; j++) {
+      var t = (j * 45 + 22.5) * RAD, ux = Math.cos(t), uy = Math.sin(t);
+      if (k === 4 && j === 7) continue;
+      b += arrow('ref', cx + ux * (a + 5), cy + uy * (a + 5), ux * (B - a - 12), uy * (B - a - 12), 2);
+    }
+    if (k === 2) b += '<circle class="trace" fill="none" stroke-width="2" stroke-dasharray="6 5" cx="' + cx + '" cy="' + cy + '" r="' + rg + '"/>' +
+      seg('axis', cx + (a + 3) * Math.cos(-60 * RAD), cy + (a + 3) * Math.sin(-60 * RAD), cx + rg * Math.cos(-60 * RAD), cy + rg * Math.sin(-60 * RAD), 1.4) +
+      text(cx + 14, cy - 50, 'r', ' text-anchor="end" font-size="16"');
+    if (k === 4) { var t4 = 337.5 * RAD; b += arrow('trace', cx + Math.cos(t4) * (a + 5), cy + Math.sin(t4) * (a + 5), Math.cos(t4) * (B - a - 12), Math.sin(t4) * (B - a - 12), 3); }
+    b += f2s09Ring(cx, cy, B, B + T, 'box-aux');
+    [45, 135, 225, 315].forEach(function (d) { b += text(cx + (B + T / 2) * Math.cos(d * RAD), cy - (B + T / 2) * Math.sin(d * RAD) + 6, '−', ' text-anchor="middle" font-size="19"'); });
+    b += '<circle class="box-err" cx="' + cx + '" cy="' + cy + '" r="' + a + '"/>' + text(cx, cy + 7, '+', ' text-anchor="middle" font-size="20"');
+    if (k === 1) {
+      b += seg('axis', cx, 300, cx + a, 300, 1.4) + seg('axis', cx, 294, cx, 306, 1.4) + seg('axis', cx + a, 294, cx + a, 306, 1.4) + text(cx + a + 10, 305, 'a', ' font-size="16"');
+      b += seg('axis', cx, 322, cx + B, 322, 1.4) + seg('axis', cx, 316, cx, 328, 1.4) + seg('axis', cx + B, 316, cx + B, 328, 1.4) + text(cx + B + 10, 327, 'b', ' font-size="16"');
+    }
+    if (k === 3) b += text(360, 90 + 2 * 32, 'afuera del forro: E = 0'.replace('forro', sph ? 'cascarón' : 'forro'), ' font-size="17"');
+    var Lc = sph ? [
+      ['esfera interior: +Q', 'cascarón exterior: −Q'],
+      ['Gauss: E·4πr² = Q / ε₀', 'E = kQ / r²'],
+      ['campo radial, de a hacia b', 'como una carga puntual'],
+      ['V = ∫ E dr, de a a b'],
+      ['V = kQ (1/a − 1/b)', '   = kQ (b − a) / (ab)'],
+      ['C = 4πε₀ ab / (b − a)', 'b → ∞:  C = 4πε₀ a']
+    ] : [
+      ['alambre: +Q', 'forro: −Q', 'largo L, λ = Q / L'],
+      ['Gauss: E·2πrL = Q / ε₀', 'E = Q / (2πε₀ L r)'],
+      ['campo radial, baja como 1/r'],
+      ['V = ∫ E dr, de a a b'],
+      ['∫ dr / r = ln (b/a)', 'V = Q ln(b/a) / (2πε₀ L)'],
+      ['C = 2πε₀ L / ln(b/a)']
+    ];
+    (Lc[Math.max(0, Math.min(5, Math.round(k) - 1))] || []).forEach(function (l, i) { b += text(360, 90 + i * 32, l, ' font-size="17"'); });
+    return svgBox('0 0 640 340', sph ? 'Capacitor esférico en corte: una esfera interior con +Q dentro de un cascarón con −Q; el campo es radial entre ellos.' :
+      'Cable coaxial en corte: un alambre central con +Q dentro de un forro con −Q; el campo es radial entre ellos.', b);
+  }
+  D['f2s09-cylinder'] = function (s) { return f2s09Radial(s, false); };
+  D['f2s09-sphere'] = function (s) { return f2s09Radial(s, true); };
+
+  // Separar las placas al doble con la batería conectada o desconectada.
+  D['f2s09-battery'] = function () {
+    var b = '';
+    function panel(x0, con) {
+      var xl = x0 + 90, xr = x0 + 210, top = 60, bot = 190, T = 12, o = '';
+      o += '<rect class="box-err" x="' + (xl - T) + '" y="' + top + '" width="' + T + '" height="' + (bot - top) + '"/>';
+      o += '<rect class="box-aux" x="' + xr + '" y="' + top + '" width="' + T + '" height="' + (bot - top) + '"/>';
+      o += '<rect class="aux" fill="none" stroke-width="1.6" stroke-dasharray="5 5" x="' + (xr - 60) + '" y="' + top + '" width="' + T + '" height="' + (bot - top) + '"/>';
+      for (var i = 0; i < 4; i++) { var y = top + 22 + i * 30; o += text(xl - T / 2, y, '+', ' text-anchor="middle" font-size="14"') + text(xr + T / 2, y, '−', ' text-anchor="middle" font-size="14"'); }
+      o += arrow('trace', xr - 44, 44, 40, 0, 2.5) + text(xr - 48, 48, 'd → 2d', ' text-anchor="end" font-size="15"');
+      var yw = 228, xm = x0 + 150;
+      o += '<path class="axis" fill="none" stroke-width="2" d="M' + (xl - T) + ' 125H' + (x0 + 40) + 'V' + yw + 'H' + (xm - 7) + '"/>';
+      o += '<path class="axis" fill="none" stroke-width="2" d="M' + (xr + T) + ' 125H' + (x0 + 260) + 'V' + yw + 'H' + (con ? xm + 7 : xm + 50) + '"/>';
+      if (!con) o += seg('axis', xm + 50, yw, xm + 80, yw - 18, 2.4);
+      o += seg('axis', xm - 7, yw - 13, xm - 7, yw + 13, 2.5) + seg('axis', xm + 7, yw - 7, xm + 7, yw + 7, 4);
+      o += text(x0 + 150, 18, con ? 'batería conectada' : 'batería desconectada', ' text-anchor="middle" font-size="16"');
+      o += text(x0 + 150, 268, con ? 'V fija · C a la mitad' : 'Q fija · C a la mitad', ' text-anchor="middle" font-size="15"');
+      o += text(x0 + 150, 290, con ? 'Q = CV baja a la mitad' : 'V = Q/C se duplica', ' text-anchor="middle" font-size="15"');
+      o += text(x0 + 150, 312, con ? 'E = V/d baja a la mitad' : 'E = σ/ε₀ no cambia', ' text-anchor="middle" font-size="15"');
+      return o;
+    }
+    b += panel(10, true) + seg('axis', 320, 20, 320, 310, 1, '3 6') + panel(330, false);
+    return svgBox('0 0 640 325', 'Dos capacitores de placas a los que se les duplica la separación: a la izquierda con la batería conectada, a la derecha desconectada.', b);
+  };
   /* ══════════════════════ fin S09 ══════════════════════ */
 
   /* ══════════════════════ S10 ══════════════════════ */
+  function f2s10Sub(main, sub) { return main + '<tspan baseline-shift="sub" font-size="70%">' + sub + '</tspan>'; }
+  function f2s10Name(id) { return f2s10Sub('C', id); }
+  function f2s10Fmt(v) { return String(Number((+v).toPrecision(3))); }
+  // Capacitor horizontal: placas verticales en x ± 6, alto 2·hh.
+  function f2s10Cap(x, y, cls, hh) {
+    hh = hh || 16;
+    return seg(cls, x - 6, y - hh, x - 6, y + hh, 4) + seg(cls, x + 6, y - hh, x + 6, y + hh, 4);
+  }
+  // Batería horizontal: placa larga (+) a la izquierda, corta (−) a la derecha.
+  function f2s10Bat(x, y) {
+    return seg('ref', x - 6, y - 20, x - 6, y + 20, 3) + seg('ref', x + 6, y - 10, x + 6, y + 10, 6);
+  }
+  // Red como arreglo: hoja [id, C] · grupo ['s' | 'p', hijo, hijo, …].
+  function f2s10IsLeaf(n) { return n[0] !== 's' && n[0] !== 'p'; }
+  function f2s10Eq(n) {
+    if (f2s10IsLeaf(n)) return n[1];
+    var v = n.slice(1).map(f2s10Eq);
+    return n[0] === 'p' ? v.reduce(function (s, x) { return s + x; }, 0) : 1 / v.reduce(function (s, x) { return s + 1 / x; }, 0);
+  }
+  function f2s10Split(n, V, out) {
+    if (f2s10IsLeaf(n)) { out[n[0]] = { Q: n[1] * V, V: V }; return out; }
+    var Q = f2s10Eq(n) * V;
+    n.slice(1).forEach(function (k) { f2s10Split(k, n[0] === 'p' ? V : Q / f2s10Eq(k), out); });
+    return out;
+  }
+  var F2S10 = { w: 104, h: 96, t: 40, stub: 22, gap: 4 };
+  function f2s10Layout(n) {
+    var L = F2S10;
+    if (f2s10IsLeaf(n)) return { w: L.w, h: L.h, t: L.t, caps: [{ id: n[0], c: n[1], x: 0, y: 0 }], wires: [], dots: [] };
+    var kids = n.slice(1).map(f2s10Layout), o = { caps: [], wires: [], dots: [] };
+    function put(K, dx, dy) {
+      K.caps.forEach(function (c) { o.caps.push({ id: c.id, c: c.c, x: c.x + dx, y: c.y + dy }); });
+      K.wires.forEach(function (w) { o.wires.push([w[0] + dx, w[1] + dy, w[2] + dx, w[3] + dy]); });
+      K.dots.forEach(function (d) { o.dots.push([d[0] + dx, d[1] + dy]); });
+    }
+    if (n[0] === 's') {
+      var top = Math.max.apply(null, kids.map(function (K) { return K.t; })), bot = Math.max.apply(null, kids.map(function (K) { return K.h - K.t; })), x = 0;
+      kids.forEach(function (K) { put(K, x, top - K.t); x += K.w; });
+      o.w = x; o.t = top; o.h = top + bot;
+      return o;
+    }
+    var mw = Math.max.apply(null, kids.map(function (K) { return K.w; })), W = mw + 2 * L.stub, y = 0, ys = [];
+    kids.forEach(function (K, i) {
+      var dx = L.stub + (mw - K.w) / 2, ty = y + K.t;
+      put(K, dx, y);
+      o.wires.push([0, ty, dx, ty], [dx + K.w, ty, W, ty]);
+      if (i < kids.length - 1) o.dots.push([0, ty], [W, ty]);
+      ys.push(ty); y += K.h + L.gap;
+    });
+    o.wires.push([0, ys[0], 0, ys[ys.length - 1]], [W, ys[0], W, ys[ys.length - 1]]);
+    o.w = W; o.h = y - L.gap; o.t = ys[0];
+    return o;
+  }
+
+  // Red de capacitores con su batería. state: { net, V, qv (muestra Q y V), hi: [ids], eq: [ids], vw, vh }.
+  D['f2s10-net'] = function (s) {
+    var net = (s && s.net) || ['s', ['1', 6], ['p', ['2', 1], ['3', 2]]], V = num(s, 'V', 12), qv = num(s, 'qv', 0) > 0.5;
+    var hi = (s && s.hi) || [], eqs = (s && s.eq) || [];
+    var L = f2s10Layout(net), side = 40, M = 14;
+    var W = Math.max(num(s, 'vw', 480), L.w + 2 * (side + M)), ox = (W - L.w) / 2, oy = M;
+    var bottom = oy + L.h + 30, H = Math.max(num(s, 'vh', 0), bottom + 48);
+    var xl = ox - side, xr = ox + L.w + side, ty = oy + L.t, xc = W / 2;
+    var sp = qv ? f2s10Split(net, V, {}) : null, body = '';
+    L.wires.concat([[xl - ox, L.t, 0, L.t], [L.w, L.t, xr - ox, L.t]]).forEach(function (w) { body += seg('axis', w[0] + ox, w[1] + oy, w[2] + ox, w[3] + oy, 2.2); });
+    body += seg('axis', xl, ty, xl, bottom, 2.2) + seg('axis', xr, ty, xr, bottom, 2.2) +
+      seg('axis', xl, bottom, xc - 6, bottom, 2.2) + seg('axis', xc + 6, bottom, xr, bottom, 2.2);
+    L.dots.forEach(function (d) { body += dot('dot-ref', d[0] + ox, d[1] + oy, 4.5); });
+    L.caps.forEach(function (c) {
+      var x0 = c.x + ox, cx = x0 + F2S10.w / 2, cy = c.y + oy + F2S10.t;
+      var cls = hi.indexOf(c.id) >= 0 ? 'error' : (eqs.indexOf(c.id) >= 0 || c.id === 'eq') ? 'trace' : 'ref';
+      body += seg('axis', x0, cy, cx - 6, cy, 2.2) + seg('axis', cx + 6, cy, x0 + F2S10.w, cy, 2.2) + f2s10Cap(cx, cy, cls);
+      body += text(cx, cy - 25, f2s10Name(c.id) + ' = ' + f2s10Fmt(c.c) + ' μF', ' text-anchor="middle" font-size="15"');
+      if (sp) {
+        body += text(cx, cy + 36, 'Q = ' + f2s10Fmt(sp[c.id].Q) + ' μC', ' text-anchor="middle" font-size="14"') +
+          text(cx, cy + 54, 'V = ' + f2s10Fmt(sp[c.id].V) + ' V', ' text-anchor="middle" font-size="14"');
+      }
+    });
+    body += f2s10Bat(xc, bottom) + text(xc - 16, bottom - 10, '+', ' text-anchor="end" font-size="18"') +
+      text(xc, bottom + 38, 'V = ' + f2s10Fmt(V) + ' V', ' text-anchor="middle" font-size="16"');
+    return svgBox('0 0 ' + r1(W) + ' ' + r1(H), 'Red de capacitores conectada a una batería', body);
+  };
+
+  // Símbolos de un diagrama de circuito.
+  D['f2s10-symbols'] = function () {
+    var y1 = 62, y2 = 214, body = '';
+    // Batería
+    body += seg('axis', 70, y1, 124, y1, 2.4) + seg('axis', 136, y1, 190, y1, 2.4) + f2s10Bat(130, y1) +
+      text(112, y1 - 26, '+', ' text-anchor="end" font-size="20"') + text(148, y1 - 22, '−', ' font-size="20"');
+    // Capacitor
+    body += seg('axis', 330, y1, 384, y1, 2.4) + seg('axis', 396, y1, 450, y1, 2.4) + f2s10Cap(390, y1, 'ref', 20);
+    // Nodo
+    body += seg('axis', 70, y2, 190, y2, 2.4) + seg('axis', 130, y2, 130, y2 + 30, 2.4) + dot('dot-ref', 130, y2, 6);
+    // Cable
+    body += seg('axis', 330, y2, 450, y2, 2.4);
+    [[130, y1, 'batería', 'placa larga = +'], [390, y1, 'capacitor', 'dos placas iguales'], [130, y2, 'nodo', 'se unen 3 cables'], [390, y2, 'cable', 'mismo potencial']].forEach(function (c) {
+      body += text(c[0], c[1] + 66, c[2], ' text-anchor="middle" font-size="21"') + text(c[0], c[1] + 92, c[3], ' text-anchor="middle" font-size="17"');
+    });
+    return svgBox('0 0 520 320', 'Símbolos: batería, capacitor, nodo y cable', body);
+  };
+
+  // Tres capacitores en paralelo: mismo V, las cargas se suman.
+  D['f2s10-parallel'] = function () {
+    var body = '', xl = 50, xr = 320, xc = 170, ys = [60, 140, 220], bot = 292;
+    body += seg('axis', xl, ys[0], xl, bot, 2.4) + seg('axis', xr, ys[0], xr, bot, 2.4) +
+      seg('axis', xl, bot, xc - 6, bot, 2.4) + seg('axis', xc + 6, bot, xr, bot, 2.4) + f2s10Bat(xc, bot) +
+      text(xc - 16, bot - 14, '+', ' text-anchor="end" font-size="20"') + text(xc + 22, bot - 10, 'V', ' font-size="20"');
+    ys.forEach(function (y, i) {
+      var n = String(i + 1);
+      body += seg('axis', xl, y, xc - 6, y, 2.4) + seg('axis', xc + 6, y, xr, y, 2.4) + f2s10Cap(xc, y, 'ref', 18) +
+        text(xc - 18, y - 16, f2s10Name(n), ' text-anchor="end" font-size="20"') +
+        text(xc + 18, y - 16, f2s10Sub('Q', n) + ' = ' + f2s10Name(n) + 'V', ' font-size="19"');
+      if (i < 2) body += dot('dot-ref', xl, y, 5) + dot('dot-ref', xr, y, 5);
+    });
+    body += text(336, 118, 'los tres', ' font-size="18"') + text(336, 142, 'tienen', ' font-size="18"') + text(336, 166, 'el mismo V', ' font-size="18"') +
+      text(240, 346, 'Q = ' + f2s10Sub('Q', '1') + ' + ' + f2s10Sub('Q', '2') + ' + ' + f2s10Sub('Q', '3'), ' text-anchor="middle" font-size="20"') +
+      text(240, 376, f2s10Sub('C', 'eq') + ' = ' + f2s10Sub('C', '1') + ' + ' + f2s10Sub('C', '2') + ' + ' + f2s10Sub('C', '3'), ' text-anchor="middle" font-size="20"');
+    return svgBox('0 0 480 390', 'Tres capacitores en paralelo conectados a una batería', body);
+  };
+
+  // Serie: por qué todos llevan la misma carga (explainer). state.n: 0 neutro · 1 extremos · 2 inducción · 3 voltajes.
+  D['f2s10-series'] = function (s) {
+    var n = num(s, 'n', 0), body = '', y = 96, xs = [200, 320, 440], bot = 240, xc = 320, hh = 28;
+    body += seg('axis', 80, y, xs[0] - 6, y, 2.2) + seg('axis', xs[0] + 6, y, xs[1] - 6, y, 2.2) + seg('axis', xs[1] + 6, y, xs[2] - 6, y, 2.2) + seg('axis', xs[2] + 6, y, 560, y, 2.2) +
+      seg('axis', 80, y, 80, bot, 2.2) + seg('axis', 560, y, 560, bot, 2.2) + seg('axis', 80, bot, xc - 6, bot, 2.2) + seg('axis', xc + 6, bot, 560, bot, 2.2) +
+      f2s10Bat(xc, bot) + text(xc - 16, bot - 12, '+', ' text-anchor="end" font-size="18"') + text(xc, bot + 38, 'V', ' text-anchor="middle" font-size="17"');
+    xs.forEach(function (x, i) { body += f2s10Cap(x, y, 'ref', hh) + text(x, y + 56, f2s10Name(String(i + 1)), ' text-anchor="middle" font-size="16"'); });
+    function signs(x, side, sg) {
+      var tx = x + side * 15, o = '';
+      [y - 16, y + 24].forEach(function (yy) { o += text(tx, yy, sg, ' text-anchor="middle" font-size="18"'); });
+      return o;
+    }
+    if (n >= 1) body += signs(xs[0] - 6, -1, '+') + signs(xs[2] + 6, 1, '−');
+    if (n >= 2) {
+      body += signs(xs[0] + 6, 1, '−') + signs(xs[1] - 6, -1, '+') + signs(xs[1] + 6, 1, '−') + signs(xs[2] - 6, -1, '+');
+      body += poly('aux', [[xs[0] + 2, y - 46], [xs[1] - 2, y - 46], [xs[1] - 2, y + 40], [xs[0] + 2, y + 40]], 1.6, true, '5 5') +
+        poly('aux', [[xs[1] + 2, y - 46], [xs[2] - 2, y - 46], [xs[2] - 2, y + 40], [xs[1] + 2, y + 40]], 1.6, true, '5 5') +
+        text(260, 184, 'carga neta 0', ' text-anchor="middle" font-size="14"') + text(380, 184, 'carga neta 0', ' text-anchor="middle" font-size="14"');
+    }
+    if (n >= 3) xs.forEach(function (x, i) { body += text(x, 30, f2s10Sub('V', String(i + 1)) + ' = Q/' + f2s10Name(String(i + 1)), ' text-anchor="middle" font-size="15"'); });
+    var cap = ['sin conectar: todas las placas están neutras', 'la batería solo toca las placas de los extremos: +Q y −Q',
+      'cada pieza aislada sigue neutra: −Q de un lado, +Q del otro', 'misma Q en los tres; V = ' + f2s10Sub('V', '1') + ' + ' + f2s10Sub('V', '2') + ' + ' + f2s10Sub('V', '3')][Math.max(0, Math.min(3, Math.round(n)))];
+    body += text(320, 306, cap, ' text-anchor="middle" font-size="16"');
+    return svgBox('0 0 640 318', 'Tres capacitores en serie con una batería; cargas en cada placa', body);
+  };
+
+  // Energía: el trabajo de cargar es el área bajo v(q), un triángulo de área ½QV.
+  D['f2s10-energy'] = function () {
+    var ox = 70, oy = 250, X = function (u) { return ox + 360 * u; }, Y = function (u) { return oy - 170 * u; };
+    var body = fill('area-fill', [[X(0), Y(0)], [X(1), Y(1)], [X(1), Y(0)]]);
+    var u0 = 0.55, du = 0.05;
+    body += fill('rect-fill', [[X(u0), Y(0)], [X(u0), Y(u0)], [X(u0 + du), Y(u0)], [X(u0 + du), Y(0)]]);
+    body += arrow('axis', ox, oy, 420, 0, 1.6) + arrow('axis', ox, oy, 0, -215, 1.6) +
+      text(ox + 432, oy + 6, 'q', ' font-size="20"') + text(ox, 22, 'v', ' text-anchor="middle" font-size="20"');
+    body += poly('ref', [[X(0), Y(0)], [X(1.02), Y(1.02)]], 3);
+    body += seg('axis', X(1), Y(1), X(1), oy, 1.2, '4 4') + seg('axis', ox, Y(1), X(1), Y(1), 1.2, '4 4') +
+      text(X(1), oy + 24, 'Q', ' text-anchor="middle" font-size="19"') + text(ox - 10, Y(1) + 6, 'V', ' text-anchor="end" font-size="19"') +
+      text(X(u0 + du / 2), oy + 24, 'dq', ' text-anchor="middle" font-size="18"');
+    body += text(456, 150, 'U = área', ' font-size="20"') + text(456, 180, 'U = ½ QV', ' font-size="20"') +
+      text(100, 42, 'v = q/C crece al cargar;', ' font-size="17"') + text(100, 64, 'cada dq cuesta v dq', ' font-size="17"');
+    return svgBox('0 0 640 290', 'Voltaje contra carga al cargar un capacitor; el área bajo la recta es la energía', body);
+  };
 
   /* ══════════════════════ fin S10 ══════════════════════ */
 
@@ -1216,6 +2150,203 @@
   }
   D['f2exam-trabajo'] = function (s) { return f2exRadial(s, false); };
   D['f2exam-proton'] = function (s) { return f2exRadial(s, true); };
+
+  /* ═══ Bloque B (S06–S10) ═══ */
+  // Cota vertical de y1 a y2 en x (con topes); agrega sus puntos a pts.
+  function f2exDimV(x, y1, y2, pts) {
+    [[x, y1, x, y2], [x - 7, y1, x + 7, y1], [x - 7, y2, x + 7, y2]].forEach(function (q) { pts.push.apply(pts, segPts(q[0], q[1], q[2], q[3])); });
+    return seg('axis', x, y1, x, y2, 1.3) + seg('axis', x - 7, y1, x + 7, y1, 1.3) + seg('axis', x - 7, y2, x + 7, y2, 1.3);
+  }
+  function f2exNum(v) { return String(Number((+v).toPrecision(3))); }
+  // Capacitor en un cable horizontal (placas verticales) o vertical (placas horizontales), centro (x, y).
+  function f2exCapH(x, y, hh) { hh = hh || 16; return seg('ref', x - 6, y - hh, x - 6, y + hh, 4) + seg('ref', x + 6, y - hh, x + 6, y + hh, 4); }
+  function f2exCapV(x, y, hh) { hh = hh || 16; return seg('ref', x - hh, y - 6, x + hh, y - 6, 4) + seg('ref', x - hh, y + 6, x + hh, y + 6, 4); }
+  // Batería en un cable vertical: placa larga (+) arriba, corta (−) abajo.
+  function f2exBatV(x, y) { return seg('ref', x - 20, y - 6, x + 20, y - 6, 3) + seg('ref', x - 10, y + 6, x + 10, y + 6, 6); }
+
+  /* ---------- Disco y punto en su eje (S06) ---------- */
+  D['f2exam-disco'] = function (s) {
+    var Q = num(s, 'Q', 20), R = Math.max(1, num(s, 'R', 5)), z = Math.max(0.5, num(s, 'z', 5));
+    var C = [170, 175], sc = Math.min(110 / R, 400 / z, 40), ry = R * sc, zp = z * sc, rx = Math.max(8, Math.min(ry * 0.28, zp - 28)), Px = C[0] + zp, fs = 16, vb = [0, 20, 640, 345];
+    var disk = [], i;
+    for (i = 0; i < 64; i++) { var t = i * Math.PI / 32; disk.push([C[0] + rx * Math.cos(t), C[1] + ry * Math.sin(t)]); }
+    var body = fill('box-err', disk) + seg('axis', 40, C[1], C[0] - rx, C[1], 1.3) + seg('axis', C[0], C[1], 620, C[1], 1.3);
+    var pts = [].concat(polyPts(disk.concat([disk[0]])), segPts(40, C[1], 620, C[1]));
+    body += dot('dot-trace', Px, C[1], 6); pts = pts.concat(f2exCirc(Px, C[1], 8));
+    var xr = C[0] - rx - 18;
+    body += f2exDimV(xr, C[1] - ry, C[1], pts) + f2exPut([[xr - 10, C[1] - ry / 2 + 6, R + ' cm', 'end']], pts, fs, vb);
+    var yz = C[1] + ry + 20;
+    body += f2exDim(C[0], Px, yz, pts) + f2exPut([[(C[0] + Px) / 2, yz + 24, 'z = ' + z + ' cm', 'middle'], [Px + 12, yz + 6, 'z = ' + z + ' cm', 'start']], pts, fs, vb);
+    body += f2exPut([[C[0], C[1] - ry - 14, 'Q = +' + Q + ' nC', 'middle'], [C[0] + rx + 10, C[1] - ry + 6, 'Q = +' + Q + ' nC', 'start']], pts, fs, vb);
+    body += f2exPut([[Px, C[1] - 18, 'P', 'middle'], [Px + 14, C[1] - 12, 'P', 'start'], [Px + 14, C[1] + 22, 'P', 'start']], pts, 17, vb);
+    return svgBox('0 20 640 325', 'Un disco de radio ' + R + ' cm con carga positiva repartida, visto en perspectiva, y el punto P sobre su eje a ' + z + ' cm del centro.', body);
+  };
+
+  /* ---------- Equipotencial de V(x, y) = A x² y + B y (S06) ---------- */
+  D['f2exam-gradiente'] = function (s) {
+    var A = Math.max(0.1, num(s, 'A', 2)), B = Math.max(0.1, num(s, 'B', 6)), x0 = Math.min(3, Math.max(0.2, num(s, 'x', 1.5))), y0 = Math.min(3, Math.max(0.2, num(s, 'y', 1)));
+    var O = [80, 290], sc = 74, M = 3.4, X = function (x) { return O[0] + x * sc; }, Y = function (y) { return O[1] - y * sc; };
+    var fs = 16, vb = [0, 0, 560, 340], body = '', pts = [], i, V0 = y0 * (A * x0 * x0 + B);
+    body += arrow('axis', O[0], O[1], (M + 0.4) * sc, 0, 1.5) + arrow('axis', O[0], O[1], 0, -(M + 0.4) * sc, 1.5);
+    pts = pts.concat(arrowPts(O[0], O[1], (M + 0.4) * sc, 0), arrowPts(O[0], O[1], 0, -(M + 0.4) * sc));
+    for (i = 1; i <= 3; i++) {
+      body += seg('axis', X(i), O[1] - 5, X(i), O[1] + 5, 1.3) + seg('axis', O[0] - 5, Y(i), O[0] + 5, Y(i), 1.3);
+      pts = pts.concat(segPts(X(i), O[1] - 5, X(i), O[1] + 5), segPts(O[0] - 5, Y(i), O[0] + 5, Y(i)));
+      body += f2exPut([[X(i), O[1] + 24, String(i), 'middle']], pts, 15, vb) + f2exPut([[O[0] - 12, Y(i) + 5, String(i), 'end']], pts, 15, vb);
+    }
+    body += f2exPut([[X(M + 0.4) + 8, O[1] + 6, 'x (m)', 'start'], [X(M + 0.4), O[1] + 26, 'x (m)', 'middle']], pts, 16, vb);
+    body += f2exPut([[O[0] + 12, Y(M + 0.4) + 12, 'y (m)', 'start']], pts, 16, vb);
+    // La equipotencial y = V₀/(A x² + B), recortada a la ventana.
+    var cur = [];
+    for (i = 0; i <= 160; i++) { var x = M * i / 160, y = V0 / (A * x * x + B); if (y <= M) cur.push([X(x), Y(y)]); }
+    body += poly('ref', cur, 2.6); pts = pts.concat(polyPts(cur));
+    body += seg('axis', X(x0), Y(y0), X(x0), O[1], 1.1, '4 5') + seg('axis', X(x0), Y(y0), O[0], Y(y0), 1.1, '4 5');
+    pts = pts.concat(segPts(X(x0), Y(y0), X(x0), O[1]), segPts(X(x0), Y(y0), O[0], Y(y0)));
+    body += dot('dot-trace', X(x0), Y(y0), 6); pts = pts.concat(f2exCirc(X(x0), Y(y0), 8));
+    body += f2exPut(around(X(x0), Y(y0), 'P').slice(16), pts, 17, vb);
+    var e = cur[cur.length - 1];
+    body += f2exPut([[e[0] + 10, e[1] + 6, 'V = V(P)', 'start'], [e[0], e[1] - 14, 'V = V(P)', 'end'], [e[0], e[1] + 24, 'V = V(P)', 'end'], [e[0] + 10, e[1] - 16, 'V = V(P)', 'start']], pts, 16, vb);
+    return svgBox('0 0 560 340', 'Plano xy con el punto P en (' + x0 + ', ' + y0 + ') m y la curva equipotencial que pasa por él.', body);
+  };
+
+  /* ---------- Cubo en E = c x î (S07 + S08) ---------- */
+  D['f2exam-cubo'] = function (s) {
+    var a = Math.max(1, num(s, 'a', 20)), x0 = Math.max(1, num(s, 'x0', 30)), c = num(s, 'c', 5);
+    var sc = Math.min(470 / (x0 + 1.45 * a + 6), 150 / (1.3 * a), 7), ox = 60, oy = 238, fs = 16, vb = [0, 0, 640, 320];
+    var P = function (x, y, z) { return [ox + (x + 0.45 * y) * sc, oy - (z + 0.3 * y) * sc]; };
+    var body = '', pts = [], x1 = x0 + a;
+    var V = [[x0, 0, 0], [x1, 0, 0], [x1, 0, a], [x0, 0, a], [x0, a, 0], [x1, a, 0], [x1, a, a], [x0, a, a]].map(function (p) { return P(p[0], p[1], p[2]); });
+    var hid = [[0, 4], [4, 5], [4, 7]], vis = [[0, 1], [1, 2], [2, 3], [3, 0], [1, 5], [5, 6], [6, 7], [7, 3], [2, 6]];
+    body += fill('area-fill', [V[0], V[1], V[5], V[6], V[7], V[3]]);
+    hid.forEach(function (e) { body += seg('aux', V[e[0]][0], V[e[0]][1], V[e[1]][0], V[e[1]][1], 1.4, '5 5'); pts = pts.concat(segPts(V[e[0]][0], V[e[0]][1], V[e[1]][0], V[e[1]][1])); });
+    vis.forEach(function (e) { body += seg('ref', V[e[0]][0], V[e[0]][1], V[e[1]][0], V[e[1]][1], 2.4); pts = pts.concat(segPts(V[e[0]][0], V[e[0]][1], V[e[1]][0], V[e[1]][1])); });
+    // Eje x por la arista de enfrente, con el origen marcado.
+    var o = P(0, 0, 0), xe = Math.max(V[5][0] + 30, V[1][0] + 60);
+    body += seg('axis', o[0], oy, V[0][0], oy, 1.4) + arrow('axis', V[1][0], oy, xe - V[1][0], 0, 1.4) + seg('axis', o[0], oy - 7, o[0], oy + 7, 1.4);
+    pts = pts.concat(segPts(o[0], oy, V[0][0], oy), arrowPts(V[1][0], oy, xe - V[1][0], 0), segPts(o[0], oy - 7, o[0], oy + 7));
+    body += f2exPut([[xe + 8, oy + 6, 'x', 'start']], pts, 17, vb);
+    body += f2exPut([[o[0], oy - 14, 'x = 0', 'middle'], [o[0] - 10, oy + 6, 'x = 0', 'end']], pts, 15, vb);
+    // Campo: flechas sobre el cubo, más largas a la derecha.
+    var top = Math.min(V[7][1], V[6][1]) - 30, xs = [0.2, 0.5, 0.8].map(function (f) { return o[0] + f * (V[5][0] - o[0]); });
+    xs.forEach(function (x) { var L = 16 + 44 * (x - o[0]) / (V[5][0] - o[0]); body += arrow('aux', x, top, L, 0, 2.4); pts = pts.concat(arrowPts(x, top, L, 0)); });
+    body += f2exPut([[xs[0] - 10, top + 6, 'E = cx î', 'end'], [xs[0], top - 16, 'E = cx î', 'start'], [xs[0], top + 24, 'E = cx î', 'start']], pts, 16, vb);
+    body += f2exDim(o[0], V[0][0], oy + 32, pts) + f2exDim(V[0][0], V[1][0], oy + 32, pts);
+    body += f2exPut([[(o[0] + V[0][0]) / 2, oy + 56, x0 + ' cm', 'middle'], [(o[0] + V[0][0]) / 2, oy + 78, x0 + ' cm', 'middle']], pts, fs, vb);
+    body += f2exPut([[(V[0][0] + V[1][0]) / 2, oy + 56, 'a = ' + a + ' cm', 'middle'], [(V[0][0] + V[1][0]) / 2, oy + 78, 'a = ' + a + ' cm', 'middle'], [V[1][0] + 10, oy + 56, 'a = ' + a + ' cm', 'start']], pts, fs, vb);
+    return svgBox('0 0 640 320', 'Un cubo de lado ' + a + ' cm con su cara izquierda a ' + x0 + ' cm del plano x = 0, en un campo que apunta en +x y crece con x.', body);
+  };
+
+  /* ---------- Prisma en un campo inclinado, vista de canto (S07) ---------- */
+  D['f2exam-prisma'] = function (s) {
+    var b = Math.max(1, num(s, 'b', 20)), h = Math.max(1, num(s, 'h', 20)), al = Math.min(80, Math.max(0, num(s, 'al', 30))), E = num(s, 'E', 500);
+    var sc = Math.min(260 / b, 210 / h, 7), x0 = 300, yb = 250, Bx = x0 + b * sc, Ht = yb - h * sc, fs = 16, vb = [0, 0, 640, 320];
+    var tri = [[x0, yb], [Bx, yb], [x0, Ht]], body = fill('area-fill', tri) + poly('ref', tri, 2.6, true), pts = polyPts(tri.concat([tri[0]]));
+    // Normal de la cara inclinada, desde su punto medio.
+    var mx = (x0 + Bx) / 2, my = (yb + Ht) / 2, L = Math.hypot(b, h), nx = h / L, ny = -b / L;
+    body += arrow('trace', mx, my, nx * 56, ny * 56, 2.4); pts = pts.concat(arrowPts(mx, my, nx * 56, ny * 56));
+    body += f2exPut([[mx + nx * 56 + 8, my + ny * 56 + 4, 'n̂', 'start'], [mx + nx * 56, my + ny * 56 - 12, 'n̂', 'middle'], [mx + nx * 56 + 8, my + ny * 56 + 20, 'n̂', 'start']], pts, 18, vb);
+    // Campo: tres flechas paralelas a la izquierda de la pared, con el ángulo α en la de abajo.
+    var ca = Math.cos(al * RAD), sa = Math.sin(al * RAD), La = 74, ys = [yb - 6, yb - 76, yb - 146];
+    ys.forEach(function (y, i) {
+      var xs = 60 + i * 12;
+      body += arrow('aux', xs, y, La * ca, -La * sa, 2.4); pts = pts.concat(arrowPts(xs, y, La * ca, -La * sa));
+    });
+    body += seg('axis', 60, yb - 6, 60 + La + 8, yb - 6, 1.1, '4 4') + arc(60, yb - 6, 44, 0, al, 'axis', 1.4);
+    pts = pts.concat(segPts(60, yb - 6, 60 + La + 8, yb - 6));
+    for (var t = 0; t <= al; t += 3) pts.push([60 + 44 * Math.cos(t * RAD), yb - 6 - 44 * Math.sin(t * RAD)]);
+    body += f2exPut([[60 + 52 * Math.cos(al * RAD / 2) + 4, yb - 6 - 52 * Math.sin(al * RAD / 2) + 6, 'α = ' + al + '°', 'start'], [60 + La + 12, yb, 'α = ' + al + '°', 'start'], [60, yb + 22, 'α = ' + al + '°', 'start']], pts, 15, vb);
+    body += f2exPut([[60 + 24 + La * ca, ys[2] - La * sa - 4, 'E = ' + E + ' N/C', 'start'], [60, ys[2] - La * sa - 20, 'E = ' + E + ' N/C', 'start'], [60, 30, 'E = ' + E + ' N/C', 'start']], pts, fs, vb);
+    // Cotas.
+    body += f2exDim(x0, Bx, yb + 26, pts) + f2exPut([[(x0 + Bx) / 2, yb + 50, 'b = ' + b + ' cm', 'middle']], pts, fs, vb);
+    body += f2exDimV(x0 - 20, Ht, yb, pts) + f2exPut([[x0 - 30, (Ht + yb) / 2 + 6, 'h = ' + h + ' cm', 'end'], [x0 - 30, Ht + 12, 'h = ' + h + ' cm', 'end'], [x0 + 10, Ht - 10, 'h = ' + h + ' cm', 'start']], pts, fs, vb);
+    var tx = b / L, ty = h / L;
+    body += f2exPut([[mx + nx * 22 + tx * 40, my + ny * 22 + ty * 40 + 6, 'cara inclinada', 'start'], [mx + nx * 22 + tx * 70, my + ny * 22 + ty * 70 + 6, 'cara inclinada', 'start'], [Bx + 14, yb - 10, 'cara inclinada', 'start'], [mx + nx * 56, my + ny * 56 - 30, 'cara inclinada', 'middle'], [Bx - 10, yb + 50, 'cara inclinada', 'end']], pts, 15, vb);
+    return svgBox('0 0 640 320', 'Vista de canto del prisma: base de ' + b + ' cm, pared vertical de ' + h + ' cm y la cara inclinada con su normal hacia afuera. El campo uniforme apunta ' + al + ' grados sobre la horizontal.', body);
+  };
+
+  /* ---------- Esfera aislante y superficie gaussiana (S08) ---------- */
+  D['f2exam-esfera'] = function (s) {
+    var Q = num(s, 'Q', 40), R = Math.max(1, num(s, 'R', 6)), r = Math.min(R, Math.max(0.1, num(s, 'r', 3)));
+    var C = [200, 165], Rp = 128, rp = Math.max(14, Rp * r / R), fs = 16, vb = [0, 20, 640, 310];
+    var big = f2exCirc(C[0], C[1], Rp), g = f2exCirc(C[0], C[1], rp);
+    var body = '<circle class="box-err" cx="' + C[0] + '" cy="' + C[1] + '" r="' + Rp + '"/>' + poly('trace', g.concat([g[0]]), 2.4, false, '7 6');
+    var pts = [].concat(big, polyPts(g.concat([g[0]]))), A1 = 28 * RAD, A2 = -32 * RAD;
+    body += dot('dot-ref', C[0], C[1], 4); pts = pts.concat(f2exCirc(C[0], C[1], 5));
+    // Radios: R hacia arriba a la derecha, r hacia abajo a la derecha, con su etiqueta afuera de la esfera.
+    var eR = [C[0] + Rp * Math.cos(A1), C[1] - Rp * Math.sin(A1)], er = [C[0] + rp * Math.cos(A2), C[1] - rp * Math.sin(A2)];
+    body += seg('axis', C[0], C[1], eR[0], eR[1], 1.6) + seg('trace', C[0], C[1], er[0], er[1], 1.6);
+    pts = pts.concat(segPts(C[0], C[1], eR[0], eR[1]), segPts(C[0], C[1], er[0], er[1]));
+    var lx = C[0] + Rp + 34, lr = [lx, C[1] - (Rp + 34) * Math.sin(A2) * 0.9];
+    body += seg('axis', er[0], er[1], lr[0] - 6, lr[1], 1, '3 4'); pts = pts.concat(segPts(er[0], er[1], lr[0] - 6, lr[1]));
+    body += f2exPut([[lr[0], lr[1] + 6, 'r = ' + r + ' cm (gaussiana)', 'start']], pts, fs, vb);
+    body += f2exPut([[eR[0] + 12, eR[1] + 2, 'R = ' + R + ' cm', 'start'], [eR[0] + 12, eR[1] - 16, 'R = ' + R + ' cm', 'start']], pts, fs, vb);
+    body += f2exPut([[C[0] + Rp * 0.8 + 18, C[1] - Rp * 0.8 - 2, 'Q = +' + Q + ' nC', 'start'], [C[0], C[1] - Rp - 12, 'Q = +' + Q + ' nC', 'middle']], pts, fs, vb);
+    return svgBox('0 20 640 290', 'Corte de una esfera aislante de radio ' + R + ' cm con carga positiva en todo su volumen y, adentro, una superficie gaussiana esférica de radio ' + r + ' cm, punteada.', body);
+  };
+
+  /* ---------- Capacitor de placas con batería (S09) ---------- */
+  D['f2exam-capacitor'] = function (s) {
+    var A = Math.max(1, num(s, 'A', 200)), d = Math.max(0.1, num(s, 'd', 2)), V = num(s, 'V', 100);
+    var Lp = Math.min(260, 100 + (Math.sqrt(A) - 7) * 12), gap = Math.min(120, 34 + d * 16), x0 = 230, x1 = x0 + Lp, yc = 165, th = 16;
+    var yt = yc - gap / 2, yb2 = yc + gap / 2, fs = 16, vb = [0, 20, 640, 300], body = '', pts = [], i;
+    body += '<rect class="box-err" x="' + x0 + '" y="' + r1(yt - th) + '" width="' + r1(Lp) + '" height="' + th + '"/>' + '<rect class="box-aux" x="' + x0 + '" y="' + r1(yb2) + '" width="' + r1(Lp) + '" height="' + th + '"/>';
+    pts = pts.concat(polyPts([[x0, yt - th], [x1, yt - th], [x1, yt], [x0, yt], [x0, yt - th]]), polyPts([[x0, yb2], [x1, yb2], [x1, yb2 + th], [x0, yb2 + th], [x0, yb2]]));
+    var n = Math.max(3, Math.floor(Lp / 34));
+    for (i = 0; i < n; i++) { var xs = x0 + (i + 0.5) * Lp / n; body += text(xs, yt - 3, '+', ' text-anchor="middle" font-size="16"') + text(xs, yb2 + 13, '−', ' text-anchor="middle" font-size="16"'); }
+    // Campo entre las placas.
+    if (gap >= 40) [0.25, 0.5, 0.75].forEach(function (f) { var xa = x0 + Lp * f; body += arrow('aux', xa, yt + 5, 0, gap - 10, 2.2); pts = pts.concat(arrowPts(xa, yt + 5, 0, gap - 10)); });
+    // Cables y batería a la izquierda.
+    var xbat = 110, yy1 = yt - th / 2, yy2 = yb2 + th / 2;
+    [[x0, yy1, xbat, yy1], [xbat, yy1, xbat, yc - 6], [xbat, yc + 6, xbat, yy2], [xbat, yy2, x0, yy2]].forEach(function (q) { body += seg('axis', q[0], q[1], q[2], q[3], 2.2); pts = pts.concat(segPts(q[0], q[1], q[2], q[3])); });
+    body += f2exBatV(xbat, yc); pts = pts.concat(segPts(xbat - 20, yc - 6, xbat + 20, yc - 6), segPts(xbat - 10, yc + 6, xbat + 10, yc + 6));
+    body += f2exPut([[xbat - 26, yc - 4, '+', 'end']], pts, 18, vb);
+    body += f2exPut([[xbat + 28, yc + 6, V + ' V', 'start'], [xbat - 26, yc + 22, V + ' V', 'end']], pts, fs, vb);
+    // Cotas y área.
+    body += f2exDimV(x1 + 22, yt, yb2, pts) + f2exPut([[x1 + 34, yc + 6, 'd = ' + d + ' mm', 'start']], pts, fs, vb);
+    body += f2exPut([[(x0 + x1) / 2, yt - th - 12, 'A = ' + A + ' cm²', 'middle']], pts, fs, vb);
+    return svgBox('0 20 640 280', 'Dos placas paralelas de ' + A + ' centímetros cuadrados separadas ' + d + ' mm, conectadas a una batería de ' + V + ' V; la de arriba queda positiva.', body);
+  };
+
+  /* ---------- Cable coaxial en corte (S09) ---------- */
+  D['f2exam-coaxial'] = function (s) {
+    var a = Math.max(0.1, num(s, 'a', 1)), b = Math.max(a * 1.2, num(s, 'b', 4)), r = Math.min(b, Math.max(a, num(s, 'r', 2))), L = num(s, 'L', 20);
+    var C = [190, 168], Rb = 122, ra = Math.max(5, Rb * a / b), rr = Rb * r / b, fs = 16, vb = [0, 20, 640, 336];
+    var outer = f2exCirc(C[0], C[1], Rb + 5), gs = f2exCirc(C[0], C[1], rr);
+    var body = poly('aux', outer.concat([outer[0]]), 10) + poly('trace', gs.concat([gs[0]]), 2, false, '7 6') + '<circle class="box-err" cx="' + C[0] + '" cy="' + C[1] + '" r="' + r1(ra) + '"/>';
+    var pts = [].concat(f2exCirc(C[0], C[1], Rb), f2exCirc(C[0], C[1], Rb + 10), polyPts(gs.concat([gs[0]])), f2exCirc(C[0], C[1], ra));
+    // Llamadas: cada radio se señala con un punto en su círculo y una guía hacia la derecha.
+    function call(rad, deg, y, t) {
+      var p = [C[0] + rad * Math.cos(deg * RAD), C[1] - rad * Math.sin(deg * RAD)], q = [C[0] + Rb + 40, y];
+      var o = seg('axis', p[0], p[1], q[0], q[1], 1, '3 4') + dot('dot-ref', p[0], p[1], 3.5);
+      pts.push.apply(pts, segPts(p[0], p[1], q[0], q[1]));
+      return o + f2exPut([[q[0] + 6, q[1] + 6, t, 'start']], pts, fs, vb);
+    }
+    body += call(Rb, 40, C[1] - 108, 'forro: b = ' + b + ' mm');
+    body += call(rr, -10, C[1] + 14, 'r = ' + r + ' mm');
+    body += call(ra, -60, C[1] + 98, 'alambre: a = ' + a + ' mm');
+    body += f2exPut([[C[0], C[1] + Rb + 30, 'corte del cable (largo ' + L + ' m)', 'middle']], pts, 15, vb);
+    return svgBox('0 20 640 316', 'Corte transversal de un cable coaxial: alambre central de radio ' + a + ' mm, forro de radio ' + b + ' mm y, punteado, el círculo de radio ' + r + ' mm donde se pide el campo.', body);
+  };
+
+  /* ---------- Red: C1 en serie con C2 ∥ C3 (S10) ---------- */
+  D['f2exam-red'] = function (s) {
+    var C1 = num(s, 'C1', 4), C2 = num(s, 'C2', 2), C3 = num(s, 'C3', 6), V = num(s, 'V', 12);
+    var xl = 70, xa = 340, xb = 480, yt = 70, yb = 270, yc = 170, x1 = 210, fs = 16, vb = [0, 20, 640, 290], body = '', pts = [];
+    var wires = [[xl, yt, x1 - 6, yt], [x1 + 6, yt, xb, yt], [xl, yb, xb, yb], [xl, yt, xl, yc - 6], [xl, yc + 6, xl, yb],
+      [xa, yt, xa, yc - 6], [xa, yc + 6, xa, yb], [xb, yt, xb, yc - 6], [xb, yc + 6, xb, yb]];
+    wires.forEach(function (w) { body += seg('axis', w[0], w[1], w[2], w[3], 2.2); pts = pts.concat(segPts(w[0], w[1], w[2], w[3])); });
+    body += f2exCapH(x1, yt, 18) + f2exCapV(xa, yc, 18) + f2exCapV(xb, yc, 18) + f2exBatV(xl, yc);
+    pts = pts.concat(segPts(x1 - 6, yt - 18, x1 - 6, yt + 18), segPts(x1 + 6, yt - 18, x1 + 6, yt + 18));
+    [xa, xb].forEach(function (x) { pts = pts.concat(segPts(x - 18, yc - 6, x + 18, yc - 6), segPts(x - 18, yc + 6, x + 18, yc + 6)); });
+    pts = pts.concat(segPts(xl - 20, yc - 6, xl + 20, yc - 6), segPts(xl - 10, yc + 6, xl + 10, yc + 6));
+    body += dot('dot-ref', xa, yt, 4.5) + dot('dot-ref', xa, yb, 4.5);
+    body += f2exPut([[x1, yt - 28, 'C₁ = ' + f2exNum(C1) + ' μF', 'middle']], pts, fs, vb);
+    body += f2exPut([[xa - 28, yc + 6, 'C₂ = ' + f2exNum(C2) + ' μF', 'end']], pts, fs, vb);
+    body += f2exPut([[xb + 28, yc + 6, 'C₃ = ' + f2exNum(C3) + ' μF', 'start']], pts, fs, vb);
+    body += f2exPut([[xl - 26, yc - 2, '+', 'end']], pts, 18, vb);
+    body += f2exPut([[xl + 28, yc + 6, f2exNum(V) + ' V', 'start']], pts, fs, vb);
+    return svgBox('0 20 640 270', 'Circuito: una batería de ' + V + ' V, el capacitor C1 en el cable de arriba y, a la derecha, C2 y C3 en paralelo.', body);
+  };
 
   /* ══════════════════════ fin Examen ══════════════════════ */
 })();

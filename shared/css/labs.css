@@ -218,3 +218,90 @@ math-field::part(menu-toggle), math-field::part(virtual-keyboard-toggle) { displ
 .cc-board .cc-handle:active { cursor: grabbing; }
 .cc-board .cc-hit { fill: none; stroke: none; pointer-events: all; }
 .cc-board { -webkit-user-select: none; user-select: none; }   /* arrastrar no selecciona texto */
+
+/* ---- lab flux-surface ---- */
+.fx-stage { -webkit-user-select: none; user-select: none; }
+.fx-stage.fx-drag { touch-action: none; cursor: grab; }
+.fx-stage.fx-drag:active { cursor: grabbing; }
+.fx-stage .fx-lbl { stroke: var(--panel); stroke-width: 5px; paint-order: stroke; stroke-linejoin: round; }
+.fx-stage .fx-key { fill: var(--panel); stroke: var(--line); stroke-width: 1; }
+.fx-stage .fx-surf { fill: var(--plot-student); fill-opacity: 0.22; }
+.fx-stage .fx-body { fill: var(--plot-trace); fill-opacity: 0.06; stroke: none; }
+.fx-stage .fx-face { stroke: var(--plot-axis); stroke-width: 1.4; fill-opacity: 0.2; }
+.fx-stage .fx-out { fill: var(--plot-error); }
+.fx-stage .fx-in { fill: var(--plot-aux); }
+.fx-stage .fx-zero { fill: var(--plot-axis); fill-opacity: 0.1; }
+.fx-group { display: grid; gap: var(--space-2); }
+.fx-group[hidden] { display: none; }
+.fx-live { font-size: 0.82rem; overflow-wrap: anywhere; }
+.fx-details summary { cursor: pointer; font-weight: 600; color: var(--text-muted); }
+
+/* ---- lab capacitor-network ---- */
+.cn-stage { -webkit-user-select: none; user-select: none; }
+.cn-stage .cn-hit { fill: transparent; stroke: none; pointer-events: all; cursor: pointer; }
+.cn-head { margin: var(--space-2) 0 0; }
+.cn-log { margin: 0; padding-left: 1.2rem; display: grid; gap: 4px; font-size: 0.85rem; color: var(--text-muted); }
+.cn-log:empty { display: none; }
+.cn-status { font-size: 0.85rem; }
+.cn-details summary { cursor: pointer; font-weight: 600; color: var(--text-muted); }
+
+/* ---- lab capacitor-plates ---- */
+.cp-details summary { cursor: pointer; font-weight: 600; color: var(--text-muted); }
+.cp-chain { line-height: 2.2; overflow-wrap: anywhere; }
+.lab-legend li[hidden] { display: none; }
+
+/* ---- lab directional-derivative ---- */
+.dd-board { -webkit-user-select: none; user-select: none; }   /* arrastrar no selecciona texto */
+.dd-map .dd-handle { cursor: grab; touch-action: none; }
+.dd-map .dd-handle:active { cursor: grabbing; }
+.dd-map .dd-hit { fill: none; stroke: none; pointer-events: all; }
+.dd-map .dd-lbl { stroke: var(--panel); stroke-width: 5px; paint-order: stroke; stroke-linejoin: round; }
+.dd-cuts { display: grid; gap: var(--space-1); min-width: 0; }
+.dd-cuts .lab-stack { min-width: 0; }
+.dd-cuts .lab-plot { width: 100%; height: auto; }
+@media (min-width: 1200px) { .dd-cuts { grid-template-columns: 1fr 1fr; } }
+.dd-check { display: flex; align-items: center; gap: 8px; font-size: 0.9rem; color: var(--text-muted); cursor: pointer; }
+.dd-check input { width: 18px; height: 18px; accent-color: var(--accent); flex: none; }
+.dd-controls .lab-field__label { text-transform: none; letter-spacing: 0; }   /* sin mayúsculas: θ se volvía Θ */
+.dd-reto { margin: 0; font-size: 0.95rem; line-height: 1.45; overflow-wrap: anywhere; }
+
+/* ---- lab gradient-field ---- */
+.gf-board { -webkit-user-select: none; user-select: none; }   /* arrastrar no selecciona texto */
+.gf-stage .gf-handle { cursor: grab; touch-action: none; }
+.gf-stage .gf-handle:active { cursor: grabbing; }
+.gf-stage .gf-hit { fill: none; stroke: none; pointer-events: all; }
+.gf-stage .gf-lbl { font: 600 16px var(--font-mono); fill: var(--text); stroke: var(--panel); stroke-width: 5px; paint-order: stroke; stroke-linejoin: round; }
+.gf-pair[hidden] { display: none; }
+.gf-pair .lab-field__label, .gf-one .lab-field__label { text-transform: none; letter-spacing: 0; font-size: 0.85rem; }   /* sin mayúsculas: f_x se volvía F_X */
+.gf-check { display: flex; align-items: center; gap: 8px; font-size: 0.9rem; color: var(--text-muted); cursor: pointer; }
+.gf-check input { width: 18px; height: 18px; accent-color: var(--accent); flex: none; }
+.gf-board .sw--axis { border-color: var(--plot-axis); }
+.gf-facts dt { overflow-wrap: anywhere; }
+@media (max-width: 560px) {
+  .gf-facts { grid-template-columns: 1fr; gap: 0; }
+  .gf-facts dd { margin-bottom: 6px; }
+}
+
+/* ---- lab chain-tree ---- */
+.ct-steps { margin: var(--space-1) 0 0; padding-left: 1.3rem; display: grid; gap: 6px; font-size: 0.9rem; color: var(--text); }
+.ct-steps:empty { display: none; }
+.ct-steps li { min-width: 0; max-width: 100%; overflow-x: auto; overflow-y: hidden; }
+
+/* ---- lab lagrange-two ---- */
+.l2-plots { display: grid; gap: var(--space-1); min-width: 0; }
+.l2-plots > div { min-width: 0; }
+.l2-plots .lab-plot { width: 100%; height: auto; }
+@media (min-width: 1200px) { .l2-plots { grid-template-columns: 1fr 1fr; } }
+.l2-check { display: flex; align-items: center; gap: 8px; font-size: 0.9rem; color: var(--text-muted); cursor: pointer; }
+.l2-check input { width: 18px; height: 18px; accent-color: var(--accent); flex: none; }
+.l2-meter { display: flex; align-items: center; gap: var(--space-1); font-size: 0.85rem; }
+.l2-meter__track { flex: 1; min-width: 0; height: 10px; border-radius: 5px; background: var(--grid); overflow: hidden; }
+.l2-meter__bar { display: block; height: 100%; width: 0; background: var(--plot-error); transition: width 0.15s; }
+.l2-meter__txt { flex: none; color: var(--text-muted); }
+.l2-board dt { overflow-wrap: anywhere; }
+@media (max-width: 600px) {
+  .l2-board { grid-template-columns: 1fr; gap: 0; }
+  .l2-board dd { margin-bottom: 6px; }
+}
+@media (prefers-reduced-motion: reduce) { .l2-meter__bar { transition: none; } }
+

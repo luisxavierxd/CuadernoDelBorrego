@@ -4,8 +4,10 @@
    anteriores, para dar crédito por arrastre de error.
    k = 8.99 × 10⁹ N·m²/C², e = 1.60 × 10⁻¹⁹ C, mₑ = 9.11 × 10⁻³¹ kg,
    mₚ = 1.67 × 10⁻²⁷ kg (los mismos valores que las sesiones y los labs).
-   Bloque A (S01–S05): 8 problemas. Las unidades de cada inciso se eligen
-   para que las respuestas queden, casi siempre, entre 0.1 y 10⁴.
+   ε₀ = 8.85 × 10⁻¹² C²/(N·m²) en el bloque B.
+   Bloque A (S01–S05): 8 problemas. Bloque B (S06–S10): 8 problemas.
+   Las unidades de cada inciso se eligen para que las respuestas queden,
+   casi siempre, entre 0.1 y 10⁴.
    ===================================================================== */
 (function () {
   var ex = (window.CB_EXAMS = window.CB_EXAMS || {});
@@ -70,6 +72,52 @@
   function prt(v) {
     var VA = k * v.Q * 1e-9 / (v.rA / 100) / 1e3, VB = k * v.Q * 1e-9 / (v.rB / 100) / 1e3, keV = VA - VB, J = keV * 1e3 * e;
     return { VA: VA, VB: VB, keV: keV, J: J, v: Math.sqrt(2 * J / mp) };
+  }
+
+  /* ---------- Bloque B ---------- */
+  var EPS0 = 8.85e-12, PI = Math.PI;
+  var E0TXT = '$\\varepsilon_0 = 8.85 \\times 10^{-12}\\ \\text{C}^2/(\\text{N·m}^2)$';
+  // Disco: Q en nC, R y z en cm, carga c nC. σ en μC/m², V en kV, E en kN/C, U en μJ.
+  function dsk(v) {
+    var R = v.R / 100, z = v.z / 100, sig = v.Q * 1e-9 / (PI * R * R), s = Math.hypot(R, z);
+    var V = 2 * PI * k * sig * (s - z) / 1e3, E = 2 * PI * k * sig * (1 - z / s) / 1e3;
+    return { sig: sig * 1e6, s: s, V: V, E: E, U: v.c * V };
+  }
+  // V(x, y) = A x² y + B y (V, m). E en V/m, F sobre q μC en μN.
+  function grd(v) {
+    var Ex = -2 * v.A * v.x * v.y, Ey = -(v.A * v.x * v.x + v.B), E = Math.hypot(Ex, Ey);
+    return { V: v.A * v.x * v.x * v.y + v.B * v.y, Ex: Ex, Ey: Ey, E: E, F: v.q * E };
+  }
+  // Cubo en E = c x î: c en kN/(C·m), a y x0 en cm. Φ en N·m²/C, q en pC.
+  function cub(v) {
+    var a = v.a / 100, x0 = v.x0 / 100, c = v.c * 1e3, R = c * (x0 + a) * a * a, L = -c * x0 * a * a;
+    return { R: R, L: L, net: R + L, q: EPS0 * (R + L) * 1e12 };
+  }
+  // Prisma: E en N/C a al° sobre +x (plano xz); b, h, w en cm. A en cm², θ en °, Φ en N·m²/C.
+  function psm(v) {
+    var A = v.w * Math.hypot(v.b, v.h), th = Math.abs(Math.atan2(v.b, v.h) * DEG - v.al);
+    return { A: A, nAng: Math.atan2(v.b, v.h) * DEG, th: th, inc: v.E * A * 1e-4 * Math.cos(th / DEG),
+      base: -v.E * Math.sin(v.al / DEG) * v.b * v.w * 1e-4, wall: -v.E * Math.cos(v.al / DEG) * v.h * v.w * 1e-4 };
+  }
+  // Esfera aislante: Q en nC, R y r en cm. q en nC, Φ en N·m²/C, E en kN/C, V en kV.
+  function sph(v) {
+    var q = v.Q * Math.pow(v.r / v.R, 3), F = q * 1e-9 / EPS0, E = F / (4 * PI * Math.pow(v.r / 100, 2)) / 1e3, ER = E * v.R / v.r;
+    return { q: q, F: F, E: E, ER: ER, V: ER * v.R / 100 };
+  }
+  // Placas: A en cm², d en mm, V en volts. C en pF, Q en nC, E en kN/C, U en nJ.
+  function cpl(v) {
+    var C = EPS0 * v.A * 1e-4 / (v.d * 1e-3) * 1e12, Q = C * v.V * 1e-3;
+    return { C: C, Q: Q, E: Q * 1e-9 / (EPS0 * v.A * 1e-4) / 1e3, U: 0.5 * Q * v.V, Qk: v.kap * Q };
+  }
+  // Coaxial: a, b, r en mm; L en m; V en volts. C/L en pF/m, C en nF, Q en nC, E en kN/C.
+  function cox(v) {
+    var cl = 2 * PI * EPS0 / Math.log(v.b / v.a) * 1e12, C = cl * v.L * 1e-3, Q = C * v.V;
+    return { cl: cl, C: C, Q: Q, lam: Q / v.L, E: Q * 1e-9 / v.L / (2 * PI * EPS0 * v.r * 1e-3) / 1e3 };
+  }
+  // Red: C1 en serie con (C2 ∥ C3); C en μF, V en volts. Q en μC, U en μJ.
+  function cnet(v) {
+    var Cp = v.C2 + v.C3, Ce = v.C1 * Cp / (v.C1 + Cp), Q = Ce * v.V, V2 = Q / Cp;
+    return { Cp: Cp, Ce: Ce, Q: Q, V1: Q / v.C1, V2: V2, U2: 0.5 * v.C2 * V2 * V2 };
   }
 
   ex.f2 = (ex.f2 || []).concat([
@@ -332,6 +380,259 @@
           prompt: function () { return 'Con tu energía de d), ¿con qué rapidez pasa el protón por B?'; },
           answer: function (v, prev) { return Math.sqrt(2 * prev[3] / mp); },
           solution: function (v) { var p = prt(v); return 'Partió del reposo, así que $\\tfrac{1}{2}m_pv^2 = \\Delta K$: $$v = \\sqrt{\\frac{2\\Delta K}{m_p}} = \\sqrt{\\frac{2(' + sci(p.J) + ')}{1.67 \\times 10^{-27}}} = ' + sci(p.v) + '\\ \\text{m/s}$$'; } }
+      ]
+    },
+
+    /* ================= Bloque B (S06–S10) ================= */
+
+    /* ---------------- S06 + S05 · Disco: V en el eje y E = −dV/dz ---------------- */
+    {
+      id: 'f2-ex-disco', tags: ['f2.S06', 'f2.S05'], block: 'B', title: 'El disco cargado: de V a E',
+      vars: { Q: [5, 50, 5], R: [2, 10, 1], z: [1, 15, 1], c: [1, 9, 1] },
+      where: function (v) { return v.z / v.R >= 0.3 && v.z / v.R <= 3; },
+      statement: function (v) {
+        return '<p>Un disco delgado de radio $' + v.R + '$ cm tiene una carga de $+' + v.Q + '\\ \\text{nC}$ repartida uniformemente en su superficie. El punto P está sobre su eje, a $z = ' + v.z + '$ cm del centro. Toma $V = 0$ en el infinito y usa ' + KTXT + '.</p>';
+      },
+      diagram: { id: 'f2exam-disco', state: function (v) { return v; } },
+      parts: [
+        { label: 'a', type: 'numeric', points: 2, unit: 'μC/m²',
+          prompt: function () { return '¿Cuánto vale la densidad superficial de carga $\\sigma$ del disco? En μC/m².'; },
+          answer: function (v) { return dsk(v).sig; },
+          solution: function (v) { return '$$\\sigma = \\frac{Q}{\\pi R^2} = \\frac{' + v.Q + ' \\times 10^{-9}\\ \\text{C}}{\\pi(' + fx(v.R / 100) + '\\ \\text{m})^2} = ' + sci(dsk(v).sig * 1e-6) + '\\ \\text{C/m}^2 = ' + fx(dsk(v).sig) + '\\ \\mu\\text{C/m}^2$$'; } },
+        { label: 'b', type: 'numeric', points: 3, unit: 'kV',
+          prompt: function () { return 'Con tu $\\sigma$ de a), ¿cuánto vale el potencial en P? En kV.'; },
+          answer: function (v, prev) { var R = v.R / 100, z = v.z / 100; return 2 * PI * k * prev[0] * 1e-6 * (Math.hypot(R, z) - z) / 1e3; },
+          solution: function (v) {
+            var d = dsk(v);
+            return 'Partes el disco en anillos de radio $r$ y ancho $dr$, con $dq = \\sigma\\,2\\pi r\\,dr$; cada uno aporta $k\\,dq/\\sqrt{z^2 + r^2}$. Al integrar de $0$ a $R$: $$V = 2\\pi k\\sigma\\left(\\sqrt{z^2 + R^2} - z\\right) = 2\\pi(8.99 \\times 10^9)(' + sci(d.sig * 1e-6) + ')(' + fx(d.s, 4) + ' - ' + fx(v.z / 100) + ') = ' + fx(d.V) + '\\ \\text{kV}$$';
+          } },
+        { label: 'c', type: 'numeric', points: 3, unit: 'kN/C',
+          prompt: function () { return 'Con tu $\\sigma$ de a), ¿qué magnitud tiene el campo en P? Obténlo como $E_z = -dV/dz$. En kN/C.'; },
+          answer: function (v, prev) { var R = v.R / 100, z = v.z / 100; return 2 * PI * k * prev[0] * 1e-6 * (1 - z / Math.hypot(R, z)) / 1e3; },
+          solution: function (v) {
+            var d = dsk(v);
+            return 'Derivas $V(z)$: la derivada de $\\sqrt{z^2 + R^2}$ es $z/\\sqrt{z^2 + R^2}$ y la de $z$ es 1. $$E_z = -\\frac{dV}{dz} = 2\\pi k\\sigma\\left(1 - \\frac{z}{\\sqrt{z^2 + R^2}}\\right) = 2\\pi(8.99 \\times 10^9)(' + sci(d.sig * 1e-6) + ')\\left(1 - \\frac{' + fx(v.z / 100) + '}{' + fx(d.s, 4) + '}\\right) = ' + fx(d.E) + '\\ \\text{kN/C}$$ Es positivo: el campo se aleja del disco, hacia donde $V$ baja.';
+          } },
+        { label: 'd', type: 'numeric', points: 2, unit: 'μJ',
+          prompt: function (v) { return 'Con tu potencial de b), ¿cuánto trabajo hay que hacer para traer una carga de $+' + v.c + '\\ \\text{nC}$ desde muy lejos hasta P, sin cambiar su rapidez? En μJ.'; },
+          answer: function (v, prev) { return v.c * prev[1]; },
+          solution: function (v) { var d = dsk(v); return 'Tu trabajo es el aumento de energía potencial: $W = q\\,(V_P - 0)$. Con nC por kV salen μJ: $$W = (' + v.c + '\\ \\text{nC})(' + fx(d.V) + '\\ \\text{kV}) = ' + fx(d.U) + '\\ \\mu\\text{J}$$'; } }
+      ]
+    },
+
+    /* ---------------- S06 + S03 · El campo a partir de V(x, y) ---------------- */
+    {
+      id: 'f2-ex-gradiente', tags: ['f2.S06', 'f2.S03'], block: 'B', title: 'El campo a partir del potencial',
+      vars: { A: [1, 5, 1], B: [2, 20, 2], x: [0.5, 3, 0.5], y: [0.5, 3, 0.5], q: [1, 9, 1] },
+      where: function (v) { var g = grd(v); return Math.abs(g.Ey) >= 5 && Math.abs(g.Ey) >= 0.5 * Math.abs(g.Ex); },
+      statement: function (v) {
+        return '<p>En cierta región el potencial eléctrico es $V(x, y) = ' + v.A + 'x^2y + ' + v.B + 'y$, con $V$ en volts y $x$, $y$ en metros. El punto P está en $(' + v.x + ', ' + v.y + ')$ m. La figura muestra la equipotencial que pasa por P.</p>';
+      },
+      diagram: { id: 'f2exam-gradiente', state: function (v) { return v; } },
+      parts: [
+        { label: 'a', type: 'numeric', points: 2, unit: 'V/m',
+          prompt: function () { return '¿Cuánto vale la componente $E_y$ del campo en P? Con su signo.'; },
+          answer: function (v) { return grd(v).Ey; },
+          solution: function (v) { return 'Derivas respecto a $y$ con $x$ fija: $\\dfrac{\\partial V}{\\partial y} = ' + v.A + 'x^2 + ' + v.B + '$. $$E_y = -\\frac{\\partial V}{\\partial y} = -\\left(' + v.A + '(' + v.x + ')^2 + ' + v.B + '\\right) = ' + fx(grd(v).Ey) + '\\ \\text{V/m}$$'; } },
+        { label: 'b', type: 'numeric', points: 2, unit: 'V/m',
+          prompt: function () { return '¿Cuánto vale la componente $E_x$ del campo en P? Con su signo.'; },
+          answer: function (v) { return grd(v).Ex; },
+          solution: function (v) { return 'Ahora con $y$ fija: $\\dfrac{\\partial V}{\\partial x} = ' + (2 * v.A) + 'xy$. $$E_x = -\\frac{\\partial V}{\\partial x} = -' + (2 * v.A) + '(' + v.x + ')(' + v.y + ') = ' + fx(grd(v).Ex) + '\\ \\text{V/m}$$'; } },
+        { label: 'c', type: 'numeric', points: 3, unit: 'V/m',
+          prompt: function () { return 'Con tus componentes de a) y b), ¿qué magnitud tiene el campo en P?'; },
+          answer: function (v, prev) { return Math.hypot(prev[0], prev[1]); },
+          solution: function (v) { var g = grd(v); return '$$|\\vec E| = \\sqrt{E_x^2 + E_y^2} = \\sqrt{(' + fx(g.Ex) + ')^2 + (' + fx(g.Ey) + ')^2} = ' + fx(g.E) + '\\ \\text{V/m}$$ Es perpendicular a la equipotencial que pasa por P y apunta hacia donde $V$ baja.'; } },
+        { label: 'd', type: 'numeric', points: 3, unit: 'μN',
+          prompt: function (v) { return 'Con tu campo de c), ¿qué magnitud tiene la fuerza sobre una carga de $-' + v.q + '\\ \\mu\\text{C}$ colocada en P? En μN.'; },
+          answer: function (v, prev) { return v.q * prev[2]; },
+          solution: function (v) { var g = grd(v); return '$$F = |q|E = (' + v.q + ' \\times 10^{-6}\\ \\text{C})(' + fx(g.E) + '\\ \\text{V/m}) = ' + sci(g.F * 1e-6) + '\\ \\text{N} = ' + fx(g.F) + '\\ \\mu\\text{N}$$ Por ser negativa, la fuerza apunta al revés que $\\vec E$: hacia donde $V$ sube.'; } }
+      ]
+    },
+
+    /* ---------------- S07 + S08 · Cubo en un campo que crece con x ---------------- */
+    {
+      id: 'f2-ex-cubo', tags: ['f2.S07', 'f2.S08'], block: 'B', title: 'El cubo en un campo que crece',
+      vars: { c: [1, 20, 1], a: [10, 50, 5], x0: [10, 60, 10] },
+      statement: function (v) {
+        return '<p>En una región el campo eléctrico es $\\vec E = c\\,x\\,\\hat\\imath$, con $c = ' + v.c + ' \\times 10^3\\ \\text{N/(C·m)}$ y $x$ en metros: apunta en $+x$ y crece al alejarse del plano $x = 0$. Un cubo imaginario de lado $' + v.a + '$ cm tiene sus caras paralelas a los planos coordenados; su cara izquierda está en $x = ' + v.x0 + '$ cm y la derecha en $x = ' + (v.x0 + v.a) + '$ cm. Usa ' + E0TXT + '.</p>';
+      },
+      diagram: { id: 'f2exam-cubo', state: function (v) { return v; } },
+      parts: [
+        { label: 'a', type: 'numeric', points: 2, unit: 'N·m²/C',
+          prompt: function () { return '¿Cuánto flujo eléctrico pasa por la cara derecha del cubo (normal hacia afuera)?'; },
+          answer: function (v) { return cub(v).R; },
+          solution: function (v) { return 'En esa cara $x = ' + fx((v.x0 + v.a) / 100) + '$ m en todos los puntos, así que $E$ es uniforme ahí y paralelo a la normal $+\\hat\\imath$: $$\\Phi_{der} = c\\,x\\,a^2 = (' + v.c + ' \\times 10^3)(' + fx((v.x0 + v.a) / 100) + ')(' + fx(v.a / 100) + ')^2 = ' + fx(cub(v).R) + '\\ \\text{N·m}^2/\\text{C}$$'; } },
+        { label: 'b', type: 'numeric', points: 2, unit: 'N·m²/C',
+          prompt: function () { return '¿Cuánto flujo pasa por la cara izquierda (normal hacia afuera)? Con su signo.'; },
+          answer: function (v) { return cub(v).L; },
+          solution: function (v) { return 'Ahí $x = ' + fx(v.x0 / 100) + '$ m y la normal hacia afuera es $-\\hat\\imath$: el campo entra. $$\\Phi_{izq} = -c\\,x\\,a^2 = -(' + v.c + ' \\times 10^3)(' + fx(v.x0 / 100) + ')(' + fx(v.a / 100) + ')^2 = ' + fx(cub(v).L) + '\\ \\text{N·m}^2/\\text{C}$$'; } },
+        { label: 'c', type: 'numeric', points: 3, unit: 'N·m²/C',
+          prompt: function () { return 'Con tus flujos de a) y b), ¿cuánto vale el flujo neto por todo el cubo?'; },
+          answer: function (v, prev) { return prev[0] + prev[1]; },
+          solution: function (v) { var c = cub(v); return 'En las otras cuatro caras $\\vec E$ es paralelo a la superficie: no aportan. $$\\Phi_{neto} = ' + fx(c.R) + ' + (' + fx(c.L) + ') = ' + fx(c.net) + '\\ \\text{N·m}^2/\\text{C}$$ Sale más de lo que entra porque el campo es más fuerte a la derecha.'; } },
+        { label: 'd', type: 'numeric', points: 3, unit: 'pC',
+          prompt: function () { return 'Con tu flujo neto de c), ¿cuánta carga hay dentro del cubo? En pC.'; },
+          answer: function (v, prev) { return EPS0 * prev[2] * 1e12; },
+          solution: function (v) { var c = cub(v); return 'Por la ley de Gauss, $\\Phi_{neto} = q_{enc}/\\varepsilon_0$: $$q_{enc} = \\varepsilon_0\\,\\Phi_{neto} = (8.85 \\times 10^{-12})(' + fx(c.net) + ') = ' + sci(c.q * 1e-12) + '\\ \\text{C} = ' + fx(c.q) + '\\ \\text{pC}$$'; } }
+      ]
+    },
+
+    /* ---------------- S07 + S08 · Prisma en un campo inclinado ---------------- */
+    {
+      id: 'f2-ex-prisma', tags: ['f2.S07', 'f2.S08'], block: 'B', title: 'El flujo por un prisma',
+      vars: { E: [100, 1000, 100], al: [10, 60, 5], b: [10, 40, 5], h: [10, 40, 5], w: [10, 40, 5] },
+      where: function (v) { return psm(v).th <= 70; },
+      statement: function (v) {
+        return '<p>Un prisma cerrado tiene corte de triángulo rectángulo: base $b = ' + v.b + '$ cm en el piso, pared vertical de altura $h = ' + v.h + '$ cm y una cara inclinada que une sus extremos; mide $w = ' + v.w + '$ cm de fondo. Está en un campo uniforme de $' + v.E + '$ N/C que apunta $' + v.al + '^\\circ$ arriba de la horizontal, hacia la cara inclinada (ve la figura, que es la vista de canto).</p>';
+      },
+      diagram: { id: 'f2exam-prisma', state: function (v) { return v; } },
+      parts: [
+        { label: 'a', type: 'numeric', points: 2, unit: 'cm²',
+          prompt: function () { return '¿Qué área tiene la cara inclinada? En cm².'; },
+          answer: function (v) { return psm(v).A; },
+          solution: function (v) { return 'Es un rectángulo de $w$ por la hipotenusa: $$A = w\\sqrt{b^2 + h^2} = ' + v.w + '\\sqrt{' + v.b + '^2 + ' + v.h + '^2} = ' + fx(psm(v).A) + '\\ \\text{cm}^2$$'; } },
+        { label: 'b', type: 'numeric', points: 2, unit: '°', tol: ANG,
+          prompt: function () { return '¿Qué ángulo $\\theta$ forma el campo con la normal (hacia afuera) de la cara inclinada?'; },
+          answer: function (v) { return psm(v).th; },
+          solution: function (v) { var p = psm(v); return 'La cara inclinada sube con pendiente $h/b$; su normal hacia afuera es perpendicular a ella y apunta $\\arctan(b/h) = \\arctan(' + v.b + '/' + v.h + ') = ' + fx(p.nAng, 1) + '^\\circ$ sobre la horizontal. El campo apunta a $' + v.al + '^\\circ$: $$\\theta = |' + fx(p.nAng, 1) + '^\\circ - ' + v.al + '^\\circ| = ' + fx(p.th, 1) + '^\\circ$$'; } },
+        { label: 'c', type: 'numeric', points: 3, unit: 'N·m²/C',
+          prompt: function () { return 'Con tus resultados de a) y b), ¿cuánto flujo pasa por la cara inclinada?'; },
+          answer: function (v, prev) { return v.E * prev[0] * 1e-4 * Math.cos(prev[1] / DEG); },
+          solution: function (v) { var p = psm(v); return '$$\\Phi_{incl} = EA\\cos\\theta = (' + v.E + ')(' + sci(p.A * 1e-4, 4) + '\\ \\text{m}^2)\\cos ' + fx(p.th, 1) + '^\\circ = ' + fx(p.inc) + '\\ \\text{N·m}^2/\\text{C}$$ Es positivo: por esa cara el campo sale.'; } },
+        { label: 'd', type: 'numeric', points: 2, unit: 'N·m²/C',
+          prompt: function () { return '¿Cuánto flujo pasa por la base (la cara del piso)? Con su signo.'; },
+          answer: function (v) { return psm(v).base; },
+          solution: function (v) { var p = psm(v); return 'La normal de la base apunta hacia abajo; el campo tiene componente vertical $E\\sin ' + v.al + '^\\circ$ hacia arriba, así que entra: $$\\Phi_{base} = -E\\sin\\alpha\\;bw = -(' + v.E + ')\\sin ' + v.al + '^\\circ\\,(' + fx(v.b / 100) + ')(' + fx(v.w / 100) + ') = ' + fx(p.base) + '\\ \\text{N·m}^2/\\text{C}$$'; } },
+        { label: 'e', type: 'numeric', points: 3, unit: 'N·m²/C',
+          prompt: function () { return 'Con tus flujos de c) y d), y sabiendo que el prisma no encierra carga, ¿cuánto flujo pasa por la pared vertical?'; },
+          answer: function (v, prev) { return -(prev[2] + prev[3]); },
+          solution: function (v) { var p = psm(v); return 'Los dos triángulos de los lados son paralelos al campo: flujo cero. Sin carga adentro, la ley de Gauss pide flujo total cero: $$\\Phi_{pared} = -(\\Phi_{incl} + \\Phi_{base}) = -(' + fx(p.inc) + ' + (' + fx(p.base) + ')) = ' + fx(p.wall) + '\\ \\text{N·m}^2/\\text{C}$$ Coincide con $-E\\cos\\alpha\\;hw$: por la pared el campo entra.'; } }
+      ]
+    },
+
+    /* ---------------- S08 + S07 + S06 · Esfera aislante con Gauss ---------------- */
+    {
+      id: 'f2-ex-esfera-solida', tags: ['f2.S08', 'f2.S07', 'f2.S06'], block: 'B', title: 'Gauss dentro de una esfera',
+      vars: { Q: [10, 90, 10], R: [3, 10, 1], r: [1, 9, 1] },
+      where: function (v) { return v.r <= v.R - 1 && v.r / v.R >= 0.25; },
+      statement: function (v) {
+        return '<p>Una esfera aislante de radio $R = ' + v.R + '$ cm tiene una carga de $+' + v.Q + '\\ \\text{nC}$ repartida uniformemente en todo su volumen. Imagina una superficie gaussiana esférica de radio $r = ' + v.r + '$ cm, concéntrica con ella. Usa ' + E0TXT + '.</p>';
+      },
+      diagram: { id: 'f2exam-esfera', state: function (v) { return v; } },
+      parts: [
+        { label: 'a', type: 'numeric', points: 2, unit: 'nC',
+          prompt: function () { return '¿Cuánta carga encierra la superficie gaussiana? En nC.'; },
+          answer: function (v) { return sph(v).q; },
+          solution: function (v) { return 'La carga es uniforme: la fracción encerrada es la fracción del volumen, $(r/R)^3$. $$q_{enc} = Q\\left(\\frac{r}{R}\\right)^3 = ' + v.Q + '\\left(\\frac{' + v.r + '}{' + v.R + '}\\right)^3 = ' + fx(sph(v).q, 3) + '\\ \\text{nC}$$'; } },
+        { label: 'b', type: 'numeric', points: 2, unit: 'N·m²/C',
+          prompt: function () { return 'Con tu carga de a), ¿cuánto flujo eléctrico atraviesa la superficie gaussiana?'; },
+          answer: function (v, prev) { return prev[0] * 1e-9 / EPS0; },
+          solution: function (v) { var s = sph(v); return '$$\\Phi = \\frac{q_{enc}}{\\varepsilon_0} = \\frac{' + fx(s.q, 3) + ' \\times 10^{-9}}{8.85 \\times 10^{-12}} = ' + fx(s.F) + '\\ \\text{N·m}^2/\\text{C}$$'; } },
+        { label: 'c', type: 'numeric', points: 3, unit: 'kN/C',
+          prompt: function () { return 'Con tu flujo de b), ¿qué magnitud tiene el campo a $r$ del centro? En kN/C.'; },
+          answer: function (v, prev) { return prev[1] / (4 * PI * Math.pow(v.r / 100, 2)) / 1e3; },
+          solution: function (v) { var s = sph(v); return 'Por simetría, $E$ es radial y vale lo mismo en toda la superficie: $\\Phi = E\\,4\\pi r^2$. $$E = \\frac{\\Phi}{4\\pi r^2} = \\frac{' + fx(s.F) + '}{4\\pi(' + fx(v.r / 100) + ')^2} = ' + fx(s.E) + '\\ \\text{kN/C}$$'; } },
+        { label: 'd', type: 'numeric', points: 2, unit: 'kN/C',
+          prompt: function () { return 'Con tu campo de c), ¿qué magnitud tiene el campo en la superficie de la esfera? En kN/C.'; },
+          answer: function (v, prev) { return prev[2] * v.R / v.r; },
+          solution: function (v) { var s = sph(v); return 'Adentro, $E = \\dfrac{Q\\,r}{4\\pi\\varepsilon_0 R^3}$ crece en proporción a $r$: $$E(R) = E(r)\\,\\frac{R}{r} = ' + fx(s.E) + '\\cdot\\frac{' + v.R + '}{' + v.r + '} = ' + fx(s.ER) + '\\ \\text{kN/C}$$'; } },
+        { label: 'e', type: 'numeric', points: 3, unit: 'kV',
+          prompt: function () { return 'Con tu campo de d), ¿cuánto vale el potencial en la superficie de la esfera ($V = 0$ en el infinito)? En kV.'; },
+          answer: function (v, prev) { return prev[3] * v.R / 100; },
+          solution: function (v) { var s = sph(v); return 'Afuera la esfera es como una carga puntual: $E = kQ/r^2$. Al integrar desde el infinito, $V(R) = \\displaystyle\\int_R^\\infty E\\,dr = \\frac{kQ}{R} = E(R)\\,R$: $$V(R) = (' + fx(s.ER) + '\\ \\text{kN/C})(' + fx(v.R / 100) + '\\ \\text{m}) = ' + fx(s.V) + '\\ \\text{kV}$$'; } }
+      ]
+    },
+
+    /* ---------------- S09 + S08 + S10 · Capacitor de placas con batería ---------------- */
+    {
+      id: 'f2-ex-capacitor', tags: ['f2.S09', 'f2.S08', 'f2.S10'], block: 'B', title: 'Placas, batería y dieléctrico',
+      vars: { A: [50, 400, 50], d: [0.5, 5, 0.5], V: [10, 200, 10], kap: [2, 6, 0.5] },
+      statement: function (v) {
+        return '<p>Un capacitor de placas paralelas tiene placas de $' + v.A + '\\ \\text{cm}^2$ separadas $' + v.d + '$ mm, con aire entre ellas, y está conectado a una batería de $' + v.V + '$ V. Usa ' + E0TXT + '.</p>';
+      },
+      diagram: { id: 'f2exam-capacitor', state: function (v) { return v; } },
+      parts: [
+        { label: 'a', type: 'numeric', points: 2, unit: 'pF',
+          prompt: function () { return '¿Cuál es su capacitancia? En pF.'; },
+          answer: function (v) { return cpl(v).C; },
+          solution: function (v) { return 'Con $A$ en m² y $d$ en m: $$C = \\frac{\\varepsilon_0 A}{d} = \\frac{(8.85 \\times 10^{-12})(' + sci(v.A * 1e-4) + ')}{' + sci(v.d * 1e-3) + '} = ' + sci(cpl(v).C * 1e-12) + '\\ \\text{F} = ' + fx(cpl(v).C) + '\\ \\text{pF}$$'; } },
+        { label: 'b', type: 'numeric', points: 2, unit: 'nC',
+          prompt: function () { return 'Con tu capacitancia de a), ¿cuánta carga hay en la placa positiva? En nC.'; },
+          answer: function (v, prev) { return prev[0] * v.V * 1e-3; },
+          solution: function (v) { var c = cpl(v); return '$$Q = CV = (' + fx(c.C) + ' \\times 10^{-12})(' + v.V + ') = ' + sci(c.Q * 1e-9) + '\\ \\text{C} = ' + fx(c.Q) + '\\ \\text{nC}$$'; } },
+        { label: 'c', type: 'numeric', points: 2, unit: 'kN/C',
+          prompt: function () { return 'Con tu carga de b), ¿qué magnitud tiene el campo entre las placas? Usa la ley de Gauss. En kN/C.'; },
+          answer: function (v, prev) { return prev[1] * 1e-9 / (EPS0 * v.A * 1e-4) / 1e3; },
+          solution: function (v) { var c = cpl(v); return 'Una caja gaussiana con una tapa dentro del metal da $E = \\sigma/\\varepsilon_0 = Q/(\\varepsilon_0 A)$: $$E = \\frac{' + sci(c.Q * 1e-9) + '}{(8.85 \\times 10^{-12})(' + sci(v.A * 1e-4) + ')} = ' + fx(c.E) + '\\ \\text{kN/C}$$ Comprueba: $V/d = ' + v.V + '/' + sci(v.d * 1e-3) + '$ da lo mismo.'; } },
+        { label: 'd', type: 'numeric', points: 2, unit: 'nJ',
+          prompt: function () { return 'Con tu carga de b), ¿cuánta energía guarda el capacitor? En nJ.'; },
+          answer: function (v, prev) { return 0.5 * prev[1] * v.V; },
+          solution: function (v) { var c = cpl(v); return 'Con nC por V salen nJ: $$U = \\tfrac{1}{2}QV = \\tfrac{1}{2}(' + fx(c.Q) + '\\ \\text{nC})(' + v.V + '\\ \\text{V}) = ' + fx(c.U) + '\\ \\text{nJ}$$'; } },
+        { label: 'e', type: 'numeric', points: 2, unit: 'nC',
+          prompt: function (v) { return 'Sin desconectar la batería, se llena el espacio entre las placas con un dieléctrico de $\\kappa = ' + v.kap + '$. Con tu carga de b), ¿cuánta carga hay ahora en la placa positiva? En nC.'; },
+          answer: function (v, prev) { return v.kap * prev[1]; },
+          solution: function (v) { var c = cpl(v); return 'La batería mantiene el mismo $V$ y la capacitancia se multiplica por $\\kappa$, así que la carga también: $$Q\' = \\kappa Q = ' + v.kap + '(' + fx(c.Q) + ') = ' + fx(c.Qk) + '\\ \\text{nC}$$'; } }
+      ]
+    },
+
+    /* ---------------- S09 + S08 · Cable coaxial ---------------- */
+    {
+      id: 'f2-ex-coaxial', tags: ['f2.S09', 'f2.S08'], block: 'B', title: 'El cable coaxial',
+      vars: { a: [0.5, 2, 0.5], b: [2, 10, 1], L: [5, 50, 5], V: [10, 100, 10], r: [1, 9, 0.5] },
+      where: function (v) { return v.b / v.a >= 2 && v.r >= v.a + 0.5 && v.r <= v.b - 0.5; },
+      statement: function (v) {
+        return '<p>Un cable coaxial de $' + v.L + '$ m tiene un alambre central de radio $a = ' + v.a + '$ mm y un forro conductor de radio $b = ' + v.b + '$ mm, con aire entre ellos. Se conecta a una diferencia de potencial de $' + v.V + '$ V entre el alambre y el forro. Usa ' + E0TXT + '.</p>';
+      },
+      diagram: { id: 'f2exam-coaxial', state: function (v) { return v; } },
+      parts: [
+        { label: 'a', type: 'numeric', points: 2, unit: 'pF/m',
+          prompt: function () { return '¿Cuál es su capacitancia por metro de largo? En pF/m.'; },
+          answer: function (v) { return cox(v).cl; },
+          solution: function (v) { return 'Las unidades de los radios se cancelan en el cociente: $$\\frac{C}{L} = \\frac{2\\pi\\varepsilon_0}{\\ln(b/a)} = \\frac{2\\pi(8.85 \\times 10^{-12})}{\\ln(' + v.b + '/' + v.a + ')} = ' + sci(cox(v).cl * 1e-12) + '\\ \\text{F/m} = ' + fx(cox(v).cl) + '\\ \\text{pF/m}$$'; } },
+        { label: 'b', type: 'numeric', points: 2, unit: 'nF',
+          prompt: function () { return 'Con tu resultado de a), ¿cuál es la capacitancia de todo el cable? En nF.'; },
+          answer: function (v, prev) { return prev[0] * v.L * 1e-3; },
+          solution: function (v) { var c = cox(v); return '$$C = \\frac{C}{L}\\cdot L = (' + fx(c.cl) + '\\ \\text{pF/m})(' + v.L + '\\ \\text{m}) = ' + fx(c.cl * v.L) + '\\ \\text{pF} = ' + fx(c.C, 3) + '\\ \\text{nF}$$'; } },
+        { label: 'c', type: 'numeric', points: 3, unit: 'nC',
+          prompt: function () { return 'Con tu capacitancia de b), ¿cuánta carga hay en el alambre central? En nC.'; },
+          answer: function (v, prev) { return prev[1] * v.V; },
+          solution: function (v) { var c = cox(v); return '$$Q = CV = (' + fx(c.C, 3) + '\\ \\text{nF})(' + v.V + '\\ \\text{V}) = ' + fx(c.Q) + '\\ \\text{nC}$$'; } },
+        { label: 'd', type: 'numeric', points: 3, unit: 'kN/C',
+          prompt: function (v) { return 'Con tu carga de c), ¿qué magnitud tiene el campo entre el alambre y el forro, a $' + v.r + '$ mm del eje? En kN/C.'; },
+          answer: function (v, prev) { return prev[2] * 1e-9 / v.L / (2 * PI * EPS0 * v.r * 1e-3) / 1e3; },
+          solution: function (v) { var c = cox(v); return 'Con un cilindro gaussiano de radio $r$ y largo $\\ell$: $E\\,2\\pi r\\ell = \\lambda\\ell/\\varepsilon_0$, con $\\lambda = Q/L = ' + fx(c.lam, 3) + '\\ \\text{nC/m}$. $$E = \\frac{\\lambda}{2\\pi\\varepsilon_0 r} = \\frac{' + fx(c.lam, 3) + ' \\times 10^{-9}}{2\\pi(8.85 \\times 10^{-12})(' + sci(v.r * 1e-3) + ')} = ' + fx(c.E) + '\\ \\text{kN/C}$$'; } }
+      ]
+    },
+
+    /* ---------------- S10 + S09 · Red de capacitores ---------------- */
+    {
+      id: 'f2-ex-red', tags: ['f2.S10', 'f2.S09'], block: 'B', title: 'Una red mixta',
+      vars: { C1: [1, 12, 1], C2: [1, 12, 1], C3: [1, 12, 1], V: [6, 48, 6] },
+      statement: function (v) {
+        return '<p>El capacitor $C_1 = ' + v.C1 + '\\ \\mu\\text{F}$ está en serie con el par formado por $C_2 = ' + v.C2 + '\\ \\mu\\text{F}$ y $C_3 = ' + v.C3 + '\\ \\mu\\text{F}$, que están en paralelo entre sí. La red se conecta a una batería de $' + v.V + '$ V. Los capacitores estaban descargados.</p>';
+      },
+      diagram: { id: 'f2exam-red', state: function (v) { return v; } },
+      parts: [
+        { label: 'a', type: 'numeric', points: 2, unit: 'μF',
+          prompt: function () { return '¿Cuál es la capacitancia equivalente del par $C_2$, $C_3$?'; },
+          answer: function (v) { return cnet(v).Cp; },
+          solution: function (v) { return 'En paralelo las capacitancias se suman: $C_{23} = ' + v.C2 + ' + ' + v.C3 + ' = ' + cnet(v).Cp + '\\ \\mu\\text{F}$.'; } },
+        { label: 'b', type: 'numeric', points: 2, unit: 'μF',
+          prompt: function () { return 'Con tu resultado de a), ¿cuál es la capacitancia equivalente de toda la red?'; },
+          answer: function (v, prev) { return v.C1 * prev[0] / (v.C1 + prev[0]); },
+          solution: function (v) { var n = cnet(v); return '$C_1$ y $C_{23}$ están en serie: se suman los inversos. $$C_{eq} = \\frac{C_1C_{23}}{C_1 + C_{23}} = \\frac{(' + v.C1 + ')(' + n.Cp + ')}{' + v.C1 + ' + ' + n.Cp + '} = ' + fx(n.Ce, 3) + '\\ \\mu\\text{F}$$'; } },
+        { label: 'c', type: 'numeric', points: 2, unit: 'μC',
+          prompt: function () { return 'Con tu resultado de b), ¿cuánta carga entrega la batería?'; },
+          answer: function (v, prev) { return prev[1] * v.V; },
+          solution: function (v) { var n = cnet(v); return '$$Q = C_{eq}V = (' + fx(n.Ce, 3) + '\\ \\mu\\text{F})(' + v.V + '\\ \\text{V}) = ' + fx(n.Q) + '\\ \\mu\\text{C}$$ Es también la carga de $C_1$, que está en serie con la batería.'; } },
+        { label: 'd', type: 'numeric', points: 2, unit: 'V',
+          prompt: function () { return 'Con tus resultados de a) y c), ¿qué voltaje tiene $C_2$?'; },
+          answer: function (v, prev) { return prev[2] / prev[0]; },
+          solution: function (v) { var n = cnet(v); return 'Toda la carga $Q$ pasa al par en paralelo, que tiene un solo voltaje: $$V_2 = V_{23} = \\frac{Q}{C_{23}} = \\frac{' + fx(n.Q) + '}{' + n.Cp + '} = ' + fx(n.V2) + '\\ \\text{V}$$ Comprueba: $V_1 = Q/C_1 = ' + fx(n.V1) + '$ V, y $V_1 + V_{23} = ' + v.V + '$ V.'; } },
+        { label: 'e', type: 'numeric', points: 2, unit: 'μJ',
+          prompt: function () { return 'Con tu voltaje de d), ¿cuánta energía guarda $C_2$?'; },
+          answer: function (v, prev) { return 0.5 * v.C2 * prev[3] * prev[3]; },
+          solution: function (v) { var n = cnet(v); return 'Con μF por V² salen μJ: $$U_2 = \\tfrac{1}{2}C_2V_2^2 = \\tfrac{1}{2}(' + v.C2 + ')(' + fx(n.V2) + ')^2 = ' + fx(n.U2) + '\\ \\mu\\text{J}$$'; } }
       ]
     }
   ]);

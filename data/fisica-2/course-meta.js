@@ -29,11 +29,11 @@ window.COURSE_META = {
     {
       id: 'B', label: 'Gauss y capacitores',
       sessions: [
-        { n: 6,  tag: 'Equipotenciales', title: 'Potencial de distribuciones continuas, equipotenciales y E = −∇V', short: 'Potencial y equipotenciales', lab: 'equipotentials', ready: false, bank: false },
-        { n: 7,  tag: 'Flujo eléctrico', title: 'Flujo eléctrico', lab: 'flux-surface', ready: false, bank: false },
-        { n: 8,  tag: 'Ley de Gauss', title: 'Ley de Gauss y sus aplicaciones', short: 'Ley de Gauss', lab: 'gauss-surface', ready: false, bank: false },
-        { n: 9,  tag: 'Capacitancia', title: 'Capacitancia: placas paralelas, cilíndrico y esférico', short: 'Capacitancia', lab: 'capacitor-plates', ready: false, bank: false },
-        { n: 10, tag: 'Redes de capacitores', title: 'Capacitores en serie y en paralelo y energía almacenada', short: 'Redes de capacitores', lab: 'capacitor-network', ready: false, bank: false }
+        { n: 6,  tag: 'Equipotenciales', title: 'Potencial de distribuciones continuas, equipotenciales y E = −∇V', short: 'Potencial y equipotenciales', lab: 'equipotentials', ready: true, bank: true },
+        { n: 7,  tag: 'Flujo eléctrico', title: 'Flujo eléctrico', lab: 'flux-surface', ready: true, bank: true },
+        { n: 8,  tag: 'Ley de Gauss', title: 'Ley de Gauss y sus aplicaciones', short: 'Ley de Gauss', lab: 'gauss-surface', ready: true, bank: true },
+        { n: 9,  tag: 'Capacitancia', title: 'Capacitancia: placas paralelas, cilíndrico y esférico', short: 'Capacitancia', lab: 'capacitor-plates', ready: true, bank: true },
+        { n: 10, tag: 'Redes de capacitores', title: 'Capacitores en serie y en paralelo y energía almacenada', short: 'Redes de capacitores', lab: 'capacitor-network', ready: true, bank: true }
       ]
     },
     {
