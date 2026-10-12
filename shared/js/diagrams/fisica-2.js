@@ -1954,22 +1954,743 @@
   /* ══════════════════════ fin S10 ══════════════════════ */
 
   /* ══════════════════════ S11 ══════════════════════ */
+  // Electrón: carga negativa chica (box-aux con «−»).
+  function f2s11El(x, y, r) {
+    r = r || 11;
+    return '<circle class="box-aux" cx="' + r1(x) + '" cy="' + r1(y) + '" r="' + r + '"/>' + text(x, y + 5, '−', ' text-anchor="middle" font-size="16"');
+  }
+  function f2s11Sub(main, sub) { return main + '<tspan baseline-shift="sub" font-size="70%">' + sub + '</tspan>'; }
+
+  // Corriente convencional contra el movimiento de los electrones, con la sección A.
+  D['f2s11-current'] = function () {
+    var body = '', y0 = 100, y1 = 170, cy = 135;
+    body += '<rect class="box-ref" x="40" y="' + y0 + '" width="560" height="' + (y1 - y0) + '" rx="10" fill-opacity="0.12"/>';
+    body += '<ellipse class="trace" fill="none" stroke-width="2" stroke-dasharray="6 5" cx="320" cy="' + cy + '" rx="13" ry="35"/>';
+    body += text(338, 94, 'sección A', ' font-size="16"');
+    [[90, 120], [150, 152], [215, 118], [268, 150], [380, 122], [432, 152], [497, 118], [556, 150]].forEach(function (p) { body += f2s11El(p[0], p[1]); });
+    body += arrow('error', 220, 52, 220, 0, 3) + text(208, 58, 'I (convencional)', ' text-anchor="end" font-size="17"');
+    body += arrow('aux', 440, 212, -220, 0, 3) + text(452, 218, 'electrones', ' font-size="17"');
+    body += text(40, 252, 'mayor potencial', ' font-size="16"') + text(600, 252, 'menor potencial', ' text-anchor="end" font-size="16"');
+    return svgBox('0 0 640 265', 'Alambre con electrones que van a la izquierda y la corriente convencional hacia la derecha', body);
+  };
+
+  // Velocidad de deriva (explainer). state.k: 0 al azar · 1 con campo · 2 cilindro v_d dt · 3 I = nqv_dA.
+  D['f2s11-drift'] = function (s) {
+    var k = num(s, 'k', 0), t = clamp01(k), body = '', y0 = 70, y1 = 230;
+    body += '<rect class="box-ref" x="40" y="' + y0 + '" width="560" height="' + (y1 - y0) + '" rx="10" fill-opacity="0.1"/>';
+    // El cilindro que cruza la sección en dt.
+    var xa = 440, xb = 540, show2 = clamp01(k - 1);
+    if (show2 > 0) {
+      body += fade(fill('area-fill', [[xa, y0 + 2], [xb, y0 + 2], [xb, y1 - 2], [xa, y1 - 2]]) +
+        '<ellipse class="trace" fill="none" stroke-width="2" stroke-dasharray="6 5" cx="' + xb + '" cy="150" rx="14" ry="78"/>' +
+        text(xb + 20, 62, 'A', ' font-size="18"') +
+        seg('axis', xa, 250, xb, 250, 1.5) + seg('axis', xa, 243, xa, 257, 1.5) + seg('axis', xb, 243, xb, 257, 1.5) +
+        text((xa + xb) / 2, 282, f2s11Sub('v', 'd') + ' dt', ' text-anchor="middle" font-size="18"'), show2);
+    }
+    // Iones fijos de la red.
+    for (var ix = 80; ix <= 560; ix += 60) [100, 150, 200].forEach(function (iy) { body += dot('dot-ref', ix, iy, 3.5); });
+    // Tres electrones: zigzag al azar; con campo, el zigzag se corre hacia la izquierda.
+    var paths = [
+      [[408, 112], [432, 140], [398, 168], [424, 196], [386, 182], [410, 128], [394, 130], [377, 149]],
+      [[262, 168], [292, 190], [258, 208], [236, 176], [270, 150], [244, 132], [273, 108], [233, 155]],
+      [[150, 100], [178, 126], [140, 146], [170, 174], [132, 188], [158, 210], [126, 163], [139, 120]]
+    ];
+    paths.forEach(function (P) {
+      var pts = P.map(function (p, i) { return [p[0] - 13 * i * t, p[1]]; }), end = pts[pts.length - 1], pre = pts[pts.length - 2];
+      // El último tramo llega al borde del electrón, no a su centro.
+      var dx = end[0] - pre[0], dy = end[1] - pre[1], L = Math.hypot(dx, dy) || 1;
+      pts[pts.length - 1] = [end[0] - dx / L * 13, end[1] - dy / L * 13];
+      body += poly('trace', pts, 1.6, false, '4 4') + f2s11El(end[0], end[1], 12);
+    });
+    if (k > 0.02) {
+      body += fade(arrow('error', 230, 50, 180, 0, 3) + text(422, 56, 'E', ' font-size="20"') +
+        arrow('aux', 330, 256, -130, 0, 3) + text(342, 262, f2s11Sub('v', 'd'), ' font-size="18"'), t);
+    }
+    var vd = f2s11Sub('v', 'd'), cap = ['sin campo: se mueven rápido, pero al azar', 'con campo: derivan despacio, contra E', 'en dt cruzan A los del cilindro',
+      'dQ = nqA' + vd + 'dt  →  I = nq' + vd + 'A'][Math.max(0, Math.min(3, Math.round(k)))];
+    body += text(40, 24, cap, ' font-size="17"');
+    return svgBox('0 0 640 295', 'Electrones en un alambre: movimiento al azar y deriva lenta contra el campo', body);
+  };
+
+  // R = ρL/A al estirar (sl) y engordar (sd) el alambre (explainer).
+  D['f2s11-wire'] = function (s) {
+    var sl = num(s, 'sl', 1), sd = num(s, 'sd', 1), body = '', x0 = 70, cy = 120;
+    var Lp = 205 * sl, Hp = 40 * sd, x1 = x0 + Lp, rx = Hp / 6;
+    // El alambre original, punteado, como referencia.
+    if (Math.abs(sl - 1) + Math.abs(sd - 1) > 0.02) body += poly('aux', [[x0, cy - 20], [x0 + 205, cy - 20], [x0 + 205, cy + 20], [x0, cy + 20]], 1.4, true, '5 5');
+    body += '<rect class="box-ref" x="' + r1(x0) + '" y="' + r1(cy - Hp / 2) + '" width="' + r1(Lp) + '" height="' + r1(Hp) + '" fill-opacity="0.18"/>';
+    body += '<ellipse class="ref" fill="none" stroke-width="2" cx="' + r1(x1) + '" cy="' + cy + '" rx="' + r1(rx) + '" ry="' + r1(Hp / 2) + '"/>';
+    // Cotas: largo abajo, diámetro a la izquierda.
+    var yl = cy + Hp / 2 + 18;
+    body += seg('axis', x0, yl, x1, yl, 1.5) + seg('axis', x0, yl - 7, x0, yl + 7, 1.5) + seg('axis', x1, yl - 7, x1, yl + 7, 1.5) +
+      text((x0 + x1) / 2, yl + 26, sl > 1.5 ? '2L' : 'L', ' text-anchor="middle" font-size="20"');
+    body += seg('axis', 48, cy - Hp / 2, 48, cy + Hp / 2, 1.5) + seg('axis', 41, cy - Hp / 2, 55, cy - Hp / 2, 1.5) + seg('axis', 41, cy + Hp / 2, 55, cy + Hp / 2, 1.5) +
+      text(38, cy + 7, sd > 1.5 ? '2d' : 'd', ' text-anchor="end" font-size="20"');
+    // Resultado.
+    var ratio = sl / (sd * sd), names = { 1: 'R', 2: '2R', 0.25: 'R/4', 0.5: 'R/2' }, key = Math.round(ratio * 100) / 100;
+    var rtxt = names[key] || 'R × ' + ratio.toFixed(2);
+    body += text(620, 110, 'resistencia', ' text-anchor="end" font-size="17"') + text(620, 146, rtxt, ' text-anchor="end" font-size="28"');
+    body += text(620, 240, 'área × ' + String(Math.round(sd * sd * 100) / 100), ' text-anchor="end" font-size="17"');
+    return svgBox('0 0 640 255', 'Un alambre que se estira o se engorda y cómo cambia su resistencia', body);
+  };
+
+  // Circuito para medir: amperímetro en serie, voltímetro en paralelo con R.
+  D['f2s11-circuit'] = function () {
+    var body = '', xl = 100, xr = 500, yt = 70, yb = 240, xv = 590, cy = 155, xa = 240;
+    body += poly('axis', [[xl, cy - 16], [xl, yt], [xa - 22, yt]], 2.2) + poly('axis', [[xa + 22, yt], [xv, yt], [xv, cy - 22]], 2.2) +
+      poly('axis', [[xv, cy + 22], [xv, yb], [xl, yb], [xl, cy + 16]], 2.2) +
+      seg('axis', xr, yt, xr, cy - 40, 2.2) + seg('axis', xr, cy + 40, xr, yb, 2.2);
+    body += dot('dot-ref', xr, yt, 5) + dot('dot-ref', xr, yb, 5);
+    // Pila: placa larga (+) arriba.
+    body += seg('ref', xl - 22, cy - 16, xl + 22, cy - 16, 3) + seg('ref', xl - 12, cy + 16, xl + 12, cy + 16, 6) +
+      text(xl - 28, cy - 18, '+', ' text-anchor="end" font-size="20"') + text(xl + 32, cy + 6, 'pila', ' font-size="17"');
+    // Resistor vertical en zigzag.
+    var zz = [[xr, cy - 40]];
+    for (var i = 0; i < 6; i++) zz.push([xr + (i % 2 ? -11 : 11), cy - 33 + i * 13]);
+    zz.push([xr, cy + 40]);
+    body += poly('ref', zz, 2.6) + text(xr - 22, cy + 7, 'R', ' text-anchor="end" font-size="20"');
+    // Medidores.
+    body += '<circle class="axis" fill="none" stroke-width="2.2" cx="' + xa + '" cy="' + yt + '" r="22"/>' + text(xa, yt + 7, 'A', ' text-anchor="middle" font-size="20"') +
+      text(xa, yt + 52, 'en serie', ' text-anchor="middle" font-size="16"');
+    body += '<circle class="axis" fill="none" stroke-width="2.2" cx="' + xv + '" cy="' + cy + '" r="22"/>' + text(xv, cy + 7, 'V', ' text-anchor="middle" font-size="20"') +
+      text(630, yb + 32, 'en paralelo', ' text-anchor="end" font-size="16"');
+    // Sentido de la corriente.
+    body += arrow('error', 320, 40, 110, 0, 3) + text(442, 46, 'I', ' font-size="20"');
+    return svgBox('0 0 640 285', 'Circuito con pila, amperímetro en serie, resistor y voltímetro en paralelo', body);
+  };
+
+  // Curvas I–V: resistor (recta), foco (se dobla) y diodo (umbral de 0.7 V).
+  D['f2s11-iv'] = function () {
+    var body = '', W = 185, top = 40, bot = 200, ay = 120;
+    var curves = [
+      { name: 'resistor', cap: 'recta: óhmico', f: function (v) { return v; } },
+      { name: 'foco', cap: 'se dobla: R crece', f: function (v) { var g = function (u) { return u / (1 + Math.sqrt(1 + 20 * u * u)); }; return g(v) / g(1); } },
+      { name: 'diodo', cap: 'conduce en un sentido', f: function (v) { return (Math.exp(v / 0.05) - 1) / (Math.exp(0.85 / 0.05) - 1); }, diode: true }
+    ];
+    curves.forEach(function (c, i) {
+      var x0 = 15 + i * 215, cx = x0 + W / 2;
+      var X = function (v) { return cx + v * (W / 2 - 6); }, Y = function (u) { return ay - u * (ay - top); };
+      body += arrow('axis', x0, ay, W, 0, 1.6) + arrow('axis', cx, bot, 0, top - bot - 12, 1.6);
+      body += text(X(1) - 2, ay - 8, 'V', ' text-anchor="end" font-size="16"') + text(cx - 8, top + 2, 'I', ' text-anchor="end" font-size="16"');
+      var pts = [];
+      for (var j = 0; j <= 80; j++) { var v = -1 + 2 * j / 80, u = c.f(v); if (u > 1.02) break; pts.push([X(v), Y(Math.max(-1, u))]); }
+      body += poly('ref', pts, 3);
+      if (c.diode) body += seg('axis', X(0.7), ay - 5, X(0.7), ay + 5, 1.5) + text(X(0.7), ay + 24, '0.7 V', ' text-anchor="middle" font-size="15"');
+      body += text(cx, 22, c.name, ' text-anchor="middle" font-size="18"') + text(cx, 232, c.cap, ' text-anchor="middle" font-size="15"');
+    });
+    return svgBox('0 0 640 245', 'Curvas corriente contra voltaje de un resistor, un foco y un diodo', body);
+  };
 
   /* ══════════════════════ fin S11 ══════════════════════ */
 
   /* ══════════════════════ S12 ══════════════════════ */
+  function f2s12Sub(main, sub) { return main + '<tspan baseline-shift="sub" font-size="70%">' + sub + '</tspan>'; }
+  function f2s12Fmt(v) { return String(Number((+v).toPrecision(3))); }
+  // Resistor en zigzag: horizontal (vert falso) centrado en (x, y) con medio largo hl, o vertical.
+  function f2s12Zig(x, y, hl, cls, w, vert, amp) {
+    var n = 6, st = 2 * hl / n, a = amp || 9, pts = [vert ? [x, y - hl] : [x - hl, y]];
+    for (var i = 0; i < n; i++) {
+      var u = -hl + st * (i + 0.5), o = i % 2 ? a : -a;
+      pts.push(vert ? [x + o, y + u] : [x + u, y + o]);
+    }
+    pts.push(vert ? [x, y + hl] : [x + hl, y]);
+    return poly(cls || 'ref', pts, w || 3);
+  }
+  // Batería horizontal: placa larga (+) a la izquierda, corta (−) a la derecha.
+  function f2s12Bat(x, y) { return seg('ref', x - 6, y - 20, x - 6, y + 20, 3) + seg('ref', x + 6, y - 10, x + 6, y + 10, 6); }
+
+  // Fuente real: fem ideal ε y resistencia interna r dentro de un recuadro, con una carga R.
+  D['f2s12-battery'] = function () {
+    var body = '', y = 90, yb = 240, xl = 70, xr = 490;
+    body += seg('axis', xl, y, 134, y, 2.4) + seg('axis', 146, y, 214, y, 2.4) + seg('axis', 266, y, xr, y, 2.4) +
+      seg('axis', xl, y, xl, yb, 2.4) + seg('axis', xl, yb, xr, yb, 2.4) + seg('axis', xr, y, xr, 134, 2.4) + seg('axis', xr, 186, xr, yb, 2.4);
+    body += f2s12Bat(140, y) + f2s12Zig(240, y, 26, 'ref', 3) + f2s12Zig(xr, 160, 26, 'ref', 3, true);
+    body += '<rect class="aux" fill="none" stroke-width="1.6" stroke-dasharray="6 5" x="96" y="52" width="190" height="84" rx="8"/>';
+    body += text(191, 40, 'fuente real', ' text-anchor="middle" font-size="16"') +
+      text(124, 76, '+', ' text-anchor="end" font-size="18"') +
+      text(140, 128, 'ε', ' text-anchor="middle" font-size="20"') + text(240, 128, 'r', ' text-anchor="middle" font-size="20"') +
+      text(510, 167, 'R', ' font-size="20"');
+    body += arrow('error', 336, 68, 84, 0, 2.6) + text(378, 54, 'I', ' text-anchor="middle" font-size="19"');
+    body += seg('aux', 96, 160, 286, 160, 1.6) + seg('aux', 96, 151, 96, 169, 1.6) + seg('aux', 286, 151, 286, 169, 1.6) +
+      text(191, 192, 'V = ε − Ir', ' text-anchor="middle" font-size="19"') +
+      text(191, 216, 'voltaje en las terminales', ' text-anchor="middle" font-size="14"');
+    return svgBox('0 0 560 270', 'Fuente real: fem ε y resistencia interna r conectadas a una carga R', body);
+  };
+
+  // Voltaje en terminales contra corriente (batería de coche: ε = 12 V, r = 0.02 Ω). state.I en amperes.
+  D['f2s12-terminal'] = function (s) {
+    var E = 12, r = 0.02, Isc = E / r, ox = 70, oy = 260;
+    var X = function (i) { return ox + 420 * i / Isc; }, Y = function (v) { return oy - 190 * v / E; };
+    var I = Math.max(0, Math.min(Isc, num(s, 'I', 0))), V = E - I * r, body = '';
+    body += arrow('axis', ox, oy, 470, 0, 1.6) + arrow('axis', ox, oy, 0, -228, 1.6) +
+      text(84, 42, 'V (volts)', ' font-size="16"') + text(548, 266, 'I (A)', ' font-size="16"');
+    body += seg('aux', ox, Y(E), 540, Y(E), 1.2, '5 5') + text(60, Y(E) + 6, '12', ' text-anchor="end" font-size="16"') +
+      text(X(Isc), oy + 24, 'ε/r = 600', ' text-anchor="middle" font-size="15"') + text(ox, oy + 24, '0', ' text-anchor="middle" font-size="15"');
+    body += poly('ref', [[X(0), Y(E)], [X(Isc), Y(0)]], 3) + text(330, 128, 'V = ε − Ir', ' text-anchor="middle" font-size="17"');
+    var px = X(I), py = Y(V);
+    if (I > 0.5) body += seg('axis', px, py, px, oy, 1.2, '4 4');
+    if (Y(E) + 2 < py) {
+      body += seg('error', px, Y(E), px, py, 3.2);
+      if (py - Y(E) > 22) body += text(px + 9, (py + Y(E)) / 2 + 6, 'Ir', ' font-size="16"');
+    }
+    body += dot('dot-trace', px, py, 6.5);
+    body += text(580, 26, 'I = ' + f2s12Fmt(I) + ' A   V = ' + V.toFixed(1) + ' V', ' text-anchor="end" font-size="16"');
+    return svgBox('0 0 600 300', 'Voltaje en las terminales de una batería contra la corriente que entrega', body);
+  };
+
+  // Tres resistores en serie: misma I, los voltajes se suman.
+  D['f2s12-series'] = function () {
+    var y = 80, yb = 210, xl = 80, xr = 480, xs = [170, 280, 390], body = '';
+    body += seg('axis', xl, y, xs[0] - 24, y, 2.4) + seg('axis', xs[0] + 24, y, xs[1] - 24, y, 2.4) + seg('axis', xs[1] + 24, y, xs[2] - 24, y, 2.4) + seg('axis', xs[2] + 24, y, xr, y, 2.4) +
+      seg('axis', xl, y, xl, yb, 2.4) + seg('axis', xr, y, xr, yb, 2.4) + seg('axis', xl, yb, 274, yb, 2.4) + seg('axis', 286, yb, xr, yb, 2.4) +
+      f2s12Bat(280, yb) + text(266, yb - 8, '+', ' text-anchor="end" font-size="18"') + text(280, yb + 40, 'ε', ' text-anchor="middle" font-size="19"');
+    xs.forEach(function (x, i) {
+      var n = String(i + 1);
+      body += f2s12Zig(x, y, 24, 'ref', 3) + text(x, y - 22, f2s12Sub('R', n), ' text-anchor="middle" font-size="19"') +
+        text(x, y + 38, f2s12Sub('V', n) + ' = I' + f2s12Sub('R', n), ' text-anchor="middle" font-size="15"');
+    });
+    body += arrow('error', 98, 156, 0, -40, 2.6) + text(108, 142, 'I', ' font-size="18"') +
+      text(290, 160, 'la misma I pasa por los tres', ' text-anchor="middle" font-size="16"');
+    body += text(280, 288, 'V = ' + f2s12Sub('V', '1') + ' + ' + f2s12Sub('V', '2') + ' + ' + f2s12Sub('V', '3'), ' text-anchor="middle" font-size="19"') +
+      text(280, 316, f2s12Sub('R', 'eq') + ' = ' + f2s12Sub('R', '1') + ' + ' + f2s12Sub('R', '2') + ' + ' + f2s12Sub('R', '3'), ' text-anchor="middle" font-size="19"');
+    return svgBox('0 0 560 330', 'Tres resistores en serie con una batería', body);
+  };
+
+  // Tres resistores en paralelo: mismo V, las corrientes se suman.
+  D['f2s12-parallel'] = function () {
+    var body = '', xl = 50, xr = 330, xc = 190, ys = [60, 140, 220], bot = 292;
+    body += seg('axis', xl, ys[0], xl, bot, 2.4) + seg('axis', xr, ys[0], xr, bot, 2.4) +
+      seg('axis', xl, bot, xc - 6, bot, 2.4) + seg('axis', xc + 6, bot, xr, bot, 2.4) + f2s12Bat(xc, bot) +
+      text(xc - 16, bot - 14, '+', ' text-anchor="end" font-size="20"') + text(xc + 22, bot - 10, 'V', ' font-size="20"');
+    ys.forEach(function (y, i) {
+      var n = String(i + 1);
+      body += seg('axis', xl, y, xc - 24, y, 2.4) + seg('axis', xc + 24, y, xr, y, 2.4) + f2s12Zig(xc, y, 24, 'ref', 3) +
+        text(xc - 32, y - 14, f2s12Sub('R', n), ' text-anchor="end" font-size="20"') +
+        text(xc + 38, y - 14, f2s12Sub('I', n) + ' = V/' + f2s12Sub('R', n), ' font-size="18"');
+      if (i < 2) body += dot('dot-ref', xl, y, 5) + dot('dot-ref', xr, y, 5);
+    });
+    body += text(346, 118, 'los tres', ' font-size="18"') + text(346, 142, 'tienen', ' font-size="18"') + text(346, 166, 'el mismo V', ' font-size="18"') +
+      text(240, 346, 'I = ' + f2s12Sub('I', '1') + ' + ' + f2s12Sub('I', '2') + ' + ' + f2s12Sub('I', '3'), ' text-anchor="middle" font-size="20"') +
+      text(240, 376, '1/' + f2s12Sub('R', 'eq') + ' = 1/' + f2s12Sub('R', '1') + ' + 1/' + f2s12Sub('R', '2') + ' + 1/' + f2s12Sub('R', '3'), ' text-anchor="middle" font-size="20"');
+    return svgBox('0 0 480 390', 'Tres resistores en paralelo conectados a una batería', body);
+  };
+
+  // Red como arreglo: hoja [id, R] · grupo ['s' | 'p', hijo, hijo, …].
+  function f2s12IsLeaf(n) { return n[0] !== 's' && n[0] !== 'p'; }
+  function f2s12Eq(n) {
+    if (f2s12IsLeaf(n)) return n[1];
+    var v = n.slice(1).map(f2s12Eq);
+    return n[0] === 's' ? v.reduce(function (a, x) { return a + x; }, 0) : 1 / v.reduce(function (a, x) { return a + 1 / x; }, 0);
+  }
+  function f2s12Split(n, I, out) {
+    if (f2s12IsLeaf(n)) { out[n[0]] = { I: I, V: I * n[1] }; return out; }
+    var V = f2s12Eq(n) * I;
+    n.slice(1).forEach(function (k) { f2s12Split(k, n[0] === 's' ? I : V / f2s12Eq(k), out); });
+    return out;
+  }
+  var F2S12 = { w: 104, h: 96, t: 40, stub: 22, gap: 4 };
+  function f2s12Layout(n) {
+    var L = F2S12;
+    if (f2s12IsLeaf(n)) return { w: L.w, h: L.h, t: L.t, res: [{ id: n[0], r: n[1], x: 0, y: 0 }], wires: [], dots: [] };
+    var kids = n.slice(1).map(f2s12Layout), o = { res: [], wires: [], dots: [] };
+    function put(K, dx, dy) {
+      K.res.forEach(function (c) { o.res.push({ id: c.id, r: c.r, x: c.x + dx, y: c.y + dy }); });
+      K.wires.forEach(function (w) { o.wires.push([w[0] + dx, w[1] + dy, w[2] + dx, w[3] + dy]); });
+      K.dots.forEach(function (d) { o.dots.push([d[0] + dx, d[1] + dy]); });
+    }
+    if (n[0] === 's') {
+      var top = Math.max.apply(null, kids.map(function (K) { return K.t; })), bot = Math.max.apply(null, kids.map(function (K) { return K.h - K.t; })), x = 0;
+      kids.forEach(function (K) { put(K, x, top - K.t); x += K.w; });
+      o.w = x; o.t = top; o.h = top + bot;
+      return o;
+    }
+    var mw = Math.max.apply(null, kids.map(function (K) { return K.w; })), W = mw + 2 * L.stub, y = 0, ys = [];
+    kids.forEach(function (K, i) {
+      var dx = L.stub + (mw - K.w) / 2, ty = y + K.t;
+      put(K, dx, y);
+      o.wires.push([0, ty, dx, ty], [dx + K.w, ty, W, ty]);
+      if (i < kids.length - 1) o.dots.push([0, ty], [W, ty]);
+      ys.push(ty); y += K.h + L.gap;
+    });
+    o.wires.push([0, ys[0], 0, ys[ys.length - 1]], [W, ys[0], W, ys[ys.length - 1]]);
+    o.w = W; o.h = y - L.gap; o.t = ys[0];
+    return o;
+  }
+
+  // Red de resistores con su fuente (ε y r en un recuadro).
+  // state: { net, E, r, iv (muestra I y V), hi: [ids], eq: [ids], vw, vh }.
+  D['f2s12-net'] = function (s) {
+    var net = (s && s.net) || ['s', ['p', ['1', 4], ['2', 12]], ['3', 5]], E = num(s, 'E', 18), r = Math.max(0, num(s, 'r', 0));
+    var iv = num(s, 'iv', 0) > 0.5, hi = (s && s.hi) || [], eqs = (s && s.eq) || [];
+    var L = f2s12Layout(net), side = 40, M = 14;
+    var W = Math.max(num(s, 'vw', 480), L.w + 2 * (side + M)), ox = (W - L.w) / 2, oy = M;
+    var bottom = oy + L.h + 40, H = Math.max(num(s, 'vh', 0), bottom + 60);
+    var xl = ox - side, xr = ox + L.w + side, ty = oy + L.t, xc = W / 2, bx = xc - 34, rx = xc + 34;
+    var I = E / (f2s12Eq(net) + r), sp = iv ? f2s12Split(net, I, {}) : null, body = '';
+    L.wires.concat([[xl - ox, L.t, 0, L.t], [L.w, L.t, xr - ox, L.t]]).forEach(function (w) { body += seg('axis', w[0] + ox, w[1] + oy, w[2] + ox, w[3] + oy, 2.2); });
+    body += seg('axis', xl, ty, xl, bottom, 2.2) + seg('axis', xr, ty, xr, bottom, 2.2) +
+      seg('axis', xl, bottom, bx - 6, bottom, 2.2) + seg('axis', bx + 6, bottom, rx - 20, bottom, 2.2) + seg('axis', rx + 20, bottom, xr, bottom, 2.2);
+    L.dots.forEach(function (d) { body += dot('dot-ref', d[0] + ox, d[1] + oy, 4.5); });
+    L.res.forEach(function (c) {
+      var x0 = c.x + ox, cx = x0 + F2S12.w / 2, cy = c.y + oy + F2S12.t;
+      var cls = hi.indexOf(c.id) >= 0 ? 'error' : (eqs.indexOf(c.id) >= 0 || c.id === 'eq') ? 'trace' : 'ref';
+      body += seg('axis', x0, cy, cx - 22, cy, 2.2) + seg('axis', cx + 22, cy, x0 + F2S12.w, cy, 2.2) + f2s12Zig(cx, cy, 22, cls, 3, false, 8);
+      body += text(cx, cy - 20, f2s12Sub('R', c.id) + ' = ' + f2s12Fmt(c.r) + ' Ω', ' text-anchor="middle" font-size="15"');
+      if (sp) {
+        body += text(cx, cy + 34, 'I = ' + f2s12Fmt(sp[c.id].I) + ' A', ' text-anchor="middle" font-size="14"') +
+          text(cx, cy + 52, 'V = ' + f2s12Fmt(sp[c.id].V) + ' V', ' text-anchor="middle" font-size="14"');
+      }
+    });
+    body += f2s12Bat(bx, bottom) + text(bx - 14, bottom - 10, '+', ' text-anchor="end" font-size="17"');
+    body += r > 0 ? f2s12Zig(rx, bottom, 20, 'ref', 2.6, false, 8) : seg('axis', rx - 20, bottom, rx + 20, bottom, 2.2);
+    body += '<rect class="aux" fill="none" stroke-width="1.4" stroke-dasharray="5 4" x="' + r1(bx - 36) + '" y="' + r1(bottom - 30) + '" width="' + r1(rx - bx + 68) + '" height="60" rx="6"/>';
+    body += text(xc, bottom + 48, 'ε = ' + f2s12Fmt(E) + ' V · r = ' + f2s12Fmt(r) + ' Ω', ' text-anchor="middle" font-size="15"');
+    return svgBox('0 0 ' + r1(W) + ' ' + r1(H), 'Red de resistores conectada a una fuente con resistencia interna', body);
+  };
+
+  // Focos en serie contra focos en paralelo: qué pasa cuando uno se funde.
+  function f2s12Bulb(x, y, state) {
+    var o = '<circle class="' + (state === 'off' || state === 'on' ? 'ref' : 'error') + '" fill="none" stroke-width="2.4" cx="' + r1(x) + '" cy="' + r1(y) + '" r="14"/>';
+    if (state === 'broken') o += seg('error', x - 9, y - 9, x - 2, y - 2, 2.2) + seg('error', x + 9, y + 9, x + 3, y + 3, 2.2) + seg('error', x + 9, y - 9, x - 9, y + 9, 2.2);
+    else o += seg('ref', x - 9, y - 9, x + 9, y + 9, 2.2) + seg('ref', x + 9, y - 9, x - 9, y + 9, 2.2);
+    if (state === 'on') [45, 135, 225, 315, 70, 110, 250, 290].forEach(function (a) {
+      var c = Math.cos(a * RAD), sn = Math.sin(a * RAD);
+      o += seg('trace', x + 19 * c, y - 19 * sn, x + 27 * c, y - 27 * sn, 2.4);
+    });
+    return o;
+  }
+  D['f2s12-bulbs'] = function () {
+    var body = '', y = 96, yb = 244;
+    // En serie: tres focos en el cable de arriba; el de en medio se fundió.
+    body += text(165, 36, 'en serie', ' text-anchor="middle" font-size="19"');
+    body += seg('axis', 50, y, 86, y, 2.4) + seg('axis', 114, y, 151, y, 2.4) + seg('axis', 179, y, 216, y, 2.4) + seg('axis', 244, y, 280, y, 2.4) +
+      seg('axis', 50, y, 50, yb, 2.4) + seg('axis', 280, y, 280, yb, 2.4) + seg('axis', 50, yb, 159, yb, 2.4) + seg('axis', 171, yb, 280, yb, 2.4) + f2s12Bat(165, yb);
+    body += f2s12Bulb(100, y, 'off') + f2s12Bulb(165, y, 'broken') + f2s12Bulb(230, y, 'off') +
+      text(165, 132, 'fundido', ' text-anchor="middle" font-size="14"') +
+      text(165, 176, 'sin corriente', ' text-anchor="middle" font-size="15"') + text(165, 286, 'uno se funde: se apagan todos', ' text-anchor="middle" font-size="15"');
+    // En paralelo: tres ramas; la de en medio se fundió y las otras siguen encendidas.
+    var xl = 370, xr = 600, xc = 485, ys = [76, 132, 188];
+    body += text(xc, 36, 'en paralelo', ' text-anchor="middle" font-size="19"');
+    body += seg('axis', xl, ys[0], xl, yb, 2.4) + seg('axis', xr, ys[0], xr, yb, 2.4) + seg('axis', xl, yb, xc - 6, yb, 2.4) + seg('axis', xc + 6, yb, xr, yb, 2.4) + f2s12Bat(xc, yb);
+    ys.forEach(function (yy, i) {
+      body += seg('axis', xl, yy, xc - 14, yy, 2.4) + seg('axis', xc + 14, yy, xr, yy, 2.4) + f2s12Bulb(xc, yy, i === 1 ? 'broken' : 'on');
+      if (i < 2) body += dot('dot-ref', xl, yy, 4.5) + dot('dot-ref', xr, yy, 4.5);
+    });
+    body += text(xc + 40, 120, 'fundido', ' font-size="14"') + text(xc, 286, 'uno se funde: los demás siguen', ' text-anchor="middle" font-size="15"');
+    return svgBox('0 0 640 300', 'Tres focos en serie y tres en paralelo, con uno fundido en cada caso', body);
+  };
 
   /* ══════════════════════ fin S12 ══════════════════════ */
 
   /* ══════════════════════ S13 ══════════════════════ */
+  // Circuitos como en el lab kirchhoff-signs: { br: [[elemento…], …] }, ramas de izquierda a
+  // derecha entre el nodo b (abajo) y el a (arriba); elementos de abajo hacia arriba.
+  //   { t: 'E', id: 'E1', v, up } (up: la terminal + arriba) · { t: 'R', id: 'R1', v }
+  // Subíndices numéricos con los caracteres ₀–₉ (con baseline-shift bajan demasiado en la letra a mano).
+  function f2s13Sub(main, s) { return main + String(s).split('').map(function (d) { return '₀₁₂₃₄₅₆₇₈₉'[+d] || d; }).join(''); }
+  function f2s13Name(id) { return f2s13Sub(id[0] === 'E' ? 'ε' : 'R', id.slice(1)); }
+  function f2s13Fmt(v) { var s = Number((+v).toFixed(2)).toString(); return s.charAt(0) === '-' ? '−' + s.slice(1) : s; }
+  function f2s13Cur(k, j) { return k === 2 ? 'I' : f2s13Sub('I', j + 1); }
+  var F2S13 = { top: 56, bot: 300, H: 350, half: 26 };
+  // Resistor vertical (zigzag) centrado en (x, y), de y − 26 a y + 26.
+  function f2s13Res(x, y, cls) {
+    var p = [[x, y - 26], [x, y - 18]];
+    for (var i = 0; i < 6; i++) p.push([x + (i % 2 ? -9 : 9), y - 18 + 6 * (i + 0.5)]);
+    p.push([x, y + 18], [x, y + 26]);
+    return poly(cls, p, 2.8);
+  }
+  // Batería vertical: placa larga (+) arriba si up; terminales de y − 26 a y + 26.
+  function f2s13Bat(x, y, up, cls) {
+    var yl = up ? y - 5 : y + 5, ys = up ? y + 5 : y - 5;
+    return seg('axis', x, y - 26, x, y - 5, 2.4) + seg('axis', x, y + 5, x, y + 26, 2.4) +
+      seg(cls, x - 18, yl, x + 18, yl, 3) + seg(cls, x - 9, ys, x + 9, ys, 6);
+  }
+  // Flecha circular de recorrido (horario si trav > 0) en el centro de una malla.
+  function f2s13Turn(cx, cy, trav) {
+    var pts = [], n = 24;
+    for (var i = 0; i <= n; i++) { var t = (trav > 0 ? -100 + 300 * i / n : 200 - 300 * i / n) * RAD; pts.push([cx + 24 * Math.cos(t), cy + 24 * Math.sin(t)]); }
+    var a = pts[n - 2], b = pts[n];
+    return poly('trace', pts, 3) + arrow('trace', a[0], a[1], b[0] - a[0], b[1] - a[1], 3);
+  }
+
+  // Circuito de una o dos mallas. state: { c, vals (valores en las etiquetas), dirs (flechas de
+  // corriente: +1 arriba), loop ('malla' | 'izq' | 'der' | 'ext'), trav, hi: [ids en rojo],
+  // ival: [corrientes con su signo, en el sentido de dirs], nodeHi (resalta el nodo a, 0–1) }.
+  D['f2s13-circuit'] = function (s) {
+    s = s || {};
+    var c = s.c || { br: [[{ t: 'E', id: 'E1', v: 12, up: true }, { t: 'R', id: 'R1', v: 2 }], [{ t: 'R', id: 'R2', v: 6 }], [{ t: 'R', id: 'R3', v: 3 }, { t: 'E', id: 'E2', v: 6, up: true }]] };
+    var k = c.br.length, W = k === 2 ? 480 : 600, xs = k === 2 ? [100, 380] : [90, 300, 510], G = F2S13;
+    var vals = s.vals !== false, dirs = s.dirs, hi = s.hi || [], ival = s.ival, trav = num(s, 'trav', 1), nodeHi = num(s, 'nodeHi', 0);
+    var nx = k === 3 ? xs[1] : xs[1] - 60, body = '';
+    var loopOf = { malla: [0, 1], izq: [0, 1], der: [1, 2], ext: [0, 2] }[s.loop];
+    if (loopOf) {
+      var x0 = xs[loopOf[0]], x1 = xs[loopOf[1]];
+      body += '<g opacity="0.35">' + poly('trace', [[x0, G.bot], [x0, G.top], [x1, G.top], [x1, G.bot]], 9, true) + '</g>';
+    }
+    body += seg('axis', xs[0], G.top, xs[k - 1], G.top, 2.4) + seg('axis', xs[0], G.bot, xs[k - 1], G.bot, 2.4);
+    c.br.forEach(function (b, j) {
+      var x = xs[j], side = j === 0 ? -1 : 1, ys = b.length === 1 ? [178] : b.length === 2 ? [230, 140] : [250, 190, 130], y = G.bot;   // de abajo hacia arriba
+      b.forEach(function (e, i) {
+        var yc = ys[i], cls = hi.indexOf(e.id) >= 0 ? 'error' : 'ref';
+        body += seg('axis', x, y, x, yc + G.half, 2.4);
+        y = yc - G.half;
+        var an = ' text-anchor="' + (side < 0 ? 'end' : 'start') + '"';
+        if (vals) body += text(x + side * 22, yc - 8, f2s13Name(e.id), an + ' font-size="24"') + text(x + side * 22, yc + 22, f2s13Fmt(e.v) + (e.t === 'R' ? ' Ω' : ' V'), an + ' font-size="22"');
+        else body += text(x + side * 22, yc + 7, f2s13Name(e.id), an + ' font-size="24"');
+        if (e.t === 'R') body += f2s13Res(x, yc, cls);
+        else {
+          body += f2s13Bat(x, yc, e.up, cls) +
+            text(x - side * 30, e.up ? yc - 4 : yc + 19, '+', ' text-anchor="middle" font-size="22"') +
+            text(x - side * 30, e.up ? yc + 19 : yc - 4, '−', ' text-anchor="middle" font-size="22"');
+        }
+      });
+      body += seg('axis', x, y, x, G.top, 2.4);
+      if (dirs) {
+        var up = dirs[j] > 0, ya = up ? 104 : 70;
+        body += arrow('aux', x, ya, 0, up ? -34 : 34, 3.2);
+        var lab = f2s13Cur(k, j) + (ival ? ' = ' + f2s13Fmt(ival[j]) + ' A' : '');
+        if (ival && k === 3 && j === 1) body += text(x + 14, 128, lab, ' font-size="22"');
+        else body += text(x - side * 14, 92, lab, ' text-anchor="' + (side < 0 ? 'start' : 'end') + '" font-size="22"');
+      }
+    });
+    if (k === 3) body += dot('dot-ref', xs[1], G.top, 5) + dot('dot-ref', xs[1], G.bot, 5);
+    if (nodeHi > 0.01) body += fade('<circle class="trace" fill="none" stroke-width="2.6" cx="' + nx + '" cy="' + G.top + '" r="11"/>', nodeHi);
+    body += text(nx, G.top - 18, 'a', ' text-anchor="middle" font-size="22"') + text(nx, G.bot + 32, 'b', ' text-anchor="middle" font-size="22"');
+    if (loopOf) {
+      if (s.loop === 'ext') {
+        [(xs[0] + xs[1]) / 2, (xs[1] + xs[2]) / 2].forEach(function (x) {
+          body += arrow('trace', x - trav * 16, G.top, trav * 32, 0, 3) + arrow('trace', x + trav * 16, G.bot, -trav * 32, 0, 3);
+        });
+      } else body += f2s13Turn((xs[loopOf[0]] + xs[loopOf[1]]) / 2 + (s.loop === 'der' ? 25 : 0), (G.top + G.bot) / 2, trav);   // a la derecha, lejos de las etiquetas de la rama central
+    }
+    return svgBox('0 0 ' + W + ' ' + G.H, 'Circuito con ' + (k === 2 ? 'una malla' : 'dos mallas') + ': baterías y resistores entre los nodos a y b', body);
+  };
+
+  // Regla de nodos: I₁ entra, I₂ e I₃ salen.
+  D['f2s13-node'] = function () {
+    var nx = 250, ny = 130, body = '';
+    body += seg('axis', 60, ny, nx, ny, 2.4) + seg('axis', nx, ny, 440, 50, 2.4) + seg('axis', nx, ny, 440, 210, 2.4) + dot('dot-ref', nx, ny, 6);
+    body += arrow('aux', 120, ny, 70, 0, 3.2) + text(155, ny - 16, f2s13Sub('I', '1'), ' text-anchor="middle" font-size="20"');
+    var u = [190 / Math.hypot(190, 80), -80 / Math.hypot(190, 80)];
+    body += arrow('aux', nx + 70 * u[0], ny + 70 * u[1], 70 * u[0], 70 * u[1], 3.2) + text(318, 66, f2s13Sub('I', '2'), ' text-anchor="middle" font-size="20"');
+    body += arrow('aux', nx + 70 * u[0], ny - 70 * u[1], 70 * u[0], -70 * u[1], 3.2) + text(318, 212, f2s13Sub('I', '3'), ' text-anchor="middle" font-size="20"');
+    body += text(236, 166, 'nodo', ' text-anchor="end" font-size="17"') + text(90, 112, 'entra', ' text-anchor="middle" font-size="16"') +
+      text(474, 46, 'sale', ' font-size="16"') + text(474, 222, 'sale', ' font-size="16"');
+    body += text(nx, 252, 'lo que entra = lo que sale', ' text-anchor="middle" font-size="18"') +
+      text(nx, 280, f2s13Sub('I', '1') + ' = ' + f2s13Sub('I', '2') + ' + ' + f2s13Sub('I', '3'), ' text-anchor="middle" font-size="20"');
+    return svgBox('0 0 540 296', 'Nodo con tres ramas: entra I1 y salen I2 e I3', body);
+  };
+
+  // Potencial a lo largo de una malla: sube en ε₁, baja en R₁, ε₂ y R₂, y vuelve a 0. state.n: 0–4.
+  D['f2s13-stairs'] = function (s) {
+    var n = num(s, 'n', 4), ox = 70, oy = 270, Y = function (V) { return oy - V * 17.5; }, body = '';
+    body += arrow('axis', ox, oy, 548, 0, 1.6) + arrow('axis', ox, oy, 0, -236, 1.6) +
+      text(56, 52, 'V', ' text-anchor="end" font-size="19"') + text(60, oy + 6, '0', ' text-anchor="end" font-size="16"') +
+      text(618, 294, 'recorrido', ' text-anchor="end" font-size="16"');
+    var segs = [
+      { pts: [[ox, Y(0)], [120, Y(0)], [120, Y(12)], [180, Y(12)]], name: f2s13Name('E1'), x: 120, d: '+12', lab: [150, Y(12) - 12, '12 V'] },
+      { pts: [[180, Y(12)], [280, Y(8)], [340, Y(8)]], name: f2s13Name('R1'), x: 230, d: '−4', lab: [312, Y(8) - 12, '8 V'] },
+      { pts: [[340, Y(8)], [360, Y(8)], [360, Y(2)], [400, Y(2)]], name: f2s13Name('E2'), x: 360, d: '−6', lab: [386, Y(2) - 12, '2 V'] },
+      { pts: [[400, Y(2)], [500, Y(0)], [560, Y(0)]], name: f2s13Name('R2'), x: 450, d: '−2', lab: null }
+    ];
+    body += dot('dot-trace', ox, oy, 6);
+    segs.forEach(function (sg, i) {
+      var o = clamp01(n - i);
+      if (o <= 0) return;
+      var part = poly('ref', sg.pts, 3.4) + text(sg.x, 294, sg.name, ' text-anchor="middle" font-size="17"') + text(sg.x, 318, sg.d + ' V', ' text-anchor="middle" font-size="16"');
+      if (sg.lab) part += text(sg.lab[0], sg.lab[1], sg.lab[2], ' text-anchor="middle" font-size="16"');
+      body += fade(part, o);
+    });
+    body += fade(text(560, 236, 'de vuelta a 0', ' text-anchor="end" font-size="17"'), clamp01(n - 3));
+    return svgBox('0 0 640 330', 'Potencial a lo largo de una malla: sube 12 V en la batería 1, baja 4 V en R1, 6 V en la batería 2 y 2 V en R2, y vuelve a cero', body);
+  };
+
+  // Las cuatro reglas de signos: resistor a favor y en contra de I; batería de − a + y de + a −.
+  D['f2s13-signs'] = function () {
+    var body = seg('axis', 12, 150, 348, 150, 1, '4 6') + seg('axis', 12, 300, 348, 300, 1, '4 6') + seg('axis', 12, 450, 348, 450, 1, '4 6');
+    function trav(cx, y, dir) {
+      var x0 = cx - dir * 40, x1 = cx + dir * 40;
+      return seg('trace', x0, y, x1 - dir * 10, y, 3, '7 6') + arrow('trace', x1 - dir * 12, y, dir * 12, 0, 3);
+    }
+    [[0, 0, 'R', 1, 'a favor de I: baja, −IR'], [1, 0, 'R', -1, 'en contra de I: sube, +IR'],
+      [0, 1, 'E', 1, 'de − a +: sube, +ε'], [1, 1, 'E', -1, 'de + a −: baja, −ε']].forEach(function (c) {
+      var row = c[1] * 2 + c[0], cx = 190, cy = row * 150 + 62, o = '';   // una columna: se lee bien en celular
+      if (c[2] === 'R') {
+        var p = [[cx - 90, cy], [cx - 24, cy]];
+        for (var i = 0; i < 6; i++) p.push([cx - 24 + 8 * (i + 0.5), cy + (i % 2 ? 9 : -9)]);
+        p.push([cx + 24, cy], [cx + 90, cy]);
+        o += poly('ref', p, 2.8) + arrow('aux', cx - 40, cy - 36, 80, 0, 3.2) + text(cx - 52, cy - 29, 'I', ' text-anchor="end" font-size="22"');
+      } else {
+        o += seg('axis', cx - 90, cy, cx - 5, cy, 2.4) + seg('axis', cx + 5, cy, cx + 90, cy, 2.4) +
+          seg('ref', cx - 5, cy - 9, cx - 5, cy + 9, 6) + seg('ref', cx + 5, cy - 18, cx + 5, cy + 18, 3) +
+          text(cx - 16, cy - 18, '−', ' text-anchor="end" font-size="24"') + text(cx + 16, cy - 20, '+', ' font-size="24"') +
+          text(cx, cy - 38, 'ε', ' text-anchor="middle" font-size="22"');
+      }
+      o += trav(cx, cy + 36, c[3]) + text(cx - 52, cy + 43, 'recorres', ' text-anchor="end" font-size="19"');
+      o += text(180, cy + 78, c[4], ' text-anchor="middle" font-size="22"');
+      body += o;
+    });
+    return svgBox('0 0 360 600', 'Reglas de signos: resistor recorrido a favor de la corriente, menos IR; en contra, más IR; batería de menos a más, más épsilon; de más a menos, menos épsilon', body);
+  };
 
   /* ══════════════════════ fin S13 ══════════════════════ */
 
   /* ══════════════════════ S14 ══════════════════════ */
+  // Circuitos de varias mallas. Dos topologías (las mismas del lab kirchhoff-solve):
+  //   dos nodos a (arriba) y b (abajo) con tres ramas verticales, y tres ventanas
+  //   (nodos a y b arriba, c abajo; ramas L, V1, H2, V2 y la derecha, que puede llevar un capacitor).
+  function f2s14Sub(main, s) { return main + '<tspan baseline-shift="sub" font-size="70%">' + s + '</tspan>'; }
+  function f2s14Fmt(v) { return String(Number((+v).toPrecision(4))); }
+  // Resistor en zigzag de 60 px centrado en (x, y); dir 'v' o 'h'.
+  function f2s14Res(x, y, dir, cls) {
+    var pts = [];
+    for (var i = 0; i <= 12; i++) { var t = -30 + 5 * i, o = i === 0 || i === 12 ? 0 : (i % 2 ? 9 : -9); pts.push(dir === 'v' ? [x + o, y + t] : [x + t, y + o]); }
+    return poly(cls || 'ref', pts, 2.6);
+  }
+  // Batería vertical: placa larga (+) arriba si plusTop.
+  function f2s14Bat(x, y, plusTop) {
+    var yl = plusTop ? y - 5 : y + 5, ys = plusTop ? y + 5 : y - 5;
+    return seg('ref', x - 17, yl, x + 17, yl, 3) + seg('ref', x - 9, ys, x + 9, ys, 6);
+  }
+  function f2s14Cap(x, y, cls) { return seg(cls || 'ref', x - 15, y - 6, x + 15, y - 6, 4) + seg(cls || 'ref', x - 15, y + 6, x + 15, y + 6, 4); }
+  // Flecha circular de malla (horario si cw), radio r.
+  function f2s14Arc(cx, cy, r, cw, cls) {
+    var dir = cw ? 1 : -1, t0 = -100 * RAD, span = 290 * RAD, pts = [];
+    for (var i = 0; i <= 29; i++) { var t = t0 + dir * span * i / 29; pts.push([cx + r * Math.cos(t), cy + r * Math.sin(t)]); }
+    var tE = t0 + dir * span, ex = cx + r * Math.cos(tE), ey = cy + r * Math.sin(tE), tx = -Math.sin(tE) * dir, ty = Math.cos(tE) * dir;
+    return poly(cls || 'student', pts, 3) + poly(cls || 'student', [[ex - tx * 10 - ty * 6, ey - ty * 10 + tx * 6], [ex, ey], [ex - tx * 10 + ty * 6, ey - ty * 10 - tx * 6]], 3);
+  }
+  function f2s14Lbl(x, y, s, anchor, fs) { return text(x, y, s, ' text-anchor="' + (anchor || 'start') + '" font-size="' + (fs || 15) + '"'); }
+  // Rama vertical de y0 a y1 con elementos [{ t: 'res' | 'bat' | 'cap', y, lab, plusTop?, cls? }];
+  // side: +1 etiquetas a la derecha, −1 a la izquierda.
+  function f2s14Vert(x, y0, y1, els, side, dash) {
+    var o = '', y = y0;
+    els.forEach(function (e) {
+      var half = e.t === 'res' ? 30 : 6;
+      o += seg('axis', x, y, x, e.y - half, 2.4, dash);
+      y = e.y + half;
+      if (e.t === 'res') o += f2s14Res(x, e.y, 'v', e.cls);
+      if (e.t === 'bat') o += f2s14Bat(x, e.y, e.plusTop) + f2s14Lbl(side > 0 ? x - 30 : x + 30, e.y + (e.plusTop ? 0 : 10), '+', 'middle', 16);
+      if (e.t === 'cap') o += f2s14Cap(x, e.y, e.cls);
+      var off = e.t === 'res' ? 18 : 26;
+      if (e.lab) o += f2s14Lbl(side > 0 ? x + off : x - off, e.y + 5, e.lab, side > 0 ? 'start' : 'end');
+    });
+    return o + seg('axis', x, y, x, y1, 2.4, dash);
+  }
+  function f2s14RLab(n, v) { return f2s14Sub('R', n) + ' = ' + f2s14Fmt(v) + ' Ω'; }
+  function f2s14ELab(n, v) { return f2s14Sub('ε', n) + ' = ' + f2s14Fmt(Math.abs(v)) + ' V'; }
+
+  // Tres ventanas. s: { R: [5], E: [ε de L, ε de la derecha] (signo + = empuja en sentido horario),
+  //   C (μF, capacitor en la rama derecha), arcs (0 nada · 1 corrientes de malla · 2 números de malla),
+  //   cw: [3], nodes, branches, shared (I₁ − I₂ en las ramas compartidas), open (capacitor abierto),
+  //   vc (texto del voltaje del capacitor), hiV2, cap (pie de figura), H }.
+  var F2S14X = [104, 268, 432, 596];
+  function f2s14Three(s) {
+    var R = s.R || [2, 4, 2, 4, 2], E = s.E || [12, 6], X = F2S14X, yt = 60, yb = 290, o = '', C = s.C;
+    var H = s.cap ? 372 : 336, cw = s.cw || [1, 1, 1], open = !!s.open, ne = 0;
+    var e1 = E[0] ? ++ne : 0, e2 = !C && E[1] ? ++ne : 0;
+    o += seg('axis', X[0], yb, X[3], yb, 2.4);
+    // Rama izquierda (L): la fem empuja en sentido horario si E[0] > 0 (placa + arriba).
+    o += f2s14Vert(X[0], yt, yb, E[0] ? [{ t: 'bat', y: 118, plusTop: E[0] > 0, lab: f2s14ELab(e1, E[0]) }, { t: 'res', y: 195, lab: f2s14RLab(1, R[0]) }] : [{ t: 'res', y: 170, lab: f2s14RLab(1, R[0]) }], -1);
+    o += seg('axis', X[0], yt, X[1], yt, 2.4);
+    o += f2s14Vert(X[1], yt, yb, [{ t: 'res', y: 225, lab: f2s14RLab(2, R[1]) }], 1);
+    o += seg('axis', X[1], yt, 320, yt, 2.4) + f2s14Res(350, yt, 'h') + seg('axis', 380, yt, X[2], yt, 2.4) + f2s14Lbl(350, 42, f2s14RLab(3, R[2]), 'middle');
+    o += f2s14Vert(X[2], yt, yb, [{ t: 'res', y: 225, lab: f2s14RLab(4, R[3]), cls: s.hiV2 ? 'trace' : null }], 1);
+    // Rama derecha: con capacitor (abierto en estado estable) o con fem (horario si E[1] > 0: placa + abajo).
+    if (C) {
+      o += seg('axis', X[2], yt, X[3], yt, 2.4, open ? '6 6' : null);
+      o += f2s14Vert(X[3], yt, yb, [{ t: 'res', y: 140, lab: f2s14RLab(5, R[4]) }, { t: 'cap', y: 228, lab: 'C = ' + f2s14Fmt(C) + ' μF', cls: s.hiV2 ? 'trace' : null }], 1, open ? '6 6' : null);
+    } else {
+      o += seg('axis', X[2], yt, X[3], yt, 2.4);
+      o += f2s14Vert(X[3], yt, yb, E[1] ? [{ t: 'bat', y: 118, plusTop: E[1] < 0, lab: f2s14ELab(e2, E[1]) }, { t: 'res', y: 195, lab: f2s14RLab(5, R[4]) }] : [{ t: 'res', y: 170, lab: f2s14RLab(5, R[4]) }], 1);
+    }
+    [[X[1], yt], [X[2], yt], [X[1], yb], [X[2], yb]].forEach(function (d) { o += dot('dot-ref', d[0], d[1], s.nodes ? 6 : 4.5); });
+    if (s.nodes) o += f2s14Lbl(X[1] - 10, 44, 'a', 'end', 18) + f2s14Lbl(X[2] + 10, 44, 'b', 'start', 18) + f2s14Lbl(350, 320, 'c', 'middle', 18);
+    if (s.branches) {
+      [[122, 262], [248, 140], [350, 92], [412, 140], [572, 262]].forEach(function (p, i) {
+        o += '<circle class="aux" fill="none" stroke-width="1.6" cx="' + p[0] + '" cy="' + p[1] + '" r="12"/>' + f2s14Lbl(p[0], p[1] + 5, String(i + 1), 'middle', 15);
+      });
+    }
+    var arcs = s.arcs || 0;
+    [0, 1, 2].forEach(function (j) {
+      var cx = (X[j] + X[j + 1]) / 2;
+      if (!arcs || (open && j === 2)) return;
+      o += f2s14Arc(cx, 168, 26, cw[j] > 0, arcs === 2 ? 'aux' : 'student') + f2s14Lbl(cx, 174, arcs === 2 ? String(j + 1) : f2s14Sub('I', String(j + 1)), 'middle', 16);
+    });
+    if (open) o += f2s14Lbl((X[2] + X[3]) / 2, 174, 'I = 0', 'middle', 16);
+    if (s.shared) o += f2s14Lbl(250, 268, f2s14Sub('I', '1') + ' − ' + f2s14Sub('I', '2'), 'end', 15) + f2s14Lbl(414, 268, f2s14Sub('I', '2') + ' − ' + f2s14Sub('I', '3'), 'end', 15);
+    if (s.vc) o += f2s14Lbl(578, 290 - 24, s.vc, 'end', 15);
+    if (s.cap) o += f2s14Lbl(350, 356, s.cap, 'middle', 16);
+    return svgBox('0 0 716 ' + H, 'Circuito de tres mallas', '<g transform="translate(8 0)">' + o + '</g>');
+  }
+
+  // Dos nodos, tres ramas. s: { R: [3], E: [3] (+ = placa + arriba), up: [3] (flechas), loops, vab, cap }.
+  function f2s14Two(s) {
+    var R = s.R || [2, 4, 2], E = s.E || [12, 0, 6], up = s.up || [1, -1, 1], X = [130, 320, 510], yt = 60, yb = 290, o = '', ne = 0;
+    var H = s.cap ? 372 : 336;
+    o += seg('axis', X[0], yt, X[2], yt, 2.4) + seg('axis', X[0], yb, X[2], yb, 2.4);
+    [0, 1, 2].forEach(function (k) {
+      var els = E[k] ? [{ t: 'bat', y: 118, plusTop: E[k] > 0, lab: f2s14ELab(++ne, E[k]) }, { t: 'res', y: 195, lab: f2s14RLab(k + 1, R[k]) }] : [{ t: 'res', y: 170, lab: f2s14RLab(k + 1, R[k]) }];
+      o += f2s14Vert(X[k], yt, yb, els, 1);
+      var y0 = up[k] > 0 ? 274 : 244, y1 = up[k] > 0 ? 244 : 274;
+      o += arrow('student', X[k], y0, 0, y1 - y0, 3.2) + f2s14Lbl(X[k] - 14, 264, f2s14Sub('I', String(k + 1)), 'end', 16);
+    });
+    o += dot('dot-ref', X[1], yt, 5) + dot('dot-ref', X[1], yb, 5) + f2s14Lbl(X[1], yt - 14, 'a', 'middle', 17) + f2s14Lbl(X[1], yb + 30, 'b', 'middle', 17);
+    if (s.loops) [0, 1].forEach(function (j) { var cx = (X[j] + X[j + 1]) / 2 + 30; o += f2s14Arc(cx, 165, 22, true, 'aux') + f2s14Lbl(cx, 171, String(j + 1), 'middle', 15); });
+    if (s.cap) o += f2s14Lbl(320, 356, s.cap, 'middle', 16);
+    return svgBox('0 0 640 ' + H, 'Circuito de dos nodos y tres ramas', o);
+  }
+  D['f2s14-two'] = f2s14Two;
+  D['f2s14-three'] = f2s14Three;
+
+  // Contar: paso 0 el circuito · 1 nodos · 2 ramas · 3 mallas · 4 cuántas ecuaciones.
+  D['f2s14-count'] = function (s) {
+    var k = Math.round(num(s, 'step', 0));
+    var caps = ['Un circuito de tres mallas: ¿cuántas ecuaciones necesitas?', 'Nodos (se unen 3 cables o más): a, b y c. n = 3',
+      'Ramas (tramos entre dos nodos): b = 5 corrientes distintas', 'Mallas (ventanas): b − n + 1 = 5 − 3 + 1 = 3',
+      'n − 1 = 2 de nodo + 3 de malla = 5 ecuaciones, 5 incógnitas'];
+    return f2s14Three({ R: [2, 4, 2, 4, 2], E: [12, 6], nodes: k >= 1, branches: k === 2, arcs: k >= 3 ? 2 : 0, cap: caps[Math.max(0, Math.min(4, k))] });
+  };
+  // Capacitor en estado estable: 0 al conectar · 1 mucho después (rama abierta) · 2 las mallas que quedan · 3 V_C y Q.
+  D['f2s14-cap'] = function (s) {
+    var k = Math.round(num(s, 'step', 0)), R = (s && s.R) || [2, 4, 1, 3, 2], E = num(s, 'E', 12), C = num(s, 'C', 10);
+    var vc = f2s14Sub('V', 'C') + ' = ' + f2s14Fmt(num(s, 'vc', 0)) + ' V';
+    var caps = ['Al conectar, el capacitor se está cargando: por su rama sí pasa corriente', 'Mucho tiempo después ya está cargado: por su rama no pasa corriente',
+      'Quedan dos mallas: resuélvelas sin la rama del capacitor', 'El capacitor tiene el mismo voltaje que ' + f2s14Sub('R', '4') + ': Q = C·' + f2s14Sub('V', 'C')];
+    return f2s14Three({ R: R, E: [E, 0], C: C, open: k >= 1, arcs: k === 1 ? 0 : 1, hiV2: k >= 3, vc: k >= 3 ? vc : '', cap: caps[Math.max(0, Math.min(3, k))] });
+  };
+
 
   /* ══════════════════════ fin S14 ══════════════════════ */
 
   /* ══════════════════════ S15 ══════════════════════ */
+  // Circuito RC con interruptor de dos posiciones (a: batería · b: descarga), como en el lab
+  // rc-circuit, y las curvas de carga y descarga en unidades de τ (eje t) y de Cε (eje q).
+  function f2s15Sub(main, s) { return main + '<tspan baseline-shift="sub" font-size="70%">' + s + '</tspan>'; }
+  function f2s15Exp(base, s) { return base + '<tspan baseline-shift="super" font-size="70%">' + s + '</tspan>'; }
+  function f2s15Pct(v) { return String(Number((100 * v).toFixed(v > 0.99 ? 1 : 0))) + ' %'; }
+  // Ejes de las gráficas: t de 0 a 5τ en x = 100…600; y de 0 a 1 (en unidades de lo máximo) en y0…y0 − hy.
+  function f2s15Axes(y0, hy, ymark) {
+    var o = arrow('axis', 100, y0, 520, 0, 1.6) + arrow('axis', 100, y0, 0, -(hy + 34), 1.6);
+    for (var k = 1; k <= 5; k++) o += seg('axis', 100 + 100 * k, y0 - 5, 100 + 100 * k, y0 + 5, 1.4) + text(100 + 100 * k, y0 + 24, (k === 1 ? '' : k) + 'τ', ' text-anchor="middle" font-size="17"');
+    o += text(92, y0 + 6, '0', ' text-anchor="end" font-size="16"') + text(614, y0 - 12, 't', ' text-anchor="end" font-size="18"');
+    if (ymark) o += seg('axis', 95, y0 - hy, 105, y0 - hy, 1.4) + text(90, y0 - hy + 6, ymark, ' text-anchor="end" font-size="17"');
+    return o;
+  }
+  function f2s15Curve(f, y0, hy, t0, t1) {
+    var p = [];
+    for (var i = 0; i <= 100; i++) { var t = t0 + (t1 - t0) * i / 100; p.push([100 + 100 * t, y0 - hy * f(t)]); }
+    return p;
+  }
+
+  // Circuito. s: { sw: 'a' | 'b' | 'open', x: t/τ (se anima), loop (1 = flecha de recorrido y ecuación),
+  //   cap: pie de figura }. Con sw 'a' carga desde 0; con 'b' descarga desde Cε.
+  D['f2s15-circuit'] = function (s) {
+    s = s || {};
+    var sw = s.sw || 'a', x = Math.max(0, num(s, 'x', 0)), loop = num(s, 'loop', 0), d = sw === 'b';
+    var frac = sw === 'open' ? 0 : d ? Math.exp(-x) : 1 - Math.exp(-x), cur = sw === 'open' ? 0 : Math.exp(-x);
+    var yt = 50, yb = 190, xb = 70, xA = 200, xB = 210, yB = 86, xP = 250, xc = 480, cy = 120, o = '';
+    o += poly('axis', [[xb, cy - 7], [xb, yt], [xA, yt]], 2.4) + seg('axis', xB, yB, xB, yb, 2.4);
+    o += poly('axis', [[xP, yt], [310, yt]], 2.4) + poly('axis', [[370, yt], [xc, yt], [xc, cy - 8]], 2.4) + poly('axis', [[xc, cy + 8], [xc, yb], [xb, yb], [xb, cy + 7]], 2.4);
+    // Batería, + arriba.
+    o += seg('ref', xb - 20, cy - 7, xb + 20, cy - 7, 3) + seg('ref', xb - 10, cy + 7, xb + 10, cy + 7, 6);
+    o += text(xb - 28, cy - 1, '+', ' text-anchor="end" font-size="20"') + text(xb + 28, cy + 7, 'ε', ' font-size="22"');
+    // Interruptor.
+    o += dot('dot-ref', xA, yt, 4.5) + dot('dot-ref', xB, yB, 4.5) + dot('dot-ref', xP, yt, 4.5) + dot('dot-ref', xB, yb, 4.5);
+    var tip = sw === 'a' ? [xA, yt] : sw === 'b' ? [xB, yB] : [xP - 40, yt - 28];
+    o += seg('student', xP, yt, tip[0], tip[1], 3.4);
+    o += text(xA - 4, yt - 14, 'a', ' text-anchor="end" font-size="18"') + text(xB - 10, yB + 22, 'b', ' text-anchor="end" font-size="18"');
+    // Resistor.
+    var zz = [[310, yt]];
+    for (var i = 0; i < 6; i++) zz.push([315 + i * 10, yt + (i % 2 ? 9 : -9)]);
+    zz.push([370, yt]);
+    o += poly('ref', zz, 2.6) + text(340, yt - 20, 'R', ' text-anchor="middle" font-size="22"');
+    // Capacitor con sus cargas (un signo por cada sexto de Cε).
+    o += seg('ref', xc - 28, cy - 8, xc + 28, cy - 8, 4) + seg('ref', xc - 28, cy + 8, xc + 28, cy + 8, 4) + text(xc + 40, cy + 8, 'C', ' font-size="22"');
+    var n = Math.round(6 * frac), OFF = [-26, 26, -18, 18, -10, 10];
+    for (var j = 0; j < n; j++) o += text(xc + OFF[j], cy - 15, '+', ' text-anchor="middle" font-size="15"') + text(xc + OFF[j], cy + 27, '−', ' text-anchor="middle" font-size="15"');
+    // Corriente: a la derecha al cargar, a la izquierda al descargar; se desvanece al decaer.
+    if (cur > 0.005) {
+      var op = Math.max(0.15, cur);
+      o += fade(d ? arrow('aux', 450, yt + 22, -50, 0, 3.2) : arrow('aux', 400, yt + 22, 50, 0, 3.2), op) + fade(text(425, yt + 48, 'i', ' text-anchor="middle" font-size="20"'), op);
+    }
+    if (loop > 0.01) {
+      var lp = [];
+      for (var m = 0; m <= 24; m++) { var a = (-100 + 300 * m / 24) * RAD; lp.push([330 + 26 * Math.cos(a), 128 + 26 * Math.sin(a)]); }
+      o += fade(poly('trace', lp, 3) + arrow('trace', lp[22][0], lp[22][1], lp[24][0] - lp[22][0], lp[24][1] - lp[22][1], 3), loop);
+    }
+    // Lecturas en unidades de ε y de ε/R.
+    var row = sw === 'open' ? 'interruptor abierto: no pasa corriente'
+      : f2s15Sub('V', 'C') + ' = ' + frac.toFixed(2) + ' ε  ·  i = ' + cur.toFixed(2) + ' ε/R';
+    o += text(320, 238, s.cap || row, ' text-anchor="middle" font-size="18"');
+    return svgBox('0 0 640 256', 'Circuito RC: batería, interruptor con posiciones a y b, resistor R y capacitor C', o);
+  };
+
+  // «EDO en 5 minutos»: campo de pendientes de dq/dt = (Cε − q)/RC y la solución. s.n: 0–4.
+  D['f2s15-slopes'] = function (s) {
+    var n = num(s, 'n', 4), y0 = 300, hy = 200, o = f2s15Axes(y0, hy, 'Cε');
+    o += text(108, 62, 'q', ' font-size="20"');
+    // Pendientes: en (t, q) la flecha sube con (1 − q) por cada τ.
+    for (var t = 0.25; t < 5; t += 0.5) {
+      for (var q = 0.1; q < 1.25; q += 0.2) {
+        var dx = 100, dy = -hy * (1 - q), L = Math.hypot(dx, dy), ux = dx / L * 11, uy = dy / L * 11, cx = 100 + 100 * t, cyy = y0 - hy * q;
+        o += seg('aux', cx - ux, cyy - uy, cx + ux, cyy + uy, 1.8);
+      }
+    }
+    o += fade(seg('axis', 100, y0 - hy, 600, y0 - hy, 1.6, '7 6'), clamp01(n));
+    o += fade(dot('dot-trace', 100, y0, 7), clamp01(n - 1));
+    o += fade(seg('student', 100, y0, 200, y0 - hy, 2.4, '6 6') + poly('ref', f2s15Curve(function (t) { return 1 - Math.exp(-t); }, y0, hy, 0, 5), 3.4), clamp01(n - 2));
+    o += fade(poly('trace', f2s15Curve(function (t) { return Math.exp(-t); }, y0, hy, 0, 5), 3, false, '9 7'), clamp01(n - 3));
+    o += fade(text(110, 28, 'carga: q = Cε(1 − ' + f2s15Exp('e', '−t/τ') + ')', ' font-size="18"'), clamp01(n - 2));
+    o += fade(text(600, 28, 'descarga: q = ' + f2s15Sub('Q', '0') + f2s15Exp('e', '−t/τ'), ' text-anchor="end" font-size="18"'), clamp01(n - 3));
+    return svgBox('0 0 640 340', 'Campo de pendientes de la ecuación de carga: las flechas son más empinadas abajo y planas en q igual a C épsilon; la solución sube desde cero', o);
+  };
+
+  // τ en la curva de carga: 63, 86, 95, 98 y 99.3 % en τ…5τ.
+  D['f2s15-tau'] = function () {
+    var y0 = 280, hy = 200, o = f2s15Axes(y0, hy, 'Cε');
+    o += seg('axis', 100, y0 - hy, 600, y0 - hy, 1.4, '7 6') + text(108, 50, 'q', ' font-size="20"');
+    o += poly('ref', f2s15Curve(function (t) { return 1 - Math.exp(-t); }, y0, hy, 0, 5), 3.4);
+    o += seg('student', 100, y0, 200, y0 - hy, 2.2, '6 6');
+    for (var k = 1; k <= 5; k++) {
+      var f = 1 - Math.exp(-k), px = 100 + 100 * k, py = y0 - hy * f;
+      o += seg('aux', px, py, px, y0, 1.4, '4 5') + dot('dot-ref', px, py, 5.5);
+      o += text(px, y0 + 50, f2s15Pct(f), ' text-anchor="middle" font-size="17"');
+    }
+    o += text(92, y0 + 50, 'carga', ' text-anchor="end" font-size="16"');
+    return svgBox('0 0 640 348', 'Curva de carga: 63 por ciento en tau, 86 en 2 tau, 95 en 3 tau, 98 en 4 tau y 99.3 en 5 tau; la tangente inicial llega a C épsilon en tau', o);
+  };
+
+  // V_C y V_R durante la carga: suman ε en todo instante y se cruzan en τ ln 2.
+  D['f2s15-volts'] = function () {
+    var y0 = 280, hy = 200, o = f2s15Axes(y0, hy, 'ε'), pts = [];
+    var vc = f2s15Curve(function (t) { return 1 - Math.exp(-t); }, y0, hy, 0, 5), vr = f2s15Curve(function (t) { return Math.exp(-t); }, y0, hy, 0, 5);
+    o += seg('axis', 100, y0 - hy, 600, y0 - hy, 1.4, '7 6') + text(108, 50, 'V', ' font-size="20"');
+    o += poly('ref', vc, 3.4) + poly('trace', vr, 3.4);
+    var tx = 100 + 100 * Math.LN2;
+    o += seg('aux', tx, y0 - hy / 2, tx, y0, 1.4, '4 5') + dot('dot-ref', tx, y0 - hy / 2, 5.5);
+    pts = pts.concat(polyPts(vc), polyPts(vr), segPts(100, y0 - hy, 600, y0 - hy));
+    var vb = [0, 0, 640, 320];
+    o += label(spot([[330, 120, f2s15Sub('V', 'C') + ' (capacitor)', 'start'], [300, 130, f2s15Sub('V', 'C') + ' (capacitor)', 'start']], pts, 18, vb), 18);
+    o += label(spot([[300, 250, f2s15Sub('V', 'R') + ' (resistor)', 'start'], [320, 240, f2s15Sub('V', 'R') + ' (resistor)', 'start']], pts, 18, vb), 18);
+    o += label(spot([[596, 68, f2s15Sub('V', 'C') + ' + ' + f2s15Sub('V', 'R') + ' = ε', 'end']], pts, 18, vb), 18);
+    return svgBox('0 0 640 320', 'Durante la carga, el voltaje del capacitor sube y el del resistor baja; siempre suman épsilon y se cruzan en tau por logaritmo de 2', o);
+  };
+
+  // Potencia en R durante la carga con R y con 3R (mismos C y ε): misma área, ½Cε².
+  D['f2s15-energy'] = function () {
+    var y0 = 280, hy = 200, o = f2s15Axes(y0, hy, ''), pts = [];
+    var a = f2s15Curve(function (t) { return Math.exp(-2 * t); }, y0, hy, 0, 5), b = f2s15Curve(function (t) { return Math.exp(-2 * t / 3) / 3; }, y0, hy, 0, 5);
+    o += fill('area-fill', a.concat([[600, y0], [100, y0]])) + fill('rect-fill', b.concat([[600, y0], [100, y0]]));
+    o += poly('ref', a, 3.2) + poly('trace', b, 3.2, false, '9 7');
+    o += text(108, 50, 'P = ' + f2s15Exp('i', '2') + 'R', ' font-size="19"');
+    pts = pts.concat(polyPts(a), polyPts(b));
+    var vb = [0, 0, 640, 320];
+    o += label(spot([[150, 128, 'R chica: pico alto y corto', 'start'], [160, 140, 'R chica: pico alto y corto', 'start']], pts, 17, vb), 17);
+    o += label(spot([[330, 226, '3R: pico bajo y largo', 'start'], [350, 216, '3R: pico bajo y largo', 'start']], pts, 17, vb), 17);
+    o += label(spot([[596, 84, 'las dos áreas valen ½Cε²', 'end']], pts, 17, vb), 17);
+    return svgBox('0 0 640 320', 'Potencia disipada en el resistor durante la carga con R y con 3R: la primera es alta y corta, la segunda baja y larga, y las dos áreas valen un medio de C épsilon cuadrado', o);
+  };
 
   /* ══════════════════════ fin S15 ══════════════════════ */
 
@@ -2346,6 +3067,237 @@
     body += f2exPut([[xl - 26, yc - 2, '+', 'end']], pts, 18, vb);
     body += f2exPut([[xl + 28, yc + 6, f2exNum(V) + ' V', 'start']], pts, fs, vb);
     return svgBox('0 20 640 270', 'Circuito: una batería de ' + V + ' V, el capacitor C1 en el cable de arriba y, a la derecha, C2 y C3 en paralelo.', body);
+  };
+
+  /* ═══ Bloque C (S11–S15) ═══ */
+  // Cables: lista de [x1, y1, x2, y2]; agrega sus puntos a pts.
+  function f2exWires(list, pts) {
+    return list.map(function (w) { pts.push.apply(pts, segPts(w[0], w[1], w[2], w[3])); return seg('axis', w[0], w[1], w[2], w[3], 2.2); }).join('');
+  }
+  // Resistor en zigzag de 60 px centrado en (x, y); vertical si vert.
+  function f2exRes(x, y, vert, pts) {
+    var p = [];
+    for (var i = 0; i <= 12; i++) { var t = -30 + 5 * i, o = i === 0 || i === 12 ? 0 : (i % 2 ? 9 : -9); p.push(vert ? [x + o, y + t] : [x + t, y + o]); }
+    pts.push.apply(pts, polyPts(p));
+    return poly('ref', p, 2.6);
+  }
+  // Batería centrada en (x, y). En cable vertical, la placa larga (+) arriba si plus < 0 y abajo si plus > 0;
+  // en cable horizontal, a la izquierda si plus < 0 y a la derecha si plus > 0.
+  function f2exBat(x, y, vert, plus, pts) {
+    var L = vert ? [x - 20, y + plus * 6, x + 20, y + plus * 6] : [x + plus * 6, y - 20, x + plus * 6, y + 20];
+    var S = vert ? [x - 10, y - plus * 6, x + 10, y - plus * 6] : [x - plus * 6, y - 10, x - plus * 6, y + 10];
+    pts.push.apply(pts, segPts(L[0], L[1], L[2], L[3]).concat(segPts(S[0], S[1], S[2], S[3])));
+    return seg('ref', L[0], L[1], L[2], L[3], 3) + seg('ref', S[0], S[1], S[2], S[3], 6);
+  }
+  function f2exCap(x, y, vert, pts) {
+    if (vert) pts.push.apply(pts, segPts(x - 16, y - 6, x + 16, y - 6).concat(segPts(x - 16, y + 6, x + 16, y + 6)));
+    else pts.push.apply(pts, segPts(x - 6, y - 16, x - 6, y + 16).concat(segPts(x + 6, y - 16, x + 6, y + 16)));
+    return vert ? f2exCapV(x, y, 16) : f2exCapH(x, y, 16);
+  }
+  // Interruptor abierto en un cable horizontal, de x − 22 a x + 22.
+  function f2exSw(x, y, pts) {
+    pts.push.apply(pts, segPts(x - 22, y, x + 14, y - 24).concat(f2exCirc(x - 22, y, 5), f2exCirc(x + 22, y, 5)));
+    return seg('ref', x - 22, y, x + 14, y - 24, 2.6) + dot('dot-ref', x - 22, y, 4) + dot('dot-ref', x + 22, y, 4);
+  }
+  // Rama recta (horizontal o vertical) de (x0, y0) a (x1, y1) con elementos [{ t: 'res' | 'bat' | 'cap' | 'sw', at, plus }]
+  // en el orden del recorrido; at es la coordenada del centro sobre la rama.
+  function f2exBranch(x0, y0, x1, y1, els, pts) {
+    var vert = x0 === x1, a = vert ? y0 : x0, b = vert ? y1 : x1, dir = b >= a ? 1 : -1, cur = a, o = '';
+    var P = function (u) { return vert ? [x0, u] : [u, y0]; };
+    els.forEach(function (e) {
+      var half = e.t === 'res' ? 30 : e.t === 'sw' ? 22 : 6, p = P(e.at), q0 = P(cur), q1 = P(e.at - dir * half);
+      o += f2exWires([[q0[0], q0[1], q1[0], q1[1]]], pts);
+      cur = e.at + dir * half;
+      if (e.t === 'res') o += f2exRes(p[0], p[1], vert, pts);
+      else if (e.t === 'bat') o += f2exBat(p[0], p[1], vert, e.plus, pts);
+      else if (e.t === 'cap') o += f2exCap(p[0], p[1], vert, pts);
+      else o += f2exSw(p[0], p[1], pts);
+    });
+    var q2 = P(cur), q3 = P(b);
+    return o + f2exWires([[q2[0], q2[1], q3[0], q3[1]]], pts);
+  }
+  // Corriente: flecha sobre el cable.
+  function f2exCur(x, y, dx, dy, pts) { pts.push.apply(pts, arrowPts(x, y, dx, dy)); return arrow('trace', x, y, dx, dy, 2.8); }
+  // Caja punteada de una batería real (fem + resistencia interna).
+  function f2exBox(x0, y0, x1, y1, pts) {
+    var r = [[x0, y0], [x1, y0], [x1, y1], [x0, y1], [x0, y0]];
+    pts.push.apply(pts, polyPts(r));
+    return poly('aux', r, 1.4, false, '5 5');
+  }
+  // Corriente de malla en sentido horario, con su nombre en el centro.
+  function f2exLoop(cx, cy, r, name, pts, vb) {
+    var t0 = -100 * RAD, span = 290 * RAD, p = [], i;
+    for (i = 0; i <= 29; i++) { var t = t0 + span * i / 29; p.push([cx + r * Math.cos(t), cy + r * Math.sin(t)]); }
+    var tE = t0 + span, ex = cx + r * Math.cos(tE), ey = cy + r * Math.sin(tE), tx = -Math.sin(tE), ty = Math.cos(tE);
+    var head = [[ex - tx * 10 - ty * 6, ey - ty * 10 + tx * 6], [ex, ey], [ex - tx * 10 + ty * 6, ey - ty * 10 - tx * 6]];
+    pts.push.apply(pts, polyPts(p).concat(polyPts(head)));
+    return poly('trace', p, 2.4) + poly('trace', head, 2.4) + f2exPut([[cx, cy + 6, name, 'middle']], pts, 16, vb);
+  }
+  function f2exSub(main, s) { return main + '<tspan baseline-shift="sub" font-size="70%">' + s + '</tspan>'; }
+
+  /* ---------- Calentador de nicromo (S11) ---------- */
+  D['f2exam-calentador'] = function (s) {
+    var L = num(s, 'L', 2.5), d = num(s, 'd', 0.5), fs = 16, vb = [0, 20, 640, 300], body = '', pts = [];
+    var x0 = 110, x1 = 450, yc = 120, hh = 7 + Math.min(1.2, Math.max(0, d)) * 8, yb = 260, xs = 280;
+    var rect = [[x0, yc - hh], [x1, yc - hh], [x1, yc + hh], [x0, yc + hh]];
+    body += fill('rect-fill', rect) + poly('ref', rect, 2, true); pts = pts.concat(polyPts(rect.concat([rect[0]])));
+    body += f2exWires([[x0, yc, 70, yc], [70, yc, 70, yb], [70, yb, xs - 20, yb], [xs + 20, yb, 500, yb], [500, yb, 500, yc], [500, yc, x1, yc]], pts);
+    // Fuente de la casa: círculo con una onda.
+    var wave = [];
+    for (var i = 0; i <= 24; i++) wave.push([xs - 11 + 22 * i / 24, yb - 6 * Math.sin(i * Math.PI / 12)]);
+    body += '<circle class="ref" fill="none" stroke-width="2.4" cx="' + xs + '" cy="' + yb + '" r="20"/>' + poly('ref', wave, 2);
+    pts = pts.concat(f2exCirc(xs, yb, 20), polyPts(wave));
+    body += f2exPut([[xs, yb - 32, '127 V', 'middle'], [xs + 30, yb - 18, '127 V', 'start']], pts, fs, vb);
+    body += f2exPut([[(x0 + x1) / 2, yc - hh - 12, 'nicromo', 'middle']], pts, fs, vb);
+    body += f2exDim(x0, x1, yc + hh + 22, pts) + f2exPut([[(x0 + x1) / 2, yc + hh + 46, 'L = ' + f2exNum(L) + ' m', 'middle']], pts, fs, vb);
+    // Corte del alambre, con su diámetro.
+    var C = [575, 110];
+    body += '<circle class="rect-fill" cx="' + C[0] + '" cy="' + C[1] + '" r="22"/><circle class="ref" fill="none" stroke-width="2" cx="' + C[0] + '" cy="' + C[1] + '" r="22"/>';
+    pts = pts.concat(f2exCirc(C[0], C[1], 22));
+    body += f2exDim(C[0] - 22, C[0] + 22, C[1] + 36, pts);
+    body += f2exPut([[C[0], C[1] - 34, 'corte', 'middle']], pts, 15, vb);
+    body += f2exPut([[C[0], C[1] + 62, 'd = ' + f2exNum(d) + ' mm', 'middle'], [632, C[1] + 62, 'd = ' + f2exNum(d) + ' mm', 'end']], pts, fs, vb);
+    return svgBox('0 20 640 280', 'Un alambre de nicromo de ' + L + ' m y ' + d + ' mm de diámetro conectado a la toma de 127 V; a la derecha, su corte con el diámetro.', body);
+  };
+
+  /* ---------- Dentro de un cable de cobre (S11) ---------- */
+  D['f2exam-cobre'] = function (s) {
+    var I = num(s, 'I', 10), d = num(s, 'd', 1.2), L = num(s, 'L', 1), fs = 16, vb = [0, 40, 640, 270], body = '', pts = [];
+    var x0 = 150, x1 = 520, yc = 150, hh = 46;
+    var rect = [[x0, yc - hh], [x1, yc - hh], [x1, yc + hh], [x0, yc + hh]];
+    body += fill('rect-fill', rect) + poly('ref', rect, 2, true); pts = pts.concat(polyPts(rect.concat([rect[0]])));
+    // Electrones con su velocidad de deriva (contra la corriente).
+    [[205, 130], [290, 172], [370, 128], [450, 170]].forEach(function (p) {
+      body += f2exQ(p[0], p[1], -1, 10, 15) + arrow('aux', p[0] - 14, p[1], -32, 0, 2.2);
+      pts = pts.concat(f2exCirc(p[0], p[1], 10), arrowPts(p[0] - 14, p[1], -32, 0));
+    });
+    body += f2exPut([[175, 160, f2exSub('v', 'd'), 'middle'], [175, 112, f2exSub('v', 'd'), 'middle']], pts, 17, vb);
+    body += f2exCur(270, 80, 130, 0, pts);
+    body += f2exPut([[260, 86, 'I = ' + f2exNum(I) + ' A', 'end'], [335, 66, 'I = ' + f2exNum(I) + ' A', 'middle']], pts, fs, vb);
+    body += f2exDim(x0, x1, yc + hh + 22, pts) + f2exPut([[(x0 + x1) / 2, yc + hh + 46, 'tramo de L = ' + f2exNum(L) + ' m', 'middle']], pts, fs, vb);
+    body += f2exDimV(x0 - 18, yc - hh, yc + hh, pts) + f2exPut([[x0 - 28, yc + 6, 'd = ' + f2exNum(d) + ' mm', 'end']], pts, fs, vb);
+    return svgBox('0 40 640 230', 'Un tramo de cable de cobre de ' + d + ' mm de diámetro con corriente ' + I + ' A hacia la derecha; los electrones derivan hacia la izquierda.', body);
+  };
+
+  /* ---------- Batería real y red mixta (S12) ---------- */
+  D['f2exam-red-fem'] = function (s) {
+    var E = num(s, 'E', 12), r = num(s, 'r', 0.5), R1 = num(s, 'R1', 4), R2 = num(s, 'R2', 6), R3 = num(s, 'R3', 3);
+    var xl = 120, xa = 400, xb = 520, yt = 70, yb = 270, fs = 16, vb = [0, 20, 640, 300], body = '', pts = [];
+    body += f2exBranch(xl, yt, xl, yb, [{ t: 'bat', at: 132, plus: -1 }, { t: 'res', at: 205 }], pts);
+    body += f2exBranch(xl, yt, xb, yt, [{ t: 'res', at: 260 }], pts);
+    body += f2exBranch(xa, yt, xa, yb, [{ t: 'res', at: 170 }], pts) + f2exBranch(xb, yt, xb, yb, [{ t: 'res', at: 170 }], pts);
+    body += f2exWires([[xl, yb, xb, yb]], pts);
+    body += f2exBox(xl - 30, 100, xl + 30, 245, pts);
+    body += dot('dot-ref', xa, yt, 4.5) + dot('dot-ref', xa, yb, 4.5);
+    body += f2exPut([[xl - 38, 130, '+', 'end']], pts, 18, vb);
+    body += f2exPut([[xl + 42, 138, 'ε = ' + f2exNum(E) + ' V', 'start']], pts, fs, vb);
+    body += f2exPut([[xl + 42, 211, 'r = ' + f2exNum(r) + ' Ω', 'start']], pts, fs, vb);
+    body += f2exPut([[260, yt - 22, f2exSub('R', '1') + ' = ' + f2exNum(R1) + ' Ω', 'middle']], pts, fs, vb);
+    body += f2exPut([[xa - 20, 176, f2exSub('R', '2') + ' = ' + f2exNum(R2) + ' Ω', 'end']], pts, fs, vb);
+    body += f2exPut([[xb + 20, 176, f2exSub('R', '3') + ' = ' + f2exNum(R3) + ' Ω', 'start']], pts, fs, vb);
+    body += f2exCur(xl + 26, yt, 46, 0, pts) + f2exPut([[xl + 49, yt - 14, 'I', 'middle']], pts, 17, vb);
+    return svgBox('0 20 640 280', 'Una batería de ' + E + ' V con resistencia interna ' + r + ' ohms, en la caja punteada, alimenta a R1 en serie con R2 y R3 en paralelo.', body);
+  };
+
+  /* ---------- Una batería carga a otra (S13) ---------- */
+  D['f2exam-cargador'] = function (s) {
+    var E1 = num(s, 'E1', 18), E2 = num(s, 'E2', 9), r1 = num(s, 'r1', 0.5), r2 = num(s, 'r2', 0.5), R = num(s, 'R', 4);
+    var xl = 130, xr = 510, yt = 70, yb = 270, fs = 16, vb = [0, 20, 640, 305], body = '', pts = [];
+    body += f2exBranch(xl, yt, xl, yb, [{ t: 'bat', at: 132, plus: -1 }, { t: 'res', at: 205 }], pts);
+    body += f2exBranch(xr, yt, xr, yb, [{ t: 'bat', at: 132, plus: -1 }, { t: 'res', at: 205 }], pts);
+    body += f2exBranch(xl, yt, xr, yt, [{ t: 'res', at: 320 }], pts) + f2exWires([[xl, yb, xr, yb]], pts);
+    body += f2exBox(xl - 30, 100, xl + 30, 245, pts) + f2exBox(xr - 30, 100, xr + 30, 245, pts);
+    body += f2exPut([[xl - 38, 130, '+', 'end']], pts, 18, vb) + f2exPut([[xr + 38, 130, '+', 'start']], pts, 18, vb);
+    body += f2exPut([[xl + 42, 138, f2exSub('ε', '1') + ' = ' + f2exNum(E1) + ' V', 'start']], pts, fs, vb);
+    body += f2exPut([[xl + 42, 211, f2exSub('r', '1') + ' = ' + f2exNum(r1) + ' Ω', 'start']], pts, fs, vb);
+    body += f2exPut([[xr - 42, 138, f2exSub('ε', '2') + ' = ' + f2exNum(E2) + ' V', 'end']], pts, fs, vb);
+    body += f2exPut([[xr - 42, 211, f2exSub('r', '2') + ' = ' + f2exNum(r2) + ' Ω', 'end']], pts, fs, vb);
+    body += f2exPut([[320, yt - 22, 'R = ' + f2exNum(R) + ' Ω', 'middle']], pts, fs, vb);
+    body += f2exPut([[xl, yb + 24, 'batería 1', 'middle']], pts, 15, vb) + f2exPut([[xr, yb + 24, 'batería 2', 'middle']], pts, 15, vb);
+    body += f2exCur(190, yt, 50, 0, pts) + f2exPut([[215, yt - 14, 'I', 'middle']], pts, 17, vb);
+    return svgBox('0 20 640 285', 'Una sola malla: la batería 1 a la izquierda y la batería 2 a la derecha, ambas con su terminal positiva arriba, y el resistor R en el cable de arriba. La corriente circula en sentido horario.', body);
+  };
+
+  /* ---------- Dos baterías y tres ramas (S13 + S14) ---------- */
+  D['f2exam-dos-baterias'] = function (s) {
+    var E1 = num(s, 'E1', 12), E2 = num(s, 'E2', 6), R = [num(s, 'R1', 2), num(s, 'R2', 4), num(s, 'R3', 3)];
+    var X = [130, 320, 510], yt = 60, yb = 290, fs = 16, vb = [0, 20, 640, 335], body = '', pts = [];
+    body += f2exWires([[X[0], yt, X[2], yt], [X[0], yb, X[2], yb]], pts);
+    [0, 1, 2].forEach(function (k) {
+      var x = X[k], bat = k !== 1, E = k === 0 ? E1 : E2;
+      body += f2exBranch(x, yt, x, yb, bat ? [{ t: 'bat', at: 118, plus: -1 }, { t: 'res', at: 190 }] : [{ t: 'res', at: 165 }], pts);
+      var ry = bat ? 190 : 165;
+      // Corriente: I1 e I3 hacia arriba, I2 hacia abajo.
+      body += k === 1 ? f2exCur(x, 236, 0, 30, pts) : f2exCur(x, 266, 0, -30, pts);
+      if (bat) {
+        body += f2exPut([[x - 30, 116, '+', 'end']], pts, 18, vb);
+        body += f2exPut([[x + 28, 124, f2exSub('ε', k === 0 ? '1' : '2') + ' = ' + f2exNum(E) + ' V', 'start']], pts, fs, vb);
+      }
+      body += f2exPut([[x + 20, ry + 6, f2exSub('R', String(k + 1)) + ' = ' + f2exNum(R[k]) + ' Ω', 'start']], pts, fs, vb);
+      body += f2exPut([[x - 14, 258, f2exSub('I', String(k + 1)), 'end'], [x + 14, 258, f2exSub('I', String(k + 1)), 'start']], pts, 17, vb);
+    });
+    body += dot('dot-ref', X[1], yt, 5) + dot('dot-ref', X[1], yb, 5);
+    body += f2exPut([[X[1], yt - 14, 'a', 'middle']], pts, 17, vb) + f2exPut([[X[1], yb + 28, 'b', 'middle']], pts, 17, vb);
+    return svgBox('0 20 640 315', 'Dos nodos, a arriba y b abajo, unidos por tres ramas: la izquierda con la batería 1 y R1, la del centro con R2 y la derecha con la batería 2 y R3. Las baterías tienen su terminal positiva arriba. Flechas: I1 e I3 hacia arriba, I2 hacia abajo.', body);
+  };
+
+  /* ---------- Tres mallas con un capacitor (S14) ---------- */
+  D['f2exam-tres-mallas'] = function (s) {
+    var E1 = num(s, 'E1', 12), E2 = num(s, 'E2', 6), C = num(s, 'C', 10), R = [1, 2, 3, 4, 5].map(function (k) { return num(s, 'R' + k, k); });
+    var X = [90, 250, 430, 580], yt = 60, yb = 300, fs = 16, vb = [0, 20, 640, 320], body = '', pts = [];
+    var RL = function (k) { return f2exSub('R', String(k)) + ' = ' + f2exNum(R[k - 1]) + ' Ω'; };
+    body += f2exBranch(X[0], yt, X[0], yb, [{ t: 'bat', at: 110, plus: -1 }, { t: 'res', at: 230 }], pts);
+    body += f2exBranch(X[1], yt, X[1], yb, [{ t: 'res', at: 130 }], pts);
+    body += f2exBranch(X[0], yt, X[3], yt, [{ t: 'res', at: 300 }, { t: 'bat', at: 385, plus: 1 }], pts);
+    body += f2exBranch(X[2], yt, X[2], yb, [{ t: 'res', at: 230 }], pts);
+    body += f2exBranch(X[3], yt, X[3], yb, [{ t: 'res', at: 130 }, { t: 'cap', at: 230 }], pts);
+    body += f2exWires([[X[0], yb, X[3], yb]], pts);
+    [[X[1], yt], [X[2], yt], [X[1], yb], [X[2], yb]].forEach(function (p) { body += dot('dot-ref', p[0], p[1], 4.5); });
+    body += f2exPut([[X[0] - 30, 108, '+', 'end']], pts, 18, vb) + f2exPut([[408, yt - 10, '+', 'start']], pts, 18, vb);
+    body += f2exPut([[X[0] + 28, 116, f2exSub('ε', '1') + ' = ' + f2exNum(E1) + ' V', 'start']], pts, fs, vb);
+    body += f2exPut([[X[0] + 20, 236, RL(1), 'start']], pts, fs, vb);
+    body += f2exPut([[X[1] + 20, 136, RL(2), 'start']], pts, fs, vb);
+    body += f2exPut([[295, yt - 20, RL(3), 'middle']], pts, fs, vb);
+    body += f2exPut([[418, yt + 36, f2exSub('ε', '2') + ' = ' + f2exNum(E2) + ' V', 'end']], pts, fs, vb);
+    body += f2exPut([[X[2] - 20, 236, RL(4), 'end']], pts, fs, vb);
+    body += f2exPut([[X[3] - 20, 136, RL(5), 'end']], pts, fs, vb);
+    body += f2exPut([[X[3] - 26, 236, 'C = ' + f2exNum(C) + ' μF', 'end']], pts, fs, vb);
+    body += f2exLoop(170, 178, 22, f2exSub('I', '1'), pts, vb) + f2exLoop(340, 178, 22, f2exSub('I', '2'), pts, vb);
+    return svgBox('0 20 640 300', 'Circuito de tres mallas: a la izquierda la batería 1 y R1; R2 en la primera rama interior; arriba R3 y la batería 2 con su terminal positiva a la derecha; R4 en la segunda rama interior; a la derecha R5 y el capacitor. I1 e I2 son las corrientes de malla en sentido horario.', body);
+  };
+
+  /* ---------- Carga de un capacitor (S15) ---------- */
+  D['f2exam-rc-carga'] = function (s) {
+    var E = num(s, 'E', 12), R = num(s, 'R', 10), C = num(s, 'C', 20);
+    var xl = 110, xr = 500, yt = 80, yb = 260, fs = 16, vb = [0, 20, 640, 280], body = '', pts = [];
+    body += f2exBranch(xl, yt, xl, yb, [{ t: 'bat', at: 170, plus: -1 }], pts);
+    body += f2exBranch(xl, yt, xr, yt, [{ t: 'sw', at: 200 }, { t: 'res', at: 340 }], pts);
+    body += f2exBranch(xr, yt, xr, yb, [{ t: 'cap', at: 170 }], pts) + f2exWires([[xl, yb, xr, yb]], pts);
+    body += f2exPut([[xl - 30, 168, '+', 'end']], pts, 18, vb);
+    body += f2exPut([[xl + 28, 176, 'ε = ' + f2exNum(E) + ' V', 'start']], pts, fs, vb);
+    body += f2exPut([[200, yt - 34, 'S (t = 0)', 'middle'], [200, yt + 28, 'S (t = 0)', 'middle']], pts, fs, vb);
+    body += f2exPut([[340, yt - 22, 'R = ' + f2exNum(R) + ' kΩ', 'middle']], pts, fs, vb);
+    body += f2exPut([[xr + 26, 176, 'C = ' + f2exNum(C) + ' μF', 'start']], pts, fs, vb);
+    body += f2exCur(415, yt, 50, 0, pts) + f2exPut([[440, yt - 14, 'i', 'middle']], pts, 17, vb);
+    return svgBox('0 20 640 260', 'Una batería de ' + E + ' V, el interruptor S, un resistor de ' + R + ' kilohms y un capacitor de ' + C + ' microfaradios en serie.', body);
+  };
+
+  /* ---------- Divisor y descarga (S15 + S12) ---------- */
+  D['f2exam-rc-descarga'] = function (s) {
+    var E = num(s, 'E', 12), R1 = num(s, 'R1', 4), R2 = num(s, 'R2', 6), C = num(s, 'C', 20);
+    var xl = 100, xa = 380, xb = 520, yt = 80, yb = 260, fs = 16, vb = [0, 20, 640, 280], body = '', pts = [];
+    body += f2exBranch(xl, yt, xl, yb, [{ t: 'bat', at: 170, plus: -1 }], pts);
+    body += f2exBranch(xl, yt, xb, yt, [{ t: 'sw', at: 180 }, { t: 'res', at: 280 }], pts);
+    body += f2exBranch(xa, yt, xa, yb, [{ t: 'res', at: 170 }], pts) + f2exBranch(xb, yt, xb, yb, [{ t: 'cap', at: 170 }], pts);
+    body += f2exWires([[xl, yb, xb, yb]], pts);
+    body += dot('dot-ref', xa, yt, 4.5) + dot('dot-ref', xa, yb, 4.5);
+    body += f2exPut([[xl - 30, 168, '+', 'end']], pts, 18, vb);
+    body += f2exPut([[xl + 28, 176, 'ε = ' + f2exNum(E) + ' V', 'start']], pts, fs, vb);
+    body += f2exPut([[180, yt - 34, 'S', 'middle'], [180, yt + 28, 'S', 'middle']], pts, fs, vb);
+    body += f2exPut([[280, yt - 22, f2exSub('R', '1') + ' = ' + f2exNum(R1) + ' kΩ', 'middle']], pts, fs, vb);
+    body += f2exPut([[xa - 20, 176, f2exSub('R', '2') + ' = ' + f2exNum(R2) + ' kΩ', 'end']], pts, fs, vb);
+    body += f2exPut([[xb + 26, 176, 'C = ' + f2exNum(C) + ' μF', 'start']], pts, fs, vb);
+    return svgBox('0 20 640 260', 'Una batería de ' + E + ' V con el interruptor S y R1 en el cable de arriba; R2 y el capacitor en paralelo a la derecha.', body);
   };
 
   /* ══════════════════════ fin Examen ══════════════════════ */

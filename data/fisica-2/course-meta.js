@@ -39,11 +39,11 @@ window.COURSE_META = {
     {
       id: 'C', label: 'Circuitos',
       sessions: [
-        { n: 11, tag: 'Ley de Ohm', title: 'Corriente, resistividad, ley de Ohm y potencia', short: 'Corriente y ley de Ohm', lab: 'iv-curve', ready: false, bank: false },
-        { n: 12, tag: 'Redes de resistores', title: 'Resistores en serie y en paralelo, fem y resistencia interna', short: 'Redes de resistores', lab: 'resistor-network', ready: false, bank: false },
-        { n: 13, tag: 'Kirchhoff I', title: 'Leyes de Kirchhoff I: nodos, mallas y convención de signos', short: 'Kirchhoff: nodos y mallas', lab: 'kirchhoff-signs', ready: false, bank: false },
-        { n: 14, tag: 'Kirchhoff II', title: 'Leyes de Kirchhoff II: varias mallas como sistema de ecuaciones', short: 'Kirchhoff: varias mallas', lab: 'kirchhoff-solve', ready: false, bank: false },
-        { n: 15, tag: 'Circuito RC', title: 'Circuito RC: carga y descarga, constante de tiempo y energía', short: 'Circuito RC', lab: 'rc-circuit', ready: false, bank: false }
+        { n: 11, tag: 'Ley de Ohm', title: 'Corriente, resistividad, ley de Ohm y potencia', short: 'Corriente y ley de Ohm', lab: 'iv-curve', ready: true, bank: true },
+        { n: 12, tag: 'Redes de resistores', title: 'Resistores en serie y en paralelo, fem y resistencia interna', short: 'Redes de resistores', lab: 'resistor-network', ready: true, bank: true },
+        { n: 13, tag: 'Kirchhoff I', title: 'Leyes de Kirchhoff I: nodos, mallas y convención de signos', short: 'Kirchhoff: nodos y mallas', lab: 'kirchhoff-signs', ready: true, bank: true },
+        { n: 14, tag: 'Kirchhoff II', title: 'Leyes de Kirchhoff II: varias mallas como sistema de ecuaciones', short: 'Kirchhoff: varias mallas', lab: 'kirchhoff-solve', ready: true, bank: true },
+        { n: 15, tag: 'Circuito RC', title: 'Circuito RC: carga y descarga, constante de tiempo y energía', short: 'Circuito RC', lab: 'rc-circuit', ready: true, bank: true }
       ]
     }
   ]

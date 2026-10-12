@@ -5,7 +5,7 @@
    k = 8.99 × 10⁹ N·m²/C², e = 1.60 × 10⁻¹⁹ C, mₑ = 9.11 × 10⁻³¹ kg,
    mₚ = 1.67 × 10⁻²⁷ kg (los mismos valores que las sesiones y los labs).
    ε₀ = 8.85 × 10⁻¹² C²/(N·m²) en el bloque B.
-   Bloque A (S01–S05): 8 problemas. Bloque B (S06–S10): 8 problemas.
+   Bloque A (S01–S05): 8 problemas. Bloque B (S06–S10): 8 problemas. Bloque C (S11–S15): 8 problemas.
    Las unidades de cada inciso se eligen para que las respuestas queden,
    casi siempre, entre 0.1 y 10⁴.
    ===================================================================== */
@@ -118,6 +118,52 @@
   function cnet(v) {
     var Cp = v.C2 + v.C3, Ce = v.C1 * Cp / (v.C1 + Cp), Q = Ce * v.V, V2 = Q / Cp;
     return { Cp: Cp, Ce: Ce, Q: Q, V1: Q / v.C1, V2: V2, U2: 0.5 * v.C2 * V2 * V2 };
+  }
+
+  /* ---------- Bloque C ---------- */
+  var RHO_NI = 1.00e-6, RHO_CU = 1.72e-8, N_CU = 8.47e28, VCASA = 127;
+  // Calentador: nicromo de L m y d mm a 127 V; h horas al día durante 30 días a p pesos/kWh.
+  function htr(v) {
+    var A = PI * Math.pow(v.d * 1e-3, 2) / 4, R = RHO_NI * v.L / A, I = VCASA / R, P = VCASA * I, kWh = P * v.h * 30 / 1000;
+    return { A: A, R: R, I: I, P: P, kWh: kWh, cost: kWh * v.p };
+  }
+  // Cable de cobre: I en A, d en mm, L en m. J en A/m², v_d en mm/s, t en min, E en mV/m, ΔV en mV.
+  function cu(v) {
+    var A = PI * Math.pow(v.d * 1e-3, 2) / 4, J = v.I / A, vd = J / (N_CU * e);
+    return { A: A, J: J, vd: vd * 1e3, t: v.L / vd / 60, E: RHO_CU * J * 1e3, dV: RHO_CU * J * v.L * 1e3 };
+  }
+  // R1 en serie con (R2 ∥ R3), fem ε con resistencia interna r. Ω, V, A, W.
+  function rnet(v) {
+    var Rp = v.R2 * v.R3 / (v.R2 + v.R3), Req = v.R1 + Rp, I = v.E / (Req + v.r), Vt = v.E - I * v.r, Vp = I * Rp;
+    return { Rp: Rp, Req: Req, I: I, Vt: Vt, Vp: Vp, P2: Vp * Vp / v.R2 };
+  }
+  // Cargador: ε1 (r1) carga a ε2 (r2) a través de R; las fem se oponen. Ω, V, A, W.
+  function chg(v) {
+    var I = (v.E1 - v.E2) / (v.R + v.r1 + v.r2), V1 = v.E1 - I * v.r1;
+    return { I: I, V1: V1, V2: v.E2 + I * v.r2, Pst: v.E2 * I, Pout: V1 * I };
+  }
+  // Dos nodos (a arriba, b abajo) y tres ramas: ε1 + R1 | R2 | ε2 + R3, con el + de las fem hacia a.
+  // Sentidos supuestos: I1 e I3 hacia arriba, I2 hacia abajo.
+  function two(v) {
+    var Vab = (v.E1 / v.R1 + v.E2 / v.R3) / (1 / v.R1 + 1 / v.R2 + 1 / v.R3);
+    var I1 = (v.E1 - Vab) / v.R1, I3 = (v.E2 - Vab) / v.R3;
+    return { Vab: Vab, I1: I1, I2: Vab / v.R2, I3: I3, P2: v.E2 * I3 };
+  }
+  // Tres mallas: ε1 + R1 a la izquierda (+ arriba) · R2 · arriba R3 y ε2 (+ a la derecha) · R4 · R5 + C.
+  // Mallas en sentido horario; en estado estable la del capacitor no lleva corriente. C en μF.
+  function msh(v) {
+    var S = v.R2 + v.R3 + v.R4, I1 = (v.E1 * S + v.E2 * v.R2) / ((v.R1 + v.R2) * S - v.R2 * v.R2), I2 = (v.E2 + v.R2 * I1) / S, VC = I2 * v.R4;
+    return { S: S, I1: I1, I2: I2, VC: VC, Q: v.C * VC, U: 0.5 * v.C * VC * VC };
+  }
+  // RC: R en kΩ, C en μF, ε en V, t en ms → τ en ms, q en μC, i en mA, energía en mJ.
+  function rcc(v) {
+    var tau = v.R * v.C, x = Math.exp(-v.t / tau), q = v.C * v.E * (1 - x);
+    return { tau: tau, q: q, i: v.E / v.R * x, ts: -tau * Math.log(1 - v.p / 100), W: (v.E * q - q * q / (2 * v.C)) / 1000 };
+  }
+  // Descarga: C cargado en estado estable con el divisor R1–R2; al abrir S se descarga por R2.
+  function rcd(v) {
+    var V0 = v.E * v.R2 / (v.R1 + v.R2), tau = v.R2 * v.C, V = V0 * Math.exp(-v.t / tau);
+    return { V0: V0, Q0: v.C * V0, tau: tau, V: V, W: 0.5 * v.C * (V0 * V0 - V * V) / 1000 };
   }
 
   ex.f2 = (ex.f2 || []).concat([
@@ -633,6 +679,273 @@
           prompt: function () { return 'Con tu voltaje de d), ¿cuánta energía guarda $C_2$?'; },
           answer: function (v, prev) { return 0.5 * v.C2 * prev[3] * prev[3]; },
           solution: function (v) { var n = cnet(v); return 'Con μF por V² salen μJ: $$U_2 = \\tfrac{1}{2}C_2V_2^2 = \\tfrac{1}{2}(' + v.C2 + ')(' + fx(n.V2) + ')^2 = ' + fx(n.U2) + '\\ \\mu\\text{J}$$'; } }
+      ]
+    },
+
+    /* ================= Bloque C (S11–S15) ================= */
+
+    /* ---------------- S11 · El calentador de nicromo ---------------- */
+    {
+      id: 'f2-ex-calentador', tags: ['f2.S11'], block: 'C', title: 'El recibo del calentador',
+      vars: { L: [1, 6, 0.5], d: [0.3, 1, 0.1], h: [1, 8, 1], p: [1, 4, 0.5] },
+      where: function (v) { var c = htr(v); return c.P >= 300 && c.P <= 3000; },
+      statement: function (v) {
+        return '<p>Un calentador eléctrico usa un alambre de nicromo de $' + v.L + '$ m de largo y $' + v.d + '$ mm de diámetro, conectado a $127$ V. Se usa $' + v.h + '$ h al día durante 30 días y la energía cuesta $' + v.p + '$ pesos/kWh. Usa $\\rho = 1.00 \\times 10^{-6}\\ \\Omega\\text{·m}$ y trátala como constante (ignora el calentamiento del alambre).</p>';
+      },
+      diagram: { id: 'f2exam-calentador', state: function (v) { return v; } },
+      parts: [
+        { label: 'a', type: 'numeric', points: 2, unit: 'Ω',
+          prompt: function () { return '¿Cuál es la resistencia del alambre?'; },
+          answer: function (v) { return htr(v).R; },
+          solution: function (v) { var c = htr(v); return 'El área sale del diámetro, no del radio: $A = \\dfrac{\\pi d^2}{4} = \\dfrac{\\pi(' + sci(v.d * 1e-3) + ')^2}{4} = ' + sci(c.A) + '\\ \\text{m}^2$. $$R = \\frac{\\rho L}{A} = \\frac{(1.00 \\times 10^{-6})(' + v.L + ')}{' + sci(c.A) + '} = ' + fx(c.R) + '\\ \\Omega$$'; } },
+        { label: 'b', type: 'numeric', points: 2, unit: 'A',
+          prompt: function () { return 'Con tu resistencia de a), ¿cuánta corriente pasa por el alambre?'; },
+          answer: function (v, prev) { return VCASA / prev[0]; },
+          solution: function (v) { var c = htr(v); return '$$I = \\frac{V}{R} = \\frac{127}{' + fx(c.R) + '} = ' + fx(c.I) + '\\ \\text{A}$$'; } },
+        { label: 'c', type: 'numeric', points: 3, unit: 'W',
+          prompt: function () { return 'Con tu corriente de b), ¿qué potencia consume el calentador?'; },
+          answer: function (v, prev) { return VCASA * prev[1]; },
+          solution: function (v) { var c = htr(v); return '$$P = IV = (' + fx(c.I) + ')(127) = ' + fx(c.P) + '\\ \\text{W}$$ Comprueba: $V^2/R = 127^2/' + fx(c.R) + '$ da lo mismo.'; } },
+        { label: 'd', type: 'numeric', points: 3, unit: 'pesos',
+          prompt: function () { return 'Con tu potencia de c), ¿cuánto cuesta usarlo durante los 30 días?'; },
+          answer: function (v, prev) { return prev[2] / 1000 * v.h * 30 * v.p; },
+          solution: function (v) { var c = htr(v); return 'Primero la energía en kWh: potencia en kW por horas de uso. $$E = (' + fx(c.P / 1000, 3) + '\\ \\text{kW})(' + v.h + ' \\times 30\\ \\text{h}) = ' + fx(c.kWh) + '\\ \\text{kWh}$$ $$\\text{costo} = (' + fx(c.kWh) + '\\ \\text{kWh})(' + v.p + '\\ \\text{pesos/kWh}) = ' + fx(c.cost) + '\\ \\text{pesos}$$'; } }
+      ]
+    },
+
+    /* ---------------- S11 · Lo que pasa dentro de un cable de cobre ---------------- */
+    {
+      id: 'f2-ex-cobre', tags: ['f2.S11'], block: 'C', title: 'Dentro del cable de cobre',
+      vars: { I: [2, 20, 1], d: [0.8, 2.6, 0.2], L: [0.5, 3, 0.5] },
+      where: function (v) { return cu(v).vd >= 0.1; },
+      statement: function (v) {
+        return '<p>Un cable de cobre de $' + v.d + '$ mm de diámetro lleva una corriente constante de $' + v.I + '$ A. Usa $n = 8.47 \\times 10^{28}$ electrones libres/m³, $e = 1.60 \\times 10^{-19}$ C y $\\rho = 1.72 \\times 10^{-8}\\ \\Omega\\text{·m}$ para el cobre.</p>';
+      },
+      diagram: { id: 'f2exam-cobre', state: function (v) { return v; } },
+      parts: [
+        { label: 'a', type: 'numeric', points: 2, unit: 'A/m²',
+          prompt: function () { return '¿Cuánto vale la densidad de corriente $J$ en el cable?'; },
+          answer: function (v) { return cu(v).J; },
+          solution: function (v) { var c = cu(v); return '$A = \\dfrac{\\pi d^2}{4} = \\dfrac{\\pi(' + sci(v.d * 1e-3) + ')^2}{4} = ' + sci(c.A) + '\\ \\text{m}^2$. $$J = \\frac{I}{A} = \\frac{' + v.I + '}{' + sci(c.A) + '} = ' + sci(c.J) + '\\ \\text{A/m}^2$$'; } },
+        { label: 'b', type: 'numeric', points: 2, unit: 'mm/s',
+          prompt: function () { return 'Con tu $J$ de a), ¿qué velocidad de deriva tienen los electrones? En mm/s.'; },
+          answer: function (v, prev) { return prev[0] / (N_CU * e) * 1e3; },
+          solution: function (v) { var c = cu(v); return 'De $J = nev_d$: $$v_d = \\frac{J}{ne} = \\frac{' + sci(c.J) + '}{(8.47 \\times 10^{28})(1.60 \\times 10^{-19})} = ' + sci(c.vd * 1e-3) + '\\ \\text{m/s} = ' + fx(c.vd, 3) + '\\ \\text{mm/s}$$'; } },
+        { label: 'c', type: 'numeric', points: 2, unit: 'min',
+          prompt: function (v) { return 'Con tu velocidad de b), ¿cuántos minutos tarda un electrón en avanzar $' + v.L + '$ m a lo largo del cable?'; },
+          answer: function (v, prev) { return v.L / (prev[1] * 1e-3) / 60; },
+          solution: function (v) { var c = cu(v); return '$$t = \\frac{L}{v_d} = \\frac{' + v.L + '\\ \\text{m}}{' + sci(c.vd * 1e-3) + '\\ \\text{m/s}} = ' + fx(c.t * 60, 1) + '\\ \\text{s} = ' + fx(c.t) + '\\ \\text{min}$$ La luz prende al instante porque el campo se establece en todo el cable casi a la velocidad de la luz, no porque los electrones corran.'; } },
+        { label: 'd', type: 'numeric', points: 2, unit: 'mV/m',
+          prompt: function () { return 'Con tu $J$ de a), ¿qué magnitud tiene el campo eléctrico dentro del cable? En mV/m.'; },
+          answer: function (v, prev) { return RHO_CU * prev[0] * 1e3; },
+          solution: function (v) { var c = cu(v); return 'La ley de Ohm en forma local es $\\vec E = \\rho\\vec J$: $$E = (1.72 \\times 10^{-8})(' + sci(c.J) + ') = ' + sci(c.E * 1e-3) + '\\ \\text{V/m} = ' + fx(c.E) + '\\ \\text{mV/m}$$'; } },
+        { label: 'e', type: 'numeric', points: 2, unit: 'mV',
+          prompt: function (v) { return 'Con tu campo de d), ¿qué diferencia de potencial hay entre los extremos de un tramo de $' + v.L + '$ m? En mV.'; },
+          answer: function (v, prev) { return prev[3] * v.L; },
+          solution: function (v) { var c = cu(v); return 'El campo es uniforme a lo largo del cable: $$\\Delta V = EL = (' + fx(c.E) + '\\ \\text{mV/m})(' + v.L + '\\ \\text{m}) = ' + fx(c.dV) + '\\ \\text{mV}$$ Comprueba: $IR = I\\rho L/A$ da lo mismo.'; } }
+      ]
+    },
+
+    /* ---------------- S12 + S11 · Red mixta con batería real ---------------- */
+    {
+      id: 'f2-ex-red-fem', tags: ['f2.S12', 'f2.S11'], block: 'C', title: 'La batería real y la red',
+      vars: { E: [6, 24, 1.5], r: [0.2, 2, 0.2], R1: [1, 10, 1], R2: [2, 12, 1], R3: [2, 12, 1] },
+      where: function (v) { return rnet(v).P2 >= 0.3; },
+      statement: function (v) {
+        return '<p>Una batería de fem $\\varepsilon = ' + v.E + '$ V y resistencia interna $r = ' + v.r + '\\ \\Omega$ alimenta una red: $R_1 = ' + v.R1 + '\\ \\Omega$ en serie con el par $R_2 = ' + v.R2 + '\\ \\Omega$ y $R_3 = ' + v.R3 + '\\ \\Omega$, que están en paralelo entre sí.</p>';
+      },
+      diagram: { id: 'f2exam-red-fem', state: function (v) { return v; } },
+      parts: [
+        { label: 'a', type: 'numeric', points: 2, unit: 'Ω',
+          prompt: function () { return '¿Cuál es la resistencia equivalente de la red que está fuera de la batería?'; },
+          answer: function (v) { return rnet(v).Req; },
+          solution: function (v) { var n = rnet(v); return 'Primero el paralelo: $R_{23} = \\dfrac{R_2R_3}{R_2 + R_3} = \\dfrac{(' + v.R2 + ')(' + v.R3 + ')}{' + v.R2 + ' + ' + v.R3 + '} = ' + fx(n.Rp, 3) + '\\ \\Omega$. Luego la serie: $$R_{eq} = R_1 + R_{23} = ' + v.R1 + ' + ' + fx(n.Rp, 3) + ' = ' + fx(n.Req, 3) + '\\ \\Omega$$'; } },
+        { label: 'b', type: 'numeric', points: 2, unit: 'A',
+          prompt: function () { return 'Con tu resultado de a), ¿cuánta corriente entrega la batería?'; },
+          answer: function (v, prev) { return v.E / (prev[0] + v.r); },
+          solution: function (v) { var n = rnet(v); return 'La resistencia interna queda en serie con la red: $$I = \\frac{\\varepsilon}{R_{eq} + r} = \\frac{' + v.E + '}{' + fx(n.Req, 3) + ' + ' + v.r + '} = ' + fx(n.I, 3) + '\\ \\text{A}$$'; } },
+        { label: 'c', type: 'numeric', points: 3, unit: 'V',
+          prompt: function () { return 'Con tu corriente de b), ¿qué voltaje marca un voltímetro entre las terminales de la batería?'; },
+          answer: function (v, prev) { return v.E - prev[1] * v.r; },
+          solution: function (v) { var n = rnet(v); return 'Dentro de la batería se pierde $Ir$: $$V_t = \\varepsilon - Ir = ' + v.E + ' - (' + fx(n.I, 3) + ')(' + v.r + ') = ' + fx(n.Vt) + '\\ \\text{V}$$'; } },
+        { label: 'd', type: 'numeric', points: 3, unit: 'W',
+          prompt: function () { return 'Con tus resultados de b) y c), ¿qué potencia se disipa en $R_2$?'; },
+          answer: function (v, prev) { var Vp = prev[2] - prev[1] * v.R1; return Vp * Vp / v.R2; },
+          solution: function (v) { var n = rnet(v); return 'A $R_1$ le toca $IR_1$; lo que queda del voltaje terminal es el voltaje del par en paralelo: $V_{23} = V_t - IR_1 = ' + fx(n.Vt) + ' - (' + fx(n.I, 3) + ')(' + v.R1 + ') = ' + fx(n.Vp, 3) + '$ V. $$P_2 = \\frac{V_{23}^2}{R_2} = \\frac{(' + fx(n.Vp, 3) + ')^2}{' + v.R2 + '} = ' + fx(n.P2) + '\\ \\text{W}$$'; } }
+      ]
+    },
+
+    /* ---------------- S13 + S12 · Una batería carga a otra ---------------- */
+    {
+      id: 'f2-ex-cargador', tags: ['f2.S13', 'f2.S12'], block: 'C', title: 'Una batería carga a otra',
+      vars: { E1: [9, 24, 1.5], E2: [3, 18, 1.5], r1: [0.2, 2, 0.2], r2: [0.2, 2, 0.2], R: [1, 10, 1] },
+      where: function (v) { return v.E1 - v.E2 >= 3 && chg(v).I >= 0.2; },
+      statement: function (v) {
+        return '<p>Una batería de fem $\\varepsilon_1 = ' + v.E1 + '$ V y resistencia interna $r_1 = ' + v.r1 + '\\ \\Omega$ carga a otra de fem $\\varepsilon_2 = ' + v.E2 + '$ V y resistencia interna $r_2 = ' + v.r2 + '\\ \\Omega$ a través de un resistor $R = ' + v.R + '\\ \\Omega$. Las dos tienen su terminal positiva arriba (ve la figura), así que sus fem se oponen en la malla.</p>';
+      },
+      diagram: { id: 'f2exam-cargador', state: function (v) { return v; } },
+      parts: [
+        { label: 'a', type: 'numeric', points: 2, unit: 'A',
+          prompt: function () { return '¿Cuánta corriente circula? Usa la regla de las mallas.'; },
+          answer: function (v) { return chg(v).I; },
+          solution: function (v) { var c = chg(v); return 'Recorres la malla en sentido horario, a favor de $I$: subes $\\varepsilon_1$, bajas $Ir_1$, $IR$, $\\varepsilon_2$ (la cruzas de + a −) e $Ir_2$. $$\\varepsilon_1 - Ir_1 - IR - \\varepsilon_2 - Ir_2 = 0 \\;\\Rightarrow\\; I = \\frac{' + v.E1 + ' - ' + v.E2 + '}{' + v.R + ' + ' + v.r1 + ' + ' + v.r2 + '} = ' + fx(c.I, 3) + '\\ \\text{A}$$'; } },
+        { label: 'b', type: 'numeric', points: 2, unit: 'V',
+          prompt: function () { return 'Con tu corriente de a), ¿qué voltaje hay entre las terminales de la batería 1?'; },
+          answer: function (v, prev) { return v.E1 - prev[0] * v.r1; },
+          solution: function (v) { var c = chg(v); return 'La batería 1 entrega corriente: su voltaje terminal es menor que su fem. $$V_1 = \\varepsilon_1 - Ir_1 = ' + v.E1 + ' - (' + fx(c.I, 3) + ')(' + v.r1 + ') = ' + fx(c.V1) + '\\ \\text{V}$$'; } },
+        { label: 'c', type: 'numeric', points: 2, unit: 'V',
+          prompt: function () { return 'Con tu corriente de a), ¿qué voltaje hay entre las terminales de la batería 2?'; },
+          answer: function (v, prev) { return v.E2 + prev[0] * v.r2; },
+          solution: function (v) { var c = chg(v); return 'A la batería 2 la corriente le entra por la terminal +: se está cargando y su voltaje terminal es mayor que su fem. $$V_2 = \\varepsilon_2 + Ir_2 = ' + v.E2 + ' + (' + fx(c.I, 3) + ')(' + v.r2 + ') = ' + fx(c.V2) + '\\ \\text{V}$$'; } },
+        { label: 'd', type: 'numeric', points: 2, unit: 'W',
+          prompt: function () { return 'Con tu corriente de a), ¿con qué rapidez guarda energía química la batería 2?'; },
+          answer: function (v, prev) { return v.E2 * prev[0]; },
+          solution: function (v) { var c = chg(v); return 'Solo la parte $\\varepsilon_2 I$ se guarda; lo de $I^2r_2$ se va en calor. $$P = \\varepsilon_2 I = (' + v.E2 + ')(' + fx(c.I, 3) + ') = ' + fx(c.Pst) + '\\ \\text{W}$$'; } },
+        { label: 'e', type: 'numeric', points: 3, unit: 'W',
+          prompt: function () { return 'Con tus resultados de a) y b), ¿qué potencia entrega la batería 1 al resto del circuito?'; },
+          answer: function (v, prev) { return prev[1] * prev[0]; },
+          solution: function (v) { var c = chg(v); return 'Lo que sale por sus terminales es $V_1 I$: $$P = V_1 I = (' + fx(c.V1) + ')(' + fx(c.I, 3) + ') = ' + fx(c.Pout) + '\\ \\text{W}$$ Comprueba: es igual a $\\varepsilon_2 I + I^2(R + r_2)$.'; } }
+      ]
+    },
+
+    /* ---------------- S13 + S14 · Dos baterías y tres resistores ---------------- */
+    {
+      id: 'f2-ex-dos-baterias', tags: ['f2.S13', 'f2.S14'], block: 'C', title: 'Dos baterías en paralelo',
+      vars: { E1: [6, 24, 2], E2: [2, 18, 2], R1: [1, 10, 1], R2: [1, 10, 1], R3: [1, 10, 1] },
+      where: function (v) { var t = two(v); return Math.abs(t.I1) >= 0.2 && Math.abs(t.I2) >= 0.2 && Math.abs(t.I3) >= 0.2 && Math.abs(t.P2) >= 0.5; },
+      statement: function (v) {
+        return '<p>En el circuito de la figura, la rama izquierda tiene $\\varepsilon_1 = ' + v.E1 + '$ V y $R_1 = ' + v.R1 + '\\ \\Omega$, la del centro solo $R_2 = ' + v.R2 + '\\ \\Omega$ y la derecha $\\varepsilon_2 = ' + v.E2 + '$ V y $R_3 = ' + v.R3 + '\\ \\Omega$. Las dos baterías tienen su terminal positiva hacia el nodo de arriba, a, y son ideales. Las flechas marcan los sentidos supuestos: $I_1$ e $I_3$ hacia arriba, $I_2$ hacia abajo. Da cada corriente con su signo respecto a su flecha.</p>';
+      },
+      diagram: { id: 'f2exam-dos-baterias', state: function (v) { return v; } },
+      parts: [
+        { label: 'a', type: 'numeric', points: 3, unit: 'A',
+          prompt: function () { return '¿Cuánto vale $I_1$? Plantea el nodo a y las dos mallas.'; },
+          answer: function (v) { return two(v).I1; },
+          solution: function (v) {
+            var t = two(v);
+            return 'Nodo a: $I_1 + I_3 = I_2$. Malla izquierda (horario): $' + v.E1 + ' - ' + v.R1 + 'I_1 - ' + v.R2 + 'I_2 = 0$. Malla derecha (antihorario, subiendo por $\\varepsilon_2$): $' + v.E2 + ' - ' + v.R3 + 'I_3 - ' + v.R2 + 'I_2 = 0$. Al resolver el sistema: $$I_1 = ' + fx(t.I1, 3) + '\\ \\text{A}$$' + (t.I1 < 0 ? ' El signo negativo dice que en realidad baja.' : '');
+          } },
+        { label: 'b', type: 'numeric', points: 2, unit: 'V',
+          prompt: function () { return 'Con tu $I_1$ de a), ¿cuánto vale $V_a - V_b$?'; },
+          answer: function (v, prev) { return v.E1 - prev[0] * v.R1; },
+          solution: function (v) { var t = two(v); return 'Caminas de b a a por la rama izquierda: subes $\\varepsilon_1$ y bajas $I_1R_1$ (vas a favor de $I_1$). $$V_a - V_b = \\varepsilon_1 - I_1R_1 = ' + v.E1 + ' - (' + fx(t.I1, 3) + ')(' + v.R1 + ') = ' + fx(t.Vab) + '\\ \\text{V}$$'; } },
+        { label: 'c', type: 'numeric', points: 2, unit: 'A',
+          prompt: function () { return 'Con tu voltaje de b), ¿cuánto vale $I_2$?'; },
+          answer: function (v, prev) { return prev[1] / v.R2; },
+          solution: function (v) { var t = two(v); return 'La rama del centro solo tiene $R_2$, con $V_{ab}$ encima: $$I_2 = \\frac{V_a - V_b}{R_2} = \\frac{' + fx(t.Vab) + '}{' + v.R2 + '} = ' + fx(t.I2, 3) + '\\ \\text{A}$$'; } },
+        { label: 'd', type: 'numeric', points: 2, unit: 'A',
+          prompt: function () { return 'Con tus corrientes de a) y c), ¿cuánto vale $I_3$?'; },
+          answer: function (v, prev) { return prev[2] - prev[0]; },
+          solution: function (v) { var t = two(v); return 'Regla del nodo a, lo que entra igual a lo que sale: $I_1 + I_3 = I_2$. $$I_3 = I_2 - I_1 = ' + fx(t.I2, 3) + ' - (' + fx(t.I1, 3) + ') = ' + fx(t.I3, 3) + '\\ \\text{A}$$' + (t.I3 < 0 ? ' Es negativa: por la batería 2 la corriente baja.' : ''); } },
+        { label: 'e', type: 'numeric', points: 3, unit: 'W',
+          prompt: function () { return 'Con tu $I_3$ de d), ¿qué potencia entrega la batería 2? (Negativa si en realidad la absorbe.)'; },
+          answer: function (v, prev) { return v.E2 * prev[3]; },
+          solution: function (v) { var t = two(v); return '$I_3$ sube por la batería 2, de − a +, así que $P = \\varepsilon_2I_3$: $$P = (' + v.E2 + ')(' + fx(t.I3, 3) + ') = ' + fx(t.P2) + '\\ \\text{W}$$ ' + (t.P2 > 0 ? 'Es positiva: la batería 2 entrega energía.' : 'Es negativa: la corriente la cruza de + a − y la batería 2 se está cargando.'); } }
+      ]
+    },
+
+    /* ---------------- S14 + S13 · Tres mallas y un capacitor ---------------- */
+    {
+      id: 'f2-ex-tres-mallas', tags: ['f2.S14', 'f2.S13'], block: 'C', title: 'Tres mallas y un capacitor',
+      vars: { E1: [6, 24, 2], E2: [2, 12, 2], R1: [1, 10, 1], R2: [1, 10, 1], R3: [1, 10, 1], R4: [1, 10, 1], R5: [1, 10, 1], C: [2, 20, 2] },
+      where: function (v) { return msh(v).VC >= 1; },
+      statement: function (v) {
+        return '<p>En el circuito de la figura, $\\varepsilon_1 = ' + v.E1 + '$ V, $\\varepsilon_2 = ' + v.E2 + '$ V, $R_1 = ' + v.R1 + '\\ \\Omega$, $R_2 = ' + v.R2 + '\\ \\Omega$, $R_3 = ' + v.R3 + '\\ \\Omega$, $R_4 = ' + v.R4 + '\\ \\Omega$, $R_5 = ' + v.R5 + '\\ \\Omega$ y $C = ' + v.C + '\\ \\mu\\text{F}$. Las baterías son ideales. Ya pasó mucho tiempo desde que se conectó: el capacitor está en estado estable. $I_1$ e $I_2$ son las corrientes de malla, en sentido horario.</p>';
+      },
+      diagram: { id: 'f2exam-tres-mallas', state: function (v) { return v; } },
+      parts: [
+        { label: 'a', type: 'numeric', points: 3, unit: 'A',
+          prompt: function () { return '¿Cuánto vale la corriente de malla $I_1$?'; },
+          answer: function (v) { return msh(v).I1; },
+          solution: function (v) {
+            var m = msh(v);
+            return 'En estado estable por la rama del capacitor no pasa corriente: la tercera malla no lleva corriente y $R_5$ no influye. Quedan dos mallas. Malla 1: $' + v.E1 + ' = (' + v.R1 + ' + ' + v.R2 + ')I_1 - ' + v.R2 + 'I_2$. Malla 2 (cruza $\\varepsilon_2$ de − a +): $' + v.E2 + ' = (' + v.R2 + ' + ' + v.R3 + ' + ' + v.R4 + ')I_2 - ' + v.R2 + 'I_1$. Al resolver: $$I_1 = ' + fx(m.I1, 3) + '\\ \\text{A}$$';
+          } },
+        { label: 'b', type: 'numeric', points: 2, unit: 'A',
+          prompt: function () { return 'Con tu $I_1$ de a), ¿cuánto vale la corriente de malla $I_2$?'; },
+          answer: function (v, prev) { return (v.E2 + v.R2 * prev[0]) / (v.R2 + v.R3 + v.R4); },
+          solution: function (v) { var m = msh(v); return 'Despejas de la ecuación de la malla 2: $$I_2 = \\frac{\\varepsilon_2 + R_2I_1}{R_2 + R_3 + R_4} = \\frac{' + v.E2 + ' + (' + v.R2 + ')(' + fx(m.I1, 3) + ')}{' + m.S + '} = ' + fx(m.I2, 3) + '\\ \\text{A}$$'; } },
+        { label: 'c', type: 'numeric', points: 2, unit: 'V',
+          prompt: function () { return 'Con tu $I_2$ de b), ¿qué voltaje tiene el capacitor?'; },
+          answer: function (v, prev) { return prev[1] * v.R4; },
+          solution: function (v) { var m = msh(v); return 'Por $R_5$ no pasa corriente, así que no le toca voltaje: el capacitor tiene el mismo voltaje que $R_4$, que solo lleva $I_2$. $$V_C = I_2R_4 = (' + fx(m.I2, 3) + ')(' + v.R4 + ') = ' + fx(m.VC) + '\\ \\text{V}$$'; } },
+        { label: 'd', type: 'numeric', points: 2, unit: 'μC',
+          prompt: function () { return 'Con tu voltaje de c), ¿cuánta carga tiene el capacitor?'; },
+          answer: function (v, prev) { return v.C * prev[2]; },
+          solution: function (v) { var m = msh(v); return 'Con μF por V salen μC: $$Q = CV_C = (' + v.C + ')(' + fx(m.VC) + ') = ' + fx(m.Q) + '\\ \\mu\\text{C}$$'; } },
+        { label: 'e', type: 'numeric', points: 3, unit: 'μJ',
+          prompt: function () { return 'Con tu carga de d), ¿cuánta energía guarda el capacitor?'; },
+          answer: function (v, prev) { return prev[3] * prev[3] / (2 * v.C); },
+          solution: function (v) { var m = msh(v); return 'Con μC² entre μF salen μJ: $$U = \\frac{Q^2}{2C} = \\frac{(' + fx(m.Q) + ')^2}{2(' + v.C + ')} = ' + fx(m.U) + '\\ \\mu\\text{J}$$'; } }
+      ]
+    },
+
+    /* ---------------- S15 · Carga de un capacitor ---------------- */
+    {
+      id: 'f2-ex-rc-carga', tags: ['f2.S15'], block: 'C', title: 'El capacitor que se carga',
+      vars: { R: [2, 20, 2], C: [5, 50, 5], E: [6, 24, 3], t: [10, 900, 10], p: [30, 90, 10] },
+      where: function (v) { var k = v.t / (v.R * v.C), c = rcc(v); return k >= 0.3 && k <= 3 && c.W >= 0.1 && c.i >= 0.1; },
+      statement: function (v) {
+        return '<p>Un capacitor de $' + v.C + '\\ \\mu\\text{F}$, descargado, está en serie con un resistor de $' + v.R + '\\ \\text{k}\\Omega$, una batería ideal de $' + v.E + '$ V y un interruptor S, que se cierra en $t = 0$.</p>';
+      },
+      diagram: { id: 'f2exam-rc-carga', state: function (v) { return v; } },
+      parts: [
+        { label: 'a', type: 'numeric', points: 2, unit: 'ms',
+          prompt: function () { return '¿Cuánto vale la constante de tiempo $\\tau$? En ms.'; },
+          answer: function (v) { return rcc(v).tau; },
+          solution: function (v) { return 'Con kΩ por μF el producto sale en ms ($10^3 \\cdot 10^{-6} = 10^{-3}$): $$\\tau = RC = (' + v.R + '\\ \\text{k}\\Omega)(' + v.C + '\\ \\mu\\text{F}) = ' + rcc(v).tau + '\\ \\text{ms}$$'; } },
+        { label: 'b', type: 'numeric', points: 2, unit: 'μC',
+          prompt: function (v) { return 'Con tu $\\tau$ de a), ¿cuánta carga tiene el capacitor en $t = ' + v.t + '$ ms?'; },
+          answer: function (v, prev) { return v.C * v.E * (1 - Math.exp(-v.t / prev[0])); },
+          solution: function (v) { var c = rcc(v); return 'Al cargar, $q = C\\varepsilon\\,(1 - e^{-t/\\tau})$, con $C\\varepsilon = ' + (v.C * v.E) + '\\ \\mu\\text{C}$: $$q = ' + (v.C * v.E) + '\\left(1 - e^{-' + v.t + '/' + c.tau + '}\\right) = ' + fx(c.q) + '\\ \\mu\\text{C}$$'; } },
+        { label: 'c', type: 'numeric', points: 2, unit: 'mA',
+          prompt: function (v) { return 'Con tu $\\tau$ de a), ¿cuánta corriente pasa por el resistor en $t = ' + v.t + '$ ms? En mA.'; },
+          answer: function (v, prev) { return v.E / v.R * Math.exp(-v.t / prev[0]); },
+          solution: function (v) { var c = rcc(v); return 'La corriente empieza en $\\varepsilon/R$ y decae: con V entre kΩ salen mA. $$i = \\frac{\\varepsilon}{R}\\,e^{-t/\\tau} = \\frac{' + v.E + '}{' + v.R + '}\\,e^{-' + v.t + '/' + c.tau + '} = ' + fx(c.i, 3) + '\\ \\text{mA}$$'; } },
+        { label: 'd', type: 'numeric', points: 2, unit: 'ms',
+          prompt: function (v) { return 'Con tu $\\tau$ de a), ¿cuánto tarda el voltaje del capacitor en llegar a $' + fx(v.p * v.E / 100) + '$ V (el ' + v.p + ' % de $\\varepsilon$)? En ms.'; },
+          answer: function (v, prev) { return -prev[0] * Math.log(1 - v.p / 100); },
+          solution: function (v) { var c = rcc(v); return 'De $V_C = \\varepsilon\\,(1 - e^{-t/\\tau})$ despejas con logaritmo: $$t = -\\tau\\ln\\left(1 - \\frac{V_C}{\\varepsilon}\\right) = -' + c.tau + '\\ln(1 - ' + fx(v.p / 100) + ') = ' + fx(c.ts) + '\\ \\text{ms}$$'; } },
+        { label: 'e', type: 'numeric', points: 3, unit: 'mJ',
+          prompt: function (v) { return 'Con tu carga de b), ¿cuánta energía se disipó en el resistor entre $t = 0$ y $t = ' + v.t + '$ ms? En mJ.'; },
+          answer: function (v, prev) { return (v.E * prev[1] - prev[1] * prev[1] / (2 * v.C)) / 1000; },
+          solution: function (v) {
+            var c = rcc(v);
+            return 'La batería entregó $\\varepsilon q$; de eso, el capacitor guarda $q^2/2C$ y el resto se fue en calor en $R$. Con V por μC salen μJ: $$W_R = \\varepsilon q - \\frac{q^2}{2C} = (' + v.E + ')(' + fx(c.q) + ') - \\frac{(' + fx(c.q) + ')^2}{2(' + v.C + ')} = ' + fx(c.W * 1000, 1) + '\\ \\mu\\text{J} = ' + fx(c.W, 3) + '\\ \\text{mJ}$$';
+          } }
+      ]
+    },
+
+    /* ---------------- S15 + S12 + S14 · Divisor, estado estable y descarga ---------------- */
+    {
+      id: 'f2-ex-rc-descarga', tags: ['f2.S15', 'f2.S12', 'f2.S14'], block: 'C', title: 'El capacitor que se descarga',
+      vars: { E: [6, 24, 3], R1: [1, 10, 1], R2: [1, 10, 1], C: [5, 50, 5], t: [5, 500, 5] },
+      where: function (v) { var k = v.t / (v.R2 * v.C); return k >= 0.3 && k <= 3 && rcd(v).W >= 0.1; },
+      statement: function (v) {
+        return '<p>En el circuito de la figura, la batería ideal de $' + v.E + '$ V alimenta a $R_1 = ' + v.R1 + '\\ \\text{k}\\Omega$ en serie con $R_2 = ' + v.R2 + '\\ \\text{k}\\Omega$, y el capacitor $C = ' + v.C + '\\ \\mu\\text{F}$ está en paralelo con $R_2$. El interruptor S lleva mucho tiempo cerrado; en $t = 0$ se abre y el capacitor se descarga a través de $R_2$.</p>';
+      },
+      diagram: { id: 'f2exam-rc-descarga', state: function (v) { return v; } },
+      parts: [
+        { label: 'a', type: 'numeric', points: 2, unit: 'V',
+          prompt: function () { return '¿Qué voltaje tiene el capacitor justo antes de abrir S?'; },
+          answer: function (v) { return rcd(v).V0; },
+          solution: function (v) { var d = rcd(v); return 'En estado estable el capacitor es una rama abierta: la corriente pasa por $R_1$ y $R_2$ en serie y $C$ tiene el voltaje de $R_2$ (divisor de voltaje): $$V_0 = \\varepsilon\\,\\frac{R_2}{R_1 + R_2} = ' + v.E + '\\cdot\\frac{' + v.R2 + '}{' + v.R1 + ' + ' + v.R2 + '} = ' + fx(d.V0) + '\\ \\text{V}$$'; } },
+        { label: 'b', type: 'numeric', points: 2, unit: 'μC',
+          prompt: function () { return 'Con tu voltaje de a), ¿cuánta carga tiene el capacitor en ese momento?'; },
+          answer: function (v, prev) { return v.C * prev[0]; },
+          solution: function (v) { var d = rcd(v); return '$$Q_0 = CV_0 = (' + v.C + '\\ \\mu\\text{F})(' + fx(d.V0) + '\\ \\text{V}) = ' + fx(d.Q0) + '\\ \\mu\\text{C}$$'; } },
+        { label: 'c', type: 'numeric', points: 2, unit: 'ms',
+          prompt: function () { return '¿Cuánto vale la constante de tiempo de la descarga? En ms.'; },
+          answer: function (v) { return rcd(v).tau; },
+          solution: function (v) { return 'Al abrir S, $R_1$ queda colgando: el capacitor solo se descarga por $R_2$. $$\\tau = R_2C = (' + v.R2 + '\\ \\text{k}\\Omega)(' + v.C + '\\ \\mu\\text{F}) = ' + rcd(v).tau + '\\ \\text{ms}$$'; } },
+        { label: 'd', type: 'numeric', points: 2, unit: 'V',
+          prompt: function (v) { return 'Con tus resultados de a) y c), ¿qué voltaje tiene el capacitor en $t = ' + v.t + '$ ms?'; },
+          answer: function (v, prev) { return prev[0] * Math.exp(-v.t / prev[2]); },
+          solution: function (v) { var d = rcd(v); return '$$V_C = V_0\\,e^{-t/\\tau} = ' + fx(d.V0) + '\\,e^{-' + v.t + '/' + d.tau + '} = ' + fx(d.V, 3) + '\\ \\text{V}$$'; } },
+        { label: 'e', type: 'numeric', points: 3, unit: 'mJ',
+          prompt: function (v) { return 'Con tus voltajes de a) y d), ¿cuánta energía se disipó en $R_2$ entre $t = 0$ y $t = ' + v.t + '$ ms? En mJ.'; },
+          answer: function (v, prev) { return 0.5 * v.C * (prev[0] * prev[0] - prev[3] * prev[3]) / 1000; },
+          solution: function (v) { var d = rcd(v); return 'Toda la energía que pierde el capacitor se va en calor en $R_2$. Con μF por V² salen μJ: $$W = \\tfrac{1}{2}C\\left(V_0^2 - V_C^2\\right) = \\tfrac{1}{2}(' + v.C + ')\\left(' + fx(d.V0) + '^2 - ' + fx(d.V, 3) + '^2\\right) = ' + fx(d.W * 1000, 1) + '\\ \\mu\\text{J} = ' + fx(d.W, 3) + '\\ \\text{mJ}$$'; } }
       ]
     }
   ]);
