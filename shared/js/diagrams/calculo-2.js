@@ -1499,23 +1499,836 @@
   /* ══════════════════════ fin S10 ══════════════════════ */
 
   /* ══════════════════════ S11 ══════════════════════ */
+  // Domo común de S11: z = 16 − x² − 2y² sobre R = [0, 2] × [0, 2] (∬ = 48, promedio 12).
+  function c2s11f(x, y) { return 16 - x * x - 2 * y * y; }
+  var C2S11_KZ = 0.11, C2S11_AZ = -35;
+  // Proyección con la caja R × [0, 16] centrada en (cx, cy); z se escala por KZ.
+  function c2s11View(cx, cy, s) {
+    var P0 = view3({ cx: 0, cy: 0, s: s, az: C2S11_AZ, el: 25 }), xs = [], ys = [];
+    [0, 2].forEach(function (x) { [0, 2].forEach(function (y) { [0, 16 * C2S11_KZ].forEach(function (z) { var p = P0([x, y, z]); xs.push(p[0]); ys.push(p[1]); }); }); });
+    var dx = cx - (Math.min.apply(null, xs) + Math.max.apply(null, xs)) / 2, dy = cy - (Math.min.apply(null, ys) + Math.max.apply(null, ys)) / 2;
+    return function (x, y, z) { var p = P0([x, y, z * C2S11_KZ]); return [p[0] + dx, p[1] + dy]; };
+  }
+  // Profundidad (mayor = más cerca de la cámara: se ve más abajo); se pinta de menor a mayor.
+  function c2s11Depth(x, y) { var a = C2S11_AZ * RAD; return x * Math.cos(a) - y * Math.sin(a); }
+  function c2s11Mesh(P, op) {
+    var o = '', i, j, n = 8, N = 24;
+    for (i = 0; i <= n; i++) {
+      var u = 2 * i / n, l1 = [], l2 = [];
+      for (j = 0; j <= N; j++) { var t = 2 * j / N; l1.push(P(u, t, c2s11f(u, t))); l2.push(P(t, u, c2s11f(t, u))); }
+      o += poly('ref', l1, 1.2) + poly('ref', l2, 1.2);
+    }
+    return '<g opacity="' + op + '">' + o + '</g>';
+  }
+  // Piso R punteado y la dirección de los ejes x, y (flechas cortas que salen del rectángulo).
+  function c2s11Floor(P) {
+    var o = poly('axis', [P(0, 0, 0), P(2, 0, 0), P(2, 2, 0), P(0, 2, 0)], 1.2, true, '4 5');
+    [[P(2, 0, 0), P(2.75, 0, 0), 'x'], [P(0, 2, 0), P(0, 2.75, 0), 'y']].forEach(function (e) {
+      var dx = e[1][0] - e[0][0], dy = e[1][1] - e[0][1], m = Math.hypot(dx, dy) || 1;
+      o += arrow('axis', e[0][0], e[0][1], dx, dy, 1.6) + text(e[1][0] + dx / m * 14, e[1][1] + dy / m * 14 + 6, e[2], ' text-anchor="middle" font-size="18"');
+    });
+    return o;
+  }
+  // Prisma sobre [x0, x1] × [y0, y1] con altura z: caras y = y1, x = x1 (las que miran a la cámara) y techo.
+  function c2s11Prism(P, x0, x1, y0, y1, z, cls) {
+    return fill(cls, [P(x0, y1, 0), P(x1, y1, 0), P(x1, y1, z), P(x0, y1, z)]) +
+      fill(cls, [P(x1, y0, 0), P(x1, y1, 0), P(x1, y1, z), P(x1, y0, z)]) +
+      fill(cls, [P(x0, y0, z), P(x1, y0, z), P(x1, y1, z), P(x0, y1, z)]);
+  }
+  function c2s11Key(y, cls, s, op) {
+    return fade('<rect class="' + cls + '" x="16" y="' + (y - 14) + '" width="24" height="16" rx="2"/>' + text(48, y, s, ' font-size="17"'), op == null ? 1 : op);
+  }
+
+  // S11 · La partición de R vista desde arriba: m × n celdas, Δx, Δy, ΔA y un punto de muestra.
+  D['c2s11-grid'] = function () {
+    var X0 = 50, Y0 = 50, cw = 90, ch = 70, m = 4, n = 3, o = '', i;
+    var X1 = X0 + m * cw, Y1 = Y0 + n * ch;
+    // Celda resaltada (i = 2, j = 1, contando desde abajo) y su punto medio.
+    var hi = 2, hj = 1, cx0 = X0 + hi * cw, cy0 = Y1 - (hj + 1) * ch;
+    o += '<rect class="box-aux" x="' + cx0 + '" y="' + cy0 + '" width="' + cw + '" height="' + ch + '"/>';
+    for (i = 0; i <= m; i++) o += seg('ref', X0 + i * cw, Y0, X0 + i * cw, Y1, i === 0 || i === m ? 2.4 : 1.4);
+    for (i = 0; i <= n; i++) o += seg('ref', X0, Y0 + i * ch, X1, Y0 + i * ch, i === 0 || i === n ? 2.4 : 1.4);
+    o += dot('dot-trace', cx0 + cw / 2, cy0 + ch / 2, 5);
+    // Cotas Δx (arriba) y Δy (a la derecha) de la celda resaltada.
+    o += seg('axis', cx0, 34, cx0 + cw, 34, 1.4) + seg('axis', cx0, 28, cx0, 40, 1.4) + seg('axis', cx0 + cw, 28, cx0 + cw, 40, 1.4);
+    o += text(cx0 + cw / 2, 24, 'Δx', ' text-anchor="middle" font-size="17"');
+    o += seg('axis', X1 + 16, cy0, X1 + 16, cy0 + ch, 1.4) + seg('axis', X1 + 10, cy0, X1 + 22, cy0, 1.4) + seg('axis', X1 + 10, cy0 + ch, X1 + 22, cy0 + ch, 1.4);
+    o += text(X1 + 28, cy0 + ch / 2 + 6, 'Δy', ' font-size="17"');
+    // Extremos del rectángulo.
+    o += text(X0, Y1 + 24, 'a', ' text-anchor="middle" font-size="18"') + text(X1, Y1 + 24, 'b', ' text-anchor="middle" font-size="18"');
+    o += text((X0 + X1) / 2, Y1 + 26, 'x', ' text-anchor="middle" font-size="18"');
+    o += text(X0 - 12, Y1 + 6, 'c', ' text-anchor="end" font-size="18"') + text(X0 - 12, Y0 + 6, 'd', ' text-anchor="end" font-size="18"');
+    o += text(X0 - 12, (Y0 + Y1) / 2 + 6, 'y', ' text-anchor="end" font-size="18"');
+    // Leyenda debajo (así se lee bien también en celular).
+    var lx = 24, ly = 312;
+    o += '<rect class="box-aux" x="' + lx + '" y="' + (ly - 14) + '" width="24" height="16" rx="2"/>' + text(lx + 34, ly, 'celda: ΔA = Δx · Δy', ' font-size="17"');
+    o += dot('dot-trace', lx + 12, ly + 26, 5) + text(lx + 34, ly + 32, 'punto de muestra (xᵢ*, yⱼ*)', ' font-size="17"');
+    o += text(lx, ly + 66, 'Δx = (b − a)/m,  Δy = (d − c)/n', ' font-size="17"');
+    o += text(lx, ly + 96, 'suma: Σ Σ f(xᵢ*, yⱼ*) ΔA', ' font-size="17"');
+    return svgBox('0 0 480 430','Rectángulo R de a a b en x y de c a d en y, partido en 4 columnas y 3 filas. Una celda resaltada mide Δx por Δy, su área es ΔA, y en su centro está el punto de muestra.', o);
+  };
+
+  // S11 · Prismas → volumen. state: { k: etapa 0…3, m: divisiones por lado (2, 4, 8) }.
+  D['c2s11-prisms'] = function (st) {
+    var k = num(st, 'k', 3), m = Math.max(1, Math.round(num(st, 'm', 2)));
+    var P = c2s11View(445, 205, 80), o = '';
+    var oG = clamp01(k), oOne = clamp01(k - 1) * (1 - clamp01(k - 2)), oAll = clamp01(k - 2);
+    o += c2s11Floor(P);
+    // Cuadrícula del piso.
+    var g = '', i, j, d = 2 / m;
+    for (i = 1; i < m; i++) { var a = P(i * d, 0, 0), b = P(i * d, 2, 0), c = P(0, i * d, 0), e = P(2, i * d, 0); g += seg('aux', a[0], a[1], b[0], b[1], 1.4) + seg('aux', c[0], c[1], e[0], e[1], 1.4); }
+    o += fade(g, oG);
+    // Un prisma (la celda del frente a la derecha) o todos, de atrás hacia adelante.
+    var cells = [];
+    for (i = 0; i < m; i++) for (j = 0; j < m; j++) cells.push([i, j]);
+    cells.sort(function (p, q) { return c2s11Depth(p[0] + 0.5, p[1] + 0.5) - c2s11Depth(q[0] + 0.5, q[1] + 0.5); });
+    var all = '', dots = '';
+    cells.forEach(function (q) {
+      var x0 = q[0] * d, y0 = q[1] * d, z = c2s11f(x0 + d / 2, y0 + d / 2);
+      all += c2s11Prism(P, x0, x0 + d, y0, y0 + d, z, 'box-aux');
+      if (m <= 4) { var t = P(x0 + d / 2, y0 + d / 2, z); dots += dot('dot-trace', t[0], t[1], 3.5); }
+    });
+    o += fade(all + dots, oAll);
+    var x1 = 2 - 2 / m, zz = c2s11f(x1 + 1 / m, 1 / m), top = P(x1 + 1 / m, 1 / m, zz);
+    o += fade(c2s11Prism(P, x1, 2, 0, 2 / m, zz, 'box-trace') + dot('dot-trace', top[0], top[1], 4.5), oOne);
+    o += c2s11Mesh(P, 0.5);
+    // Suma de punto medio con m × m celdas (ΔA = (2/m)²).
+    var S = 0;
+    for (i = 0; i < m; i++) for (j = 0; j < m; j++) S += c2s11f((i + 0.5) * d, (j + 0.5) * d);
+    S *= d * d;
+    o += text(16, 30, 'z = 16 − x² − 2y²', ' font-size="17"');
+    o += c2s11Key(62, 'box-aux', 'R partido en ' + m + ' × ' + m + ' celdas', oG);
+    o += c2s11Key(92, 'box-trace', 'prisma: base ΔA', oOne);
+    o += fade(text(48, 116, 'altura f(x*, y*)', ' font-size="17"'), oOne);
+    o += fade(text(16, 150, 'Σ f(x*, y*) ΔA = ' + (+S.toFixed(4)), ' font-size="17"'), oAll);
+    o += fade(text(16, 178, 'valor exacto: 48', ' font-size="17"'), oAll);
+    return svgBox('0 0 640 380', 'Superficie z = 16 − x² − 2y² sobre el cuadrado R de lado 2. Se parte R en celdas y sobre cada una se levanta un prisma cuya altura es f en el punto medio; la suma de sus volúmenes se acerca a 48 al refinar la cuadrícula.', o);
+  };
+
+  // S11 · Fubini con rebanadas. state: { s1: una rebanada, s2: su grosor, s3: rebanadas en y, s4: en x } (0…1).
+  D['c2s11-slices'] = function (st) {
+    var s1 = clamp01(num(st, 's1', 1)), s2 = clamp01(num(st, 's2', 0)), s3 = clamp01(num(st, 's3', 0)), s4 = clamp01(num(st, 's4', 0));
+    var P = c2s11View(445, 205, 80), o = c2s11Floor(P) + c2s11Mesh(P, 0.45);
+    function sliceY(y, cls) {
+      var pts = [P(0, y, 0)], k;
+      for (k = 0; k <= 30; k++) pts.push(P(2 * k / 30, y, c2s11f(2 * k / 30, y)));
+      pts.push(P(2, y, 0));
+      return fill(cls, pts) + poly(cls === 'box-trace' ? 'trace' : 'aux', pts.slice(1, -1), 2.6);
+    }
+    function sliceX(x, cls) {
+      var pts = [P(x, 0, 0)], k;
+      for (k = 0; k <= 30; k++) pts.push(P(x, 2 * k / 30, c2s11f(x, 2 * k / 30)));
+      pts.push(P(x, 2, 0));
+      return fill(cls, pts) + poly(cls === 'box-trace' ? 'trace' : 'aux', pts.slice(1, -1), 2.6);
+    }
+    // Varias rebanadas en y (de atrás hacia adelante: y grande está más lejos).
+    var many = '';
+    [0.1, 0.5, 0.9, 1.3, 1.7].forEach(function (y) { many += sliceY(y, 'box-aux'); });
+    o += fade(many, s3);
+    var mx = '';
+    [0.1, 0.5, 0.9, 1.3, 1.7].forEach(function (x) { mx += sliceX(x, 'box-trace'); });
+    o += fade(mx, s4);
+    // Una rebanada en y = 0.8 y su gemela en y = 0.8 + dy (más cerca de la cámara, va después).
+    var one = 1 - Math.max(s3, s4);
+    o += fade(sliceY(0.8, 'box-aux'), s1 * one) + fade(sliceY(1.05, 'box-trace'), s2 * one);
+    o += text(16, 30, 'z = 16 − x² − 2y²', ' font-size="17"');
+    o += c2s11Key(62, 'box-aux', 'y fija: A(y) = ∫ f(x, y) dx', Math.max(s1 * one, s3));
+    o += c2s11Key(92, 'box-trace', 'grosor dy: A(y) dy', s2 * one);
+    o += fade(text(16, 126, 'sumar rebanadas:', ' font-size="17"') + text(16, 152, '∫ A(y) dy = 48', ' font-size="17"'), s3);
+    o += c2s11Key(186, 'box-trace', 'x fija: B(x) = ∫ f dy', s4);
+    o += fade(text(16, 216, '∫ B(x) dx = 48 también', ' font-size="17"'), s4);
+    return svgBox('0 0 640 380', 'El sólido bajo z = 16 − x² − 2y² se corta en rebanadas. Con y fija, la rebanada tiene área A(y), la integral de adentro; con grosor dy aporta A(y) dy, y al sumar las rebanadas sale 48. Rebanando en x sale lo mismo.', o);
+  };
+
+  // S11 · Valor promedio: el bloque de altura f̄ = 12 sobre R tiene el mismo volumen que el domo.
+  D['c2s11-average'] = function () {
+    var P = c2s11View(445, 195, 80), o = c2s11Floor(P), avg = 12;
+    o += c2s11Mesh(P, 0.55);
+    o += c2s11Prism(P, 0, 2, 0, 2, avg, 'box-trace');
+    o += text(16, 34, 'domo: z = 16 − x² − 2y²', ' font-size="17"');
+    o += c2s11Key(70, 'box-trace', 'bloque de altura f̄', 1);
+    o += text(16, 112, 'f̄ = (1/área) ∬ f dA', ' font-size="17"');
+    o += text(16, 140, '   = 48 / 4 = 12', ' font-size="17"');
+    o += text(16, 182, 'Mismo volumen:', ' font-size="16"');
+    o += text(16, 206, 'lo que sobresale del domo', ' font-size="16"');
+    o += text(16, 230, 'llena lo que le falta al bloque.', ' font-size="16"');
+    return svgBox('0 0 640 360', 'El domo z = 16 − x² − 2y² sobre el cuadrado de lado 2 tiene volumen 48. Un bloque plano de altura 12, el valor promedio, sobre el mismo cuadrado tiene el mismo volumen.', o);
+  };
+
 
   /* ══════════════════════ fin S11 ══════════════════════ */
 
   /* ══════════════════════ S12 ══════════════════════ */
+  // Ejes de un panel: X, Y convierten coordenadas; los ejes salen del origen hacia la caja dada.
+  function c2s12Axes(X, Y, x0, x1, y0, y1, fs) {
+    var o = arrow('axis', X(x0), Y(0), X(x1) - X(x0), 0, 1.5) + arrow('axis', X(0), Y(y0), 0, Y(y1) - Y(y0), 1.5);
+    o += text(X(x1) + 10, Y(0) + 5, 'x', ' font-size="' + (fs || 16) + '"');
+    o += text(X(0) + 8, Y(y1) + 4, 'y', ' font-size="' + (fs || 16) + '"');
+    return o;
+  }
+  // Región entre dos curvas: tipo I (x de a a b, lo(x) ≤ y ≤ hi(x)) o tipo II (y de a a b, lo(y) ≤ x ≤ hi(y)).
+  function c2s12Region(X, Y, kind, a, b, lo, hi, n) {
+    var pts = [], i, u;
+    for (i = 0; i <= n; i++) { u = a + (b - a) * i / n; pts.push(kind === 'I' ? [X(u), Y(lo(u))] : [X(lo(u)), Y(u)]); }
+    for (i = n; i >= 0; i--) { u = a + (b - a) * i / n; pts.push(kind === 'I' ? [X(u), Y(hi(u))] : [X(hi(u)), Y(u)]); }
+    return pts;
+  }
+  function c2s12Curve(X, Y, kind, a, b, g, n) {
+    var pts = [];
+    for (var i = 0; i <= n; i++) { var u = a + (b - a) * i / n; pts.push(kind === 'I' ? [X(u), Y(g(u))] : [X(g(u)), Y(u)]); }
+    return pts;
+  }
+  // Rebanadas: m segmentos entre lo y hi, repartidos en (a, b).
+  function c2s12Slices(X, Y, kind, a, b, lo, hi, m, cls, w) {
+    var o = '';
+    for (var k = 1; k <= m; k++) {
+      var u = a + (b - a) * (k - 0.5) / m;
+      o += kind === 'I' ? seg(cls, X(u), Y(lo(u)), X(u), Y(hi(u)), w || 1.4) : seg(cls, X(lo(u)), Y(u), X(hi(u)), Y(u), w || 1.4);
+    }
+    return o;
+  }
+  // Renglón de leyenda: muestra del trazo (línea, flecha, punto o relleno) y su texto.
+  function c2s12Key(x, y, cls, s, kind, op) {
+    var sw = kind === 'dot' ? dot(cls, x + 12, y - 6, 5.5) : kind === 'fill' ? '<rect class="' + cls + '" x="' + x + '" y="' + (y - 13) + '" width="24" height="14" rx="2"/>' :
+      kind === 'arrow' ? arrow(cls, x, y - 6, 26, 0, 2.6) : seg(cls, x, y - 6, x + 26, y - 6, kind === 'thin' ? 1.6 : 3, kind === 'dash' ? '6 5' : null);
+    return fade(sw + text(x + 34, y, s, ' font-size="16"'), op == null ? 1 : op);
+  }
+
+  // S12 · Tipo I (rebanadas verticales entre y = g₁(x) y y = g₂(x)) y tipo II (horizontales entre x = h₁(y) y x = h₂(y)).
+  D['c2s12-types'] = function () {
+    var o = '';
+    // Panel izquierdo: tipo I.
+    var X = function (x) { return 40 + 40 * x; }, Y = function (y) { return 230 - 40 * y; };
+    var g1 = function (x) { return 0.8 + 0.35 * Math.sin(1.2 * x); }, g2 = function (x) { return 3.6 - 0.12 * (x - 3) * (x - 3) + 0.3 * Math.sin(x); };
+    o += fill('area-fill', c2s12Region(X, Y, 'I', 1, 5.5, g1, g2, 60));
+    o += c2s12Slices(X, Y, 'I', 1, 5.5, g1, g2, 11, 'aux', 1.3);
+    o += c2s12Axes(X, Y, 0, 6.6, 0, 4.6);
+    o += seg('axis', X(1), Y(0), X(1), Y(g1(1)), 1.3, '5 4') + seg('axis', X(5.5), Y(0), X(5.5), Y(g1(5.5)), 1.3, '5 4');
+    o += text(X(1), Y(0) + 20, 'a', ' text-anchor="middle" font-size="16"') + text(X(5.5), Y(0) + 20, 'b', ' text-anchor="middle" font-size="16"');
+    o += poly('ref', c2s12Curve(X, Y, 'I', 1, 5.5, g2, 60), 3) + poly('trace', c2s12Curve(X, Y, 'I', 1, 5.5, g1, 60), 3);
+    o += text(40, 26, 'Tipo I: rebanadas verticales', ' font-size="17"');
+    o += c2s12Key(40, 284, 'ref', 'sale: y = g₂(x)');
+    o += c2s12Key(40, 308, 'trace', 'entra: y = g₁(x)');
+    o += text(40, 334, 'x de a a b (números)', ' font-size="15"');
+    // Panel derecho: tipo II.
+    var X2 = function (x) { return 360 + 40 * x; }, Y2 = function (y) { return 230 - 40 * y; };
+    var h1 = function (y) { return 0.9 + 0.3 * Math.sin(1.4 * y) + 0.08 * y * y; }, h2 = function (y) { return 4.6 + 0.6 * Math.sin(0.9 * y + 0.4) - 0.1 * y; };
+    o += fill('area-fill', c2s12Region(X2, Y2, 'II', 0.7, 4, h1, h2, 60));
+    o += c2s12Slices(X2, Y2, 'II', 0.7, 4, h1, h2, 9, 'aux', 1.3);
+    o += c2s12Axes(X2, Y2, 0, 6.3, 0, 4.6);
+    o += seg('axis', X2(0), Y2(0.7), X2(h1(0.7)), Y2(0.7), 1.3, '5 4') + seg('axis', X2(0), Y2(4), X2(h1(4)), Y2(4), 1.3, '5 4');
+    o += text(X2(0) - 8, Y2(0.7) + 5, 'c', ' text-anchor="end" font-size="16"') + text(X2(0) - 8, Y2(4) + 5, 'd', ' text-anchor="end" font-size="16"');
+    o += poly('trace', c2s12Curve(X2, Y2, 'II', 0.7, 4, h1, 60), 3) + poly('ref', c2s12Curve(X2, Y2, 'II', 0.7, 4, h2, 60), 3);
+    o += text(360, 26, 'Tipo II: rebanadas horizontales', ' font-size="17"');
+    o += c2s12Key(360, 284, 'trace', 'entra: x = h₁(y)');
+    o += c2s12Key(360, 308, 'ref', 'sale: x = h₂(y)');
+    o += text(360, 334, 'y de c a d (números)', ' font-size="15"');
+    return svgBox('0 0 640 346', 'Dos regiones. A la izquierda, una región tipo I: x va de a a b y cada rebanada vertical entra por la curva de abajo y = g1(x) y sale por la de arriba y = g2(x). A la derecha, una región tipo II: y va de c a d y cada rebanada horizontal entra por la curva de la izquierda x = h1(y) y sale por la de la derecha x = h2(y).', o);
+  };
+
+  // S12 · Leer los límites del dibujo en la región entre y = x² y y = 2x.
+  // state: { v: rebanada vertical (0…1), t: su x; hz: rebanada horizontal (0…1), s: su y;
+  //          many: rebanadas de relleno (0…1), rng: corchete del tramo de afuera (0…1) }.
+  D['c2s12-read'] = function (st) {
+    var v = clamp01(num(st, 'v', 0)), t = num(st, 't', 1), hz = clamp01(num(st, 'hz', 0)), s = num(st, 's', 2.5);
+    var many = clamp01(num(st, 'many', 0)), rng = clamp01(num(st, 'rng', 0));
+    var X = function (x) { return 70 + 68 * x; }, Y = function (y) { return 318 - 68 * y; }, o = '';
+    var sq = function (x) { return x * x; }, ln = function (x) { return 2 * x; }, half = function (y) { return y / 2; }, rt = function (y) { return Math.sqrt(y); };
+    o += fill('area-fill', c2s12Region(X, Y, 'I', 0, 2, sq, ln, 60));
+    // Rebanadas de relleno: verticales mientras manda la vertical; horizontales después.
+    var wV = many * (1 - hz), wH = many * hz;
+    o += fade(c2s12Slices(X, Y, 'I', 0, 2, sq, ln, 12, 'aux', 1.2), wV);
+    o += fade(c2s12Slices(X, Y, 'II', 0, 4, half, rt, 12, 'aux', 1.2), wH);
+    o += c2s12Axes(X, Y, 0, 2.95, 0, 4.45);
+    o += poly('ref', c2s12Curve(X, Y, 'I', 0, 2.25, ln, 40), 3) + poly('trace', c2s12Curve(X, Y, 'I', 0, 2.12, sq, 60), 3);
+    o += dot('dot-ref', X(0), Y(0), 5) + dot('dot-ref', X(2), Y(4), 5);
+    o += text(X(2) + 14, Y(4) + 18, '(2, 4)', ' font-size="16"');
+    o += text(X(0) - 10, Y(0) + 26, '(0, 0)', ' text-anchor="end" font-size="16"');
+    // Corchetes del tramo de afuera: x de 0 a 2 (abajo) o y de 0 a 4 (a la izquierda).
+    var bx = Y(0) + 12, by = X(0) - 14;
+    o += fade(seg('error', X(0), bx, X(2), bx, 2.4) + seg('error', X(0), bx - 6, X(0), bx + 6, 2.4) + seg('error', X(2), bx - 6, X(2), bx + 6, 2.4), rng * (1 - hz));
+    o += fade(seg('error', by, Y(0), by, Y(4), 2.4) + seg('error', by - 6, Y(0), by + 6, Y(0), 2.4) + seg('error', by - 6, Y(4), by + 6, Y(4), 2.4), rng * hz);
+    // La rebanada vertical: entra por y = x² (abajo) y sale por y = 2x (arriba).
+    var oV = v * (1 - hz);
+    if (oV > 0.001) {
+      var y0 = sq(t), y1 = ln(t);
+      o += fade(arrow('aux', X(t), Y(y0), 0, Y(y1) - Y(y0), 3.4) + dot('dot-trace', X(t), Y(y0), 5.5) + dot('dot-ref', X(t), Y(y1), 5.5), oV);
+    }
+    var oH = v * hz;
+    if (oH > 0.001) {
+      var x0 = half(s), x1 = rt(s);
+      o += fade(arrow('aux', X(x0), Y(s), X(x1) - X(x0), 0, 3.4) + dot('dot-ref', X(x0), Y(s), 5.5) + dot('dot-trace', X(x1), Y(s), 5.5), oH);
+    }
+    // Leyenda: cambia con la dirección de las rebanadas.
+    var lx = 330;
+    o += c2s12Key(lx, 40, 'ref', 'y = 2x, o x = y/2');
+    o += c2s12Key(lx, 66, 'trace', 'y = x², o x = √y');
+    o += fade(c2s12Key(lx, 104, 'aux', 'rebanada vertical', 'arrow') + c2s12Key(lx, 130, 'dot-trace', 'entra por y = x²', 'dot') + c2s12Key(lx, 156, 'dot-ref', 'sale por y = 2x', 'dot'), oV);
+    o += fade(c2s12Key(lx, 104, 'aux', 'rebanada horizontal', 'arrow') + c2s12Key(lx, 130, 'dot-ref', 'entra por x = y/2', 'dot') + c2s12Key(lx, 156, 'dot-trace', 'sale por x = √y', 'dot'), oH);
+    o += fade(c2s12Key(lx, 194, 'error', 'x va de 0 a 2'), rng * (1 - hz));
+    o += fade(c2s12Key(lx, 194, 'error', 'y va de 0 a 4'), rng * hz);
+    return svgBox('0 0 600 350', 'Región entre la parábola y = x² y la recta y = 2x, que se cortan en (0, 0) y (2, 4). Una rebanada vertical entra por la parábola y sale por la recta; una horizontal entra por la recta, x = y/2, y sale por la parábola, x = raíz de y.', o);
+  };
+
+  // S12 · Cambiar el orden: x = y² y y = x − 2. En dx dy basta una integral; en dy dx la
+  // curva de abajo cambia en x = 1 y hay que partir.
+  D['c2s12-split'] = function () {
+    var o = '';
+    function panel(ox, mode) {
+      var X = function (x) { return ox + 22 + 52 * x; }, Y = function (y) { return 168 - 52 * y; }, p = '';
+      var L = function (y) { return y * y; }, Rr = function (y) { return y + 2; };
+      var top = function (x) { return Math.sqrt(x); }, b1 = function (x) { return -Math.sqrt(x); }, b2 = function (x) { return x - 2; };
+      if (mode === 'II') p += fill('area-fill', c2s12Region(X, Y, 'II', -1, 2, L, Rr, 60));
+      else p += fill('area-fill', c2s12Region(X, Y, 'I', 0, 1, b1, top, 40)) + fill('rect-fill', c2s12Region(X, Y, 'I', 1, 4, b2, top, 60));
+      p += mode === 'II' ? c2s12Slices(X, Y, 'II', -1, 2, L, Rr, 10, 'aux', 1.3)
+        : c2s12Slices(X, Y, 'I', 0, 1, b1, top, 3, 'aux', 1.3) + c2s12Slices(X, Y, 'I', 1, 4, b2, top, 8, 'aux', 1.3);
+      p += arrow('axis', X(0), Y(0), X(4.6) - X(0), 0, 1.5) + arrow('axis', X(0), Y(-1.35), 0, Y(2.45) - Y(-1.35), 1.5);
+      p += text(X(4.6) + 9, Y(0) + 5, 'x', ' font-size="16"') + text(X(0) + 8, Y(2.45) + 4, 'y', ' font-size="16"');
+      p += poly('trace', c2s12Curve(X, Y, 'II', -1.25, 2.1, L, 60), 3) + poly('ref', c2s12Curve(X, Y, 'II', -1.25, 2.1, Rr, 10), 3);
+      if (mode === 'I') p += seg('error', X(1), Y(-1.3), X(1), Y(1.6), 2.2, '6 5');
+      p += dot('dot-ref', X(1), Y(-1), 5) + dot('dot-ref', X(4), Y(2), 5);
+      return p;
+    }
+    o += panel(0, 'II') + panel(320, 'I');
+    o += text(22, 24, 'dx dy: una sola integral', ' font-size="17"');
+    o += text(342, 24, 'dy dx: hay que partir en x = 1', ' font-size="17"');
+    o += c2s12Key(22, 262, 'trace', 'entra: x = y²');
+    o += c2s12Key(22, 286, 'ref', 'sale: x = y + 2');
+    o += text(22, 312, 'y de −1 a 2', ' font-size="15"');
+    o += c2s12Key(342, 262, 'trace', 'arriba: y = √x');
+    o += c2s12Key(342, 286, 'area-fill', 'abajo: y = −√x (0 a 1)', 'fill');
+    o += c2s12Key(342, 310, 'rect-fill', 'abajo: y = x − 2 (1 a 4)', 'fill');
+    o += c2s12Key(342, 334, 'error', 'corte en x = 1', 'dash');
+    return svgBox('0 0 640 346', 'La región entre x = y al cuadrado y la recta y = x − 2, que se cortan en (1, −1) y (4, 2). Con rebanadas horizontales todas entran por la parábola y salen por la recta: una integral. Con rebanadas verticales, la curva de abajo es y = −raíz de x hasta x = 1 y luego y = x − 2: hay que partir en x = 1.', o);
+  };
+
+  // S12 · El triángulo 0 ≤ y ≤ x ≤ 1: como viene (dx dy) y volteado (dy dx).
+  D['c2s12-swap'] = function () {
+    var o = '';
+    function panel(ox, mode) {
+      var X = function (x) { return ox + 40 + 180 * x; }, Y = function (y) { return 256 - 180 * y; }, p = '';
+      var zero = function () { return 0; }, id = function (u) { return u; }, one = function () { return 1; };
+      p += fill('area-fill', c2s12Region(X, Y, 'I', 0, 1, zero, id, 4));
+      p += mode === 'II' ? c2s12Slices(X, Y, 'II', 0, 1, id, one, 9, 'aux', 1.4) : c2s12Slices(X, Y, 'I', 0, 1, zero, id, 9, 'aux', 1.4);
+      p += arrow('axis', X(0), Y(0), X(1.28) - X(0), 0, 1.5) + arrow('axis', X(0), Y(0), 0, Y(1.15) - Y(0), 1.5);
+      p += text(X(1.28) + 9, Y(0) + 5, 'x', ' font-size="16"') + text(X(0) + 8, Y(1.15) + 4, 'y', ' font-size="16"');
+      p += seg('ref', X(0), Y(0), X(1.08), Y(1.08), 3) + seg('trace', X(1), Y(0), X(1), Y(1.08), 3);
+      p += dot('dot-ref', X(1), Y(1), 5);
+      p += text(X(1) + 12, Y(1) + 6, '(1, 1)', ' font-size="15"');
+      return p;
+    }
+    o += panel(0, 'II') + panel(320, 'I');
+    o += text(40, 24, 'Como viene: dx dy', ' font-size="17"');
+    o += text(360, 24, 'Volteada: dy dx', ' font-size="17"');
+    o += c2s12Key(40, 292, 'aux', 'x de y a 1', 'thin');
+    o += text(40, 318, 'adentro: ∫ e^(x²) dx', ' font-size="15"');
+    o += text(40, 340, 'no tiene antiderivada elemental', ' font-size="15"');
+    o += c2s12Key(360, 292, 'aux', 'y de 0 a x', 'thin');
+    o += text(360, 318, 'adentro: ∫ e^(x²) dy = x·e^(x²)', ' font-size="15"');
+    o += text(360, 340, 'y eso sí se integra en x', ' font-size="15"');
+    return svgBox('0 0 640 354', 'El triángulo con vértices (0, 0), (1, 0) y (1, 1), entre la recta y = x y la recta x = 1. A la izquierda, con rebanadas horizontales de x = y a x = 1, la integral de adentro es la de e a la x cuadrada, que no tiene antiderivada elemental. A la derecha, con rebanadas verticales de y = 0 a y = x, la de adentro da x por e a la x cuadrada, que sí se integra.', o);
+  };
+
+  // S12 · Lámina bajo y = 4 − x² con densidad ρ = y: más densa arriba. El centro de masa sube
+  // de ȳ = 8/5 (sin densidad) a ȳ = 16/7; por simetría x̄ = 0.
+  D['c2s12-mass'] = function () {
+    var X = function (x) { return 170 + 62 * x; }, Y = function (y) { return 300 - 62 * y; }, o = '', i;
+    var top = function (x) { return 4 - x * x; };
+    // Bandas horizontales: más opacas arriba (más densidad).
+    for (i = 0; i < 8; i++) {
+      var y0 = 4 * i / 8, y1 = 4 * (i + 1) / 8, w0 = Math.sqrt(4 - y0), w1 = Math.sqrt(4 - y1);
+      o += '<g opacity="' + (0.25 + 0.75 * (i + 0.5) / 8).toFixed(2) + '">' + fill('area-fill', [[X(-w0), Y(y0)], [X(w0), Y(y0)], [X(w1), Y(y1)], [X(-w1), Y(y1)]]) + '</g>';
+    }
+    o += arrow('axis', X(-2.5), Y(0), X(2.6) - X(-2.5), 0, 1.5) + arrow('axis', X(0), Y(0), 0, Y(4.4) - Y(0), 1.5);
+    o += text(X(2.6) + 9, Y(0) + 5, 'x', ' font-size="16"') + text(X(0) + 8, Y(4.4) + 4, 'y', ' font-size="16"');
+    o += poly('ref', c2s12Curve(X, Y, 'I', -2, 2, top, 60), 3);
+    o += dot('dot-aux', X(0), Y(1.6), 6) + dot('dot-error', X(0), Y(16 / 7), 6.5);
+    var lx = 340;
+    o += c2s12Key(lx, 44, 'ref', 'y = 4 − x²');
+    o += c2s12Key(lx, 72, 'area-fill', 'ρ = y: más densa arriba', 'fill');
+    o += c2s12Key(lx, 100, 'dot-error', 'centro de masa: ȳ ≈ 2.29', 'dot');
+    o += c2s12Key(lx, 128, 'dot-aux', 'con ρ constante: ȳ = 1.6', 'dot');
+    o += text(lx, 166, 'La figura es simétrica respecto', ' font-size="15"');
+    o += text(lx, 188, 'al eje y y ρ también: x̄ = 0.', ' font-size="15"');
+    return svgBox('0 0 640 322', 'Lámina bajo la parábola y = 4 − x² con densidad ρ = y, sombreada más fuerte arriba. Su centro de masa está en x = 0 por simetría y en y = 16/7, más arriba que el centroide de la figura con densidad constante, y = 1.6.', o);
+  };
 
   /* ══════════════════════ fin S12 ══════════════════════ */
 
   /* ══════════════════════ S13 ══════════════════════ */
+  // Integral doble en polares. Q(ox, oy, k): (r, θ en grados) → píxeles; θ antihorario.
+  function c2s13Q(ox, oy, k) { return function (r, deg) { return [ox + k * r * Math.cos(deg * RAD), oy - k * r * Math.sin(deg * RAD)]; }; }
+  function c2s13Arc(Q, r, a0, a1, n) { var o = []; n = n || 40; for (var i = 0; i <= n; i++) o.push(Q(r, a0 + (a1 - a0) * i / n)); return o; }
+  // Rectángulo polar [r0, r1] × [a0, a1] como polígono.
+  function c2s13Cell(Q, r0, r1, a0, a1) { return c2s13Arc(Q, r1, a0, a1, 24).concat(c2s13Arc(Q, r0, a1, a0, 24)); }
+  // Coloca etiquetas [[x, y, texto]] alrededor de su punto sin tocar trazos ni otras etiquetas.
+  function c2s13Labels(list, pts, vb, fs) {
+    var out = '', placed = [];
+    list.forEach(function (L) {
+      var cands = L[3] || around(L[0], L[1], L[2]);
+      var c = spot(cands, pts.concat(placed), fs, vb);
+      out += label(c, fs);
+      var w = String(c[2]).length * fs * 0.6, x0 = c[3] === 'end' ? c[0] - w : c[3] === 'middle' ? c[0] - w / 2 : c[0];
+      for (var x = x0 - 4; x <= x0 + w + 4; x += 4) { placed.push([x, c[1] + 3]); placed.push([x, c[1] - fs * 0.45]); placed.push([x, c[1] - fs * 0.9]); }
+    });
+    return out;
+  }
 
+  // Cuadritos contra rebanadas y anillos sobre el mismo disco.
+  D['c2s13-why'] = function () {
+    var b = '', R = 2, k = 58, Lc = [160, 150], Rc = [480, 150], i, j;
+    // Izquierda: rejilla rectangular; los cuadritos del borde no encajan (se marcan).
+    for (i = -2; i < 2; i++) for (j = -2; j < 2; j++) {
+      for (var a = 0; a < 2; a++) for (var c = 0; c < 2; c++) {
+        var x0 = i + a / 2, y0 = j + c / 2, dd = [[x0, y0], [x0 + 0.5, y0], [x0 + 0.5, y0 + 0.5], [x0, y0 + 0.5]].map(function (p) { return Math.hypot(p[0], p[1]); });
+        var n = dd.filter(function (d) { return d <= R + 1e-9; }).length;
+        if (!n) continue;
+        var pts = [[x0, y0], [x0 + 0.5, y0], [x0 + 0.5, y0 + 0.5], [x0, y0 + 0.5]].map(function (p) { return [Lc[0] + k * p[0], Lc[1] - k * p[1]]; });
+        b += '<path class="' + (n === 4 ? 'rect-fill' : 'box-err') + '" stroke-width="1.2" d="' + pts.map(function (p, q) { return (q ? 'L' : 'M') + r1(p[0]) + ' ' + r1(p[1]); }).join('') + 'Z"/>';
+      }
+    }
+    b += '<circle class="ref" fill="none" stroke-width="3" cx="' + Lc[0] + '" cy="' + Lc[1] + '" r="' + (R * k) + '"/>';
+    // Derecha: malla polar que sigue al borde.
+    var Q = c2s13Q(Rc[0], Rc[1], k);
+    for (i = 0; i < 4; i++) for (j = 0; j < 12; j++) b += fill('box-aux', c2s13Cell(Q, i * 0.5, (i + 1) * 0.5, j * 30, (j + 1) * 30));
+    b += '<circle class="ref" fill="none" stroke-width="3" cx="' + Rc[0] + '" cy="' + Rc[1] + '" r="' + (R * k) + '"/>';
+    b += text(Lc[0], 300, 'Cuadritos: los del borde no encajan', ' text-anchor="middle" font-size="17"');
+    b += text(Lc[0], 324, 'y piden límites con √(4 − x²)', ' text-anchor="middle" font-size="17"');
+    b += text(Rc[0], 300, 'Rebanadas y anillos: encajan', ' text-anchor="middle" font-size="17"');
+    b += text(Rc[0], 324, 'exacto con 0 ≤ r ≤ 2', ' text-anchor="middle" font-size="17"');
+    return svgBox('0 0 640 340', 'El disco x² + y² ≤ 4 cubierto con cuadritos: los del borde quedan cortados. El mismo disco cubierto con rebanadas y anillos: encajan exacto con 0 ≤ r ≤ 2.', b);
+  };
+
+  // Explainer: de dónde sale la r. state.k: 0 malla · 1 resta de sectores · 2 lados Δr y r*Δθ ·
+  // 3 comparar con un rectángulo cerca del origen · 4 dA = r dr dθ.
+  D['c2s13-element'] = function (st) {
+    var k = Math.max(0, Math.min(4, num(st, 'k', 0)));
+    var ox = 56, oy = 330, sc = 64, Q = c2s13Q(ox, oy, sc), b = '', pts = [], i;
+    var A0 = 30, A1 = 45, ra = 3, rb = 4;
+    // Malla polar del primer cuadrante.
+    for (i = 1; i <= 4; i++) { var arc = c2s13Arc(Q, i, 0, 90, 48); b += poly('aux', arc, 1.4); pts = pts.concat(polyPts(arc)); }
+    for (i = 0; i <= 6; i++) { var e = Q(4, i * 15); b += seg('aux', ox, oy, e[0], e[1], 1.4); pts = pts.concat(segPts(ox, oy, e[0], e[1])); }
+    b += arrow('axis', ox - 10, oy, 300, 0, 1.6) + arrow('axis', ox, oy + 10, 0, -300, 1.6);
+    pts = pts.concat(segPts(ox - 10, oy, ox + 290, oy), segPts(ox, oy + 10, ox, oy - 290));
+    b += text(ox + 300, oy + 22, 'x', ' text-anchor="end" font-size="18"') + text(ox - 12, oy - 286, 'y', ' text-anchor="end" font-size="18"');
+    // Paso 1: resta de dos sectores.
+    var s1 = clamp01(k) * (1 - clamp01(k - 1.6));
+    if (s1 > 0.01) {
+      var big = [[ox, oy]].concat(c2s13Arc(Q, rb, A0, A1, 24)), small = [[ox, oy]].concat(c2s13Arc(Q, ra, A0, A1, 24));
+      b += fade(fill('box-aux', big) + fill('box-err', small), s1);
+    }
+    // El rectángulo polar lejano (siempre).
+    var far = c2s13Cell(Q, ra, rb, A0, A1);
+    b += fill('box-trace', far);
+    var near = c2s13Cell(Q, 1, 2, A0, A1), o4 = clamp01(k - 2.4);
+    if (o4 > 0.01) b += fade(fill('box-err', near), o4);
+    var lab = [], vb = [0, 0, 640, 360];
+    // Paso 2: lados Δr (radial) y r* Δθ (arco).
+    var o2 = clamp01(k - 1.4);
+    if (o2 > 0.5) {
+      var m = Q(3.5, A1 + 2.5), am = Q(rb, (A0 + A1) / 2);
+      lab.push([m[0], m[1], 'Δr']);
+      lab.push([am[0], am[1], 'r*Δθ']);
+    }
+    var rows = [];
+    if (k < 0.5) rows = ['Circunferencias r = cte', 'cada Δr y rayos θ = cte', 'cada Δθ: la región se parte', 'en rectángulos polares.'];
+    else if (k < 1.5) rows = ['Rectángulo polar =', 'sector grande − sector chico', '½(r + Δr)²Δθ − ½r²Δθ'];
+    else if (k < 2.5) rows = ['= (r + Δr/2) Δr Δθ', '= r* Δr Δθ', 'r* = radio de en medio'];
+    else if (k < 3.5) rows = ['Mismos Δr y Δθ:', 'lejos (r* = 3.5): 3.5 ΔrΔθ', 'cerca (r* = 1.5): 1.5 ΔrΔθ', 'el de afuera es 2.3 veces mayor'];
+    else rows = ['Con Δr, Δθ → 0:', 'dA = r dr dθ', 'la r es el factor que mide', 'cuánto se estira el pedazo'];
+    rows.forEach(function (t, q) { b += text(352, 70 + q * 32, t, ' font-size="19"'); });
+    b += c2s13Labels(lab, pts.concat(polyPts(far.concat([far[0]]))), vb, 18);
+    return svgBox('0 0 640 360', 'Malla polar del primer cuadrante con un rectángulo polar resaltado entre r = 3 y r = 4. Su área es la resta de dos sectores, r* Δr Δθ; uno igual de ancho cerca del origen es más chico.', b);
+  };
+
+  // Región polar general: entre r = r₁(θ) y r = r₂(θ), con α ≤ θ ≤ β.
+  D['c2s13-region'] = function () {
+    var ox = 70, oy = 330, sc = 70, Q = c2s13Q(ox, oy, sc), b = '', pts = [];
+    var r1f = function (d) { return 1.4 + 0.35 * Math.sin(3 * d * RAD); }, r2f = function (d) { return 3.3 + 0.45 * Math.cos(2 * d * RAD); };
+    var al = 15, be = 70, n = 60, i, out = [], inn = [];
+    for (i = 0; i <= n; i++) { var d = al + (be - al) * i / n; out.push(Q(r2f(d), d)); inn.push(Q(r1f(d), d)); }
+    b += fill('area-fill', out.concat(inn.slice().reverse()));
+    b += arrow('axis', ox - 10, oy, 300, 0, 1.6) + arrow('axis', ox, oy + 10, 0, -300, 1.6);
+    pts = pts.concat(segPts(ox - 10, oy, ox + 290, oy), segPts(ox, oy + 10, ox, oy - 290));
+    [al, be].forEach(function (d) { var e = Q(4.2, d); b += seg('aux', ox, oy, e[0], e[1], 1.6, '6 5'); pts = pts.concat(segPts(ox, oy, e[0], e[1])); });
+    b += poly('ref', out, 3) + poly('ref', inn, 3);
+    pts = pts.concat(polyPts(out), polyPts(inn));
+    var dm = 42, p1 = Q(r1f(dm), dm), p2 = Q(r2f(dm), dm);
+    b += arrow('trace', p1[0], p1[1], p2[0] - p1[0], p2[1] - p1[1], 3);
+    pts = pts.concat(arrowPts(p1[0], p1[1], p2[0] - p1[0], p2[1] - p1[1]));
+    b += dot('dot-trace', p1[0], p1[1], 4.5);
+    var vb = [0, 0, 640, 360], o2 = Q(r2f(25) + 0.15, 25), ea = Q(4.2, al), eb = Q(4.2, be);
+    b += c2s13Labels([
+      [o2[0], o2[1], 'r = r₂(θ)', [[o2[0] + 14, o2[1] + 4, 'r = r₂(θ)', 'start'], [o2[0] + 24, o2[1] + 20, 'r = r₂(θ)', 'start']]],
+      [ea[0], ea[1], 'θ = α'], [eb[0], eb[1], 'θ = β']
+    ], pts, vb, 18);
+    // La curva de adentro se nombra abajo del rayo θ = α, con una línea guía.
+    var g1 = Q(r1f(20), 20);
+    b += seg('axis', g1[0], g1[1], 218, 308, 1.2);
+    b += text(224, 318, 'r = r₁(θ)', ' font-size="18"');
+    b += text(400, 60, 'Para cada θ', ' font-size="18"');
+    b += text(400, 88, 'entre α y β,', ' font-size="18"');
+    b += text(400, 116, 'r va de la curva', ' font-size="18"');
+    b += text(400, 144, 'de adentro a la', ' font-size="18"');
+    b += text(400, 172, 'de afuera (flecha).', ' font-size="18"');
+    return svgBox('0 0 640 360', 'Región polar general: entre los rayos θ = α y θ = β, y entre las curvas r = r₁(θ) y r = r₂(θ). Para cada θ, r va de la curva interior a la exterior.', b);
+  };
+
+  // Un pétalo de r = 2 cos 3θ entre los rayos θ = −π/6 y θ = π/6.
+  D['c2s13-petal'] = function () {
+    var ox = 180, oy = 175, sc = 72, b = '', pts = [], i, all = [], pet = [];
+    var Q = c2s13Q(ox, oy, sc);
+    for (i = 0; i <= 360; i++) { var t = i * Math.PI / 360; all.push(Q(2 * Math.cos(3 * t), t / RAD)); }
+    for (i = 0; i <= 80; i++) { var u = -30 + 60 * i / 80; pet.push(Q(2 * Math.cos(3 * u * RAD), u)); }
+    b += arrow('axis', ox - 170, oy, 340, 0, 1.6) + arrow('axis', ox, oy + 165, 0, -330, 1.6);
+    pts = pts.concat(segPts(ox - 170, oy, ox + 170, oy), segPts(ox, oy + 165, ox, oy - 165));
+    b += text(ox + 168, oy + 24, 'x', ' text-anchor="end" font-size="18"') + text(ox - 12, oy - 148, 'y', ' text-anchor="end" font-size="18"');
+    b += poly('aux', all, 1.8, false, '5 5');
+    pts = pts.concat(polyPts(all));
+    b += fill('area-fill', pet) + poly('ref', pet, 3);
+    [30, -30].forEach(function (d) { var e = Q(2.3, d); b += seg('trace', ox, oy, e[0], e[1], 2, '6 5'); pts = pts.concat(segPts(ox, oy, e[0], e[1])); });
+    var e1 = Q(2.3, 30), e2 = Q(2.3, -30), tip = Q(2, 0);
+    b += c2s13Labels([
+      [e1[0], e1[1], 'θ = π/6', [[e1[0] + 8, e1[1] - 6, 'θ = π/6', 'start'], [e1[0] + 10, e1[1] + 16, 'θ = π/6', 'start']]],
+      [e2[0], e2[1], 'θ = −π/6', [[e2[0] + 8, e2[1] + 14, 'θ = −π/6', 'start'], [e2[0] + 10, e2[1] - 6, 'θ = −π/6', 'start']]],
+      [tip[0], tip[1], '2', [[tip[0] + 10, tip[1] - 10, '2', 'start'], [tip[0] + 8, tip[1] + 22, '2', 'start']]]
+    ], pts, [0, 0, 640, 350], 18);
+    b += text(424, 70, 'r = 2 cos 3θ', ' font-size="18"');
+    b += text(424, 96, 'tiene 3 pétalos.', ' font-size="18"');
+    b += text(424, 140, 'El sombreado va', ' font-size="18"');
+    b += text(424, 166, 'de θ = −π/6', ' font-size="18"');
+    b += text(424, 192, 'a θ = π/6 (r = 0).', ' font-size="18"');
+    b += text(424, 244, 'A = ½ ∫ r² dθ', ' font-size="19"');
+    return svgBox('0 0 640 350', 'La rosa r = 2 cos 3θ con un pétalo sombreado. Ese pétalo empieza y termina en el origen, en θ = −π/6 y θ = π/6.', b);
+  };
+
+  // Convertir: el cuarto de disco leído en rectangulares (tira vertical) y en polares (rayo).
+  D['c2s13-convert'] = function () {
+    var b = '', k = 60, R = 2;
+    function panel(ox, oy, polar) {
+      var o = '', pts = [], Q = c2s13Q(ox, oy, k), q = c2s13Arc(Q, R, 0, 90, 48);
+      o += fill('area-fill', [[ox, oy]].concat(q));
+      o += arrow('axis', ox - 10, oy, 170, 0, 1.6) + arrow('axis', ox, oy + 10, 0, -170, 1.6);
+      pts = pts.concat(segPts(ox - 10, oy, ox + 160, oy), segPts(ox, oy + 10, ox, oy - 160));
+      o += text(ox + 168, oy + 22, 'x', ' text-anchor="end" font-size="18"') + text(ox - 10, oy - 150, 'y', ' text-anchor="end" font-size="18"');
+      o += poly('ref', q, 3);
+      pts = pts.concat(polyPts(q));
+      if (!polar) {
+        var x = 1.2, yt = Math.sqrt(R * R - x * x);
+        o += fill('box-trace', [[ox + k * (x - 0.08), oy], [ox + k * (x + 0.08), oy], [ox + k * (x + 0.08), oy - k * Math.sqrt(R * R - (x + 0.08) * (x + 0.08))], [ox + k * (x - 0.08), oy - k * Math.sqrt(R * R - (x - 0.08) * (x - 0.08))]]);
+        pts = pts.concat(segPts(ox + k * x, oy, ox + k * x, oy - k * yt));
+        o += c2s13Labels([[ox + k * x, oy - k * yt, 'y = √(4 − x²)', [[ox + k * x + 14, oy - k * yt - 18, 'y = √(4 − x²)', 'start'], [ox + k * x + 30, oy - k * yt - 8, 'y = √(4 − x²)', 'start']]]], pts, [0, 0, 640, 330], 17);
+      } else {
+        var e = Q(R, 35);
+        o += arrow('trace', ox, oy, e[0] - ox, e[1] - oy, 3);
+        pts = pts.concat(arrowPts(ox, oy, e[0] - ox, e[1] - oy));
+        o += arc(ox, oy, 34, 0, 35, 'trace', 2);
+        o += c2s13Labels([[e[0], e[1], 'r = 2', [[e[0] + 12, e[1] - 6, 'r = 2', 'start'], [e[0] + 14, e[1] + 14, 'r = 2', 'start']]],
+          [ox + 46, oy - 16, 'θ', [[ox + 48, oy - 10, 'θ', 'start'], [ox + 52, oy - 4, 'θ', 'start']]]], pts, [0, 0, 640, 330], 18);
+      }
+      return o;
+    }
+    b += panel(40, 230, false) + panel(360, 230, true);
+    b += text(110, 280, '0 ≤ y ≤ √(4 − x²)', ' text-anchor="middle" font-size="17"');
+    b += text(110, 306, '0 ≤ x ≤ 2', ' text-anchor="middle" font-size="17"');
+    b += text(440, 280, '0 ≤ r ≤ 2', ' text-anchor="middle" font-size="17"');
+    b += text(440, 306, '0 ≤ θ ≤ π/2', ' text-anchor="middle" font-size="17"');
+    return svgBox('0 0 640 330', 'El cuarto de disco x² + y² ≤ 4 en el primer cuadrante. En rectangulares se recorre con tiras verticales de y = 0 a y = √(4 − x²); en polares, con rayos de r = 0 a r = 2 y θ de 0 a π/2.', b);
+  };
+
+  // Gauss: el cuadrado [−R, R]² queda entre el disco de radio R y el de radio R√2.
+  D['c2s13-gauss'] = function () {
+    var ox = 170, oy = 175, R = 1.6, k = 72, b = '', s = R * k, big = R * Math.SQRT2 * k;
+    b += '<circle class="box-aux" stroke-width="2" cx="' + ox + '" cy="' + oy + '" r="' + r1(big) + '"/>';
+    b += '<path class="rect-fill" stroke-width="2" d="M' + (ox - s) + ' ' + (oy - s) + 'H' + (ox + s) + 'V' + (oy + s) + 'H' + (ox - s) + 'Z"/>';
+    b += '<circle class="ref" fill="none" stroke-width="3" cx="' + ox + '" cy="' + oy + '" r="' + s + '"/>';
+    b += seg('axis', ox - big - 6, oy, ox + big + 6, oy, 1.4) + seg('axis', ox, oy + big + 6, ox, oy - big - 6, 1.4);
+    b += text(372, 56, 'Disco de radio R (dentro)', ' font-size="17"');
+    b += text(372, 82, '⊂ cuadrado [−R, R]²', ' font-size="17"');
+    b += text(372, 108, '⊂ disco de radio R√2', ' font-size="17"');
+    b += text(372, 168, 'e^(−(x² + y²)) > 0, así que', ' font-size="17"');
+    b += text(372, 194, 'π(1 − e^(−R²)) ≤ I(R)²', ' font-size="17"');
+    b += text(372, 220, 'I(R)² ≤ π(1 − e^(−2R²))', ' font-size="17"');
+    b += text(372, 280, 'R → ∞: I² = π, I = √π', ' font-size="19"');
+    return svgBox('0 0 640 350', 'Un disco de radio R dentro del cuadrado de lado 2R, y el cuadrado dentro del disco de radio R√2. Como el integrando es positivo, la integral sobre el cuadrado queda entre las dos de los discos.', b);
+  };
   /* ══════════════════════ fin S13 ══════════════════════ */
 
   /* ══════════════════════ S14 ══════════════════════ */
+  // Cubito [x0, x1] × [y0, y1] × [z0, z1] proyectado: solo las caras que ve la cámara (+x, +y y la tapa).
+  // Para pintar bien, llámalo en orden lexicográfico (x, luego y, luego z): la cámara mira desde +x, +y, +z.
+  function c2s14Cube(P, x0, y0, z0, x1, y1, z1, cls) {
+    var f = [
+      [[x0, y1, z0], [x1, y1, z0], [x1, y1, z1], [x0, y1, z1]],
+      [[x1, y0, z0], [x1, y1, z0], [x1, y1, z1], [x1, y0, z1]],
+      [[x0, y0, z1], [x1, y0, z1], [x1, y1, z1], [x0, y1, z1]]
+    ];
+    return f.map(function (q) { return fill(cls, q.map(P)); }).join('');
+  }
+  // Líneas de texto a la derecha, alineadas al final; aparecen con el paso.
+  function c2s14Notes(lines, x, y0, dy, fs) {
+    return lines.map(function (L, i) { return L[1] <= 0.001 ? '' : fade(text(x, y0 + i * dy, L[0], ' text-anchor="end" font-size="' + fs + '"'), L[1]); }).join('');
+  }
+
+  // S14 · Del cubito a la integral: tetraedro x + y + z ≤ 4 con cubitos de lado 1 (centro adentro).
+  // k = 0 un cubito · 1 una columna · 2 una rebanada (x fija) · 3 todo el sólido.
+  D['c2s14-cubes'] = function (st) {
+    var k = num(st, 'k', 0), P = view3({ cx: 200, cy: 205, s: 36 }), body = '';
+    body += axes3(P, 5.1, 18);
+    var cubes = [];
+    for (var i = 0; i < 4; i++) for (var j = 0; j < 4; j++) for (var l = 0; l < 3 - i - j; l++) cubes.push([i, j, l]);
+    cubes.forEach(function (c) {
+      var i2 = c[0], j2 = c[1], l2 = c[2], show, cls;
+      if (k < 0.5) { show = i2 === 1 && j2 === 0 && l2 === 0; cls = 'box-trace'; }
+      else if (k < 1.5) { show = i2 === 1 && j2 === 0; cls = 'box-trace'; }
+      else if (k < 2.5) { show = i2 === 1; cls = 'box-trace'; }
+      else { show = true; cls = i2 === 1 ? 'box-trace' : 'box-aux'; }
+      if (show) body += c2s14Cube(P, i2 + 0.04, j2 + 0.04, l2 + 0.04, i2 + 0.96, j2 + 0.96, l2 + 0.96, cls);
+    });
+    var X = P([4, 0, 0]), Y = P([0, 4, 0]), Z = P([0, 0, 4]);
+    body += fill('area-fill', [X, Y, Z]);
+    body += poly('ref', [X, Y, Z], 2.4, true);
+    body += c2s14Notes([
+      ['dV = dx dy dz', 1],
+      ['∫ dz: de 0 a 4 − x − y', clamp01(k)],
+      ['∫ dy: de 0 a 4 − x', clamp01(k - 1)],
+      ['∫ dx: de 0 a 4', clamp01(k - 2)]
+    ], 548, 40, 32, 20);
+    return svgBox('0 0 560 330', 'Tetraedro bajo el plano x + y + z = 4 armado con cubitos: un cubito de volumen dx dy dz, una columna en z, una rebanada en y y todas las rebanadas en x.', body);
+  };
+
+  // S14 · Límites de la cuña bajo z = 5 − x − y sobre el triángulo 0 ≤ y ≤ x ≤ 2.
+  // s = 1 sólido · 2 sombra D · 3 columna en z · 4 tramo en y · 5 recorrido en x.
+  D['c2s14-shadow'] = function (st) {
+    // Esquema: z se dibuja a 0.55 de su escala para que la sombra D se vea grande.
+    var s = num(st, 's', 1), V = view3({ cx: 160, cy: 232, s: 70, az: -30, el: 25 }), body = '';
+    function P(p) { return V([p[0], p[1], p[2] * 0.55]); }
+    function top(x, y) { return 5 - x - y; }
+    var A = [0, 0, 0], B = [2, 0, 0], C = [2, 2, 0], A2 = [0, 0, 5], B2 = [2, 0, 3], C2 = [2, 2, 1];
+    var O = P([0, 0, 0]);
+    [[[2.6, 0, 0], 'x'], [[0, 2.9, 0], 'y'], [[0, 0, 5.7], 'z']].forEach(function (e) {
+      var t = P(e[0]), dx = t[0] - O[0], dy = t[1] - O[1], m = Math.hypot(dx, dy) || 1;
+      body += arrow('axis', O[0], O[1], dx, dy, 1.6) + text(t[0] + dx / m * 14, t[1] + dy / m * 14 + 6, e[1], ' text-anchor="middle" font-size="18"');
+    });
+    var dS = clamp01(s - 1);
+    if (dS > 0) body += fade(fill('box-trace', [A, B, C].map(P)), dS);
+    body += fill('area-fill', [A2, B2, C2].map(P));
+    body += poly('ref', [A2, B2, C2].map(P), 2.4, true);
+    body += poly('ref', [A, B, C].map(P), 1.6, true, dS > 0.5 ? null : '5 4');
+    [[A, A2], [B, B2], [C, C2]].forEach(function (e) { var p = P(e[0]), q = P(e[1]); body += seg('ref', p[0], p[1], q[0], q[1], 2); });
+    var px = 1.5, py = 0.6, dC = clamp01(s - 2);
+    if (dC > 0) {
+      var p0 = P([px, py, 0]), p1 = P([px, py, top(px, py)]);
+      body += fade(seg('trace', p0[0], p0[1], p1[0], p1[1], 3.2) + dot('dot-trace', p0[0], p0[1], 5) + dot('dot-trace', p1[0], p1[1], 5), dC);
+    }
+    var dY = clamp01(s - 3);
+    if (dY > 0) { var q0 = P([px, 0, 0]), q1 = P([px, px, 0]); body += fade(seg('error', q0[0], q0[1], q1[0], q1[1], 3.6), dY); }
+    var dX = clamp01(s - 4);
+    if (dX > 0) { var r0 = P([0, 0, 0]), r1 = P([2, 0, 0]); body += fade(seg('error', r0[0], r0[1], r1[0], r1[1], 3.6), dX); }
+    body += c2s14Notes([
+      ['tapa: z = 5 − x − y', 1],
+      ['sombra D: 0 ≤ y ≤ x ≤ 2', dS],
+      ['z: de 0 a 5 − x − y', dC],
+      ['y: de 0 a x', dY],
+      ['x: de 0 a 2', dX]
+    ], 548, 40, 32, 20);
+    return svgBox('0 0 560 330', 'Cuña bajo el plano z = 5 − x − y sobre el triángulo 0 ≤ y ≤ x ≤ 2: su sombra D en el piso, una columna vertical de z = 0 a la tapa, el tramo de y de 0 a x y el recorrido de x de 0 a 2.', body);
+  };
 
   /* ══════════════════════ fin S14 ══════════════════════ */
 
   /* ══════════════════════ S15 ══════════════════════ */
+  // Punto en esféricas (ρ, θ, φ) con φ desde el eje z positivo; y en cilíndricas (r, θ, z).
+  function c2s15S(rho, th, ph) { return [rho * Math.sin(ph) * Math.cos(th), rho * Math.sin(ph) * Math.sin(th), rho * Math.cos(ph)]; }
+  function c2s15C(r, th, z) { return [r * Math.cos(th), r * Math.sin(th), z]; }
+  // Curva entre dos juegos de coordenadas (lineal en las coordenadas), proyectada.
+  function c2s15Path(P, F, a, b, n) {
+    var o = [];
+    for (var i = 0; i <= n; i++) { var t = i / n; o.push(P(F(a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t, a[2] + (b[2] - a[2]) * t))); }
+    return o;
+  }
+  // Las seis caras de una cajita curva [lo, hi] (coordenadas del sistema F), como rellenos.
+  function c2s15Cell(P, F, lo, hi, cls) {
+    var o = '', m = 10;
+    function face(p, du, dv) {
+      var q = [p, [p[0] + du[0], p[1] + du[1], p[2] + du[2]], [p[0] + du[0] + dv[0], p[1] + du[1] + dv[1], p[2] + du[2] + dv[2]], [p[0] + dv[0], p[1] + dv[1], p[2] + dv[2]]];
+      return fill(cls, c2s15Path(P, F, q[0], q[1], m).concat(c2s15Path(P, F, q[1], q[2], m), c2s15Path(P, F, q[2], q[3], m), c2s15Path(P, F, q[3], q[0], m)));
+    }
+    var d = [hi[0] - lo[0], hi[1] - lo[1], hi[2] - lo[2]];
+    o += face([lo[0], lo[1], lo[2]], [0, d[1], 0], [0, 0, d[2]]) + face([hi[0], lo[1], lo[2]], [0, d[1], 0], [0, 0, d[2]]);
+    o += face([lo[0], lo[1], lo[2]], [d[0], 0, 0], [0, 0, d[2]]) + face([lo[0], hi[1], lo[2]], [d[0], 0, 0], [0, 0, d[2]]);
+    o += face([lo[0], lo[1], lo[2]], [d[0], 0, 0], [0, d[1], 0]) + face([lo[0], lo[1], hi[2]], [d[0], 0, 0], [0, d[1], 0]);
+    return o;
+  }
+  // Notas a la derecha, alineadas al final, que aparecen con el paso.
+  function c2s15Notes(lines, x, y0, dy, fs) {
+    return lines.map(function (L, i) { return L[1] <= 0.001 ? '' : fade(text(x, y0 + i * dy, L[0], ' text-anchor="end" font-size="' + fs + '"'), L[1]); }).join('');
+  }
 
+  // S15 · La cajita esférica: s = 0 el punto P · 1 lado dρ · 2 lado ρ dφ · 3 lado ρ sin φ dθ · 4 volumen.
+  D['c2s15-box'] = function (st) {
+    var s = num(st, 's', 0), P = view3({ cx: 165, cy: 262, s: 62, az: -38, el: 24 }), body = '', pts = [];
+    var r0 = 1.9, r1 = 2.7, t0 = 1.25, t1 = 2.05, p0 = 0.62, p1 = 0.95;
+    var O = P([0, 0, 0]);
+    [[[3.2, 0, 0], 'x'], [[0, 2.9, 0], 'y'], [[0, 0, 3.6], 'z']].forEach(function (e) {
+      var t = P(e[0]), dx = t[0] - O[0], dy = t[1] - O[1], m = Math.hypot(dx, dy) || 1;
+      body += arrow('axis', O[0], O[1], dx, dy, 1.6) + text(t[0] + dx / m * 14, t[1] + dy / m * 14 + 6, e[1], ' text-anchor="middle" font-size="17"');
+      pts = pts.concat(arrowPts(O[0], O[1], dx, dy), segPts(t[0] + dx / m * 14 - 8, t[1] + dy / m * 14 - 6, t[0] + dx / m * 14 + 8, t[1] + dy / m * 14 + 6));
+    });
+    var Pp = P(c2s15S(r0, t0, p0)), foot = P(c2s15C(r0 * Math.sin(p0), t0, 0)), axisPt = P([0, 0, r0 * Math.cos(p0)]);
+    // ρ: del origen a P; su sombra en el piso y la vertical.
+    body += seg('aux', O[0], O[1], Pp[0], Pp[1], 2);
+    body += seg('aux', O[0], O[1], foot[0], foot[1], 1.4, '5 4') + seg('aux', foot[0], foot[1], Pp[0], Pp[1], 1.4, '5 4');
+    pts = pts.concat(segPts(O[0], O[1], Pp[0], Pp[1]), segPts(O[0], O[1], foot[0], foot[1]), segPts(foot[0], foot[1], Pp[0], Pp[1]));
+    // Ángulos: φ desde el eje z y θ en el piso.
+    var aPh = c2s15Path(P, c2s15S, [1.1, t0, 0], [1.1, t0, p0], 16), aTh = c2s15Path(P, c2s15C, [1.1, 0, 0], [1.1, t0, 0], 16);
+    body += poly('axis', aPh, 1.6) + poly('axis', aTh, 1.6);
+    pts = pts.concat(polyPts(aPh), polyPts(aTh));
+    // La cajita: se ve de contorno desde el paso 1 y se rellena en el paso 4.
+    var dB = clamp01(s - 3);
+    if (dB > 0) body += fade(c2s15Cell(P, c2s15S, [r0, t0, p0], [r1, t1, p1], 'box-aux'), dB);
+    // Aristas de la cajita (para que las etiquetas no las pisen).
+    [[[r1, t0, p0], [r1, t1, p0]], [[r1, t0, p1], [r1, t1, p1]], [[r0, t0, p1], [r0, t1, p1]], [[r0, t1, p0], [r0, t1, p1]], [[r1, t0, p0], [r1, t0, p1]], [[r1, t1, p0], [r1, t1, p1]], [[r0, t1, p0], [r1, t1, p0]], [[r0, t0, p1], [r1, t0, p1]], [[r0, t1, p1], [r1, t1, p1]], [[r0, t1, p0], [r0, t1, p1]]].forEach(function (e) {
+      pts = pts.concat(polyPts(c2s15Path(P, c2s15S, e[0], e[1], 12)));
+    });
+    var cR = clamp01(s), cM = clamp01(s - 1), cP = clamp01(s - 2);
+    // Los tres lados se juntan en la esquina de afuera (ρ + dρ ≈ ρ): ahí se ven más largos.
+    var eR = c2s15Path(P, c2s15S, [r0, t0, p0], [r1, t0, p0], 2), eM = c2s15Path(P, c2s15S, [r1, t0, p0], [r1, t0, p1], 16), eP = c2s15Path(P, c2s15S, [r1, t0, p0], [r1, t1, p0], 16);
+    if (dB > 0) pts = pts.concat(polyPts(c2s15Path(P, c2s15S, [r0, t0, p0], [r0, t0, p1], 12)), polyPts(c2s15Path(P, c2s15S, [r0, t0, p0], [r0, t1, p0], 12)));
+    if (cP > 0) {
+      // El paralelo de radio ρ sin φ y su radio desde el eje z.
+      var par = c2s15Path(P, c2s15S, [r0, 0, p0], [r0, Math.PI / 2, p0], 40);
+      body += fade(poly('aux', par, 1.4, false, '5 4') + seg('aux', axisPt[0], axisPt[1], Pp[0], Pp[1], 1.6, '3 3'), cP);
+      pts = pts.concat(polyPts(par), segPts(axisPt[0], axisPt[1], Pp[0], Pp[1]));
+    }
+    if (cR > 0) body += fade(poly('error', eR, 4), cR);
+    if (cM > 0) body += fade(poly('trace', eM, 4), cM);
+    if (cP > 0) body += fade(poly('student', eP, 4), cP);
+    pts = pts.concat(polyPts(eR), polyPts(eM), polyPts(eP));
+    body += dot('dot-trace', Pp[0], Pp[1], 5);
+    pts = pts.concat(segPts(Pp[0] - 6, Pp[1], Pp[0] + 6, Pp[1]));
+    var vb = [0, 0, 345, 350], fs = 16, cands;
+    var mid = function (a) { return a[Math.floor(a.length / 2)]; };
+    var mP = mid(aPh), mT = mid(aTh), mR = P(c2s15S(r0 * 0.45, t0, p0));
+    var marks = [['φ', mP, 1], ['θ', mT, 1], ['ρ', mR, 1], ['P', Pp, 1], ['dρ', mid(eR), cR], ['ρ dφ', mid(eM), cM], ['ρ sin φ dθ', mid(eP), cP]];
+    if (cP > 0) marks.push(['r', [(axisPt[0] + Pp[0]) / 2, (axisPt[1] + Pp[1]) / 2], cP]);
+    marks.forEach(function (L) {
+      if (L[2] <= 0.001) return;
+      cands = around(L[1][0], L[1][1], L[0]).concat(around(L[1][0] + 40, L[1][1], L[0]).slice(32), around(L[1][0] - 40, L[1][1], L[0]).slice(32));
+      var c = spot(cands, pts, fs, vb);
+      body += fade(label(c, fs), L[2]);
+      var w = String(c[2]).length * fs * 0.6, x0 = c[3] === 'end' ? c[0] - w : c[3] === 'middle' ? c[0] - w / 2 : c[0];
+      pts = pts.concat(segPts(x0 - 2, c[1] - fs * 0.8, x0 + w + 2, c[1] - fs * 0.8), segPts(x0 - 2, c[1] + 2, x0 + w + 2, c[1] + 2), segPts(x0 - 2, c[1] - fs * 0.4, x0 + w + 2, c[1] - fs * 0.4));
+    });
+    body += c2s15Notes([
+      ['P = (ρ, θ, φ)', 1],
+      ['r = ρ sin φ: distancia al eje z', cP],
+      ['lado radial: dρ', cR],
+      ['lado del meridiano: ρ dφ', cM],
+      ['lado del paralelo: ρ sin φ dθ', cP],
+      ['dV = ρ² sin φ dρ dθ dφ', dB]
+    ], 548, 40, 32, 16);
+    return svgBox('0 0 560 350', 'Cajita esférica junto al punto P de coordenadas rho, theta y phi: un lado radial d rho, un lado sobre el meridiano rho d phi y un lado sobre el paralelo de radio rho sin phi, rho sin phi d theta; su volumen es rho cuadrada sin phi d rho d theta d phi.', body);
+  };
+
+  // S15 · La cajita cilíndrica: el rectángulo polar de S13 en el piso, levantado a una altura dz.
+  D['c2s15-cyl'] = function () {
+    var P = view3({ cx: 150, cy: 262, s: 52, az: -38, el: 22 }), body = '', pts = [];
+    var r0 = 1.6, r1 = 2.7, t0 = 1.05, t1 = 1.75, z0 = 1.5, z1 = 2.5;
+    var O = P([0, 0, 0]);
+    [[[3.4, 0, 0], 'x'], [[0, 3.6, 0], 'y'], [[0, 0, 3.6], 'z']].forEach(function (e) {
+      var t = P(e[0]), dx = t[0] - O[0], dy = t[1] - O[1], m = Math.hypot(dx, dy) || 1;
+      body += arrow('axis', O[0], O[1], dx, dy, 1.6) + text(t[0] + dx / m * 14, t[1] + dy / m * 14 + 6, e[1], ' text-anchor="middle" font-size="17"');
+      pts = pts.concat(arrowPts(O[0], O[1], dx, dy), segPts(t[0] + dx / m * 14 - 8, t[1] + dy / m * 14 - 6, t[0] + dx / m * 14 + 8, t[1] + dy / m * 14 + 6));
+    });
+    var base = c2s15Path(P, c2s15C, [r0, t0, 0], [r1, t0, 0], 4).concat(c2s15Path(P, c2s15C, [r1, t0, 0], [r1, t1, 0], 16), c2s15Path(P, c2s15C, [r1, t1, 0], [r0, t1, 0], 4), c2s15Path(P, c2s15C, [r0, t1, 0], [r0, t0, 0], 16));
+    body += fill('area-fill', base) + poly('ref', base, 1.6, true, '5 4');
+    pts = pts.concat(polyPts(base));
+    [[r0, t0], [r1, t0], [r1, t1], [r0, t1]].forEach(function (q) {
+      var a = P(c2s15C(q[0], q[1], 0)), b = P(c2s15C(q[0], q[1], z0));
+      body += seg('aux', a[0], a[1], b[0], b[1], 1.2, '3 4');
+      pts = pts.concat(segPts(a[0], a[1], b[0], b[1]));
+    });
+    body += c2s15Cell(P, c2s15C, [r0, t0, z0], [r1, t1, z1], 'box-aux');
+    var eR = c2s15Path(P, c2s15C, [r0, t0, z0], [r1, t0, z0], 2), eT = c2s15Path(P, c2s15C, [r1, t0, z0], [r1, t1, z0], 16), eZ = c2s15Path(P, c2s15C, [r1, t0, z0], [r1, t0, z1], 2);
+    body += poly('error', eR, 4) + poly('trace', eT, 4) + poly('student', eZ, 4);
+    pts = pts.concat(polyPts(eR), polyPts(eT), polyPts(eZ));
+    [[r0, r1], [t0, t1], [z0, z1]].forEach(function (rg, q) {               // las 12 aristas de la cajita
+      [0, 1].forEach(function (i) { [0, 1].forEach(function (j) {
+        var o = [0, 1, 2].filter(function (w) { return w !== q; }), lo = [r0, t0, z0], hi;
+        lo[o[0]] = [[r0, r1], [t0, t1], [z0, z1]][o[0]][i]; lo[o[1]] = [[r0, r1], [t0, t1], [z0, z1]][o[1]][j];
+        hi = lo.slice(); lo[q] = rg[0]; hi[q] = rg[1];
+        pts = pts.concat(polyPts(c2s15Path(P, c2s15C, lo, hi, 12)));
+      }); });
+    });
+    var fs = 16, vb = [0, 0, 340, 330];
+    [['dr', eR[1]], ['r dθ', eT[8]], ['dz', eZ[1]]].forEach(function (L) {
+      var c = spot(around(L[1][0], L[1][1], L[0]), pts, fs, vb);
+      body += label(c, fs);
+      var w = String(c[2]).length * fs * 0.6, x0 = c[3] === 'end' ? c[0] - w : c[3] === 'middle' ? c[0] - w / 2 : c[0];
+      pts = pts.concat(segPts(x0 - 2, c[1] - fs * 0.8, x0 + w + 2, c[1] - fs * 0.8), segPts(x0 - 2, c[1] + 2, x0 + w + 2, c[1] + 2));
+    });
+    body += c2s15Notes([
+      ['lado radial: dr', 1],
+      ['arco: r dθ', 1],
+      ['altura: dz', 1],
+      ['base: r dr dθ, como en S13', 1],
+      ['dV = r dr dθ dz', 1]
+    ], 548, 50, 34, 16);
+    return svgBox('0 0 560 330', 'Cajita en cilíndricas: su base es un rectángulo polar de área r dr d theta, igual que en la sesión 13, y su altura es dz; su volumen es r dr d theta dz.', body);
+  };
+
+  // S15 · Qué sistema conviene: una lata (cilíndricas), un cono de helado y una pelota (esféricas).
+  D['c2s15-choose'] = function () {
+    var body = '', W = 186;
+    function ring(P, F, a, b, n) { return c2s15Path(P, F, a, b, n); }
+    // Lata: cilindro r = 1.1, 0 ≤ z ≤ 2.4.
+    var P1 = view3({ cx: W / 2, cy: 168, s: 46, az: -35, el: 22 });
+    var bot = ring(P1, c2s15C, [1.1, 0, 0], [1.1, 2 * Math.PI, 0], 60), top = ring(P1, c2s15C, [1.1, 0, 2.4], [1.1, 2 * Math.PI, 2.4], 60);
+    body += fill('area-fill', top) + poly('ref', top, 2) + poly('ref', bot, 2);
+    var xs = bot.map(function (p) { return p[0]; }), il = xs.indexOf(Math.min.apply(null, xs)), ir = xs.indexOf(Math.max.apply(null, xs));
+    body += seg('ref', bot[il][0], bot[il][1], top[il][0], top[il][1], 2) + seg('ref', bot[ir][0], bot[ir][1], top[ir][0], top[ir][1], 2);
+    // Cono de helado: cono φ = π/5 hasta la esfera ρ = 2.6.
+    var P2 = view3({ cx: W + W / 2, cy: 184, s: 46, az: -35, el: 22 }), al = Math.PI / 5, R = 2.45;
+    var rim = ring(P2, c2s15S, [R, 0, al], [R, 2 * Math.PI, al], 60), O2 = P2([0, 0, 0]);
+    var cap = ring(P2, c2s15S, [R, -Math.PI / 2 + 0.6, al], [R, -Math.PI / 2 + 0.6, 0], 14).concat(ring(P2, c2s15S, [R, Math.PI / 2 + 0.6, 0], [R, Math.PI / 2 + 0.6, al], 14));
+    var rx = rim.map(function (p) { return p[0]; }), jl = rx.indexOf(Math.min.apply(null, rx)), jr = rx.indexOf(Math.max.apply(null, rx));
+    body += fill('area-fill', rim) + poly('ref', rim, 2) + poly('ref', cap, 2);
+    body += seg('ref', O2[0], O2[1], rim[jl][0], rim[jl][1], 2) + seg('ref', O2[0], O2[1], rim[jr][0], rim[jr][1], 2);
+    // Pelota: esfera ρ = 1.4 (contorno, ecuador y un meridiano).
+    var P3 = view3({ cx: 2 * W + W / 2, cy: 108, s: 46, az: -35, el: 22 });
+    var c3 = P3([0, 0, 0]), rr = 1.4 * 46;
+    var eq = ring(P3, c2s15S, [1.4, 0, Math.PI / 2], [1.4, 2 * Math.PI, Math.PI / 2], 60), me = ring(P3, c2s15S, [1.4, 0.4, 0], [1.4, 0.4, Math.PI], 40);
+    var circ = []; for (var i = 0; i <= 60; i++) { var a = 2 * Math.PI * i / 60; circ.push([c3[0] + rr * Math.cos(a), c3[1] + rr * Math.sin(a)]); }
+    body += fill('area-fill', circ) + poly('ref', circ, 2) + poly('aux', eq, 1.4, false, '5 4') + poly('aux', me, 1.4, false, '5 4');
+    [[W / 2, 'lata'], [W + W / 2, 'cono de helado'], [2 * W + W / 2, 'pelota']].forEach(function (c, k) {
+      body += text(c[0], 214, c[1], ' text-anchor="middle" font-size="16"');
+      body += text(c[0], 238, k ? 'esféricas' : 'cilíndricas', ' text-anchor="middle" font-size="16" font-weight="600"');
+    });
+    return svgBox('0 0 560 252', 'Tres sólidos: una lata, que conviene en cilíndricas; un cono de helado y una pelota, que convienen en esféricas.', body);
+  };
+
+  // S15 · Cono de helado en el corte x–z: dentro de ρ = 2 y arriba del cono φ = π/4.
+  D['c2s15-cone'] = function () {
+    var k = 70, ox = 230, oy = 205, body = '';
+    function Q(x, z) { return [ox + k * x, oy - k * z]; }
+    var R = 2, a = Math.PI / 4, reg = [Q(0, 0)];
+    for (var i = 0; i <= 40; i++) { var t = -a + 2 * a * i / 40; reg.push(Q(R * Math.sin(t), R * Math.cos(t))); }
+    body += seg('axis', ox - 2.6 * k, oy, ox + 2.6 * k, oy, 1.6) + seg('axis', ox, oy + 12, ox, oy - 2.4 * k, 1.6);
+    body += text(ox + 2.6 * k + 14, oy + 6, 'x', ' text-anchor="middle" font-size="17"') + text(ox + 14, oy - 2.4 * k + 12, 'z', ' text-anchor="middle" font-size="17"');
+    var circ = []; for (var j = 0; j <= 60; j++) { var u = -Math.PI / 2 + Math.PI * j / 60; circ.push(Q(R * Math.sin(u), R * Math.cos(u))); }
+    body += poly('aux', circ, 1.4, false, '5 4');
+    body += fill('area-fill', reg) + poly('ref', reg, 2.6, true);
+    body += seg('aux', Q(0, 0)[0], Q(0, 0)[1], Q(2.3 * Math.sin(a), 2.3 * Math.cos(a))[0], Q(2.3 * Math.sin(a), 2.3 * Math.cos(a))[1], 1.4, '5 4');
+    var arcP = []; for (var m = 0; m <= 16; m++) { var w = a * m / 16; arcP.push(Q(0.7 * Math.sin(w), 0.7 * Math.cos(w))); }
+    body += poly('error', arcP, 2.2);
+    var lab = Q(0.42 * Math.sin(a / 2) + 0.02, 0.95 * Math.cos(a / 2));
+    body += text(lab[0] + 4, lab[1] - 20, 'φ', ' text-anchor="start" font-size="17"');
+    body += text(Q(-1.55, 1.75)[0], Q(-1.55, 1.75)[1], 'esfera ρ = 2', ' text-anchor="end" font-size="16"');
+    body += text(Q(1.8, 1.5)[0], Q(1.8, 1.5)[1], 'cono φ = π/4', ' text-anchor="start" font-size="16"');
+    body += text(Q(1.8, 1.5)[0], Q(1.8, 1.5)[1] + 22, 'z = √(x² + y²)', ' text-anchor="start" font-size="15"');
+    return svgBox('0 0 520 250', 'Corte del cono de helado en el plano x z: la región entre el cono phi igual a pi cuartos y la esfera rho igual a 2.', body);
+  };
   /* ══════════════════════ fin S15 ══════════════════════ */
 
   /* ══════════════════════ Examen ══════════════════════ */

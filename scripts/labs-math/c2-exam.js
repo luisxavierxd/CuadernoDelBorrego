@@ -48,17 +48,17 @@ module.exports = ({ test, near, LM, math }) => {
     return (lo + hi) / 2;
   }
 
-  test('examen c2: 8 problemas por bloque (A y B); cada sesión S01–S10 en ≥ 2', () => {
-    const blocks = { A: 0, B: 0 }, count = {};
+  test('examen c2: 8 problemas por bloque (A, B y C); cada sesión S01–S15 en ≥ 2', () => {
+    const blocks = { A: 0, B: 0, C: 0 }, count = {}, range = { A: [1, 5], B: [6, 10], C: [11, 15] };
     list.forEach((p) => {
       if (!(p.block in blocks)) throw new Error(p.id + ' tiene bloque ' + p.block);
       blocks[p.block]++;
-      const n = +p.tags[0].slice(4);
-      if (p.block === 'A' ? n > 5 : n < 6 || n > 10) throw new Error(p.id + ': su sesión principal no es de su bloque');
+      const n = +p.tags[0].slice(4), [lo, hi] = range[p.block];
+      if (n < lo || n > hi) throw new Error(p.id + ': su sesión principal no es de su bloque');
       p.tags.forEach((t) => { count[t] = (count[t] || 0) + 1; });
     });
-    near(blocks.A, 8, 0, 'bloque A'); near(blocks.B, 8, 0, 'bloque B');
-    ['c2.S01', 'c2.S02', 'c2.S03', 'c2.S04', 'c2.S05', 'c2.S06', 'c2.S07', 'c2.S08', 'c2.S09', 'c2.S10'].forEach((t) => { if (!(count[t] >= 2)) throw new Error(t + ' tiene ' + (count[t] || 0)); });
+    near(blocks.A, 8, 0, 'bloque A'); near(blocks.B, 8, 0, 'bloque B'); near(blocks.C, 8, 0, 'bloque C');
+    for (let s = 1; s <= 15; s++) { const t = 'c2.S' + String(s).padStart(2, '0'); if (!(count[t] >= 2)) throw new Error(t + ' tiene ' + (count[t] || 0)); }
   });
 
   test('examen c2 esfera: surface.sphere, traza por bisección, área por polígono, distancia muestreada', () => {
@@ -304,6 +304,109 @@ module.exports = ({ test, near, LM, math }) => {
       const s = L2.solve(math, 'x^2 + y^2 + z^2', g, h);
       near(t[0], s.min.lam, 1e-7, at + ' a (Newton)'); near(t[1], s.min.mu, 1e-7, at + ' b (Newton)');
       near(t[4], Math.sqrt(s.min.value), 1e-7, at + ' e (Newton)');
+    });
+  });
+
+  /* ---------------- Bloque C ---------------- */
+  // Simpson compuesto (n par), anidado donde hay integrales iteradas con límites variables; y
+  // mallas de punto medio en rectangulares (con indicador de la región), que no usan ningún
+  // Jacobiano. Nada de esto usa las fórmulas cerradas de answer().
+  const simp = (f, a, b, n = 40) => { const h = (b - a) / n; let s = f(a) + f(b); for (let i = 1; i < n; i++) s += f(a + i * h) * (i % 2 ? 4 : 2); return s * h / 3; };
+  const grid2 = (f, lo, hi, n) => { const h = (hi - lo) / n; let s = 0; for (let i = 0; i < n; i++) for (let j = 0; j < n; j++) s += f(lo + (i + 0.5) * h, lo + (j + 0.5) * h); return s * h * h; };
+  const grid3 = (f, lo, hi, n) => { const h = (hi - lo) / n; let s = 0; for (let i = 0; i < n; i++) for (let j = 0; j < n; j++) for (let k = 0; k < n; k++) s += f(lo + (i + 0.5) * h, lo + (j + 0.5) * h, lo + (k + 0.5) * h); return s * h * h * h; };
+
+  test('examen c2 placa rectangular: Fubini con Simpson anidado de T completa y del área', () => {
+    each('c2-ex-placa-rect', (v, t, at) => {
+      const T = (x, y) => v.c + v.p * x * x + v.q * y * y, Y0 = (f) => simp((y) => simp((x) => f(x, y), 0, v.a, 8), 0, v.b, 8);
+      rel(t[0], Y0((x) => v.p * x * x), 1e-9, at + ' a'); rel(t[1], Y0((x, y) => v.q * y * y), 1e-9, at + ' b'); rel(t[2], Y0(() => v.c), 1e-9, at + ' c');
+      const I = Y0(T);
+      rel(t[3], I, 1e-9, at + ' d'); rel(t[4], I / Y0(() => 1), 1e-9, at + ' e');
+      // El otro orden (primero y, luego x) da lo mismo.
+      rel(I, simp((x) => simp((y) => T(x, y), 0, v.b, 8), 0, v.a, 8), 1e-9, at + ' Fubini');
+    });
+  });
+
+  test('examen c2 parábola y recta: región tipo I con Simpson anidado, y el otro orden (tipo II)', () => {
+    each('c2-ex-parabola-recta', (v, t, at) => {
+      const m = v.m, I1 = (f) => simp((x) => simp((y) => f(x, y), x * x, m * x, 40), 0, m, 40);
+      // Tipo II: y de 0 a m², x de y/m a √y.
+      const I2 = (f) => simp((y) => simp((x) => f(x, y), y / m, Math.sqrt(y), 400), 0, m * m, 400);
+      const A = I1(() => 1), M = I1((x) => v.p * x), Mx = I1((x) => v.p * x * x);
+      rel(t[0], A, 1e-7, at + ' a'); rel(t[1], M, 1e-6, at + ' b'); rel(t[2], Mx, 1e-4, at + ' c');
+      rel(t[3], Mx / M, 1e-4, at + ' d'); rel(t[4], M / A, 1e-4, at + ' e');
+      rel(A, I2(() => 1), 1e-4, at + ' A tipo II'); rel(M, I2((x) => v.p * x), 1e-4, at + ' M tipo II');
+    });
+  });
+
+  test('examen c2 cambio de orden: la integral original con Simpson anidado y la interior numérica', () => {
+    each('c2-ex-cambio-orden', (v, t, at) => {
+      const X = v.m * v.L, f = (y) => v.k * Math.exp(y * y);
+      // Orden original: x de 0 a mL, y de x/m a L.
+      const I = simp((x) => simp(f, x / v.m, v.L, 80), 0, X, 80);
+      rel(t[1], I, 1e-6, at + ' b');
+      // c: la interior en x, a y0 fijo, sobre y e^{y²}.
+      const y0 = v.L / 2;
+      rel(t[0], simp(() => f(y0), 0, v.m * y0, 4) / (y0 * Math.exp(y0 * y0)), 1e-9, at + ' a');
+      const area = simp((x) => v.L - x / v.m, 0, X, 4);
+      rel(t[2], I / area, 1e-6, at + ' c'); rel(t[3], I / area / v.k, 1e-6, at + ' d');
+    });
+  });
+
+  test('examen c2 sector de anillo: polares con Simpson y malla cartesiana (sin Jacobiano)', () => {
+    each('c2-ex-sector-anular', (v, t, at) => {
+      const al = v.j * Math.PI / 6, P = (f) => simp((th) => simp((r) => f(r) * r, v.R0, v.R, 8), 0, al, 8);
+      const A = P(() => 1), M = P((r) => v.p * r * r), N = P((r) => r);
+      rel(t[0], A, 1e-9, at + ' a'); rel(t[1], M, 1e-9, at + ' b'); rel(t[2], M / A, 1e-9, at + ' c'); rel(t[3], N / A, 1e-9, at + ' d');
+      const inside = (x, y) => { const r = Math.hypot(x, y); return y >= 0 && r >= v.R0 && r <= v.R && Math.atan2(y, x) <= al; };
+      rel(t[0], grid2((x, y) => inside(x, y) ? 1 : 0, -v.R, v.R, 600), 2e-2, at + ' a (malla)');
+      rel(t[1], grid2((x, y) => inside(x, y) ? v.p * (x * x + y * y) : 0, -v.R, v.R, 600), 2e-2, at + ' b (malla)');
+    });
+  });
+
+  test('examen c2 gaussiana: Simpson radial, malla cartesiana en el disco y el total sobre todo el plano', () => {
+    each('c2-ex-gaussiana', (v, t, at) => {
+      const rad = simp((r) => Math.exp(-v.k * r * r) * r, 0, v.R, 200);
+      rel(t[0], rad, 1e-9, at + ' a');
+      rel(t[1], simp(() => 1, 0, 2 * Math.PI, 2) * v.c * rad, 1e-9, at + ' b');
+      rel(t[1], grid2((x, y) => x * x + y * y <= v.R * v.R ? v.c * Math.exp(-v.k * (x * x + y * y)) : 0, -v.R, v.R, 500), 1e-2, at + ' b (malla)');
+      const Minf = 2 * Math.PI * v.c * simp((r) => Math.exp(-v.k * r * r) * r, 0, 14 / Math.sqrt(v.k), 4000);
+      rel(t[2], t[1] / Minf, 1e-6, at + ' c'); rel(t[2], 1 - Math.exp(-v.k * v.R * v.R), 1e-9, at + ' c (cerrada)');
+    });
+  });
+
+  test('examen c2 tetraedro: triple de Simpson anidado con límites variables', () => {
+    each('c2-ex-tetraedro', (v, t, at) => {
+      const zt = (x, y) => v.c * (1 - x / v.a - y / v.b), yt = (x) => v.b * (1 - x / v.a);
+      const T = (f) => simp((x) => simp((y) => simp((z) => f(z), 0, zt(x, y), 4), 0, yt(x), 4), 0, v.a, 4);
+      const V = T(() => 1), Z = T((z) => z), M = T((z) => v.k * z);
+      rel(t[0], V, 1e-9, at + ' a'); rel(t[1], Z, 1e-9, at + ' b'); rel(t[2], Z / V, 1e-9, at + ' c'); rel(t[3], M, 1e-9, at + ' d'); rel(t[4], M / V, 1e-9, at + ' e');
+      // Otro orden de integración: z, luego x, luego y.
+      const T2 = simp((z) => simp((x) => simp((y) => v.k * z, 0, v.b * (1 - x / v.a - z / v.c), 4), 0, v.a * (1 - z / v.c), 4), 0, v.c, 4);
+      rel(M, T2, 1e-9, at + ' M en otro orden');
+    });
+  });
+
+  test('examen c2 tazón parabólico: malla cartesiana (longitud de la columna en z) sin Jacobiano', () => {
+    each('c2-ex-paraboloide', (v, t, at) => {
+      near(v.k * t[0] * t[0], v.H, 1e-9, at + ' a');
+      const rm = Math.sqrt(v.H / v.k), col = (x, y) => Math.max(0, v.H - v.k * (x * x + y * y));
+      const V = grid2(col, -rm, rm, 600), M = grid2((x, y) => v.p * (x * x + y * y) * col(x, y), -rm, rm, 600);
+      rel(t[1], V, 2e-3, at + ' b'); rel(t[2], M, 2e-3, at + ' c'); rel(t[3], M / V, 4e-3, at + ' d');
+      // Cilíndricas con Simpson: z de k r² a H, r de 0 a r máx.
+      const C = simp((r) => v.p * r * r * r * (v.H - v.k * r * r), 0, rm, 200) * 2 * Math.PI;
+      rel(t[2], C, 1e-5, at + ' c (Simpson)');
+    });
+  });
+
+  test('examen c2 cono con tapa esférica: Simpson en (ρ, θ, φ) y malla cartesiana en (x, y, z)', () => {
+    each('c2-ex-cono-helado', (v, t, at) => {
+      const al = v.j * Math.PI / 6, S = (f) => simp((rho) => simp(() => simp((ph) => f(rho) * rho * rho * Math.sin(ph), 0, al, 60), 0, 2 * Math.PI, 2), 0, v.R, 60);
+      rel(t[0], simp(Math.sin, 0, al, 200), 1e-9, at + ' a');
+      const V = S(() => 1), M = S((rho) => v.p * rho);
+      rel(t[1], V, 1e-8, at + ' b'); rel(t[2], M, 1e-8, at + ' c'); rel(t[3], M / V, 1e-8, at + ' d');
+      const inside = (x, y, z) => { const r = Math.sqrt(x * x + y * y + z * z); return r > 0 && r <= v.R && Math.acos(Math.max(-1, Math.min(1, z / r))) <= al; };
+      rel(t[1], grid3((x, y, z) => inside(x, y, z) ? 1 : 0, -v.R, v.R, 70), 0.1, at + ' b (malla)');
+      rel(t[2], grid3((x, y, z) => inside(x, y, z) ? v.p * Math.sqrt(x * x + y * y + z * z) : 0, -v.R, v.R, 70), 0.1, at + ' c (malla)');
     });
   });
 };

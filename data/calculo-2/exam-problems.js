@@ -7,6 +7,9 @@
    Bloque B (S06–S10): 8 problemas. Las direcciones en el plano, en grados
    desde el eje x positivo en sentido antihorario (como en S08); Lagrange con
    ∇f = λ∇g (+ μ∇h), como en S09 y S10.
+   Bloque C (S11–S15): 8 problemas. Integral doble y triple con integrales
+   iteradas; polares con dA = r dr dθ; cilíndricas con dV = r dz dr dθ; esféricas
+   (ρ, θ, φ) con dV = ρ² sen φ dρ dθ dφ y φ desde el eje z positivo (como en S15).
    Las respuestas se comprueban por otro camino en scripts/labs-math/c2-exam.js.
    ===================================================================== */
 (function () {
@@ -146,6 +149,52 @@
   function rct(v) {
     var lam = 2 * v.c1 / (2 + v.k * v.k), mu = v.c2, x = (lam + mu) / 2, y = (lam - mu) / 2, z = v.k * lam / 2;
     return { lam: lam, mu: mu, x: x, y: y, z: z, d: Math.sqrt(x * x + y * y + z * z) };
+  }
+
+  /* ---------- Bloque C ---------- */
+  // x/n en LaTeX (n = 1 → solo x); el coeficiente k de e^{-k r²} (1 → vacío, si no 'k\,').
+  function ftx(s, n) { return n === 1 ? s : '\\dfrac{' + s + '}{' + n + '}'; }
+  function gk(v) { return v.k === 1 ? '' : fx(v.k) + '\\,'; }
+  // T = c + p x² + q y² en [0, a] × [0, b]: cada pieza de la integral doble y el promedio.
+  function rtg(v) {
+    var X = v.p * Math.pow(v.a, 3) * v.b / 3, Y = v.q * v.a * Math.pow(v.b, 3) / 3, C = v.c * v.a * v.b, I = X + Y + C;
+    return { X: X, Y: Y, C: C, I: I, avg: I / (v.a * v.b) };
+  }
+  // Placa 0 ≤ x ≤ m, x² ≤ y ≤ m x con δ = p x: área, masa, momento en x, x̄ y densidad promedio.
+  function pbl(v) {
+    var m = v.m;
+    return { A: Math.pow(m, 3) / 6, M: v.p * Math.pow(m, 4) / 12, Mx: v.p * Math.pow(m, 5) / 20, xb: 3 * m / 5, avg: v.p * m / 2 };
+  }
+  // I = ∫₀^{mL}∫_{x/m}^{L} k e^{y²} dy dx = (cambiando el orden) ∫₀^L k m y e^{y²} dy.
+  function swp(v) {
+    var c = v.m * v.k, e = (Math.exp(v.L * v.L) - 1) / 2, I = c * e, area = v.m * v.L * v.L / 2;
+    return { c: c, e: e, I: I, area: area, avg: I / area, ratio: I / area / v.k };
+  }
+  // Sector de anillo R0 ≤ r ≤ R, 0 ≤ θ ≤ α = jπ/6, δ = p r²: área, masa, ∬ r dA y distancia promedio.
+  function sct(v) {
+    var al = v.j * Math.PI / 6, A = al * (v.R * v.R - v.R0 * v.R0) / 2, M = al * v.p * (Math.pow(v.R, 4) - Math.pow(v.R0, 4)) / 4;
+    var N = al * (Math.pow(v.R, 3) - Math.pow(v.R0, 3)) / 3;
+    return { al: al, A: A, M: M, avg: M / A, N: N, rb: N / A };
+  }
+  // ρ = c e^{−k r²} en el disco r ≤ R: integral radial, masa y fracción del total (πc/k).
+  function gss(v) {
+    var rad = (1 - Math.exp(-v.k * v.R * v.R)) / (2 * v.k), M = 2 * Math.PI * v.c * rad, Minf = Math.PI * v.c / v.k;
+    return { rad: rad, M: M, Minf: Minf, frac: M / Minf };
+  }
+  // Tetraedro x/a + y/b + z/c ≤ 1 con δ = k z: volumen, ∭ z dV, z̄, masa y densidad promedio.
+  function tet(v) {
+    var V = v.a * v.b * v.c / 6, Z = v.a * v.b * v.c * v.c / 24;
+    return { V: V, Z: Z, zb: Z / V, M: v.k * Z, avg: v.k * Z / V };
+  }
+  // Tazón k r² ≤ z ≤ H con δ = p r²: radio máximo, volumen, masa y densidad promedio.
+  function pbd(v) {
+    var V = Math.PI * v.H * v.H / (2 * v.k), M = Math.PI * v.p * Math.pow(v.H, 3) / (6 * v.k * v.k);
+    return { rm: Math.sqrt(v.H / v.k), V: V, M: M, avg: M / V };
+  }
+  // Cono-casquete 0 ≤ ρ ≤ R, 0 ≤ φ ≤ α = jπ/6, δ = p ρ: w = ∫ sen φ dφ = 1 − cos α, volumen, masa y promedio.
+  function cap(v) {
+    var w = 1 - Math.cos(v.j * Math.PI / 6), V = 2 * Math.PI * Math.pow(v.R, 3) * w / 3, M = Math.PI * v.p * Math.pow(v.R, 4) * w / 2;
+    return { w: w, V: V, M: M, avg: M / V };
   }
 
   ex.c2 = (ex.c2 || []).concat([
@@ -934,6 +983,390 @@
           prompt: function (v) { return 'Con tus incisos c) y d) (y $y = x - ' + par(v.c2) + '$, de la segunda restricción), ¿a qué distancia del origen está la recta?'; },
           answer: function (v, prev) { return Math.sqrt(prev[2] * prev[2] + Math.pow(prev[2] - v.c2, 2) + prev[3] * prev[3]); },
           solution: function (v) { var s = rct(v); return '$y = ' + fx(s.x) + ' - ' + par(v.c2) + ' = ' + fx(s.y) + '$; $d = \\sqrt{' + fx(s.x) + '^2 + ' + par(fx(s.y)) + '^2 + ' + par(fx(s.z)) + '^2} \\approx ' + fx(s.d) + '$.'; }
+        }
+      ]
+    },
+
+    /* ================= Bloque C · Integrales múltiples (S11–S15) ================= */
+    {
+      id: 'c2-ex-placa-rect', tags: ['c2.S11'], block: 'C', title: 'La temperatura promedio de una placa rectangular',
+      vars: { a: [1, 4, 1], b: [1, 4, 1], c: [10, 40, 10], p: [1, 5, 1], q: [1, 5, 1] },
+      where: function (v) { var s = rtg(v); return Math.abs(0.37 * s.X + 1) > 0.05 + 0.02 * s.I; },
+      statement: function (v) {
+        return '<p>Una placa rectangular ocupa $R = [0, ' + v.a + '] \\times [0, ' + v.b + ']$ (en metros). Su temperatura en °C es $T(x, y) = ' + v.c + term(v.p, 'x^2') + term(v.q, 'y^2') + '$. Calcula la integral doble $\\iint_R T\\,dA$ por partes (linealidad y Fubini) y de ahí la temperatura promedio de la placa.</p>';
+      },
+      diagram: {
+        id: 'exam-fn', state: function (v) {
+          return {
+            x: [0, v.a * 1.3], y: [0, v.b * 1.3], equal: true,
+            fns: [{ f: function (x) { return x >= 0 && x <= v.a ? v.b : NaN; }, cls: 'aux', w: 2.4 }, { f: function (x) { return x >= 0 && x <= v.a ? 0 : NaN; }, cls: 'aux', w: 2.4 }],
+            vlines: [{ x: v.a, label: 'x = ' + v.a }], hlines: [{ y: v.b, label: 'y = ' + v.b }],
+            xlab: 'x (m)', ylab: 'y (m)', label: 'La placa rectangular, con una esquina en el origen.'
+          };
+        }
+      },
+      parts: [
+        {
+          label: 'a', type: 'numeric', points: 3, unit: '°C·m²',
+          prompt: function (v) { return '¿Cuánto vale $\\iint_R ' + lead(v.p, 'x^2') + '\\,dA$? (Integra primero en $x$ de $0$ a $' + v.a + '$ y luego en $y$ de $0$ a $' + v.b + '$.)'; },
+          answer: function (v) { return rtg(v).X; },
+          solution: function (v) { var s = rtg(v); return '$\\int_0^{' + v.b + '}\\int_0^{' + v.a + '} ' + lead(v.p, 'x^2') + '\\,dx\\,dy = ' + v.p + '\\cdot\\dfrac{' + v.a + '^3}{3}\\cdot ' + v.b + ' \\approx ' + fx(s.X) + '$.'; }
+        },
+        {
+          label: 'b', type: 'numeric', points: 3, unit: '°C·m²',
+          prompt: function (v) { return '¿Cuánto vale $\\iint_R ' + lead(v.q, 'y^2') + '\\,dA$?'; },
+          answer: function (v) { return rtg(v).Y; },
+          solution: function (v) { var s = rtg(v); return '$' + v.q + '\\cdot ' + v.a + '\\cdot\\dfrac{' + v.b + '^3}{3} \\approx ' + fx(s.Y) + '$.'; }
+        },
+        {
+          label: 'c', type: 'numeric', points: 2, unit: '°C·m²',
+          prompt: function (v) { return '¿Cuánto vale $\\iint_R ' + v.c + '\\,dA$ (la constante por el área de $R$)?'; },
+          answer: function (v) { return v.c * v.a * v.b; },
+          solution: function (v) { var s = rtg(v); return '$' + v.c + '\\cdot(' + v.a + ')(' + v.b + ') = ' + fx(s.C) + '$.'; }
+        },
+        {
+          label: 'd', type: 'numeric', points: 2, unit: '°C·m²',
+          prompt: function () { return 'Con tus incisos a), b) y c), ¿cuánto vale $\\iint_R T\\,dA$?'; },
+          answer: function (v, prev) { return prev[0] + prev[1] + prev[2]; },
+          solution: function (v) { var s = rtg(v); return 'Por linealidad se suman: $' + fx(s.X) + ' + ' + fx(s.Y) + ' + ' + fx(s.C) + ' \\approx ' + fx(s.I) + '$.'; }
+        },
+        {
+          label: 'e', type: 'numeric', points: 3, unit: '°C',
+          prompt: function (v) { return 'La temperatura promedio es la integral entre el área de la placa ($' + (v.a * v.b) + '$ m²). Con tu inciso d), ¿cuánto vale?'; },
+          answer: function (v, prev) { return prev[3] / (v.a * v.b); },
+          solution: function (v) { var s = rtg(v); return '$\\bar T = \\dfrac{\\iint_R T\\,dA}{\\text{área}} = \\dfrac{' + fx(s.I) + '}{' + (v.a * v.b) + '} \\approx ' + fx(s.avg) + '$ °C.'; }
+        }
+      ]
+    },
+    {
+      id: 'c2-ex-parabola-recta', tags: ['c2.S12', 'c2.S11'], block: 'C', title: 'La placa entre una parábola y una recta',
+      vars: { m: [2, 4, 1], p: [1, 4, 1] },
+      where: function (v) { return farA(pbl(v).A); },
+      statement: function (v) {
+        return '<p>Una placa (en cm) ocupa la región entre la parábola $y = x^2$ y la recta $y = ' + lead(v.m, 'x') + '$. Su densidad es $\\delta(x, y) = ' + lead(v.p, 'x') + '$ g/cm². Describe la región como $0 \\le x \\le ' + v.m + '$, $x^2 \\le y \\le ' + lead(v.m, 'x') + '$ e integra primero en $y$.</p>';
+      },
+      diagram: {
+        id: 'exam-fn', state: function (v) {
+          return {
+            x: [0, v.m * 1.15], y: [0, v.m * v.m * 1.1],
+            fns: [{ f: function (x) { return x * x; }, label: 'y = x²', at: v.m * 0.45 }, { f: function (x) { return v.m * x; }, cls: 'aux', w: 2.6, label: 'y = ' + lead(v.m, 'x'), at: v.m * 0.9 }],
+            shade: { a: 0, b: v.m, f: function (x) { return v.m * x; }, g: function (x) { return x * x; } },
+            pts: [{ x: v.m, y: v.m * v.m }], xlab: 'x (cm)', ylab: 'y (cm)',
+            label: 'La región entre la parábola y la recta: se cortan en el origen y en x = ' + v.m + '.'
+          };
+        }
+      },
+      parts: [
+        {
+          label: 'a', type: 'numeric', points: 3, unit: 'cm²',
+          prompt: function () { return '¿Cuál es el área de la placa, $\\iint_R dA$?'; },
+          answer: function (v) { return pbl(v).A; },
+          solution: function (v) { var s = pbl(v); return '$\\int_0^{' + v.m + '}(' + lead(v.m, 'x') + ' - x^2)\\,dx = ' + v.m + '\\cdot\\dfrac{' + v.m + '^2}{2} - \\dfrac{' + v.m + '^3}{3} = \\dfrac{' + v.m + '^3}{6} \\approx ' + fx(s.A) + '$.'; }
+        },
+        {
+          label: 'b', type: 'numeric', points: 3, unit: 'g',
+          prompt: function () { return '¿Cuál es la masa $M = \\iint_R \\delta\\,dA$?'; },
+          answer: function (v) { return pbl(v).M; },
+          solution: function (v) { var s = pbl(v); return '$M = \\int_0^{' + v.m + '}\\int_{x^2}^{' + lead(v.m, 'x') + '} ' + lead(v.p, 'x') + '\\,dy\\,dx = ' + v.p + '\\int_0^{' + v.m + '} (' + v.m + 'x^2 - x^3)\\,dx = ' + v.p + '\\cdot\\dfrac{' + v.m + '^4}{12} \\approx ' + fx(s.M) + '$ g.'; }
+        },
+        {
+          label: 'c', type: 'numeric', points: 3, unit: 'g·cm',
+          prompt: function () { return '¿Cuánto vale el momento $\\iint_R x\\,\\delta\\,dA$?'; },
+          answer: function (v) { return pbl(v).Mx; },
+          solution: function (v) { var s = pbl(v); return '$' + v.p + '\\int_0^{' + v.m + '} x^2(' + v.m + 'x - x^2)\\,dx = ' + v.p + '\\left(' + v.m + '\\cdot\\dfrac{' + v.m + '^4}{4} - \\dfrac{' + v.m + '^5}{5}\\right) = ' + v.p + '\\cdot\\dfrac{' + v.m + '^5}{20} \\approx ' + fx(s.Mx) + '$.'; }
+        },
+        {
+          label: 'd', type: 'numeric', points: 2, unit: 'cm',
+          prompt: function () { return 'Con tus incisos b) y c), ¿cuánto vale la coordenada $\\bar x$ del centro de masa, $\\bar x = \\dfrac{\\iint x\\,\\delta\\,dA}{M}$?'; },
+          answer: function (v, prev) { return prev[2] / prev[1]; },
+          solution: function (v) { var s = pbl(v); return '$\\bar x = \\dfrac{' + fx(s.Mx) + '}{' + fx(s.M) + '} \\approx ' + fx(s.xb) + '$ cm (es $\\dfrac{3}{5}\\cdot ' + v.m + '$).'; }
+        },
+        {
+          label: 'e', type: 'numeric', points: 3, unit: 'g/cm²',
+          prompt: function () { return 'Con tus incisos a) y b), ¿cuál es la densidad promedio de la placa, masa entre área?'; },
+          answer: function (v, prev) { return prev[1] / prev[0]; },
+          solution: function (v) { var s = pbl(v); return '$\\dfrac{M}{A} = \\dfrac{' + fx(s.M) + '}{' + fx(s.A) + '} \\approx ' + fx(s.avg) + '$ g/cm².'; }
+        }
+      ]
+    },
+    {
+      id: 'c2-ex-cambio-orden', tags: ['c2.S12', 'c2.S11'], block: 'C', title: 'Invertir el orden para poder integrar',
+      vars: { m: [1, 3, 1], k: [1, 5, 1], L: [1, 2, 0.5] },
+      where: function (v) { return farA(swp(v).c); },
+      statement: function (v) {
+        return '<p>Quieres calcular $I = \\int_0^{' + fx(v.m * v.L) + '}\\int_{x/' + v.m + '}^{' + fx(v.L) + '} ' + lead(v.k, 'e^{y^2}') + '\\,dy\\,dx$. La antiderivada de $e^{y^2}$ en $y$ no existe en forma elemental, así que dibuja la región ($0 \\le x \\le ' + fx(v.m * v.L) + '$, $x/' + v.m + ' \\le y \\le ' + fx(v.L) + '$) y cambia el orden: primero $x$, luego $y$.</p>';
+      },
+      diagram: {
+        id: 'exam-fn', state: function (v) {
+          var X = v.m * v.L;
+          return {
+            x: [0, X * 1.12], y: [0, v.L * 1.25],
+            fns: [{ f: function (x) { return x / v.m; }, label: 'y = x/' + v.m, at: X * 0.45 }],
+            shade: { a: 0, b: X, f: function () { return v.L; }, g: function (x) { return x / v.m; } },
+            hlines: [{ y: v.L, label: 'y = ' + fx(v.L) }], pts: [{ x: X, y: v.L }], xlab: 'x', ylab: 'y',
+            label: 'La región de integración: el triángulo entre la recta y = x/m, la recta horizontal superior y el eje y.'
+          };
+        }
+      },
+      parts: [
+        {
+          label: 'a', type: 'numeric', points: 3,
+          prompt: function (v) { return 'Con el orden cambiado, $0 \\le y \\le ' + fx(v.L) + '$ y $0 \\le x \\le ' + lead(v.m, 'y') + '$. La integral interior en $x$ es $\\int_0^{' + lead(v.m, 'y') + '} ' + lead(v.k, 'e^{y^2}') + '\\,dx = c\\,y\\,e^{y^2}$. ¿Cuánto vale $c$?'; },
+          answer: function (v) { return swp(v).c; },
+          solution: function (v) { var s = swp(v); return 'El integrando no depende de $x$: la integral interior es $' + lead(v.k, 'e^{y^2}') + '\\cdot' + lead(v.m, 'y') + '$, así que $c = ' + v.k + '\\cdot ' + v.m + ' = ' + s.c + '$.'; }
+        },
+        {
+          label: 'b', type: 'numeric', points: 4,
+          prompt: function (v) { return 'Con tu $c$ del inciso a), ¿cuánto vale $I = \\int_0^{' + fx(v.L) + '} c\\,y\\,e^{y^2}\\,dy$? (Con $u = y^2$.)'; },
+          answer: function (v, prev) { return prev[0] * (Math.exp(v.L * v.L) - 1) / 2; },
+          solution: function (v) { var s = swp(v); return 'Con $u = y^2$, $du = 2y\\,dy$: $\\int_0^{' + fx(v.L) + '} y\\,e^{y^2}\\,dy = \\dfrac{e^{' + fx(v.L * v.L) + '} - 1}{2} \\approx ' + fx(s.e) + '$, y $I = ' + s.c + '\\cdot ' + fx(s.e) + ' \\approx ' + fx(s.I) + '$.'; }
+        },
+        {
+          label: 'c', type: 'numeric', points: 3,
+          prompt: function (v) { return 'El área de la región es $\\tfrac{1}{2}(' + fx(v.m * v.L) + ')(' + fx(v.L) + ')$. Con tu inciso b), ¿cuál es el valor promedio de $' + lead(v.k, 'e^{y^2}') + '$ sobre la región?'; },
+          answer: function (v, prev) { return prev[1] / (v.m * v.L * v.L / 2); },
+          solution: function (v) { var s = swp(v); return '$\\dfrac{I}{\\text{área}} = \\dfrac{' + fx(s.I) + '}{' + fx(s.area) + '} \\approx ' + fx(s.avg) + '$.'; }
+        },
+        {
+          label: 'd', type: 'numeric', points: 2,
+          prompt: function (v) { return 'En $y = 0$ el integrando vale $' + v.k + '$, su mínimo en la región. Con tu inciso c), ¿cuántas veces es mayor el promedio que ese mínimo?'; },
+          answer: function (v, prev) { return prev[2] / v.k; },
+          solution: function (v) { var s = swp(v); return '$\\dfrac{' + fx(s.avg) + '}{' + v.k + '} \\approx ' + fx(s.ratio) + '$ veces (es $\\dfrac{e^{' + fx(v.L * v.L) + '} - 1}{' + fx(v.L * v.L) + '}$: no depende de $m$ ni de $k$).'; }
+        }
+      ]
+    },
+    {
+      id: 'c2-ex-sector-anular', tags: ['c2.S13'], block: 'C', title: 'Un sector de anillo con densidad radial',
+      vars: { R0: [1, 2, 1], R: [3, 5, 1], j: [2, 6, 1], p: [1, 4, 1] },
+      where: function (v) { return farA(sct(v).A); },
+      statement: function (v) {
+        return '<p>Una placa tiene la forma del sector de anillo $' + v.R0 + ' \\le r \\le ' + v.R + '$, $0 \\le \\theta \\le ' + piTex(v.j, 6) + '$ (en metros). Su densidad es $\\delta = ' + lead(v.p, 'r^2') + '$ kg/m². Usa polares, con $dA = r\\,dr\\,d\\theta$ (el $r$ extra es el Jacobiano).</p>';
+      },
+      diagram: {
+        id: 'exam-fn', state: function (v) {
+          var al = v.j * Math.PI / 6;
+          return {
+            x: [-v.R * 1.1, v.R * 1.1], y: [-v.R * 0.2, v.R * 1.1], equal: true,
+            curves: [
+              { xy: function (t) { return [v.R * Math.cos(t), v.R * Math.sin(t)]; }, t0: 0, t1: al, cls: 'ref', w: 3 },
+              { xy: function (t) { return [v.R0 * Math.cos(t), v.R0 * Math.sin(t)]; }, t0: 0, t1: al, cls: 'ref', w: 3 },
+              { xy: function (s) { return [v.R0 + s * (v.R - v.R0), 0]; }, t0: 0, t1: 1, cls: 'aux', w: 2.6 },
+              { xy: function (s) { return [(v.R0 + s * (v.R - v.R0)) * Math.cos(al), (v.R0 + s * (v.R - v.R0)) * Math.sin(al)]; }, t0: 0, t1: 1, cls: 'aux', w: 2.6 }
+            ],
+            xlab: 'x (m)', ylab: 'y (m)',
+            label: 'El sector de anillo: dos arcos y dos segmentos radiales.'
+          };
+        }
+      },
+      parts: [
+        {
+          label: 'a', type: 'numeric', points: 3, unit: 'm²',
+          prompt: function () { return '¿Cuál es el área de la placa, $\\int\\int r\\,dr\\,d\\theta$?'; },
+          answer: function (v) { return sct(v).A; },
+          solution: function (v) { var s = sct(v); return '$A = \\int_0^{' + piTex(v.j, 6) + '}\\int_{' + v.R0 + '}^{' + v.R + '} r\\,dr\\,d\\theta = ' + fx(s.al, 4) + '\\cdot\\dfrac{' + v.R + '^2 - ' + v.R0 + '^2}{2} \\approx ' + fx(s.A) + '$ m².'; }
+        },
+        {
+          label: 'b', type: 'numeric', points: 3, unit: 'kg',
+          prompt: function (v) { return '¿Cuál es la masa $M = \\iint \\delta\\,dA$? (El integrando en polares es $' + lead(v.p, 'r^2') + '\\cdot r$.)'; },
+          answer: function (v) { return sct(v).M; },
+          solution: function (v) { var s = sct(v); return '$M = ' + v.p + '\\int_0^{' + piTex(v.j, 6) + '}\\int_{' + v.R0 + '}^{' + v.R + '} r^3\\,dr\\,d\\theta = ' + v.p + '\\cdot ' + fx(s.al, 4) + '\\cdot\\dfrac{' + v.R + '^4 - ' + v.R0 + '^4}{4} \\approx ' + fx(s.M) + '$ kg.'; }
+        },
+        {
+          label: 'c', type: 'numeric', points: 2, unit: 'kg/m²',
+          prompt: function () { return 'Con tus incisos a) y b), ¿cuál es la densidad promedio de la placa?'; },
+          answer: function (v, prev) { return prev[1] / prev[0]; },
+          solution: function (v) { var s = sct(v); return '$\\dfrac{M}{A} = \\dfrac{' + fx(s.M) + '}{' + fx(s.A) + '} \\approx ' + fx(s.avg) + '$ kg/m².'; }
+        },
+        {
+          label: 'd', type: 'numeric', points: 3, unit: 'm',
+          prompt: function (v) { return 'La distancia promedio de un punto de la placa al origen es $\\dfrac{\\iint r\\,dA}{A}$, con $\\iint r\\,dA = \\int_0^{' + piTex(v.j, 6) + '}\\int_{' + v.R0 + '}^{' + v.R + '} r^2\\,dr\\,d\\theta$. Con tu área del inciso a), ¿cuánto vale?'; },
+          answer: function (v, prev) { return sct(v).N / prev[0]; },
+          solution: function (v) { var s = sct(v); return '$\\iint r\\,dA = ' + fx(s.al, 4) + '\\cdot\\dfrac{' + v.R + '^3 - ' + v.R0 + '^3}{3} \\approx ' + fx(s.N) + '$, y $\\dfrac{' + fx(s.N) + '}{' + fx(s.A) + '} \\approx ' + fx(s.rb) + '$ m (entre $' + v.R0 + '$ y $' + v.R + '$, como debe ser).'; }
+        }
+      ]
+    },
+    {
+      id: 'c2-ex-gaussiana', tags: ['c2.S13', 'c2.S11'], block: 'C', title: 'Un contaminante que se dispersa en un disco',
+      vars: { c: [2, 10, 2], k: [0.5, 2, 0.5], R: [1, 3, 0.5] },
+      where: function (v) { var q = v.k * v.R * v.R; return q >= 0.5 && q <= 5 && farA(gss(v).rad); },
+      statement: function (v) {
+        return '<p>La concentración de un contaminante en un lago es $\\rho(x, y) = ' + lead(v.c, 'e^{-' + gk(v) + '(x^2 + y^2)}') + '$ kg/m² (en metros, con el origen en la fuente). En rectangulares no hay antiderivada, pero en polares sí: sobre el disco $r \\le ' + fx(v.R) + '$, $\\rho = ' + lead(v.c, 'e^{-' + gk(v) + 'r^2}') + '$ y $dA = r\\,dr\\,d\\theta$.</p>';
+      },
+      diagram: {
+        id: 'exam-fn', state: function (v) {
+          var f = function (r) { return v.c * Math.exp(-v.k * r * r); };
+          return {
+            x: [0, v.R * 1.25], y: [0, v.c * 1.15],
+            fns: [{ f: f, label: 'ρ(r)', at: v.R * 0.55 }],
+            shade: { a: 0, b: v.R, f: f }, vlines: [{ x: v.R, label: 'r = ' + fx(v.R) }], xlab: 'r (m)', ylab: 'ρ',
+            label: 'La concentración en función de la distancia r a la fuente: baja muy rápido.'
+          };
+        }
+      },
+      parts: [
+        {
+          label: 'a', type: 'numeric', points: 3,
+          prompt: function (v) { return 'Calcula la integral radial $\\int_0^{' + fx(v.R) + '} e^{-' + gk(v) + 'r^2}\\,r\\,dr$ (con $u = ' + gk(v) + 'r^2$).'; },
+          answer: function (v) { return gss(v).rad; },
+          solution: function (v) { var s = gss(v); return 'Con $u = ' + fx(v.k) + 'r^2$, $du = ' + fx(2 * v.k) + 'r\\,dr$: $\\dfrac{1 - e^{-' + fx(v.k * v.R * v.R) + '}}{' + fx(2 * v.k) + '} \\approx ' + fx(s.rad, 4) + '$.'; }
+        },
+        {
+          label: 'b', type: 'numeric', points: 4, unit: 'kg',
+          prompt: function (v) { return 'La integral en $\\theta$ da $2\\pi$. Con tu inciso a), ¿cuánto contaminante hay dentro del disco, $M = ' + v.c + '\\cdot 2\\pi\\cdot(\\text{tu integral radial})$?'; },
+          answer: function (v, prev) { return 2 * Math.PI * v.c * prev[0]; },
+          solution: function (v) { var s = gss(v); return '$M = 2\\pi\\cdot ' + v.c + '\\cdot ' + fx(s.rad, 4) + ' \\approx ' + fx(s.M) + '$ kg.'; }
+        },
+        {
+          label: 'c', type: 'numeric', points: 3,
+          prompt: function (v) { return 'Sobre todo el plano, con $R \\to \\infty$, la cantidad total es $\\dfrac{\\pi\\cdot ' + v.c + '}{' + fx(v.k) + '}$ kg. Con tu inciso b), ¿qué fracción de ese total (un número entre 0 y 1) está dentro del disco?'; },
+          answer: function (v, prev) { return prev[1] / (Math.PI * v.c / v.k); },
+          solution: function (v) { var s = gss(v); return '$\\dfrac{' + fx(s.M) + '}{' + fx(s.Minf) + '} \\approx ' + fx(s.frac, 4) + '$, que es $1 - e^{-' + fx(v.k * v.R * v.R) + '}$.'; }
+        }
+      ]
+    },
+    {
+      id: 'c2-ex-tetraedro', tags: ['c2.S14'], block: 'C', title: 'La masa de un tetraedro con densidad creciente',
+      vars: { a: [1, 4, 1], b: [1, 4, 1], c: [2, 6, 1], k: [1, 4, 1] },
+      where: function (v) { return farA(tet(v).V); },
+      statement: function (v) {
+        return '<p>Un sólido (en metros) está limitado por los planos coordenados y el plano $' + ftx('x', v.a) + ' + ' + ftx('y', v.b) + ' + ' + ftx('z', v.c) + ' = 1$. Su densidad es $\\delta = ' + lead(v.k, 'z') + '$ kg/m³ (más denso arriba). Describe el sólido como $0 \\le z \\le ' + v.c + '\\left(1 - ' + ftx('x', v.a) + ' - ' + ftx('y', v.b) + '\\right)$ sobre el triángulo del piso y calcula con integrales triples en rectangulares.</p>';
+      },
+      diagram: {
+        id: 'exam-fn', state: function (v) {
+          return {
+            x: [0, v.a * 1.15], y: [0, v.c * 1.2],
+            fns: [{ f: function (x) { return x <= v.a ? v.c * (1 - x / v.a) : NaN; }, label: 'plano', at: v.a * 0.55 }],
+            shade: { a: 0, b: v.a, f: function (x) { return v.c * (1 - x / v.a); } },
+            pts: [{ x: v.a, y: 0, label: 'x = ' + v.a }, { x: 0, y: v.c, label: 'z = ' + v.c }], xlab: 'x (m)', ylab: 'z (m)',
+            label: 'El corte del tetraedro con el plano y = 0: el triángulo entre los ejes y la traza del plano.'
+          };
+        }
+      },
+      parts: [
+        {
+          label: 'a', type: 'numeric', points: 3, unit: 'm³',
+          prompt: function () { return '¿Cuál es el volumen del tetraedro, $\\iiint dV$?'; },
+          answer: function (v) { return tet(v).V; },
+          solution: function (v) { var s = tet(v); return 'Las aristas sobre los ejes miden $' + v.a + '$, $' + v.b + '$ y $' + v.c + '$: $V = \\dfrac{1}{6}\\cdot ' + v.a + '\\cdot ' + v.b + '\\cdot ' + v.c + ' \\approx ' + fx(s.V) + '$ m³. (Con triples: $\\int_0^{' + v.a + '}\\int_0^{' + v.b + '(1 - x/' + v.a + ')}\\int_0^{' + v.c + '(1 - x/' + v.a + ' - y/' + v.b + ')} dz\\,dy\\,dx$.)'; }
+        },
+        {
+          label: 'b', type: 'numeric', points: 4, unit: 'm⁴',
+          prompt: function () { return '¿Cuánto vale $\\iiint z\\,dV$? (La integral interior en $z$ da $\\tfrac{1}{2}z^2$ evaluada en el plano.)'; },
+          answer: function (v) { return tet(v).Z; },
+          solution: function (v) { var s = tet(v); return 'La integral interior: $\\dfrac{' + v.c + '^2}{2}\\left(1 - \\dfrac{x}{' + v.a + '} - \\dfrac{y}{' + v.b + '}\\right)^2$. Integrando en $y$ y luego en $x$ (cada vez el cuadrado da un $\\tfrac13$ y un $\\tfrac14$ con su arista): $\\dfrac{' + v.a + '\\cdot ' + v.b + '\\cdot ' + v.c + '^2}{24} \\approx ' + fx(s.Z, 3) + '$.'; }
+        },
+        {
+          label: 'c', type: 'numeric', points: 2, unit: 'm',
+          prompt: function () { return 'Con tus incisos a) y b), ¿a qué altura está el centroide, $\\bar z = \\dfrac{\\iiint z\\,dV}{V}$?'; },
+          answer: function (v, prev) { return prev[1] / prev[0]; },
+          solution: function (v) { var s = tet(v); return '$\\bar z = \\dfrac{' + fx(s.Z, 3) + '}{' + fx(s.V) + '} \\approx ' + fx(s.zb) + '$ m (un cuarto de la altura $' + v.c + '$).'; }
+        },
+        {
+          label: 'd', type: 'numeric', points: 2, unit: 'kg',
+          prompt: function (v) { return 'Con $\\delta = ' + lead(v.k, 'z') + '$ y tu inciso b), ¿cuál es la masa $M = \\iiint \\delta\\,dV$?'; },
+          answer: function (v, prev) { return v.k * prev[1]; },
+          solution: function (v) { var s = tet(v); return '$M = ' + v.k + '\\iiint z\\,dV = ' + v.k + '\\cdot ' + fx(s.Z, 3) + ' \\approx ' + fx(s.M, 3) + '$ kg.'; }
+        },
+        {
+          label: 'e', type: 'numeric', points: 3, unit: 'kg/m³',
+          prompt: function () { return 'Con tus incisos a) y d), ¿cuál es la densidad promedio del sólido?'; },
+          answer: function (v, prev) { return prev[3] / prev[0]; },
+          solution: function (v) { var s = tet(v); return '$\\dfrac{M}{V} = \\dfrac{' + fx(s.M, 3) + '}{' + fx(s.V) + '} \\approx ' + fx(s.avg) + '$ kg/m³, que es $\\delta(\\bar z) = ' + v.k + '\\cdot ' + fx(s.zb) + '$: el promedio es la densidad a la altura del centroide.'; }
+        }
+      ]
+    },
+    {
+      id: 'c2-ex-paraboloide', tags: ['c2.S15', 'c2.S14'], block: 'C', title: 'Un tazón parabólico en cilíndricas',
+      vars: { k: [1, 3, 1], H: [2, 8, 1], p: [1, 4, 1] },
+      where: function (v) { return farA(pbd(v).rm); },
+      statement: function (v) {
+        return '<p>Un tazón sólido (en metros) ocupa la región $' + lead(v.k, 'r^2') + ' \\le z \\le ' + v.H + '$, con $r^2 = x^2 + y^2$. Su densidad es $\\delta = ' + lead(v.p, 'r^2') + '$ kg/m³. Usa cilíndricas, $dV = r\\,dz\\,dr\\,d\\theta$, con $\\theta$ de $0$ a $2\\pi$ y $z$ de $' + lead(v.k, 'r^2') + '$ a $' + v.H + '$.</p>';
+      },
+      diagram: {
+        id: 'exam-fn', state: function (v) {
+          var rm = Math.sqrt(v.H / v.k);
+          return {
+            x: [0, rm * 1.2], y: [0, v.H * 1.2],
+            fns: [{ f: function (r) { return v.k * r * r <= v.H * 1.2 ? v.k * r * r : NaN; }, label: 'z = ' + lead(v.k, 'r²'), at: rm * 0.5 }],
+            shade: { a: 0, b: rm, f: function () { return v.H; }, g: function (r) { return v.k * r * r; } },
+            hlines: [{ y: v.H, label: 'z = ' + v.H }], pts: [{ x: rm, y: v.H, label: 'r máx' }], xlab: 'r (m)', ylab: 'z (m)',
+            label: 'El corte del tazón (r, z): el sólido está entre la parábola y el plano z = H, y gira alrededor del eje z.'
+          };
+        }
+      },
+      parts: [
+        {
+          label: 'a', type: 'numeric', points: 3, unit: 'm',
+          prompt: function () { return 'El paraboloide y el plano se cortan en una circunferencia. ¿Cuánto vale el radio máximo $r$ del tazón?'; },
+          answer: function (v) { return pbd(v).rm; },
+          solution: function (v) { var s = pbd(v); return '$' + lead(v.k, 'r^2') + ' = ' + v.H + '$, así que $r = \\sqrt{' + fx(v.H / v.k) + '} \\approx ' + fx(s.rm) + '$ m.'; }
+        },
+        {
+          label: 'b', type: 'numeric', points: 3, unit: 'm³',
+          prompt: function (v) { return 'Con tu radio del inciso a), ¿cuál es el volumen? $V = 2\\pi\\int_0^{r_{\\max}} (' + v.H + ' - ' + lead(v.k, 'r^2') + ')\\,r\\,dr$.'; },
+          answer: function (v, prev) { return 2 * Math.PI * (v.H * prev[0] * prev[0] / 2 - v.k * Math.pow(prev[0], 4) / 4); },
+          solution: function (v) { var s = pbd(v); return '$V = 2\\pi\\left(\\dfrac{' + v.H + 'r^2}{2} - \\dfrac{' + v.k + 'r^4}{4}\\right)$ con $r^2 = ' + fx(v.H / v.k) + '$: $\\dfrac{\\pi\\cdot ' + v.H + '^2}{' + 2 * v.k + '} \\approx ' + fx(s.V) + '$ m³.'; }
+        },
+        {
+          label: 'c', type: 'numeric', points: 4, unit: 'kg',
+          prompt: function (v) { return 'Con tu radio del inciso a), ¿cuál es la masa? $M = 2\\pi\\int_0^{r_{\\max}} ' + lead(v.p, 'r^2') + '\\,(' + v.H + ' - ' + lead(v.k, 'r^2') + ')\\,r\\,dr$.'; },
+          answer: function (v, prev) { return 2 * Math.PI * v.p * (v.H * Math.pow(prev[0], 4) / 4 - v.k * Math.pow(prev[0], 6) / 6); },
+          solution: function (v) { var s = pbd(v); return '$M = 2\\pi\\cdot ' + v.p + '\\left(\\dfrac{' + v.H + 'r^4}{4} - \\dfrac{' + v.k + 'r^6}{6}\\right)$ con $r^2 = ' + fx(v.H / v.k) + '$: $\\dfrac{\\pi\\cdot ' + v.p + '\\cdot ' + v.H + '^3}{' + 6 * v.k * v.k + '} \\approx ' + fx(s.M) + '$ kg.'; }
+        },
+        {
+          label: 'd', type: 'numeric', points: 2, unit: 'kg/m³',
+          prompt: function () { return 'Con tus incisos b) y c), ¿cuál es la densidad promedio del tazón?'; },
+          answer: function (v, prev) { return prev[2] / prev[1]; },
+          solution: function (v) { var s = pbd(v); return '$\\dfrac{M}{V} = \\dfrac{' + fx(s.M) + '}{' + fx(s.V) + '} \\approx ' + fx(s.avg) + '$ kg/m³ (es $\\dfrac{' + v.p + '\\cdot ' + v.H + '}{' + 3 * v.k + '}$).'; }
+        }
+      ]
+    },
+    {
+      id: 'c2-ex-cono-helado', tags: ['c2.S15', 'c2.S14'], block: 'C', title: 'Una bola de helado en esféricas',
+      vars: { R: [2, 5, 1], j: [1, 4, 1], p: [1, 4, 1] },
+      where: function (v) { return farA(cap(v).w); },
+      statement: function (v) {
+        return '<p>Un sólido (en metros) ocupa $0 \\le \\rho \\le ' + v.R + '$, $0 \\le \\theta \\le 2\\pi$, $0 \\le \\varphi \\le ' + piTex(v.j, 6) + '$, en esféricas $(\\rho, \\theta, \\varphi)$ con $\\varphi$ medido desde el eje $z$ positivo: un cono con su tapa esférica. Su densidad es $\\delta = ' + lead(v.p, '\\rho') + '$ kg/m³. Usa $dV = \\rho^2\\sin\\varphi\\,d\\rho\\,d\\theta\\,d\\varphi$.</p>';
+      },
+      diagram: {
+        id: 'exam-fn', state: function (v) {
+          var al = v.j * Math.PI / 6;
+          return {
+            x: [0, v.R * 1.25], y: [Math.min(0, v.R * Math.cos(al)) - 0.4, v.R * 1.2], equal: true,
+            curves: [
+              { xy: function (t) { return [v.R * Math.sin(t), v.R * Math.cos(t)]; }, t0: 0, t1: al, cls: 'ref', w: 3 },
+              { xy: function (s) { return [s * v.R * Math.sin(al), s * v.R * Math.cos(al)]; }, t0: 0, t1: 1, cls: 'aux', w: 2.6 },
+              { xy: function (s) { return [0, s * v.R]; }, t0: 0, t1: 1, cls: 'aux', w: 2.6 }
+            ],
+            pts: [{ x: v.R * Math.sin(al), y: v.R * Math.cos(al), label: 'φ = ' + (v.j * 30) + '°' }], xlab: 'r', ylab: 'z',
+            label: 'El corte del sólido (r, z): el arco de la esfera de radio R, desde el eje z hasta el cono φ = α.'
+          };
+        }
+      },
+      parts: [
+        {
+          label: 'a', type: 'numeric', points: 3,
+          prompt: function (v) { return 'La integral en $\\varphi$ es $\\int_0^{' + piTex(v.j, 6) + '}\\sin\\varphi\\,d\\varphi$. ¿Cuánto vale?'; },
+          answer: function (v) { return cap(v).w; },
+          solution: function (v) { var s = cap(v); return '$\\left[-\\cos\\varphi\\right]_0^{' + piTex(v.j, 6) + '} = 1 - \\cos\\left(' + piTex(v.j, 6) + '\\right) \\approx ' + fx(s.w, 4) + '$.'; }
+        },
+        {
+          label: 'b', type: 'numeric', points: 3, unit: 'm³',
+          prompt: function (v) { return 'Con tu inciso a), ¿cuál es el volumen? $V = \\dfrac{' + v.R + '^3}{3}\\cdot 2\\pi\\cdot(\\text{tu inciso a})$, de $\\int_0^{' + v.R + '}\\rho^2\\,d\\rho = \\dfrac{' + v.R + '^3}{3}$.'; },
+          answer: function (v, prev) { return Math.pow(v.R, 3) / 3 * 2 * Math.PI * prev[0]; },
+          solution: function (v) { var s = cap(v); return '$V = \\dfrac{' + v.R + '^3}{3}\\cdot 2\\pi\\cdot ' + fx(s.w, 4) + ' \\approx ' + fx(s.V) + '$ m³.'; }
+        },
+        {
+          label: 'c', type: 'numeric', points: 4, unit: 'kg',
+          prompt: function (v) { return 'Con $\\delta = ' + lead(v.p, '\\rho') + '$, la integral radial es $\\int_0^{' + v.R + '} ' + lead(v.p, '\\rho') + '\\,\\rho^2\\,d\\rho = ' + v.p + '\\cdot\\dfrac{' + v.R + '^4}{4}$. Con tu inciso a), ¿cuál es la masa?'; },
+          answer: function (v, prev) { return v.p * Math.pow(v.R, 4) / 4 * 2 * Math.PI * prev[0]; },
+          solution: function (v) { var s = cap(v); return '$M = ' + v.p + '\\cdot\\dfrac{' + v.R + '^4}{4}\\cdot 2\\pi\\cdot ' + fx(s.w, 4) + ' \\approx ' + fx(s.M) + '$ kg.'; }
+        },
+        {
+          label: 'd', type: 'numeric', points: 2, unit: 'kg/m³',
+          prompt: function () { return 'Con tus incisos b) y c), ¿cuál es la densidad promedio?'; },
+          answer: function (v, prev) { return prev[2] / prev[1]; },
+          solution: function (v) { var s = cap(v); return '$\\dfrac{M}{V} = \\dfrac{' + fx(s.M) + '}{' + fx(s.V) + '} \\approx ' + fx(s.avg) + '$ kg/m³. Es $\\dfrac{3\\cdot ' + v.p + '\\cdot ' + v.R + '}{4}$: no depende del ángulo del cono, porque $1 - \\cos\\alpha$ se cancela.'; }
         }
       ]
     }

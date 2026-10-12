@@ -39,11 +39,11 @@ window.COURSE_META = {
     {
       id: 'C', label: 'Integral múltiple',
       sessions: [
-        { n: 11, tag: 'Integral doble', title: 'Integral doble como suma de diferenciales: sumas de Riemann en 2D y teorema de Fubini', short: 'Integral doble y Fubini', lab: 'double-riemann', ready: false, bank: false },
-        { n: 12, tag: 'Regiones generales', title: 'Integral doble en regiones generales: orden de integración, área y masa', short: 'Regiones generales', lab: 'region-order', ready: false, bank: false },
-        { n: 13, tag: 'Doble en polares', title: 'Integral doble en coordenadas polares', short: 'Doble en polares', lab: 'polar-element', ready: false, bank: false },
-        { n: 14, tag: 'Integral triple', title: 'Integral triple en rectangulares: volumen, masa y centro de masa', short: 'Integral triple', lab: 'triple-cubes', ready: false, bank: false },
-        { n: 15, tag: 'Triple curvilínea', title: 'Integral triple en cilíndricas y esféricas: el Jacobiano', short: 'Triple en cilíndricas y esféricas', lab: 'spherical-element', ready: false, bank: false }
+        { n: 11, tag: 'Integral doble', title: 'Integral doble como suma de diferenciales: sumas de Riemann en 2D y teorema de Fubini', short: 'Integral doble y Fubini', lab: 'double-riemann', ready: true, bank: true },
+        { n: 12, tag: 'Regiones generales', title: 'Integral doble en regiones generales: orden de integración, área y masa', short: 'Regiones generales', lab: 'region-order', ready: true, bank: true },
+        { n: 13, tag: 'Doble en polares', title: 'Integral doble en coordenadas polares', short: 'Doble en polares', lab: 'polar-element', ready: true, bank: true },
+        { n: 14, tag: 'Integral triple', title: 'Integral triple en rectangulares: volumen, masa y centro de masa', short: 'Integral triple', lab: 'triple-cubes', ready: true, bank: true },
+        { n: 15, tag: 'Triple curvilínea', title: 'Integral triple en cilíndricas y esféricas: el Jacobiano', short: 'Triple en cilíndricas y esféricas', lab: 'spherical-element', ready: true, bank: true }
       ]
     }
   ]
