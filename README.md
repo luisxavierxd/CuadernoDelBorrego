@@ -13,8 +13,8 @@
 | ![Portada del sitio en tema pizarrón](docs/media/hub.png) | ![Sesión 5 de Cálculo 1, regla de la cadena](docs/media/sesion.png) | ![Simulacro de examen de Física 1 con reloj sugerido](docs/media/examen.png) |
 
 Clases universitarias de cálculo y física, autogestionadas y pensadas para quien batalla con la materia.
-Ya están completos los dos primeros cursos (15 sesiones cada uno); Cálculo 2 y 3 (ecuaciones diferenciales)
-y Física 2 y 3 están en el plan. Cada sesión trae una lección explicada paso a paso, un lab que compara tu
+Ya están completos Cálculo 1, Física 1, Cálculo 2 (multivariable) y Física 2 (sistemas eléctricos),
+con 15 sesiones cada uno; Cálculo 3 (ecuaciones diferenciales) y Física 3 están en el plan. Cada sesión trae una lección explicada paso a paso, un lab que compara tu
 respuesta contra la real, ejercicios parametrizados y quiz; cada curso tiene banco de preguntas, simulacros
 de examen y formulario imprimible. Sitio estático para GitHub Pages. **Proyecto de alumnos, no oficial.**
 
@@ -35,7 +35,7 @@ KaTeX 0.16.47, math.js 15.2.0, MathLive 0.110.0, anime.js 3.2.1 y manim-web 0.3.
 
 ```
 index.html                         Hub: hero, cómo funciona, biblioteca y atajos de práctica
-calculo-1/ · fisica-1/             Portadas de curso
+calculo-1/ · fisica-1/ · calculo-2/ · fisica-2/   Portadas de curso
   sesiones/sesion-NN/index.html    Shell mínimo de cada sesión (lo crea scripts/make-shell.js)
 quiz/                              Lanzador de práctica (quiz, simulacro, personalizado) e historial
 quiz/examen/                       Intento y revisión de un examen (?intento=ID)
@@ -66,7 +66,8 @@ data/<curso>/bank/sesion-NN.js     Banco de 100 preguntas de la sesión
 data/<curso>/exam-problems.js      Problemas de examen con incisos encadenados y figura
 data/<curso>/formulario.js         Fórmulas del formulario, con comprobación numérica
 reference/lab-antiderivada.html    Demo aprobada que se portó a antiderivative-check
-scripts/                           Validación en Node
+scripts/                           Validación en Node (las pruebas descubren solas los cursos de data/)
+scripts/labs-math/<lab>.js         Pruebas del LabMath de cada lab nuevo, con oráculos independientes
 .github/workflows/validate.yml     CI: npm run validate en cada push y PR; links externos cada semana
 docs/media/                        GIF y capturas de este README
 ```

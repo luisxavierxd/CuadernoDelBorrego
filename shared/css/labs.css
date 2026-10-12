@@ -305,3 +305,125 @@ math-field::part(menu-toggle), math-field::part(virtual-keyboard-toggle) { displ
 }
 @media (prefers-reduced-motion: reduce) { .l2-meter__bar { transition: none; } }
 
+/* ---- lab kirchhoff-signs ---- */
+.ks-stage { -webkit-user-select: none; user-select: none; }
+.ks-stage .ks-hit { fill: transparent; stroke: none; pointer-events: all; cursor: pointer; }
+.ks-stage .ks-loop { stroke-opacity: 0.35; }
+.ks-head { margin: var(--space-2) 0 0; }
+.ks-cur-row { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--space-1); }
+.ks-terms { margin: 0; padding: 0; list-style: none; display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: var(--space-1); }
+.ks-terms:empty { display: none; }
+.ks-terms .lab-field__label, .ks-cur-row .lab-field__label, .ks-currents .lab-field__label { text-transform: none; letter-spacing: 0; }
+.ks-eq { margin: 0; font-family: var(--font-mono); font-size: 0.95rem; overflow-wrap: anywhere; }
+.ks-why { margin: 0; padding-left: 1.2rem; display: grid; gap: 4px; font-size: 0.88rem; }
+.ks-why:empty { display: none; }
+.ks-status { font-size: 0.85rem; }
+.ks-details summary { cursor: pointer; font-weight: 600; color: var(--text-muted); }
+
+/* ---- lab kirchhoff-solve ---- */
+.kz-stage { -webkit-user-select: none; user-select: none; }
+.kz-stage .kz-hit { fill: transparent; stroke: none; pointer-events: all; cursor: pointer; }
+.kz-head { margin: var(--space-2) 0 0; }
+.kz-table { display: grid; grid-template-columns: 2.6em repeat(4, minmax(0, 1fr)); gap: 6px; align-items: center; }
+.kz-th { font: 600 0.85rem/1.2 var(--font-mono); color: var(--text-muted); text-align: center; }
+.kz-th--rhs { white-space: nowrap; }
+.kz-rowlab { font-size: 0.8rem; color: var(--text-muted); white-space: nowrap; }
+.kz-table .kz-cell { width: 100%; min-width: 0; padding: 6px 6px; text-align: center; font-variant-numeric: tabular-nums; -moz-appearance: textfield; appearance: textfield; }
+.kz-table .kz-cell::-webkit-inner-spin-button, .kz-table .kz-cell::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+.kz-eqs { margin: 0; padding-left: 0; list-style: none; display: grid; gap: 4px; font-family: var(--font-mono); font-size: 0.85rem; color: var(--text-muted); overflow-wrap: anywhere; }
+.kz-eqs .kz-ok { color: var(--ok); }
+.kz-eqs .kz-bad { color: var(--warn); }
+.kz-result dd { overflow-wrap: anywhere; font-family: inherit; }
+.kz-status { font-size: 0.85rem; }
+.kz-details summary { cursor: pointer; font-weight: 600; color: var(--text-muted); }
+.lab-legend li.kz-legend-cap[hidden] { display: none; }
+
+/* ---- lab resistor-network ---- */
+.rn-stage { -webkit-user-select: none; user-select: none; }
+.rn-stage .rn-hit { fill: transparent; stroke: none; pointer-events: all; cursor: pointer; }
+.rn-head { margin: var(--space-2) 0 0; }
+.rn-controls .lab-field__label:not(.rn-head) { text-transform: none; letter-spacing: 0; }   /* sin mayúsculas: ε se volvía E y r, R */
+.rn-log { margin: 0; padding-left: 1.2rem; display: grid; gap: 4px; font-size: 0.85rem; color: var(--text-muted); overflow-wrap: anywhere; }
+.rn-log:empty { display: none; }
+.rn-status { font-size: 0.85rem; }
+.rn-details summary { cursor: pointer; font-weight: 600; color: var(--text-muted); }
+
+/* ---- lab rc-circuit ---- */
+.rc-head { margin: var(--space-2) 0 0; }
+.rc-controls .lab-field__label:not(.rc-head) { text-transform: none; letter-spacing: 0; }   /* sin mayúsculas: ε se volvía Ε y τ, Τ */
+.rc-data { overflow-wrap: anywhere; }
+.rc-facts dd { overflow-wrap: anywhere; }
+
+/* ---- lab polar-element ---- */
+.pe-controls .lab-field__label { text-transform: none; letter-spacing: 0; }   /* sin mayúsculas: θ se volvía Θ y f(x, y), F(X, Y) */
+.pe-check { display: flex; align-items: center; gap: 8px; font-size: 0.9rem; color: var(--text-muted); cursor: pointer; }
+.pe-check input { width: 18px; height: 18px; accent-color: var(--accent); flex: none; }
+@media (max-width: 560px) {
+  .pe-facts { grid-template-columns: 1fr; gap: 0; }
+  .pe-facts dd { margin-bottom: 6px; }
+}
+
+/* ---- lab triple-cubes ---- */
+.tc-controls .lab-field__label { text-transform: none; letter-spacing: 0; }   /* sin mayúsculas: ρ(x, y, z) se volvía Ρ(X, Y, Z) */
+.tc-views { display: grid; gap: var(--space-1); }
+.tc-views .lab-plot { width: 100%; height: auto; }
+@media (min-width: 1200px) { .tc-views { grid-template-columns: 1fr 1fr; } }
+.tc-check { display: flex; align-items: center; gap: 8px; font-size: 0.9rem; color: var(--text-muted); cursor: pointer; }
+.tc-check input { width: 18px; height: 18px; accent-color: var(--accent); flex: none; }
+.tc-board dt { overflow-wrap: anywhere; }
+.tc-board dd { overflow-wrap: anywhere; }
+@media (max-width: 560px) {
+  .tc-board { grid-template-columns: 1fr; gap: 0; }
+  .tc-board dd { margin-bottom: 6px; }
+}
+.lab-plot .tc-lbl { fill: var(--text); stroke: var(--panel); stroke-width: 4px; paint-order: stroke; stroke-linejoin: round; font-weight: 600; }
+.lab-plot .tc-face { stroke: var(--plot-aux); stroke-width: 0.8; stroke-linejoin: round; fill: var(--plot-aux); }
+.lab-plot .tc-face--z { fill-opacity: 0.55; }
+.lab-plot .tc-face--x { fill-opacity: 0.4; }
+.lab-plot .tc-face--y { fill-opacity: 0.25; }
+.lab-plot .tc-face.tc-cube--row { fill: var(--plot-trace); stroke: var(--plot-trace); }
+.lab-plot .tc-cell--row { fill: var(--plot-trace); stroke: var(--plot-trace); fill-opacity: 0.3; }
+
+/* ---- lab region-order ---- */
+.lab-plot .ro-extra { fill: var(--plot-error); fill-opacity: 0.38; stroke: none; }
+.lab-plot .ro-miss { fill: var(--plot-trace); fill-opacity: 0.3; stroke: none; }
+.ro-sw { display: inline-block; width: 18px; height: 12px; margin-right: 6px; vertical-align: middle; border-radius: 2px; }
+.ro-sw--extra { background: var(--plot-error); opacity: 0.55; }
+.ro-sw--miss { background: var(--plot-trace); opacity: 0.4; }
+.ro-sw--cm { width: 12px; height: 12px; border-radius: 50%; background: var(--plot-error); }
+.ro-piece { display: grid; gap: var(--space-1); }
+.ro-piece[hidden] { display: none; }
+.ro-check { display: flex; align-items: center; gap: 8px; font-size: 0.95rem; cursor: pointer; }
+.ro-written[hidden] { display: none; }
+.ro-tex { margin: 0; overflow-x: auto; }
+
+/* ---- lab double-riemann ---- */
+.dr-controls .lab-field__label { text-transform: none; letter-spacing: 0; }   /* sin mayúsculas: f(x, y) se volvía F(X, Y) */
+.dr-views { display: grid; gap: var(--space-1); }
+.dr-views > div { min-width: 0; }
+.dr-views .lab-plot { width: 100%; height: auto; }
+.dr-check { display: flex; align-items: center; gap: 8px; font-size: 0.9rem; color: var(--text-muted); cursor: pointer; }
+.dr-check input { width: 18px; height: 18px; accent-color: var(--accent); flex: none; }
+.dr-board dt { overflow-wrap: anywhere; }
+.dr-board dd { overflow-wrap: anywhere; }
+@media (max-width: 560px) {
+  .dr-board { grid-template-columns: 1fr; gap: 0; }
+  .dr-board dd { margin-bottom: 6px; }
+}
+
+/* ---- lab spherical-element ---- */
+.se-controls .lab-field__label { text-transform: none; letter-spacing: 0; }   /* sin mayúsculas: δ(x, y, z) y ρ no cambian */
+.se-views { display: grid; gap: var(--space-1); }
+.se-views > div { min-width: 0; }
+.se-views .lab-plot { width: 100%; height: auto; }
+@media (min-width: 1200px) { .se-views { grid-template-columns: 1fr 1fr; } }
+.se-check { display: flex; align-items: center; gap: 8px; font-size: 0.9rem; color: var(--text-muted); cursor: pointer; }
+.se-check input { width: 18px; height: 18px; accent-color: var(--accent); flex: none; }
+.se-board dt { overflow-wrap: anywhere; }
+.se-board dd { overflow-wrap: anywhere; }
+@media (max-width: 560px) {
+  .se-board { grid-template-columns: 1fr; gap: 0; }
+  .se-board dd { margin-bottom: 6px; }
+}
+.lab-plot .se-cell { fill: var(--plot-trace); fill-opacity: 0.16; stroke: var(--plot-trace); stroke-width: 0.8; stroke-opacity: 0.6; stroke-linejoin: round; }
+.lab-plot .se-cell2 { fill: var(--plot-trace); fill-opacity: 0.32; stroke: var(--plot-trace); stroke-width: 2; }

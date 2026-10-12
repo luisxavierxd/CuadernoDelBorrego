@@ -27,7 +27,7 @@ window.COURSES = [
         blurb: 'Derivadas, optimización, técnicas de integración y sus aplicaciones.'
       },
       {
-        level: 'N2', tone: 'mat-n2', status: 'soon',
+        level: 'N2', tone: 'mat-n2', status: 'live', url: 'calculo-2/', sessions: 15, formulario: true,
         title: 'Cálculo 2: multivariable',
         blurb: 'Funciones de varias variables, integrales dobles y triples.'
       },
@@ -49,7 +49,7 @@ window.COURSES = [
         blurb: 'Vectores, tiro parabólico, leyes de Newton, trabajo y energía, y equilibrio.'
       },
       {
-        level: 'N2', tone: 'fis-n2', status: 'soon',
+        level: 'N2', tone: 'fis-n2', status: 'live', url: 'fisica-2/', sessions: 15, formulario: true,
         title: 'Física 2: electricidad',
         blurb: 'Carga, corriente, circuitos y leyes de Kirchhoff.'
       },
