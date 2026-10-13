@@ -163,7 +163,8 @@
   function renderCallout(b, id) {
     return section(id, null, [el('aside', { class: 'callout reveal', 'aria-label': b.heading || 'Nota' }, [
       b.heading ? el('h3', { class: 'callout__title sheet__title', html: b.heading }) : null,
-      el('div', { html: (Array.isArray(b.body) ? b.body.map(function (p) { return '<p>' + p + '</p>'; }).join('') : '<p>' + b.body + '</p>') })
+      el('div', { html: (Array.isArray(b.body) ? b.body.map(function (p) { return '<p>' + p + '</p>'; }).join('') : '<p>' + b.body + '</p>') }),
+      b.diagram ? figure(b.diagram, b.state, b.caption) : null
     ])], 'session-section--tight');
   }
 

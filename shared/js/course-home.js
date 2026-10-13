@@ -3,6 +3,7 @@
    - Firma animada del hero: Cálculo = secante que se vuelve tangente;
      Física = proyectil con sus vectores v y a. En N2: Cálculo = subir por el
      gradiente entre curvas de nivel; Física = carga de prueba en un dipolo.
+     En N3: Física = carga en órbita en un B uniforme, con v y F = qv×B.
    - Contadores calculados desde los datos.
    - Línea de tiempo de 15 semanas con marcas de quiz (Q) y parcial (P).
    - Temario por bloque; la tarjeta enlaza solo si la sesión ya existe (ready).
@@ -204,11 +205,61 @@
     return { draw: draw, from: 0.1, to: 0.5 };
   }
 
+  /* ---------- Firma N3 de Física: carga en órbita dentro de un B uniforme ---------- */
+  // B sale de la página (puntos); una carga positiva gira en sentido horario con F = qv×B
+  // siempre hacia el centro: v cambia de dirección y su rapidez no.
+  function signOrbit(svg) {
+    var C = { x: 300, y: 200 }, R = 128;
+    var g = el('g', { 'class': 'sketch' }, svg);
+    for (var gx = 60; gx <= 540; gx += 60) {
+      for (var gy = 40; gy <= 380; gy += 60) {
+        el('circle', { cx: gx, cy: gy, r: 9, 'class': 'axis', 'stroke-width': 1.6, opacity: 0.6 }, g);
+        el('circle', { cx: gx, cy: gy, r: 2.6, 'class': 'dot-ref', opacity: 0.6 }, g);
+      }
+    }
+    var tagB = el('text', { 'class': 'ann', 'font-size': 22, x: 585, y: 410, 'text-anchor': 'end' }, g);
+    tagB.textContent = 'B sale de la página';
+    el('circle', { cx: C.x, cy: C.y, r: R, 'class': 'ref', 'stroke-width': 3, fill: 'none', 'stroke-dasharray': '1 9', 'stroke-linecap': 'round' }, g);
+    var trace = el('path', { 'class': 'trace', 'stroke-width': 3, fill: 'none', 'stroke-linecap': 'round' }, g);
+    var vArrow = el('path', { 'class': 'aux', 'stroke-width': 3.2, fill: 'none', 'stroke-linecap': 'round', 'stroke-linejoin': 'round' }, g);
+    var fArrow = el('path', { 'class': 'error', 'stroke-width': 3.2, fill: 'none', 'stroke-linecap': 'round', 'stroke-linejoin': 'round' }, g);
+    var q = el('circle', { r: 15, 'class': 'box-err' }, g);
+    var qs = el('text', { 'class': 'ann', 'font-size': 26, 'text-anchor': 'middle' }, g);
+    qs.textContent = '+';
+    var vLab = el('text', { 'class': 'ann', 'font-size': 28, 'text-anchor': 'middle' }, g);
+    var fLab = el('text', { 'class': 'ann', 'font-size': 28, 'text-anchor': 'middle' }, g);
+    vLab.textContent = 'v'; fLab.textContent = 'F';
+    function arrow(x, y, dx, dy) {
+      var L = Math.hypot(dx, dy) || 1, ux = dx / L, uy = dy / L, h = 11;
+      var ex = x + dx, ey = y + dy;
+      return 'M' + x + ' ' + y + 'L' + ex + ' ' + ey +
+        'M' + (ex - ux * h - uy * h * 0.6) + ' ' + (ey - uy * h + ux * h * 0.6) + 'L' + ex + ' ' + ey +
+        'L' + (ex - ux * h + uy * h * 0.6) + ' ' + (ey - uy * h - ux * h * 0.6);
+    }
+    // Ángulo φ en coordenadas de pantalla (y hacia abajo): φ creciente = sentido horario.
+    var phi0 = Math.PI / 2;
+    function draw(u) {
+      var phi = phi0 + u * 2 * Math.PI, d = '';
+      for (var i = 0; i <= 60; i++) { var a = phi0 + (phi - phi0) * i / 60; d += (i ? 'L' : 'M') + (C.x + R * Math.cos(a)).toFixed(1) + ' ' + (C.y + R * Math.sin(a)).toFixed(1); }
+      trace.setAttribute('d', d);
+      var c = Math.cos(phi), s = Math.sin(phi), x = C.x + R * c, y = C.y + R * s;
+      var tx = -s, ty = c, nx = -c, ny = -s, lv = 78, lf = 62;
+      vArrow.setAttribute('d', arrow(x + tx * 16, y + ty * 16, tx * lv, ty * lv));
+      fArrow.setAttribute('d', arrow(x + nx * 16, y + ny * 16, nx * lf, ny * lf));
+      q.setAttribute('cx', x); q.setAttribute('cy', y);
+      qs.setAttribute('x', x); qs.setAttribute('y', y + 9);
+      // Etiquetas a un lado de la punta, del lado de afuera del círculo para v.
+      vLab.setAttribute('x', x + tx * (lv + 30) - nx * 18); vLab.setAttribute('y', y + ty * (lv + 30) - ny * 18 + 9);
+      fLab.setAttribute('x', x + nx * (lf + 34) + tx * 4); fLab.setAttribute('y', y + ny * (lf + 34) + ty * 4 + 9);
+    }
+    return { draw: draw, from: 0, to: 0.62 };
+  }
+
   function mountSign(meta) {
     var svg = document.getElementById('course-sign');
     if (!svg) return;
-    var n2 = meta.level === 'N2';
-    var sign = meta.subject === 'fis' ? (n2 ? signDipole(svg) : signPhysics(svg)) : (n2 ? signGradient(svg) : signCalculus(svg));
+    var n2 = meta.level === 'N2', n3 = meta.level === 'N3';
+    var sign = meta.subject === 'fis' ? (n3 ? signOrbit(svg) : n2 ? signDipole(svg) : signPhysics(svg)) : (n2 ? signGradient(svg) : signCalculus(svg));
     var anim = window.CBAnim;
     if (!anim || !anim.canAnimate()) { sign.draw(sign.to); return; }
     var p = { v: sign.from };

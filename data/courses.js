@@ -54,9 +54,9 @@ window.COURSES = [
         blurb: 'Carga, corriente, circuitos y leyes de Kirchhoff.'
       },
       {
-        level: 'N3', tone: 'fis-n3', status: 'soon',
-        title: 'Física 3: electromagnetismo',
-        blurb: 'Campos eléctrico y magnético, inducción y ondas.'
+        level: 'N3', tone: 'fis-n3', status: 'live', url: 'fisica-3/', sessions: 15, formulario: true,
+        title: 'Física 3: sistemas electromagnéticos',
+        blurb: 'Fuerza magnética, fuentes de campo, ley de Faraday e inductancia.'
       }
     ]
   }
