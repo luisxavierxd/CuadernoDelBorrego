@@ -103,3 +103,6 @@ a.session-card .session-card__state { color: var(--accent); }
 .next-level__card { display: grid; gap: var(--space-2); justify-items: start; padding: var(--space-4); border-style: dashed; }
 .next-level__title { margin: 0; font-size: clamp(1.5rem, 3vw, 2rem); color: var(--text-muted); }
 .next-level__card p { margin: 0; color: var(--text-muted); }
+/* Si el siguiente curso ya está publicado, la tarjeta no se ve apagada. */
+.next-level__card--live { border-style: solid; }
+.next-level__card--live .next-level__title { color: var(--text); }

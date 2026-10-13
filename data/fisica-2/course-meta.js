@@ -13,7 +13,7 @@ window.COURSE_META = {
   level: 'N2',
   sessions: 15,
   lead: 'Quince sesiones de electricidad: carga y campo eléctrico, potencial, ley de Gauss, capacitores, ley de Ohm, Kirchhoff y circuitos RC. Cada una trae explicación gráfica paso a paso, derivaciones completas, ejemplos resueltos, un lab que compara tu respuesta contra la simulación y un quiz.',
-  next: { title: 'Física 3: sistemas electromagnéticos', blurb: 'Fuerza magnética, fuentes de campo, ley de Faraday e inductancia.' },
+  next: { url: '../fisica-3/', title: 'Física 3: sistemas electromagnéticos', blurb: 'Fuerza magnética, fuentes de campo, ley de Faraday e inductancia.' },
   temario: [],
   groups: [
     {

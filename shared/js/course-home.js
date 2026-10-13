@@ -350,11 +350,11 @@
 
   function renderNext(meta, root) {
     if (!meta.next) { root.remove(); return; }
-    root.innerHTML = '<div class="card next-level__card reveal">' +
-      '<span class="chip chip--line">Siguiente nivel · próximamente</span>' +
+    root.innerHTML = '<div class="card next-level__card' + (meta.next.url ? ' next-level__card--live' : '') + ' reveal">' +
+      '<span class="chip chip--line">Siguiente nivel' + (meta.next.url ? '' : ' · próximamente') + '</span>' +
       '<h2 class="next-level__title">' + esc(meta.next.title) + '</h2>' +
       '<p>' + esc(meta.next.blurb) + '</p>' +
-      '<a class="btn btn--ghost" href="../#biblioteca">Ver la biblioteca</a></div>';
+      (meta.next.url ? '<a class="btn btn--primary" href="' + esc(meta.next.url) + '">Ir al curso</a>' : '<a class="btn btn--ghost" href="../#biblioteca">Ver la biblioteca</a>') + '</div>';
   }
 
   function render(meta) {

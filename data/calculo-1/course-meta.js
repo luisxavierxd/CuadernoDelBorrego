@@ -13,7 +13,7 @@ window.COURSE_META = {
   level: 'N1',
   sessions: 15,
   lead: 'Quince sesiones para pasar de la razón de cambio a los sólidos de revolución. Cada una trae explicación gráfica paso a paso, ejemplos resueltos, un lab para comprobar tu respuesta y un quiz.',
-  next: { title: 'Cálculo 2: multivariable', blurb: 'Funciones de varias variables, integrales dobles y triples.' },
+  next: { url: '../calculo-2/', title: 'Cálculo 2: multivariable', blurb: 'Funciones de varias variables, integrales dobles y triples.' },
   groups: [
     {
       id: 'A', label: 'Derivada',

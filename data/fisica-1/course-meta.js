@@ -13,7 +13,7 @@ window.COURSE_META = {
   level: 'N1',
   sessions: 15,
   lead: 'Quince sesiones de vectores, movimiento, fuerzas, energía y equilibrio. Cada una trae explicación gráfica paso a paso, ejemplos resueltos, un lab que compara tu respuesta contra la simulación y un quiz.',
-  next: { title: 'Física 2: electricidad', blurb: 'Carga, corriente, circuitos y leyes de Kirchhoff.' },
+  next: { url: '../fisica-2/', title: 'Física 2: electricidad', blurb: 'Carga, corriente, circuitos y leyes de Kirchhoff.' },
   groups: [
     {
       id: 'A', label: 'Herramientas',
