@@ -155,6 +155,30 @@
     return api;
   }
 
+  // Curva de nivel f(x, y) = c (cuadrados que marchan) → segmentos en pantalla [[px, py], [px, py]].
+  function levelSegs(P, f, c, xr, yr, n) {
+    n = n || 70;
+    var dx = (xr[1] - xr[0]) / n, dy = (yr[1] - yr[0]) / n, out = [], v = [];
+    for (var i = 0; i <= n; i++) { v.push([]); for (var j = 0; j <= n; j++) v[i].push(f(xr[0] + i * dx, yr[0] + j * dy) - c); }
+    function cut(x1, y1, a, x2, y2, b) { var t = a / (a - b); return [P.X(x1 + t * (x2 - x1)), P.Y(y1 + t * (y2 - y1))]; }
+    for (var I = 0; I < n; I++) for (var J = 0; J < n; J++) {
+      var x0 = xr[0] + I * dx, y0 = yr[0] + J * dy, a = v[I][J], b = v[I + 1][J], cc = v[I + 1][J + 1], d = v[I][J + 1], e = [];
+      if (![a, b, cc, d].every(isFinite)) continue;
+      if ((a > 0) !== (b > 0)) e.push(cut(x0, y0, a, x0 + dx, y0, b));
+      if ((b > 0) !== (cc > 0)) e.push(cut(x0 + dx, y0, b, x0 + dx, y0 + dy, cc));
+      if ((cc > 0) !== (d > 0)) e.push(cut(x0 + dx, y0 + dy, cc, x0, y0 + dy, d));
+      if ((d > 0) !== (a > 0)) e.push(cut(x0, y0 + dy, d, x0, y0, a));
+      if (e.length >= 2) out.push([e[0], e[1]]);
+      if (e.length === 4) out.push([e[2], e[3]]);
+    }
+    return out;
+  }
+  function segsPath(cls, segs, w, dash) {
+    if (!segs.length) return '';
+    return '<path class="' + cls + '" fill="none" stroke-width="' + (w || 2) + '" stroke-linecap="round"' + (dash ? ' stroke-dasharray="' + dash + '"' : '') +
+      ' d="' + segs.map(function (s) { return 'M' + r1(s[0][0]) + ' ' + r1(s[0][1]) + 'L' + r1(s[1][0]) + ' ' + r1(s[1][1]); }).join('') + '"/>';
+  }
+
   /* ══════════════════════ S01 ══════════════════════ */
   // S01 · Campo de pendientes de y′ = x − y: el campo, el punto inicial, la solución y la familia.
   // state: { field, ic, sol, fam } en [0, 1].
@@ -300,4 +324,109 @@
     return svgBox('0 0 600 340', 'Curvas logísticas: todas las poblaciones positivas se acercan a la capacidad de carga K', s);
   };
 
+
+  /* ══════════════════════ S06 ══════════════════════ */
+  // S06 · Curvas de nivel de F = x² + xy + y²: cada una es una solución de (2x + y)dx + (x + 2y)dy = 0.
+  // state: { curves, pick, grad } en [0, 1]. El gradiente (M, N) es perpendicular a la curva.
+  D['c3s06-levels'] = function (st) {
+    var fc = num(st, 'curves', 1), fp = num(st, 'pick', 0), fg = num(st, 'grad', 0);
+    var P = plane({ W: 600, H: 380, x: [-2.6, 2.6], y: [-2, 2], pad: [46, 24, 22, 40] });
+    var F = function (x, y) { return x * x + x * y + y * y; };
+    var s = P.axes('x', 'y');
+    var fam = '';
+    [0.5, 1.5, 3, 4.5].forEach(function (c) {
+      var sg = levelSegs(P, F, c, [-2.6, 2.6], [-2, 2]);
+      sg.forEach(function (q) { P.pts.push(q[0], q[1]); });
+      fam += segsPath('aux', sg, 2, '6 6');
+    });
+    s += fade(fam, fc);
+    if (fp > 0) {
+      var sg3 = levelSegs(P, F, 3, [-2.6, 2.6], [-2, 2]);
+      s += fade(segsPath('ref', sg3, 3.6), fp);
+      s += fade(P.dot(1, 1, 'dot-ref', 7), fp);
+    }
+    if (fg > 0) {
+      var x0 = 1, y0 = 1, M = 2 * x0 + y0, N = x0 + 2 * y0, L = Math.hypot(M, N), k = 70 / L;
+      var px = P.X(x0), py = P.Y(y0), gx = M * k, gy = -N * k;
+      s += fade(arrow('error', px, py, gx, gy, 3), fg);
+      s += fade(seg('trace', px - gy * 0.9, py + gx * 0.9, px + gy * 0.9, py - gx * 0.9, 3), fg);
+      P.pts.push.apply(P.pts, segPts(px, py, px + gx, py + gy));
+      if (fg > 0.5) s += P.tag(around(px + gx, py + gy, '(M, N)'), 16);
+    }
+    if (fp > 0.5) s += P.tag([[P.X(-2.5), P.Y(-1.75), 'x² + xy + y² = 3', 'start'], [P.X(-2.5), P.Y(1.8), 'x² + xy + y² = 3', 'start']], 16);
+    return svgBox('0 0 600 380', 'Curvas de nivel de F de x y igual a x cuadrada más x y más y cuadrada; la que pasa por (1, 1) es la solución, y el vector (M, N) es perpendicular a ella', s);
+  };
+
+  /* ══════════════════════ S08 ══════════════════════ */
+  // S08 · Caída con resistencia: lineal (v′ = g − cv) y cuadrática (v′ = g − kv²) hacia su velocidad terminal.
+  // state: { quad } en [0, 1].
+  D['c3s08-drag'] = function (st) {
+    var fq = num(st, 'quad', 1), g = 9.81, c = 0.4, k = 0.04, vl = g / c, vq = Math.sqrt(g / k);
+    var P = plane({ W: 600, H: 340, x: [0, 12], y: [0, 28] });
+    var s = P.axes('t (s)', 'v (m/s)');
+    s += P.curve(function (t) { return g * t; }, 'axis', 1.6, 0, 2.6, '3 6');
+    s += P.hline(vl, 'aux') + P.curve(function (t) { return vl * (1 - Math.exp(-c * t)); }, 'ref', 3.6);
+    if (fq > 0) s += fade(P.hline(vq, 'aux', '2 6') + P.curve(function (t) { return vq * Math.tanh(Math.sqrt(g * k) * t); }, 'trace', 3.4), fq);
+    s += P.tag([[P.X(2.7), P.Y(27), 'caída libre', 'start'], [P.X(1.2), P.Y(14), 'caída libre', 'end']], 15);
+    s += P.tag([[P.R - 6, P.Y(vl) + 22, 'lineal: g/c', 'end'], [P.R - 6, P.Y(vl) - 10, 'lineal: g/c', 'end']], 15);
+    if (fq > 0.5) s += P.tag([[P.R - 6, P.Y(vq) - 10, 'cuadrática: √(g/k)', 'end'], [P.R - 6, P.Y(vq) + 22, 'cuadrática: √(g/k)', 'end']], 15);
+    return svgBox('0 0 600 340', 'Velocidad de un objeto que cae con resistencia lineal y con resistencia cuadrática: las dos se acercan a su velocidad terminal', s);
+  };
+
+  /* ══════════════════════ S09 ══════════════════════ */
+  // S09 · Superposición: y₁ = e^(−x/2)cos 2x, y₂ = e^(−x/2)sin 2x y la combinación c₁y₁ + c₂y₂.
+  // state: { c1, c2, combo } (combo en [0, 1] muestra la combinación).
+  D['c3s09-combo'] = function (st) {
+    var c1 = num(st, 'c1', 1), c2 = num(st, 'c2', 0), fc = num(st, 'combo', 0);
+    var P = plane({ W: 600, H: 340, x: [0, 6], y: [-1.6, 1.6] });
+    var y1 = function (x) { return Math.exp(-x / 2) * Math.cos(2 * x); }, y2 = function (x) { return Math.exp(-x / 2) * Math.sin(2 * x); };
+    var s = P.axes('x', 'y');
+    s += P.curve(y1, 'aux', 2.4, null, null, '7 6') + P.curve(y2, 'trace', 2.4, null, null, '2 6');
+    if (fc > 0) s += fade(P.curve(function (x) { return c1 * y1(x) + c2 * y2(x); }, 'ref', 3.6), fc);
+    s += P.tag([[P.X(0.1), P.Y(1.45), 'y₁ = e⁻ˣᐟ² cos 2x', 'start'], [P.R - 6, P.Y(1.45), 'y₁ = e⁻ˣᐟ² cos 2x', 'end']], 15);
+    s += P.tag([[P.R - 6, P.Y(-1.35), 'y₂ = e⁻ˣᐟ² sin 2x', 'end'], [P.X(0.1), P.Y(-1.35), 'y₂ = e⁻ˣᐟ² sin 2x', 'start']], 15);
+    if (fc > 0.5) s += P.tag([[P.R - 6, P.Y(1.05), c1.toFixed(1) + 'y₁ + ' + c2.toFixed(1) + 'y₂', 'end'], [P.R - 6, P.Y(-0.9), c1.toFixed(1) + 'y₁ + ' + c2.toFixed(1) + 'y₂', 'end']], 15);
+    return svgBox('0 0 600 340', 'Dos soluciones de una ecuación lineal homogénea y una combinación de ellas, que también es solución', s);
+  };
+
+  /* ══════════════════════ S10 ══════════════════════ */
+  // S10 · Raíces de r² + ar + b = 0 en el plano complejo (izquierda) y la forma de la solución (derecha).
+  // state: { c } 0 = reales distintas, 1 = raíz doble, 2 = complejas.
+  D['c3s10-cases'] = function (st) {
+    var c = Math.max(0, Math.min(2, Math.round(num(st, 'c', 0))));
+    var cases = [
+      { a: 3, b: 2, f: function (x) { return 2 * Math.exp(-x) - Math.exp(-2 * x); }, txt: 'y = c₁eʳ¹ˣ + c₂eʳ²ˣ' },
+      { a: 2, b: 1, f: function (x) { return (1 + x) * Math.exp(-x); }, txt: 'y = (c₁ + c₂x)eʳˣ' },
+      { a: 0.6, b: 9.09, f: function (x) { return Math.exp(-0.3 * x) * (Math.cos(3 * x) + 0.1 * Math.sin(3 * x)); }, txt: 'y = eᵅˣ(c₁cos βx + c₂sin βx)' }
+    ][c];
+    var disc = cases.a * cases.a - 4 * cases.b, roots = disc >= 0 ? [[(-cases.a - Math.sqrt(disc)) / 2, 0], [(-cases.a + Math.sqrt(disc)) / 2, 0]] : [[-cases.a / 2, -Math.sqrt(-disc) / 2], [-cases.a / 2, Math.sqrt(-disc) / 2]];
+    var L = plane({ W: 600, H: 320, x: [-3, 1], y: [-3.6, 3.6], pad: [20, 330, 30, 40] });
+    var s = L.axes('Re', 'Im');
+    roots.forEach(function (q) { s += L.dot(q[0], q[1], 'dot-ref', 7); });
+    if (c === 1) s += L.tag([[L.X(roots[0][0]), L.Y(0) - 16, 'doble', 'middle']], 15);
+    var R = plane({ W: 600, H: 320, x: [0, 6], y: [-1.1, 1.2], pad: [330, 20, 30, 40] });
+    s += R.axes('x', 'y') + R.curve(cases.f, 'ref', 3.4);
+    s += text(445, 312, cases.txt, ' text-anchor="middle" font-size="15"');
+    return svgBox('0 0 600 320', 'Raíces de la ecuación característica en el plano complejo y la forma de la solución que les corresponde', s);
+  };
+
+  /* ══════════════════════ S07 ══════════════════════ */
+  // S07 · (3xy + y²)dx + (x² + xy)dy = 0 no es exacta; con μ = x sí. Las curvas solución no cambian:
+  // el campo de pendientes es el mismo y las curvas de nivel de F = x³y + x²y²/2 caen sobre él.
+  // state: { level } en [0, 1].
+  D['c3s07-same'] = function (st) {
+    var fl = num(st, 'level', 1);
+    var P = plane({ W: 600, H: 360, x: [0, 2.4], y: [0, 2.4] });
+    var s = P.axes('x', 'y');
+    s += P.field(function (x, y) { return -(3 * x * y + y * y) / (x * x + x * y); }, 13, 11, function (x, y) { return x > 1.5 && y > 2.0; });
+    var F = function (x, y) { return x * x * x * y + x * x * y * y / 2; }, lv = '';
+    [0.4, 1.5, 4].forEach(function (c) {
+      var sg = levelSegs(P, F, c, [0.02, 2.4], [0.02, 2.4]);
+      sg.forEach(function (q) { P.pts.push(q[0], q[1]); });
+      lv += segsPath('ref', sg, 3.2);
+    });
+    s += fade(lv, fl);
+    if (fl > 0.5) s += P.tag([[P.R - 6, P.T + 18, 'x³y + x²y²/2 = C', 'end']], 16);
+    return svgBox('0 0 600 360', 'Campo de pendientes de la ecuación original y curvas de nivel de la función potencial que sale después de multiplicar por mu igual a x: las curvas siguen las rayitas', s);
+  };
 })();

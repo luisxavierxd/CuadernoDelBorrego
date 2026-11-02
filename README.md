@@ -14,7 +14,7 @@
 
 Clases universitarias de cálculo y física, autogestionadas y pensadas para quien batalla con la materia.
 Ya están completos Cálculo 1, Física 1, Cálculo 2 (multivariable), Física 2 (sistemas eléctricos)
-y Física 3 (sistemas electromagnéticos), con 15 sesiones cada uno; Cálculo 3 (ecuaciones diferenciales) va en camino, con las sesiones 1 a 5 publicadas. Cada sesión trae una lección explicada paso a paso, un lab que compara tu
+y Física 3 (sistemas electromagnéticos), con 15 sesiones cada uno; Cálculo 3 (ecuaciones diferenciales) va en camino, con las sesiones 1 a 10 publicadas. Cada sesión trae una lección explicada paso a paso, un lab que compara tu
 respuesta contra la real, ejercicios parametrizados y quiz; cada curso tiene banco de preguntas, simulacros
 de examen y formulario imprimible. Sitio estático para GitHub Pages. **Proyecto de alumnos, no oficial.**
 

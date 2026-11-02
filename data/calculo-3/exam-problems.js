@@ -3,8 +3,10 @@
    part.answer(v, prev): prev son las respuestas DEL ALUMNO en los incisos
    anteriores, para dar crédito por arrastre de error.
    Bloque A (S01–S05): 8 problemas de primer orden (separables, homogéneas,
-   lineales y Bernoulli) con su modelo físico. Todas las figuras usan el
-   graficador genérico exam-fn.
+   lineales y Bernoulli) con su modelo físico.
+   Bloque B (S06–S10): 8 problemas (exactas, factor integrante, RL, tanque con
+   volumen variable, conjunto fundamental, reducción de orden y los casos de raíces).
+   Todas las figuras usan el graficador genérico exam-fn.
    Las respuestas se comprueban por otro camino en scripts/labs-math/c3-exam.js
    (integrando cada PVI con RK4 de LabMath.ode).
    ===================================================================== */
@@ -298,6 +300,274 @@
           prompt: function (v) { return 'Con tu población del inciso b), ¿qué tan rápido crece a los ' + v.t1 + ' años ($P\'$)?'; },
           answer: function (v, prev) { return v.r * prev[1] * (1 - prev[1] / v.K); },
           solution: function (v) { var A = v.K / v.P0 - 1, P = v.K / (1 + A * Math.exp(-v.r * v.t1)); return '$P\' = rP(1 - P/K) = ' + v.r + '(' + fx(P) + ')\\left(1 - \\frac{' + fx(P) + '}{' + v.K + '}\\right) \\approx ' + fx(v.r * P * (1 - P / v.K)) + '$ peces por año.'; }
+        }
+      ]
+    },
+
+    /* ================= Bloque B · Primer orden II y orden n (S06–S10) ================= */
+    {
+      id: 'c3-ex-exacta', tags: ['c3.S06'], block: 'B', title: 'Una ecuación exacta',
+      vars: { a: [1, 5, 1], b: [1, 3, 1], p: [1, 3, 1], q: [1, 3, 1] },
+      statement: function (v) { return '<p>Considera $(2xy + ' + v.a + ')\\,dx + (x^2 + ' + (2 * v.b) + 'y)\\,dy = 0$ con la condición $y(' + v.p + ') = ' + v.q + '$. Es exacta, con función potencial $F = x^2y + ' + v.a + 'x + ' + (v.b === 1 ? '' : v.b) + 'y^2$.</p>'; },
+      diagram: { id: 'exam-fn', state: function (v) {
+        var C = v.p * v.p * v.q + v.a * v.p + v.b * v.q * v.q;
+        var y = function (x) { var d = Math.pow(x, 4) - 4 * v.b * (v.a * x - C); return d < 0 ? NaN : (-x * x + Math.sqrt(d)) / (2 * v.b); };
+        return { x: [0, v.p + 1], fns: [{ f: y, cls: 'ref', label: 'F = C' }], pts: [{ x: v.p, y: v.q, label: '(' + v.p + ', ' + v.q + ')' }], xlab: 'x', ylab: 'y' };
+      } },
+      parts: [
+        {
+          label: 'a', type: 'numeric', points: 3,
+          prompt: function () { return '¿Cuánto vale la constante $C$ de la solución $F(x, y) = C$?'; },
+          answer: function (v) { return v.p * v.p * v.q + v.a * v.p + v.b * v.q * v.q; },
+          solution: function (v) { var C = v.p * v.p * v.q + v.a * v.p + v.b * v.q * v.q; return '$C = F(' + v.p + ', ' + v.q + ') = ' + (v.p * v.p * v.q) + ' + ' + (v.a * v.p) + ' + ' + (v.b * v.q * v.q) + ' = ' + C + '$.'; }
+        },
+        {
+          label: 'b', type: 'numeric', points: 3,
+          prompt: function () { return 'Con tu $C$, ¿cuánto vale $y$ cuando $x = 0$? (Toma la raíz positiva.)'; },
+          answer: function (v, prev) { return Math.sqrt(prev[0] / v.b); },
+          solution: function (v) { var C = v.p * v.p * v.q + v.a * v.p + v.b * v.q * v.q; return 'En $x = 0$ queda $' + (v.b === 1 ? '' : v.b) + 'y^2 = ' + C + '$, así que $y = \\sqrt{' + C + '/' + v.b + '} \\approx ' + fx(Math.sqrt(C / v.b)) + '$.'; }
+        },
+        {
+          label: 'c', type: 'numeric', points: 2,
+          prompt: function () { return 'Con tu resultado del inciso b), ¿cuál es la pendiente $dy/dx$ de la solución en ese punto $(0, y)$?'; },
+          answer: function (v, prev) { return -v.a / (2 * v.b * prev[1]); },
+          solution: function (v) { var C = v.p * v.p * v.q + v.a * v.p + v.b * v.q * v.q, y = Math.sqrt(C / v.b); return '$\\dfrac{dy}{dx} = -\\dfrac{M}{N} = -\\dfrac{' + v.a + '}{' + (2 * v.b) + '(' + fx(y) + ')} \\approx ' + fx(-v.a / (2 * v.b * y), 3) + '$ (en $x = 0$, $M = ' + v.a + '$ y $N = ' + (2 * v.b) + 'y$).'; }
+        }
+      ]
+    },
+    {
+      id: 'c3-ex-factor', tags: ['c3.S07'], block: 'B', title: 'Un factor integrante',
+      vars: { a: [1, 3, 1], b: [1, 3, 1], x1: [0.6, 0.9, 0.1] },
+      statement: function (v) { return '<p>Considera $(2y^2 + ' + (3 * v.a) + 'x)\\,dx + 2xy\\,dy = 0$ con $y(1) = ' + v.b + '$. No es exacta, pero con el factor integrante $\\mu = x$ queda la función potencial $F = x^2y^2 + ' + (v.a === 1 ? '' : v.a) + 'x^3$.</p>'; },
+      diagram: { id: 'exam-fn', state: function (v) {
+        var C = v.b * v.b + v.a;
+        return { x: [0.4, Math.min(1.25, Math.pow(C / v.a, 1 / 3) * 0.98)], fns: [{ f: function (x) { return Math.sqrt(Math.max(0, C - v.a * x * x * x)) / x; }, cls: 'ref', label: 'y(x)' }], pts: [{ x: 1, y: v.b, label: '(1, ' + v.b + ')' }], xlab: 'x', ylab: 'y' };
+      } },
+      parts: [
+        {
+          label: 'a', type: 'numeric', points: 3,
+          prompt: function () { return '¿Cuánto vale la constante $C$ de la solución $F = C$?'; },
+          answer: function (v) { return v.b * v.b + v.a; },
+          solution: function (v) { return '$C = F(1, ' + v.b + ') = ' + (v.b * v.b) + ' + ' + v.a + ' = ' + (v.b * v.b + v.a) + '$.'; }
+        },
+        {
+          label: 'b', type: 'numeric', points: 3,
+          prompt: function (v) { return 'Con tu $C$, ¿cuánto vale $y(' + v.x1 + ')$?'; },
+          answer: function (v, prev) { return Math.sqrt(Math.max(0, prev[0] - v.a * Math.pow(v.x1, 3))) / v.x1; },
+          solution: function (v) { var C = v.b * v.b + v.a, y = Math.sqrt(C - v.a * Math.pow(v.x1, 3)) / v.x1; return '$y = \\dfrac{\\sqrt{C - ' + v.a + 'x^3}}{x}$, así que $y(' + v.x1 + ') \\approx ' + fx(y) + '$.'; }
+        },
+        {
+          label: 'c', type: 'numeric', points: 2,
+          prompt: function (v) { return 'Con tu $y(' + v.x1 + ')$, ¿cuánto vale la pendiente $dy/dx$ ahí? (Usa la ecuación original.)'; },
+          answer: function (v, prev) { var y = prev[1]; return -(2 * y * y + 3 * v.a * v.x1) / (2 * v.x1 * y); },
+          solution: function (v) { var C = v.b * v.b + v.a, y = Math.sqrt(C - v.a * Math.pow(v.x1, 3)) / v.x1; return '$\\dfrac{dy}{dx} = -\\dfrac{2y^2 + ' + (3 * v.a) + 'x}{2xy} \\approx ' + fx(-(2 * y * y + 3 * v.a * v.x1) / (2 * v.x1 * y)) + '$.'; }
+        }
+      ]
+    },
+    {
+      id: 'c3-ex-rl', tags: ['c3.S08'], block: 'B', title: 'Un circuito RL',
+      vars: { L: [0.2, 1, 0.1], R: [4, 20, 2], E: [6, 24, 6], t1: [0.02, 0.1, 0.02] },
+      where: function (v) { return v.R * v.t1 / v.L < 4; },
+      statement: function (v) { return '<p>Un circuito RL en serie tiene $L = ' + v.L + '$ H, $R = ' + v.R + '$ Ω y una batería de ' + v.E + ' V. Se cierra el interruptor en $t = 0$ con corriente cero. Cumple $Li\' + Ri = \\varepsilon$.</p>'; },
+      diagram: { id: 'exam-fn', state: function (v) {
+        var tau = v.L / v.R;
+        return { x: [0, 5 * tau], y: [0, 1.15 * v.E / v.R], fns: [{ f: function (t) { return v.E / v.R * (1 - Math.exp(-t / tau)); }, cls: 'ref', label: 'i(t)' }], hlines: [{ y: v.E / v.R, label: 'ε/R' }], xlab: 't (s)', ylab: 'i (A)' };
+      } },
+      parts: [
+        {
+          label: 'a', type: 'numeric', points: 2, unit: 's',
+          prompt: function () { return '¿Cuánto vale la constante de tiempo $\\tau = L/R$?'; },
+          answer: function (v) { return v.L / v.R; },
+          tol: { rel: 0.01 },
+          solution: function (v) { return '$\\tau = \\dfrac{' + v.L + '}{' + v.R + '} \\approx ' + fx(v.L / v.R, 4) + '$ s.'; }
+        },
+        {
+          label: 'b', type: 'numeric', points: 3, unit: 'A',
+          prompt: function (v) { return 'Con tu $\\tau$, ¿cuánta corriente hay a los ' + v.t1 + ' s?'; },
+          answer: function (v, prev) { return v.E / v.R * (1 - Math.exp(-v.t1 / prev[0])); },
+          solution: function (v) { var i = v.E / v.R * (1 - Math.exp(-v.R * v.t1 / v.L)); return '$i = \\dfrac{\\varepsilon}{R}(1 - e^{-t/\\tau}) = ' + fx(v.E / v.R, 3) + '(1 - e^{-' + v.t1 + '/' + fx(v.L / v.R, 4) + '}) \\approx ' + fx(i, 3) + '$ A.'; }
+        },
+        {
+          label: 'c', type: 'numeric', points: 2, unit: 'J',
+          prompt: function () { return 'Con tu corriente del inciso b), ¿cuánta energía hay en la bobina ($U = \\frac{1}{2}Li^2$)?'; },
+          answer: function (v, prev) { return 0.5 * v.L * prev[1] * prev[1]; },
+          solution: function (v) { var i = v.E / v.R * (1 - Math.exp(-v.R * v.t1 / v.L)); return '$U = \\tfrac{1}{2}(' + v.L + ')(' + fx(i, 3) + ')^2 \\approx ' + fx(0.5 * v.L * i * i, 4) + '$ J.'; }
+        },
+        {
+          label: 'd', type: 'numeric', points: 3, unit: 's',
+          prompt: function () { return 'Con tu $\\tau$, ¿en cuánto tiempo llega la corriente al 90 % de su valor final?'; },
+          answer: function (v, prev) { return prev[0] * Math.log(10); },
+          solution: function (v) { return '$1 - e^{-t/\\tau} = 0.9$ da $t = \\tau\\ln 10 \\approx ' + fx(v.L / v.R * Math.log(10), 4) + '$ s.'; }
+        }
+      ]
+    },
+    {
+      id: 'c3-ex-tanque-var', tags: ['c3.S08', 'c3.S04'], block: 'B', title: 'Un tanque que se llena',
+      vars: { V0: [50, 200, 50], c: [1, 3, 1], t1: [20, 80, 20] },
+      statement: function (v) { return '<p>Un tanque tiene ' + v.V0 + ' L de agua pura. Entra salmuera con ' + v.c + ' g/L a 3 L/min y sale la mezcla a 2 L/min; el tanque no se desborda en el tiempo del problema. $A(t)$ es la sal en gramos.</p>'; },
+      diagram: { id: 'exam-fn', state: function (v) {
+        return { x: [0, v.t1 * 1.3], fns: [{ f: function (t) { var V = v.V0 + t; return v.c * V - v.c * Math.pow(v.V0, 3) / (V * V); }, cls: 'ref', label: 'A(t)' }], xlab: 't (min)', ylab: 'A (g)' };
+      } },
+      parts: [
+        {
+          label: 'a', type: 'numeric', points: 2, unit: 'L',
+          prompt: function (v) { return '¿Qué volumen tiene el tanque a los ' + v.t1 + ' minutos?'; },
+          answer: function (v) { return v.V0 + v.t1; },
+          solution: function (v) { return 'Entra 1 L/min más de lo que sale: $V = ' + v.V0 + ' + t = ' + (v.V0 + v.t1) + '$ L.'; }
+        },
+        {
+          label: 'b', type: 'numeric', points: 4, unit: 'g',
+          prompt: function (v) { return 'Resolviendo $A\' + \\frac{2}{V(t)}A = 3(' + v.c + ')$ con $A(0) = 0$ queda $A = ' + v.c + 'V - \\dfrac{' + v.c + '\\cdot ' + v.V0 + '^3}{V^2}$. Con tu volumen, ¿cuánta sal hay a los ' + v.t1 + ' minutos?'; },
+          answer: function (v, prev) { return v.c * prev[0] - v.c * Math.pow(v.V0, 3) / (prev[0] * prev[0]); },
+          solution: function (v) { var V = v.V0 + v.t1, A = v.c * V - v.c * Math.pow(v.V0, 3) / (V * V); return '$A = ' + v.c + '(' + V + ') - \\dfrac{' + v.c + '(' + v.V0 + ')^3}{' + V + '^2} \\approx ' + fx(A) + '$ g.'; }
+        },
+        {
+          label: 'c', type: 'numeric', points: 2, unit: 'g/L',
+          prompt: function () { return 'Con tus resultados, ¿qué concentración tiene el tanque en ese momento?'; },
+          answer: function (v, prev) { return prev[1] / prev[0]; },
+          solution: function (v) { var V = v.V0 + v.t1, A = v.c * V - v.c * Math.pow(v.V0, 3) / (V * V); return '$\\dfrac{A}{V} = \\dfrac{' + fx(A) + '}{' + V + '} \\approx ' + fx(A / V, 3) + '$ g/L (se acerca a ' + v.c + ' g/L).'; }
+        }
+      ]
+    },
+    {
+      id: 'c3-ex-fundamental', tags: ['c3.S09', 'c3.S10'], block: 'B', title: 'Conjunto fundamental y PVI',
+      vars: { r1: [1, 3, 1], r2: [-3, -1, 1], A: [-2, 3, 1], B: [-3, 4, 1] },
+      where: function (v) { var c1 = (v.B - v.r2 * v.A) / (v.r1 - v.r2); return Math.abs(c1) > 0.2 && Math.abs(v.A - c1) > 0.2; },
+      statement: function (v) { var s = v.r1 + v.r2, p = v.r1 * v.r2; return '<p>$y_1 = e^{' + (v.r1 === 1 ? '' : v.r1) + 'x}$ y $y_2 = e^{' + (v.r2 === -1 ? '-' : v.r2) + 'x}$ son soluciones de $y\'\'' + (s ? (s > 0 ? ' - ' + (s === 1 ? '' : s) : ' + ' + (s === -1 ? '' : -s)) + "y'" : '') + ' - ' + (-p) + 'y = 0$. Se busca la solución con $y(0) = ' + v.A + '$ y $y\'(0) = ' + v.B + '$.</p>'; },
+      diagram: { id: 'exam-fn', state: function (v) {
+        var c1 = (v.B - v.r2 * v.A) / (v.r1 - v.r2), c2 = v.A - c1;
+        return { x: [-1, 1], fns: [{ f: function (x) { return c1 * Math.exp(v.r1 * x) + c2 * Math.exp(v.r2 * x); }, cls: 'ref', label: 'y(x)' }], pts: [{ x: 0, y: v.A, label: 'y(0) = ' + v.A }], xlab: 'x', ylab: 'y' };
+      } },
+      parts: [
+        {
+          label: 'a', type: 'numeric', points: 2,
+          prompt: function () { return '¿Cuánto vale el Wronskiano $W(y_1, y_2)$ en $x = 0$?'; },
+          answer: function (v) { return v.r2 - v.r1; },
+          solution: function (v) { return '$W = y_1y_2\' - y_1\'y_2 = (' + v.r2 + ' - ' + v.r1 + ')e^{' + (v.r1 + v.r2) + 'x}$, así que $W(0) = ' + (v.r2 - v.r1) + '$: no es cero, son independientes.'; }
+        },
+        {
+          label: 'b', type: 'numeric', points: 3,
+          prompt: function () { return 'Con $y = c_1y_1 + c_2y_2$, el sistema de las condiciones iniciales tiene determinante $W(0)$. Con tu Wronskiano, ¿cuánto vale $c_1$? (Por Cramer: $c_1 = \\dfrac{y(0)\\,y_2\'(0) - y\'(0)\\,y_2(0)}{W(0)}$.)'; },
+          answer: function (v, prev) { return (v.A * v.r2 - v.B) / prev[0]; },
+          solution: function (v) { var c1 = (v.B - v.r2 * v.A) / (v.r1 - v.r2); return '$c_1 = \\dfrac{' + v.A + '(' + v.r2 + ') - (' + v.B + ')(1)}{' + (v.r2 - v.r1) + '} \\approx ' + fx(c1, 3) + '$.'; }
+        },
+        {
+          label: 'c', type: 'numeric', points: 2,
+          prompt: function () { return 'Con tu $c_1$, ¿cuánto vale $c_2$?'; },
+          answer: function (v, prev) { return v.A - prev[1]; },
+          solution: function (v) { var c1 = (v.B - v.r2 * v.A) / (v.r1 - v.r2); return 'De $c_1 + c_2 = ' + v.A + '$: $c_2 \\approx ' + fx(v.A - c1, 3) + '$.'; }
+        },
+        {
+          label: 'd', type: 'numeric', points: 3,
+          prompt: function () { return 'Con tus constantes, ¿cuánto vale $y(0.5)$?'; },
+          answer: function (v, prev) { return prev[1] * Math.exp(0.5 * v.r1) + prev[2] * Math.exp(0.5 * v.r2); },
+          solution: function (v) { var c1 = (v.B - v.r2 * v.A) / (v.r1 - v.r2), c2 = v.A - c1; return '$y(0.5) = ' + fx(c1, 3) + 'e^{' + (0.5 * v.r1) + '} + ' + fx(c2, 3) + 'e^{' + (0.5 * v.r2) + '} \\approx ' + fx(c1 * Math.exp(0.5 * v.r1) + c2 * Math.exp(0.5 * v.r2)) + '$.'; }
+        }
+      ]
+    },
+    {
+      id: 'c3-ex-reduccion', tags: ['c3.S09'], block: 'B', title: 'Una segunda solución',
+      vars: { A: [1, 4, 1], B: [-2, 6, 1] },
+      where: function (v) { return v.B - 2 * v.A !== 0; },
+      statement: function (v) { return '<p>$y_1 = x^2$ resuelve $x^2y\'\' - 3xy\' + 4y = 0$ para $x > 0$, y por reducción de orden $y_2 = x^2\\ln x$. Se busca la solución con $y(1) = ' + v.A + '$ y $y\'(1) = ' + v.B + '$.</p>'; },
+      diagram: { id: 'exam-fn', state: function (v) {
+        var c2 = v.B - 2 * v.A;
+        return { x: [0.3, 3], fns: [{ f: function (x) { return x * x * (v.A + c2 * Math.log(x)); }, cls: 'ref', label: 'y(x)' }], pts: [{ x: 1, y: v.A, label: '(1, ' + v.A + ')' }], xlab: 'x', ylab: 'y' };
+      } },
+      parts: [
+        {
+          label: 'a', type: 'numeric', points: 2,
+          prompt: function () { return 'Con $y = c_1x^2 + c_2x^2\\ln x$, ¿cuánto vale $c_1$?'; },
+          answer: function (v) { return v.A; },
+          solution: function (v) { return 'En $x = 1$, $\\ln 1 = 0$: $y(1) = c_1 = ' + v.A + '$.'; }
+        },
+        {
+          label: 'b', type: 'numeric', points: 3,
+          prompt: function () { return 'Con tu $c_1$, ¿cuánto vale $c_2$?'; },
+          answer: function (v, prev) { return v.B - 2 * prev[0]; },
+          solution: function (v) { return '$y\' = 2c_1x + c_2(2x\\ln x + x)$, así que $y\'(1) = 2c_1 + c_2 = ' + v.B + '$ y $c_2 = ' + (v.B - 2 * v.A) + '$.'; }
+        },
+        {
+          label: 'c', type: 'numeric', points: 3,
+          prompt: function () { return 'Con tus constantes, ¿cuánto vale $y(2)$?'; },
+          answer: function (v, prev) { return 4 * (prev[0] + prev[1] * Math.log(2)); },
+          solution: function (v) { var c2 = v.B - 2 * v.A; return '$y(2) = 4\\left(' + v.A + ' + (' + c2 + ')\\ln 2\\right) \\approx ' + fx(4 * (v.A + c2 * Math.log(2))) + '$.'; }
+        },
+        {
+          label: 'd', type: 'numeric', points: 2,
+          prompt: function () { return '¿Cuánto vale el Wronskiano $W(x^2, x^2\\ln x)$ en $x = 2$?'; },
+          answer: function () { return 8; },
+          solution: function () { return '$W = x^2(2x\\ln x + x) - 2x\\cdot x^2\\ln x = x^3$, así que $W(2) = 8$.'; }
+        }
+      ]
+    },
+    {
+      id: 'c3-ex-complejas', tags: ['c3.S10'], block: 'B', title: 'Raíces complejas',
+      vars: { al: [0.5, 2, 0.5], be: [1, 4, 1], A: [1, 3, 1], B: [-2, 3, 1], t1: [0.5, 1.5, 0.5] },
+      statement: function (v) { return '<p>Considera $y\'\' + ' + fx(2 * v.al) + "y' + " + fx(v.al * v.al + v.be * v.be) + 'y = 0$ con $y(0) = ' + v.A + '$ y $y\'(0) = ' + v.B + '$.</p>'; },
+      diagram: { id: 'exam-fn', state: function (v) {
+        var c2 = (v.B + v.al * v.A) / v.be;
+        return { x: [0, 6], fns: [{ f: function (t) { return Math.exp(-v.al * t) * (v.A * Math.cos(v.be * t) + c2 * Math.sin(v.be * t)); }, cls: 'ref', label: 'y(x)' }], pts: [{ x: 0, y: v.A, label: 'y(0)' }], xlab: 'x', ylab: 'y' };
+      } },
+      parts: [
+        {
+          label: 'a', type: 'numeric', points: 2,
+          prompt: function () { return 'Las raíces de la característica son $\\alpha \\pm \\beta i$. ¿Cuánto vale $\\beta$ (positiva)?'; },
+          answer: function (v) { return v.be; },
+          solution: function (v) { return '$r = \\dfrac{-' + fx(2 * v.al) + ' \\pm \\sqrt{' + fx(4 * v.al * v.al) + ' - ' + fx(4 * (v.al * v.al + v.be * v.be)) + '}}{2} = -' + v.al + ' \\pm ' + v.be + 'i$: $\\beta = ' + v.be + '$.'; }
+        },
+        {
+          label: 'b', type: 'numeric', points: 3,
+          prompt: function () { return 'Con $y = e^{\\alpha x}(c_1\\cos\\beta x + c_2\\sin\\beta x)$ y tu $\\beta$, ¿cuánto vale $c_2$?'; },
+          answer: function (v, prev) { return (v.B + v.al * v.A) / prev[0]; },
+          solution: function (v) { return '$c_1 = ' + v.A + '$ y $y\'(0) = \\alpha c_1 + \\beta c_2 = ' + v.B + '$, con $\\alpha = -' + v.al + '$: $c_2 = \\dfrac{' + v.B + ' + ' + v.al + '(' + v.A + ')}{' + v.be + '} \\approx ' + fx((v.B + v.al * v.A) / v.be, 3) + '$.'; }
+        },
+        {
+          label: 'c', type: 'numeric', points: 3,
+          prompt: function (v) { return 'Con tus resultados, ¿cuánto vale $y(' + v.t1 + ')$?'; },
+          answer: function (v, prev) { return Math.exp(-v.al * v.t1) * (v.A * Math.cos(prev[0] * v.t1) + prev[1] * Math.sin(prev[0] * v.t1)); },
+          solution: function (v) { var c2 = (v.B + v.al * v.A) / v.be, y = Math.exp(-v.al * v.t1) * (v.A * Math.cos(v.be * v.t1) + c2 * Math.sin(v.be * v.t1)); return '$y(' + v.t1 + ') = e^{-' + fx(v.al * v.t1) + '}\\left(' + v.A + '\\cos ' + fx(v.be * v.t1) + ' + ' + fx(c2, 3) + '\\sin ' + fx(v.be * v.t1) + '\\right) \\approx ' + fx(y, 3) + '$.'; }
+        },
+        {
+          label: 'd', type: 'numeric', points: 2,
+          prompt: function () { return 'Con tu $\\beta$, ¿cuál es el periodo de la oscilación?'; },
+          answer: function (v, prev) { return 2 * Math.PI / prev[0]; },
+          solution: function (v) { return '$T = \\dfrac{2\\pi}{\\beta} = \\dfrac{2\\pi}{' + v.be + '} \\approx ' + fx(2 * Math.PI / v.be) + '$.'; }
+        }
+      ]
+    },
+    {
+      id: 'c3-ex-doble', tags: ['c3.S10'], block: 'B', title: 'Raíz doble: el máximo',
+      vars: { k: [1, 3, 1], A: [1, 3, 1], B: [1, 6, 1] },
+      statement: function (v) { return '<p>Considera $y\'\' + ' + (2 * v.k) + "y' + " + (v.k * v.k) + 'y = 0$ con $y(0) = ' + v.A + '$ y $y\'(0) = ' + v.B + '$. La característica tiene la raíz doble $r = -' + v.k + '$.</p>'; },
+      diagram: { id: 'exam-fn', state: function (v) {
+        var c2 = v.B + v.k * v.A;
+        return { x: [0, 4], fns: [{ f: function (t) { return (v.A + c2 * t) * Math.exp(-v.k * t); }, cls: 'ref', label: 'y(x)' }], pts: [{ x: 0, y: v.A, label: 'y(0)' }], xlab: 'x', ylab: 'y' };
+      } },
+      parts: [
+        {
+          label: 'a', type: 'numeric', points: 3,
+          prompt: function () { return 'Con $y = (c_1 + c_2x)e^{-kx}$, ¿cuánto vale $c_2$?'; },
+          answer: function (v) { return v.B + v.k * v.A; },
+          solution: function (v) { return '$c_1 = ' + v.A + '$ y $y\'(0) = c_2 - ' + v.k + 'c_1 = ' + v.B + '$, así que $c_2 = ' + (v.B + v.k * v.A) + '$.'; }
+        },
+        {
+          label: 'b', type: 'numeric', points: 2,
+          prompt: function () { return 'Con tu $c_2$, ¿cuánto vale $y(1)$?'; },
+          answer: function (v, prev) { return (v.A + prev[0]) * Math.exp(-v.k); },
+          solution: function (v) { var c2 = v.B + v.k * v.A; return '$y(1) = (' + v.A + ' + ' + c2 + ')e^{-' + v.k + '} \\approx ' + fx((v.A + c2) * Math.exp(-v.k), 3) + '$.'; }
+        },
+        {
+          label: 'c', type: 'numeric', points: 3,
+          prompt: function () { return 'Con tu $c_2$, ¿en qué $x > 0$ alcanza la solución su máximo ($y\' = 0$)?'; },
+          answer: function (v, prev) { return (prev[0] - v.k * v.A) / (v.k * prev[0]); },
+          solution: function (v) { var c2 = v.B + v.k * v.A; return '$y\' = \\left(c_2 - k(c_1 + c_2x)\\right)e^{-kx} = 0$ da $x = \\dfrac{c_2 - kc_1}{kc_2} = \\dfrac{' + v.B + '}{' + (v.k * c2) + '} \\approx ' + fx(v.B / (v.k * c2), 3) + '$.'; }
+        },
+        {
+          label: 'd', type: 'numeric', points: 2,
+          prompt: function () { return 'Con tus resultados, ¿cuánto vale ese máximo?'; },
+          answer: function (v, prev) { return (v.A + prev[0] * prev[2]) * Math.exp(-v.k * prev[2]); },
+          solution: function (v) { var c2 = v.B + v.k * v.A, x = v.B / (v.k * c2); return '$y_{máx} = (' + v.A + ' + ' + c2 + '\\cdot ' + fx(x, 3) + ')e^{-' + v.k + '(' + fx(x, 3) + ')} \\approx ' + fx((v.A + c2 * x) * Math.exp(-v.k * x), 3) + '$.'; }
         }
       ]
     }

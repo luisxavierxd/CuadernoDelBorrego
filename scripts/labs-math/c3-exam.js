@@ -88,6 +88,43 @@ module.exports = ({ test, near, LM, math }) => {
     rel(at(P, v.x1), t[1], 1e-7, s + ' y(x1)');
     rel(slope(P, v.x1), t[2], 1e-5, s + ' y′(x1)');
   }));
+  test('c3 examen · exacta: la numérica por (p, q) llega a x = 0 en √(C/b) con pendiente −M/N', () => each('c3-ex-exacta', (v, t, s) => {
+    const P = { kind: 'exact', M: '2x*y + ' + v.a, N: 'x^2 + ' + (2 * v.b) + '*y', x0: v.p, ics: [v.q], domain: [0, 4] };
+    rel(at(P, 0), t[1], 1e-6, s + ' y(0)');
+    rel(slope(P, 1e-3), t[2], 2e-3, s + ' pendiente');
+  }));
+  test('c3 examen · factor integrante: y(x1) y la pendiente con RK4', () => each('c3-ex-factor', (v, t, s) => {
+    const P = { kind: 'exact', M: '2y^2 + ' + (3 * v.a) + '*x', N: '2x*y', x0: 1, ics: [v.b], domain: [0.5, 1] };
+    rel(at(P, v.x1), t[1], 1e-6, s + ' y(x1)');
+    rel(slope(P, v.x1), t[2], 1e-5, s + ' pendiente');
+  }));
+  test('c3 examen · RL: corriente y 90 % con RK4', () => each('c3-ex-rl', (v, t, s) => {
+    const P = { iv: 't', order: 1, rhs: 'E/L - R*y/L', params: { E: v.E, L: v.L, R: v.R }, x0: 0, ics: [0], domain: [0, 1] };
+    rel(at(P, v.t1), t[1], 1e-7, s + ' i(t1)');
+    rel(cross(P, 0.9 * v.E / v.R, 0, 20 * t[0]), t[3], 1e-6, s + ' 90 %');
+  }));
+  test('c3 examen · tanque con volumen variable: A(t1) con RK4', () => each('c3-ex-tanque-var', (v, t, s) => {
+    const P = { iv: 't', order: 1, rhs: '3*c - 2y/(V0 + t)', params: { c: v.c, V0: v.V0 }, x0: 0, ics: [0], domain: [0, 1] };
+    rel(at(P, v.t1), t[1], 1e-7, s + ' A(t1)');
+  }));
+  test('c3 examen · conjunto fundamental: y(0.5) del PVI con RK4', () => each('c3-ex-fundamental', (v, t, s) => {
+    const P = { order: 2, rhs: (v.r1 + v.r2) + '*dy - ' + (v.r1 * v.r2) + '*y', x0: 0, ics: [v.A, v.B], domain: [0, 1] };
+    rel(at(P, 0.5), t[3], 1e-7, s + ' y(0.5)');
+  }));
+  test('c3 examen · reducción de orden: y(2) del PVI de Euler con RK4', () => each('c3-ex-reduccion', (v, t, s) => {
+    const P = { order: 2, rhs: '(3x*dy - 4y)/x^2', x0: 1, ics: [v.A, v.B], domain: [1, 2] };
+    rel(at(P, 2), t[2], 1e-7, s + ' y(2)');
+  }));
+  test('c3 examen · complejas: y(t1) con RK4 y el periodo entre cruces', () => each('c3-ex-complejas', (v, t, s) => {
+    const P = { order: 2, rhs: '-' + (2 * v.al) + '*dy - ' + (v.al * v.al + v.be * v.be) + '*y', x0: 0, ics: [v.A, v.B], domain: [0, 4] };
+    rel(at(P, v.t1), t[2], 1e-6, s + ' y(t1)');
+  }));
+  test('c3 examen · raíz doble: el máximo donde y′ = 0 con RK4', () => each('c3-ex-doble', (v, t, s) => {
+    const P = { order: 2, rhs: '-' + (2 * v.k) + '*dy - ' + (v.k * v.k) + '*y', x0: 0, ics: [v.A, v.B], domain: [0, 4] };
+    rel(at(P, 1), t[1], 1e-7, s + ' y(1)');
+    near(slope(P, t[2]), 0, 1e-5 * (1 + Math.abs(t[3])), s + ' y′ en el máximo');
+    rel(at(P, t[2]), t[3], 1e-7, s + ' máximo');
+  }));
   test('c3 examen · logística: P(t1), K/2 y P′ con RK4', () => each('c3-ex-logistica', (v, t, s) => {
     const P = { iv: 't', order: 1, rhs: 'r*y*(1 - y/K)', params: { r: v.r, K: v.K }, x0: 0, ics: [v.P0], domain: [0, 1] };
     rel(at(P, v.t1), t[1], 1e-7, s + ' P(t1)');

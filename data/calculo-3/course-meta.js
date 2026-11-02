@@ -19,21 +19,21 @@ window.COURSE_META = {
     {
       id: 'A', label: 'Primer orden I',
       sessions: [
-        { n: 1,  tag: 'Qué es una EDO', title: 'Qué es una ecuación diferencial: orden, linealidad, solución, PVI, existencia y unicidad', short: 'Qué es una EDO', lab: 'ode-compare', ready: true, bank: true },
-        { n: 2,  tag: 'Variables separables', title: 'Ecuaciones de variables separables', short: 'Variables separables', lab: 'ode-compare', ready: true, bank: true },
-        { n: 3,  tag: 'Cambio de variable', title: 'Reducibles a separables: homogéneas (y = ux) y sustitución u = ax + by + c', short: 'Reducibles a separables', lab: 'ode-compare', ready: true, bank: true },
-        { n: 4,  tag: 'Lineales de primer orden', title: 'Lineales de primer orden: factor integrante', short: 'Lineales y factor integrante', lab: 'ode-compare', ready: true, bank: true },
-        { n: 5,  tag: 'Ecuación de Bernoulli', title: 'Reducibles a lineales: ecuación de Bernoulli', short: 'Bernoulli', lab: 'ode-compare', ready: true, bank: true }
+        { n: 1,  tag: 'Qué es una EDO', labMode: 'campo', title: 'Qué es una ecuación diferencial: orden, linealidad, solución, PVI, existencia y unicidad', short: 'Qué es una EDO', lab: 'ode-compare', ready: true, bank: true },
+        { n: 2,  tag: 'Variables separables', labMode: 'separables', title: 'Ecuaciones de variables separables', short: 'Variables separables', lab: 'ode-compare', ready: true, bank: true },
+        { n: 3,  tag: 'Cambio de variable', labMode: 'cambio', title: 'Reducibles a separables: homogéneas (y = ux) y sustitución u = ax + by + c', short: 'Reducibles a separables', lab: 'ode-compare', ready: true, bank: true },
+        { n: 4,  tag: 'Lineales de primer orden', labMode: 'tanque', title: 'Lineales de primer orden: factor integrante', short: 'Lineales y factor integrante', lab: 'ode-compare', ready: true, bank: true },
+        { n: 5,  tag: 'Ecuación de Bernoulli', labMode: 'bernoulli', title: 'Reducibles a lineales: ecuación de Bernoulli', short: 'Bernoulli', lab: 'ode-compare', ready: true, bank: true }
       ]
     },
     {
       id: 'B', label: 'Primer orden II y orden n',
       sessions: [
-        { n: 6,  tag: 'Ecuaciones exactas', title: 'Ecuaciones exactas: ∂M/∂y = ∂N/∂x y función potencial', short: 'Exactas', lab: 'ode-compare', ready: false, bank: false },
-        { n: 7,  tag: 'Reducibles a exactas', title: 'Reducibles a exactas: factores integrantes μ(x) y μ(y)', short: 'Reducibles a exactas', lab: 'ode-compare', ready: false, bank: false },
-        { n: 8,  tag: 'Modelado con EDO', title: 'Modelado con primer orden: circuitos RC y RL, mezclas y poblaciones', short: 'Modelado con primer orden', lab: 'ode-compare', ready: false, bank: false },
-        { n: 9,  tag: 'Teoría lineal', title: 'Teoría lineal de orden n: superposición, Wronskiano, conjunto fundamental y reducción de orden', short: 'Teoría lineal de orden n', lab: 'ode-compare', ready: false, bank: false },
-        { n: 10, tag: 'Coeficientes constantes', title: 'Homogéneas de segundo orden con coeficientes constantes: los tres casos de raíces', short: 'Segundo orden homogéneas', lab: 'ode-compare', ready: false, bank: false }
+        { n: 6,  tag: 'Ecuaciones exactas', labMode: 'exactas', title: 'Ecuaciones exactas: ∂M/∂y = ∂N/∂x y función potencial', short: 'Exactas', lab: 'ode-compare', ready: true, bank: true },
+        { n: 7,  tag: 'Reducibles a exactas', labMode: 'mu', title: 'Reducibles a exactas: factores integrantes μ(x) y μ(y)', short: 'Reducibles a exactas', lab: 'ode-compare', ready: true, bank: true },
+        { n: 8,  tag: 'Modelado con EDO', labMode: 'metodo', title: 'Modelado con primer orden: circuitos RC y RL, mezclas y poblaciones', short: 'Modelado con primer orden', lab: 'ode-compare', ready: true, bank: true },
+        { n: 9,  tag: 'Teoría lineal', labMode: 'wronskiano', title: 'Teoría lineal de orden n: superposición, Wronskiano, conjunto fundamental y reducción de orden', short: 'Teoría lineal de orden n', lab: 'ode-compare', ready: true, bank: true },
+        { n: 10, tag: 'Coeficientes constantes', labMode: 'raices', title: 'Homogéneas de segundo orden con coeficientes constantes: los tres casos de raíces', short: 'Segundo orden homogéneas', lab: 'ode-compare', ready: true, bank: true }
       ]
     },
     {

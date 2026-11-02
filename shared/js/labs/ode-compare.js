@@ -34,7 +34,7 @@
 
   // Lado derecho y^(n) = f(x, y, y′, …) compilado. state = [y, y′, …, y^(n−1)].
   function rhsFn(math, P, pv) {
-    var code = math.parse(prep(P.rhs)).compile(), iv = P.iv || 'x', n = P.order || 1;
+    var code = math.parse(prep(P.kind === 'exact' ? exactRhs(P) : P.rhs)).compile(), iv = P.iv || 'x', n = P.order || 1;
     return function (x, s) {
       var sc = Object.assign({}, pv);
       sc[iv] = x;
@@ -200,6 +200,128 @@
     return { err: err, ref: ref };
   }
 
+  /* ---------- Exactas (S06–S07): M dx + N dy = 0 ----------
+     P = { kind: 'exact', M, N, mu?, ask: 'F' | 'mu', x0, ics: [y0], domain, yRange }
+     La solución numérica sigue dy/dx = −M/N; el alumno da F(x, y) (curvas F = C) o el
+     factor integrante μ que vuelve exacta la ecuación. */
+  function exactRhs(P) { return P.rhs || '-(' + P.M + ')/(' + P.N + ')'; }
+  function grid2(P, n) {
+    var d = P.domain, r = P.yRange || [P.ics[0] - 2, P.ics[0] + 2], out = [];
+    for (var i = 0; i < n; i++) for (var j = 0; j < n; j++) out.push([d[0] + (d[1] - d[0]) * (i + 0.5) / n, r[0] + (r[1] - r[0]) * (j + 0.5) / n]);
+    return out;
+  }
+  function compile2(math, src) {
+    var node = math.parse(prep(src)), code = node.compile();
+    return { node: node, f: function (x, y) { try { var v = code.evaluate({ x: x, y: y }); return typeof v === 'number' ? v : NaN; } catch (e) { return NaN; } } };
+  }
+  function partials(math, src) {
+    var c = compile2(math, src), fx = compile2(math, math.derivative(c.node, 'x').toString()), fy = compile2(math, math.derivative(c.node, 'y').toString());
+    return { f: c.f, fx: fx.f, fy: fy.f };
+  }
+  // Máximo error relativo |a − b| / (1 + |b|) en la malla; null si casi ningún punto es válido.
+  function maxRel(pts, a, b) {
+    var m = 0, n = 0;
+    pts.forEach(function (p) {
+      var u = a(p[0], p[1]), v = b(p[0], p[1]);
+      if (!isFinite(u) || !isFinite(v)) return;
+      n++; m = Math.max(m, Math.abs(u - v) / (1 + Math.abs(v)));
+    });
+    return n < 0.6 * pts.length ? null : m;
+  }
+  // ¿Es exacta M dx + N dy (multiplicada por μ, si se da)? Devuelve el máximo de |∂(μM)/∂y − ∂(μN)/∂x|.
+  function exactGap(math, P, muSrc) {
+    var mu = muSrc ? '(' + muSrc + ')*' : '';
+    var Mm = partials(math, mu + '(' + P.M + ')'), Nn = partials(math, mu + '(' + P.N + ')');
+    return maxRel(grid2(P, 9), Mm.fy, Nn.fx);
+  }
+  // Veredicto: correct · sign (−F) · missingH (falta la h(y)) · residual · notExact (μ no sirve)
+  function verifyExact(math, P, src) {
+    if (!String(src || '').trim()) return { kind: 'invalid', reason: 'empty' };
+    var extra;
+    try { extra = freeSymbols(math, src, P.ask === 'mu' ? ['x', 'y'] : ['x', 'y']); }
+    catch (e) { return { kind: 'invalid', reason: 'parse', msg: e.message }; }
+    if (extra.length) return { kind: 'invalid', reason: 'symbols', symbols: extra };
+    var pts = grid2(P, 9);
+    try {
+      if (P.ask === 'mu') {
+        var g = exactGap(math, P, src);
+        if (g === null) return { kind: 'bad', reason: 'domain' };
+        return g < 1e-7 ? { kind: 'ok', reason: 'correct', gap: g, before: exactGap(math, P) } : { kind: 'bad', reason: 'notExact', gap: g, before: exactGap(math, P) };
+      }
+      var mu = P.mu ? '(' + P.mu + ')*' : '';
+      var F = partials(math, src), M = compile2(math, mu + '(' + P.M + ')').f, N = compile2(math, mu + '(' + P.N + ')').f;
+      var ex = maxRel(pts, F.fx, M), ey = maxRel(pts, F.fy, N);
+      if (ex === null || ey === null) return { kind: 'bad', reason: 'domain' };
+      var out = { ex: ex, ey: ey };
+      if (ex < 1e-7 && ey < 1e-7) { out.kind = 'ok'; out.reason = 'correct'; return out; }
+      var sx = maxRel(pts, function (x, y) { return -F.fx(x, y); }, M), sy = maxRel(pts, function (x, y) { return -F.fy(x, y); }, N);
+      if (sx < 1e-7 && sy < 1e-7) { out.kind = 'warn'; out.reason = 'sign'; return out; }
+      if (ex < 1e-7) { out.kind = 'warn'; out.reason = 'missingH'; return out; }
+      out.kind = 'bad'; out.reason = 'residual'; return out;
+    } catch (e) { return { kind: 'invalid', reason: 'parse', msg: e.message }; }
+  }
+  // Versiones numéricas para los ejemplos: 1 si se cumple, 0 si no.
+  function isPotential(math, P, src) { return verifyExact(math, P, src).reason === 'correct' ? 1 : 0; }
+  function isExactEq(math, P, muSrc) { var g = exactGap(math, P, muSrc); return g !== null && g < 1e-7 ? 1 : 0; }
+  // Curva de nivel f(x, y) = c con cuadrados que marchan: segmentos [[x, y], [x, y]].
+  function contour(f, box, c, nx, ny) {
+    nx = nx || 80; ny = ny || 60;
+    var dx = (box.x[1] - box.x[0]) / nx, dy = (box.y[1] - box.y[0]) / ny, segs = [], v = [];
+    for (var i = 0; i <= nx; i++) { v.push([]); for (var j = 0; j <= ny; j++) v[i].push(f(box.x[0] + i * dx, box.y[0] + j * dy) - c); }
+    function cut(x1, y1, a, x2, y2, b) { var t = a / (a - b); return [x1 + t * (x2 - x1), y1 + t * (y2 - y1)]; }
+    for (var I = 0; I < nx; I++) for (var J = 0; J < ny; J++) {
+      var x0 = box.x[0] + I * dx, y0 = box.y[0] + J * dy, a = v[I][J], b = v[I + 1][J], cc = v[I + 1][J + 1], d = v[I][J + 1];
+      if (![a, b, cc, d].every(isFinite)) continue;
+      var e = [];
+      if ((a > 0) !== (b > 0)) e.push(cut(x0, y0, a, x0 + dx, y0, b));
+      if ((b > 0) !== (cc > 0)) e.push(cut(x0 + dx, y0, b, x0 + dx, y0 + dy, cc));
+      if ((cc > 0) !== (d > 0)) e.push(cut(x0 + dx, y0 + dy, cc, x0, y0 + dy, d));
+      if ((d > 0) !== (a > 0)) e.push(cut(x0, y0 + dy, d, x0, y0, a));
+      if (e.length >= 2) segs.push([e[0], e[1]]);
+      if (e.length === 4) segs.push([e[2], e[3]]);
+    }
+    return segs;
+  }
+
+  /* ---------- Wronskiano (S09): dos soluciones de una lineal homogénea de orden 2 ----------
+     P = { kind: 'pair', order: 2, rhs, domain }; el alumno da y₁ y y₂.
+     Veredicto: correct (las dos son solución y W ≠ 0) · dependent (W ≡ 0) · notSolution1/2 */
+  function wronskian(math, P, s1, s2) {
+    var iv = P.iv || 'x', d = P.domain, D1 = derivs(math, s1, iv, 1, {}), D2 = derivs(math, s2, iv, 1, {}), pts = [];
+    for (var i = 0; i <= 120; i++) {
+      var x = d[0] + (d[1] - d[0]) * (i + 0.5) / 121, a = D1.at(x), b = D2.at(x);
+      pts.push([x, a[0] * b[1] - a[1] * b[0], Math.abs(a[0] * b[1]) + Math.abs(a[1] * b[0])]);
+    }
+    return pts;
+  }
+  function verifyPair(math, P, s1, s2) {
+    if (!String(s1 || '').trim() || !String(s2 || '').trim()) return { kind: 'invalid', reason: 'empty' };
+    try {
+      var bad = freeSymbols(math, s1, [P.iv || 'x']).concat(freeSymbols(math, s2, [P.iv || 'x']));
+      if (bad.length) return { kind: 'invalid', reason: 'symbols', symbols: bad };
+      var tol = 1e-7, r1 = residual(math, P, s1), r2 = residual(math, P, s2);
+      var Wp = wronskian(math, P, s1, s2), out = { r1: r1, r2: r2, W: Wp };
+      if (r1.valid < 0.6 * r1.total || r2.valid < 0.6 * r2.total) { out.kind = 'bad'; out.reason = 'domain'; return out; }
+      if (r1.maxRel > tol) { out.kind = 'bad'; out.reason = 'notSolution1'; return out; }
+      if (r2.maxRel > tol) { out.kind = 'bad'; out.reason = 'notSolution2'; return out; }
+      var big = Wp.some(function (p) { return isFinite(p[1]) && Math.abs(p[1]) > 1e-7 * (1 + p[2]); });
+      out.kind = big ? 'ok' : 'warn'; out.reason = big ? 'correct' : 'dependent';
+      return out;
+    } catch (e) { return { kind: 'invalid', reason: 'parse', msg: e.message }; }
+  }
+  // Para ejemplos: W(x₀) y si el par es un conjunto fundamental (1/0).
+  function wronskianAt(math, P, s1, s2, x) {
+    var a = derivs(math, s1, P.iv || 'x', 1, {}).at(x), b = derivs(math, s2, P.iv || 'x', 1, {}).at(x);
+    return a[0] * b[1] - a[1] * b[0];
+  }
+  function isFundamental(math, P, s1, s2) { return verifyPair(math, P, s1, s2).reason === 'correct' ? 1 : 0; }
+  // Raíces de r² + a r + b = 0: { re1, im1, re2, im2 }.
+  function charRoots(a, b) {
+    var disc = a * a - 4 * b;
+    if (disc >= 0) { var s = Math.sqrt(disc); return [[(-a - s) / 2, 0], [(-a + s) / 2, 0]]; }
+    var w = Math.sqrt(-disc) / 2; return [[-a / 2, -w], [-a / 2, w]];
+  }
+
   // LaTeX del alumno → expresión de math.js. El convertidor del sitio ignora los subíndices
   // (T_a → T), así que los parámetros con subíndice (T_a, P_0, c_{in}) se cambian por letras
   // griegas de paso y se regresan a su nombre; P.alias traduce otras (epsilon → E).
@@ -225,7 +347,9 @@
     fromLatex: fromLatex,
     paramValues: paramValues, rhsFn: rhsFn, rk4Step: rk4Step, integrate: integrate, numeric: numeric, solveAt: solveAt,
     derivs: derivs, residual: residual, verify: verify, isSolution: isSolution, slopeField: slopeField,
-    traceError: traceError, freeSymbols: freeSymbols, icsOf: icsOf
+    traceError: traceError, freeSymbols: freeSymbols, icsOf: icsOf,
+    exactRhs: exactRhs, exactGap: exactGap, verifyExact: verifyExact, contour: contour, isPotential: isPotential, isExactEq: isExactEq,
+    wronskian: wronskian, verifyPair: verifyPair, charRoots: charRoots, wronskianAt: wronskianAt, isFundamental: isFundamental
   };
 
   /* ------------------------------ UI ------------------------------ */
@@ -258,6 +382,8 @@
     var sliders = h('div', { class: 'lab-controls__group' });
     var modeSel = cfg.trace ? UI.select({ label: '¿Cómo quieres responder?', options: ['Escribiendo la fórmula', 'Trazando la curva a mano'] }) : null;
     var yIn = UI.mathField({ label: 'Tu solución', palette: 'calculo', hint: '', onEnter: function () { check(); } });
+    var y2In = UI.mathField({ label: 'Tu segunda solución', palette: 'calculo', hint: '', onEnter: function () { check(); } });
+    var methodSel = UI.select({ label: '¿Qué método usarías?', options: ['—'] });
     var run = UI.button('Comprobar', 'primary', function () { check(); });
     var showSol = UI.button('Ver una solución', 'ghost', function () {
       solBox.hidden = !solBox.hidden;
@@ -268,7 +394,7 @@
     var verdict = h('div', { class: 'verdict', hidden: true, role: 'status' });
     var traceNote = h('p', { class: 'lab-note' });
     var traceClear = UI.button('Borrar trazo', 'ghost', function () { tracePts = []; drawTrace(); });
-    var formulaBox = h('div', {}, [yIn.node, h('div', { class: 'lab-buttons' }, [run, showSol]), solBox, note]);
+    var formulaBox = h('div', {}, [methodSel.node, yIn.node, y2In.node, h('div', { class: 'lab-buttons' }, [run, showSol]), solBox, note]);
     var traceBox = h('div', { hidden: true }, [traceNote, h('div', { class: 'lab-buttons' }, [traceClear])]);
 
     var svg = UI.svg(W, H, 'Tu solución contra la solución numérica del PVI');
@@ -301,14 +427,24 @@
     function setProblem(P) {
       cur = P; over = {}; pristine = true; tracePts = [];
       given.innerHTML = '$' + P.tex + '$';
-      solBox.innerHTML = '$' + (P.dv || 'y') + '(' + (P.iv || 'x') + ') = ' + P.solutionTex + '$';
+      var lhs = P.kind === 'exact' ? (P.ask === 'mu' ? '\\mu = ' : 'F(x, y) = ') : P.kind === 'pair' ? '' : (P.dv || 'y') + '(' + (P.iv || 'x') + ') = ';
+      solBox.innerHTML = '$' + lhs + P.solutionTex + '$';
       solBox.hidden = true; showSol.textContent = 'Ver una solución';
       UI.renderMath(given); UI.renderMath(solBox);
       hintP.innerHTML = P.hint ? 'Pista: ' + P.hint : '';
       UI.renderMath(hintP);
-      var lbl = h('span', {}, ['Tu ' + (P.dv || 'y') + '(' + (P.iv || 'x') + ')']);
-      var lab = yIn.node.querySelector('.lab-field__label, label');
-      if (lab) { lab.innerHTML = ''; lab.appendChild(lbl); }
+      function setLabel(field, text) {
+        var lab = field.node.querySelector('.lab-field__label, label');
+        if (lab) lab.textContent = text;
+      }
+      setLabel(yIn, P.kind === 'exact' ? (P.ask === 'mu' ? 'Tu factor integrante μ' : 'Tu F(x, y)') : P.kind === 'pair' ? 'Tu y₁(x)' : 'Tu ' + (P.dv || 'y') + '(' + (P.iv || 'x') + ')');
+      setLabel(y2In, 'Tu y₂(x)');
+      y2In.node.hidden = P.kind !== 'pair';
+      methodSel.node.hidden = !P.methods;
+      if (P.methods) {
+        methodSel.input.innerHTML = '';
+        ['Elige un método'].concat(P.methods).forEach(function (m, i) { methodSel.input.appendChild(h('option', { value: String(i - 1) }, [m])); });
+      }
       sliders.innerHTML = '';
       Object.keys(P.params || {}).forEach(function (k) {
         var p = P.params[k];
@@ -322,9 +458,11 @@
       sliders.hidden = !sliders.children.length;
       traceNote.textContent = 'Toca el campo de pendientes para marcar puntos de tu curva, de izquierda a derecha, siguiendo las rayitas. El primer punto es la condición inicial.';
       var sample = (P.wrong && P.wrong[0]) || null;
-      if (sample && sample.tex) { yIn.setLatex ? yIn.setLatex(sample.tex) : yIn.setMath && yIn.setMath(sample.src); }
+      function put(field, tex, src) { if (field.setLatex) field.setLatex(tex); else if (field.setMath) field.setMath(src); }
+      if (sample && P.kind === 'pair') { put(yIn, sample.tex[0], sample.src[0]); put(y2In, sample.tex[1], sample.src[1]); }
+      else if (sample && sample.tex) put(yIn, sample.tex, sample.src);
       startSample = sample ? sample.src : '';
-      note.textContent = sample ? 'Ejemplo cargado: así respondió un compañero. ¿Es solución? Compruébalo y luego escribe la tuya.' : '';
+      note.textContent = sample ? 'Ejemplo cargado: así respondió un compañero. ' + (P.kind === 'exact' ? '¿Está bien?' : '¿Es solución?') + ' Compruébalo y luego escribe la tuya.' : '';
       verdict.hidden = true;
       if (mode === 'trace') drawTrace(); else check();
     }
@@ -446,9 +584,25 @@
       if (su) path(su, kind === 'ok' ? 'trace' : 'student', 3, kind === 'ok' ? '8 7' : null);
       plot.label(cur.domain[1], r[1], 'u', 'end', 16, -6, 6);
     }
+    // Raíces de r² + a r + b = 0 en el plano complejo (S10, S15): P.roots = ['a', 'b'] nombra los parámetros.
+    function drawRoots() {
+      var pv = LabMath.ode.paramValues(cur, over), names = cur.roots || ['a', 'b'];
+      var a = pv[names[0]], b = pv[names[1]], R = LabMath.ode.charRoots(a, b);
+      var s = UI.svg(W, 200, 'Raíces de la ecuación característica en el plano complejo');
+      var lim = Math.max(2, Math.ceil(Math.max(Math.abs(R[0][0]), Math.abs(R[1][0]), Math.abs(R[0][1])) * 1.3));
+      var plot = window.LabPlot(s, { x: [-lim, lim], y: [-lim * 0.55, lim * 0.55] });
+      plot.clear().grid().axes();
+      scene.appendChild(h('p', { class: 'lab-note' }, ['Raíces de r² + ' + UI.fmt(a, 3) + 'r + ' + UI.fmt(b, 3) + ' = 0 (eje horizontal: parte real; vertical: parte imaginaria)']));
+      scene.appendChild(s);
+      R.forEach(function (q) { plot.point(q[0], q[1], 'dot-ref', 7); });
+      var disc = a * a - 4 * b, kindTxt = Math.abs(disc) < 1e-9 ? 'raíz doble: y = (c₁ + c₂x)eʳˣ' : disc > 0 ? 'dos raíces reales: y = c₁eʳ¹ˣ + c₂eʳ²ˣ' : 'complejas α ± βi: y = eᵅˣ(c₁cos βx + c₂sin βx)';
+      facts.appendChild(h('dt', {}, ['tipo de raíces'])); facts.appendChild(h('dd', {}, [kindTxt]));
+      facts.appendChild(h('dt', {}, ['r₁, r₂'])); facts.appendChild(h('dd', {}, [R.map(function (q) { return UI.fmt(q[0], 3) + (q[1] ? (q[1] > 0 ? ' + ' : ' − ') + UI.fmt(Math.abs(q[1]), 3) + 'i' : ''); }).join(' · ')]));
+    }
     function drawScene(numPts, stuPts, kind) {
       scene.innerHTML = '';
       if (cur.twin) { scene.hidden = false; drawTwin(numPts, stuPts, kind); return; }
+      if (cur.scene === 'roots') { scene.hidden = false; drawRoots(); return; }
       if (cur.scene !== 'tank') { scene.hidden = true; return; }
       scene.hidden = false;
       // Tanque de mezclas: el tono del líquido sigue la concentración en el instante final del dominio.
@@ -489,26 +643,48 @@
       return { plot: plot, B: B, num: num };
     }
 
-    function readSrc() {
-      var tex = yIn.latex ? yIn.latex() : '';
-      if (!tex || !window.CBLatex) return yIn.get();
+    function readSrc(field) {
+      field = field || yIn;
+      var tex = field.latex ? field.latex() : '';
+      if (!tex || !window.CBLatex) return field.get();
       return LabMath.ode.fromLatex(window.CBLatex.toMath, tex, cur);
+    }
+
+    // ¿Eligió el método correcto? (S08). Se agrega como una nota al veredicto.
+    function methodNote() {
+      if (!cur.methods) return;
+      var i = +methodSel.input.value;
+      var p = h('p', { class: 'verdict__note' });
+      if (i < 0) p.textContent = 'Elige también qué método usarías.';
+      else if ((cur.method || []).indexOf(i) >= 0) p.textContent = 'Método: «' + cur.methods[i] + '» funciona aquí. ' + (cur.methodWhy || '');
+      else p.textContent = 'Método: «' + cur.methods[i] + '» no es el camino. ' + (cur.methodWhy || '');
+      verdict.hidden = false;
+      verdict.appendChild(p);
     }
 
     function check() {
       if (!math || !cur) return;
+      if (cur.kind === 'exact') { checkExact(); methodNote(); return; }
+      if (cur.kind === 'pair') { checkPair(); return; }
+      checkPvi();
+      methodNote();
+    }
+
+    function checkPvi() {
       var src;
       try { src = readSrc() || (pristine ? startSample : ''); } catch (e) { UI.verdict(verdict, 'bad', 'Completa tu solución', e.message); return; }
       var M = msgs(cur);
       setLegend((cur.field ? [['aux', 'campo de pendientes']] : []).concat([['ref', 'solución numérica del PVI'], ['student', 'tu solución']]));
       title.textContent = 'Tu curva contra la numérica';
-      if (!src) { verdict.hidden = true; draw(null); drawResidual(null); facts.innerHTML = ''; return; }
+      rTitle.textContent = 'Residuo r = (lado izquierdo) − (lado derecho) al sustituir tu solución';
+      facts.innerHTML = '';
+      if (!src) { verdict.hidden = true; draw(null); drawResidual(null); return; }
       var r = LabMath.ode.verify(math, cur, src, over);
       if (r.kind === 'invalid') {
         var t = M[r.reason] || M.parse;
         var body = r.reason === 'symbols' ? 'Tu fórmula usa ' + r.symbols.join(', ') + ', que no existe en este problema. Si es una constante, despéjala con la condición inicial y escribe su valor.' : (r.msg || t[1]);
         UI.verdict(verdict, 'bad', t[0], body);
-        draw(null); drawResidual(null); facts.innerHTML = '';
+        draw(null); drawResidual(null);
         return;
       }
       var stu = sampleStudent(src);
@@ -517,11 +693,137 @@
       var msg = M[r.reason] || M.residual;
       var extra = r.reason === 'ic' ? ' Tu ' + (cur.dv || 'y') + '(' + UI.fmt(cur.x0, 4) + ') da ' + UI.fmt(r.y0[0], 4) + '.' : '';
       UI.verdict(verdict, r.kind, msg[0], msg[1] + extra);
-      facts.innerHTML = '';
       var pv = LabMath.ode.paramValues(cur, over), ics = LabMath.ode.icsOf(math, cur, pv), y = cur.dv || 'y';
       [['máx |r| en el dominio', UI.fmt(r.maxAbs, 3)]]
         .concat(ics.map(function (c, k) { return [y + PRIME[k] + '(' + UI.fmt(cur.x0, 4) + '): pide · tuya', UI.fmt(c, 4) + ' · ' + UI.fmt(r.y0 ? r.y0[k] : NaN, 4)]; }))
         .forEach(function (row) { facts.appendChild(h('dt', {}, [row[0]])); facts.appendChild(h('dd', {}, [row[1]])); });
+    }
+
+    /* ---------- Exactas (S06–S07) ---------- */
+    var EXACT_MSG = {
+      correct: ['F es una función potencial', '∂F/∂x = M y ∂F/∂y = N en todo el cuadro. Las curvas F(x, y) = C son las soluciones: la que pasa por el punto inicial cae encima de la numérica.'],
+      sign: ['Casi: es −F', 'Tus curvas de nivel son las mismas, pero ∂F/∂x da −M. Revisa el signo al integrar.'],
+      missingH: ['Casi: falta la parte que solo depende de y', '∂F/∂x = M ya cuadra, pero ∂F/∂y no da N. Después de integrar M respecto a x, deriva respecto a y, compara con N y agrega la h(y) que falta.'],
+      residual: ['No es función potencial', '∂F/∂x no da M. Integra M respecto a x (con y fija) y vuelve a intentar.'],
+      muOk: ['Con ese μ la ecuación es exacta', 'Después de multiplicar, ∂(μM)/∂y = ∂(μN)/∂x en todo el cuadro. Ya puedes buscar F como en la sesión 6.'],
+      notExact: ['Con ese μ todavía no es exacta', 'Después de multiplicar, ∂(μM)/∂y y ∂(μN)/∂x siguen siendo distintas. Revisa si (M_y − N_x)/N depende solo de x o (N_x − M_y)/M solo de y.'],
+      domain: ['No pude evaluar tu expresión', 'Casi ningún punto del cuadro da un número. Revisa paréntesis, raíces y logaritmos.']
+    };
+    function exactBox() { return { x: cur.domain.slice(), y: (cur.yRange || [cur.ics[0] - 2, cur.ics[0] + 2]).slice() }; }
+    function checkExact() {
+      var src;
+      try { src = readSrc() || (pristine ? startSample : ''); } catch (e) { UI.verdict(verdict, 'bad', 'Completa tu respuesta', e.message); return; }
+      var B = exactBox(), plot = window.LabPlot(svg, B);
+      plot.clear().grid().axes();
+      var num = LabMath.ode.numeric(math, cur, over);
+      polyPath(plot, num, 'ref', 4);
+      plot.point(cur.x0, cur.ics[0], 'dot-ref', 6);
+      scene.hidden = true; facts.innerHTML = '';
+      var isMu = cur.ask === 'mu';
+      title.textContent = isMu ? 'La solución y la prueba de exactitud' : 'Tus curvas F(x, y) = C contra la solución';
+      setLegend(isMu ? [['ref', 'solución numérica']] : [['aux', 'otras curvas F = C'], ['ref', 'solución numérica'], ['student', 'tu curva por el punto inicial']]);
+      rTitle.textContent = isMu ? 'M_y − N_x a lo largo de la solución: antes (punteada) y después de multiplicar por tu μ' : 'A lo largo de la solución: ∂F/∂x − M (punteada) y ∂F/∂y − N (sólida). Las dos deben ser cero.';
+      rsvg.innerHTML = '';
+      if (!src) { verdict.hidden = true; return; }
+      var r = LabMath.ode.verifyExact(math, cur, src);
+      if (r.kind === 'invalid') {
+        var body = r.reason === 'symbols' ? 'Tu fórmula usa ' + r.symbols.join(', ') + ', que no existe aquí. Usa solo x y y (sin la constante C).' : (r.msg || 'Escribe tu expresión en x y y.');
+        UI.verdict(verdict, 'bad', 'Revisa tu expresión', body);
+        return;
+      }
+      var key = isMu ? (r.reason === 'correct' ? 'muOk' : r.reason) : r.reason;
+      var msg = EXACT_MSG[key] || EXACT_MSG.residual;
+      UI.verdict(verdict, r.kind, msg[0], msg[1]);
+      var code = math.parse(LabMath.core.prep(src)).compile();
+      var F = function (x, y) { try { var v = code.evaluate({ x: x, y: y }); return typeof v === 'number' ? v : NaN; } catch (e) { return NaN; } };
+      if (!isMu) {
+        var c0 = F(cur.x0, cur.ics[0]);
+        if (isFinite(c0)) {
+          var span = Math.abs(c0) + 1;
+          [-0.6, -0.3, 0.3, 0.6].forEach(function (k) { plot.segments(LabMath.ode.contour(F, B, c0 + k * span), 'aux', 1.4); });
+          plot.segments(LabMath.ode.contour(F, B, c0), r.kind === 'ok' ? 'trace' : 'student', 3);
+        }
+        facts.appendChild(h('dt', {}, ['máx |∂F/∂x − M| relativo'])); facts.appendChild(h('dd', {}, [UI.fmt(r.ex, 3)]));
+        facts.appendChild(h('dt', {}, ['máx |∂F/∂y − N| relativo'])); facts.appendChild(h('dd', {}, [UI.fmt(r.ey, 3)]));
+      } else {
+        facts.appendChild(h('dt', {}, ['máx |M_y − N_x| sin μ'])); facts.appendChild(h('dd', {}, [UI.fmt(r.before, 3)]));
+        facts.appendChild(h('dt', {}, ['máx |(μM)_y − (μN)_x| con tu μ'])); facts.appendChild(h('dd', {}, [UI.fmt(r.gap, 3)]));
+      }
+      drawExactPanel(num, src, isMu, r.kind);
+    }
+    // Panel de abajo: la diferencia que debe ser cero, evaluada en los puntos de la solución numérica.
+    function drawExactPanel(num, src, isMu, kind) {
+      var mu = cur.mu ? '(' + cur.mu + ')*' : '';
+      function d2(expr, v) { return math.derivative(LabMath.core.prep(expr), v).compile(); }
+      function ev(c, x, y) { try { var v = c.evaluate({ x: x, y: y }); return typeof v === 'number' ? v : NaN; } catch (e) { return NaN; } }
+      var A, Bc, A0, B0;
+      if (isMu) {
+        A = d2('(' + src + ')*(' + cur.M + ')', 'y'); Bc = d2('(' + src + ')*(' + cur.N + ')', 'x');
+        A0 = d2(cur.M, 'y'); B0 = d2(cur.N, 'x');
+      } else {
+        // Punteada: ∂F/∂x − μM; sólida: ∂F/∂y − μN (la que delata la h(y) que falta).
+        A0 = d2(src, 'x'); B0 = math.parse(LabMath.core.prep(mu + '(' + cur.M + ')')).compile();
+        A = d2(src, 'y'); Bc = math.parse(LabMath.core.prep(mu + '(' + cur.N + ')')).compile();
+      }
+      var after = num.map(function (p) { return [p[0], ev(A, p[0], p[1]) - ev(Bc, p[0], p[1])]; });
+      var before = num.map(function (p) { return [p[0], ev(A0, p[0], p[1]) - ev(B0, p[0], p[1])]; });
+      var m = 0; after.concat(before || []).forEach(function (p) { if (isFinite(p[1])) m = Math.max(m, Math.abs(p[1])); });
+      var tiny = m < 1e-9, M = tiny ? 1 : m * 1.15;
+      var plot = window.LabPlot(rsvg, { x: cur.domain.slice(), y: [-M, M] });
+      plot.clear().grid().axes();
+      Array.prototype.slice.call(rsvg.querySelectorAll('text.lab-tick[text-anchor="end"]')).forEach(function (t) { t.remove(); });
+      function path(pts, cls, dash) {
+        var d = '', pen = false;
+        pts.forEach(function (p) { if (!isFinite(p[1])) { pen = false; return; } d += (pen ? 'L' : 'M') + plot.X(p[0]).toFixed(1) + ' ' + plot.Y(p[1]).toFixed(1); pen = true; });
+        if (!d || !UI.svgOk({ d: d })) return;
+        var n = document.createElementNS(NS, 'path');
+        n.setAttribute('d', d); n.setAttribute('class', cls); n.setAttribute('fill', 'none'); n.setAttribute('stroke-width', '3');
+        if (dash) n.setAttribute('stroke-dasharray', dash);
+        rsvg.querySelector('g.sketch').appendChild(n);
+      }
+      if (before) path(before, 'aux', '6 6');
+      path(after, kind === 'ok' ? 'trace' : 'error');
+      plot.label(cur.domain[1], M, kind === 'ok' ? 'cero en toda la curva' : 'escala ±' + UI.fmt(M, 2), 'end', 15, -6, 4);
+    }
+
+    /* ---------- Wronskiano (S09) ---------- */
+    var PAIR_MSG = {
+      correct: ['Son un conjunto fundamental', 'Las dos son solución y el Wronskiano no es cero: toda solución es c₁y₁ + c₂y₂.'],
+      dependent: ['Casi: son solución, pero linealmente dependientes', 'W(x) = 0 en todo el dominio: una es múltiplo de la otra, así que no forman un conjunto fundamental.'],
+      notSolution1: ['y₁ no es solución', 'Al sustituir y₁ en la ecuación no da cero. Deriva dos veces y revisa.'],
+      notSolution2: ['y₂ no es solución', 'Al sustituir y₂ en la ecuación no da cero. Deriva dos veces y revisa.'],
+      domain: ['No pude evaluar tus funciones', 'Revisa paréntesis, raíces y logaritmos.']
+    };
+    function checkPair() {
+      var s1, s2;
+      try { s1 = readSrc(yIn) || (pristine ? startSample[0] : ''); s2 = readSrc(y2In) || (pristine ? startSample[1] : ''); }
+      catch (e) { UI.verdict(verdict, 'bad', 'Completa tus funciones', e.message); return; }
+      title.textContent = 'Tus dos soluciones';
+      setLegend([['student', 'y₁'], ['trace', 'y₂']]);
+      rTitle.textContent = 'Wronskiano W(x) = y₁y₂′ − y₁′y₂';
+      scene.hidden = true; facts.innerHTML = ''; rsvg.innerHTML = '';
+      var r = LabMath.ode.verifyPair(math, cur, s1, s2);
+      if (r.kind === 'invalid') {
+        UI.verdict(verdict, 'bad', 'Revisa tus funciones', r.reason === 'symbols' ? 'Usan ' + r.symbols.join(', ') + ': escribe funciones solo de x.' : (r.msg || 'Escribe y₁ y y₂.'));
+        return;
+      }
+      var msg = PAIR_MSG[r.reason] || PAIR_MSG.domain;
+      UI.verdict(verdict, r.kind, msg[0], msg[1]);
+      var a = sampleStudent(s1), b = sampleStudent(s2), ys = [];
+      a.concat(b).forEach(function (p) { ys.push(p[1]); });
+      var plot = window.LabPlot(svg, { x: cur.domain.slice(), y: cur.yRange || window.LabPlot.range(ys) });
+      plot.clear().grid().axes();
+      polyPath(plot, a, 'student', 3.5);
+      polyPath(plot, b, 'trace', 3.5, '9 6');
+      var Wp = r.W.map(function (p) { return [p[0], p[1]]; }), m = 0;
+      Wp.forEach(function (p) { if (isFinite(p[1])) m = Math.max(m, Math.abs(p[1])); });
+      var M = m < 1e-9 ? 1 : m * 1.15, wp = window.LabPlot(rsvg, { x: cur.domain.slice(), y: [-M, M] });
+      wp.clear().grid().axes();
+      Array.prototype.slice.call(rsvg.querySelectorAll('text.lab-tick[text-anchor="end"]')).forEach(function (t) { t.remove(); });
+      polyPathR(wp, Wp);
+      wp.label(cur.domain[1], M, m < 1e-9 ? 'W ≡ 0' : 'escala ±' + UI.fmt(M, 2), 'end', 15, -6, 4);
+      var x0 = (cur.domain[0] + cur.domain[1]) / 2, w0 = Wp[Math.floor(Wp.length / 2)][1];
+      facts.appendChild(h('dt', {}, ['W en x ≈ ' + UI.fmt(x0, 3)])); facts.appendChild(h('dd', {}, [UI.fmt(w0, 4)]));
     }
 
     /* ---------- Trazo a mano (S01) ---------- */

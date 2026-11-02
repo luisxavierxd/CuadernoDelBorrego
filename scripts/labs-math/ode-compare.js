@@ -86,6 +86,39 @@ module.exports = ({ test, eq, near, LM, math }) => {
     near(math.evaluate(q, { R: 2, C: 3, E: 12, t: 6, e: Math.E }), 36 * (1 - Math.exp(-1)), 1e-9, q);
   });
 
+  test('ode: exactas — F potencial, −F, falta h(y), μ que vuelve exacta y curvas de nivel', () => {
+    // (2xy + 3) dx + (x² + 4y) dy = 0 → F = x²y + 3x + 2y²
+    const P = { kind: 'exact', M: '2x*y + 3', N: 'x^2 + 4y', x0: 1, ics: [1], domain: [0.5, 3], yRange: [0, 3] };
+    eq(O.verifyExact(math, P, 'x^2*y + 3x + 2y^2').reason, 'correct');
+    eq(O.verifyExact(math, P, 'x^2*y + 3x + 2y^2 + 7').reason, 'correct', 'una constante no importa');
+    eq(O.verifyExact(math, P, '-(x^2*y + 3x + 2y^2)').reason, 'sign');
+    eq(O.verifyExact(math, P, 'x^2*y + 3x').reason, 'missingH');
+    eq(O.verifyExact(math, P, 'x^2*y + 2y^2').reason, 'residual');
+    // La solución numérica sigue F = F(x0, y0): F constante a lo largo de ella.
+    const F = (x, y) => x * x * y + 3 * x + 2 * y * y, c = F(1, 1);
+    O.numeric(math, P).forEach(([x, y]) => near(F(x, y), c, 1e-6, 'F en la solución'));
+    // y dx + 2x dy = 0 no es exacta; con μ = y lo es (M_y − N_x)/(−M)... μ(y) = y.
+    const Q = { kind: 'exact', ask: 'mu', M: 'y', N: '2x', x0: 1, ics: [1], domain: [0.5, 3], yRange: [0.5, 3] };
+    if (!(O.exactGap(math, Q) > 0.1)) throw new Error('y dx + 2x dy debería no ser exacta');
+    eq(O.verifyExact(math, Q, 'y').reason, 'correct');
+    eq(O.verifyExact(math, Q, 'x').reason, 'notExact');
+    // Curva de nivel x² + y² = 4 en un cuadro: los cortes caen sobre la circunferencia.
+    const segs = O.contour((x, y) => x * x + y * y, { x: [-3, 3], y: [-3, 3] }, 4, 40, 40);
+    if (segs.length < 40) throw new Error('pocos segmentos en la circunferencia');
+    segs.forEach((s) => s.forEach(([x, y]) => near(Math.hypot(x, y), 2, 0.02, 'punto de la curva de nivel')));
+  });
+
+  test('ode: Wronskiano — conjunto fundamental, dependientes y no solución; raíces características', () => {
+    const P = { kind: 'pair', order: 2, rhs: '-dy + 6y', domain: [-1, 1] };       // y″ + y′ − 6y = 0: e^(2x), e^(−3x)
+    eq(O.verifyPair(math, P, 'e^(2x)', 'e^(-3x)').reason, 'correct');
+    eq(O.verifyPair(math, P, 'e^(2x)', '5e^(2x)').reason, 'dependent');
+    eq(O.verifyPair(math, P, 'e^(-2x)', 'e^(-3x)').reason, 'notSolution1');
+    const W = O.wronskian(math, P, 'e^(2x)', 'e^(-3x)');
+    W.forEach(([x, w]) => near(w, -5 * Math.exp(-x), 1e-9 * (1 + Math.abs(w)), 'W = −5e^(−x)'));
+    const R = O.charRoots(1, -6); near(R[0][0], -3, 1e-12); near(R[1][0], 2, 1e-12);
+    const C = O.charRoots(2, 5); near(C[0][0], -1, 1e-12); near(Math.abs(C[0][1]), 2, 1e-12);
+  });
+
   // Problemas de los labs de Cálculo 3: oficial pasa, erróneas rechazadas con su motivo.
   const dir = path.join(__dirname, '..', '..', 'data', 'calculo-3');
   if (!fs.existsSync(dir)) return;
@@ -98,6 +131,27 @@ module.exports = ({ test, eq, near, LM, math }) => {
       if (!probs.length) throw new Error('el lab no tiene problemas');
       let wrongs = 0;
       probs.forEach((P) => {
+        if (P.kind === 'exact' || P.kind === 'pair') {
+          const check = (src) => (P.kind === 'exact' ? O.verifyExact(math, P, src) : O.verifyPair(math, P, src[0], src[1]));
+          eq(check(P.solution).reason, 'correct', `${P.name}: la oficial ${P.solution}`);
+          (P.wrong || []).forEach((w) => {
+            const g = check(w.src);
+            if (g.reason === 'correct') throw new Error(`${P.name}: la errónea ${w.src} pasa como correcta`);
+            if (w.key) eq(g.reason, w.key, `${P.name}: ${w.src}`);
+            wrongs++;
+          });
+          if (P.kind === 'exact') {
+            // La numérica sigue una curva de nivel de la F oficial (o de μ·M dx + μ·N dy = 0).
+            const n = O.numeric(math, P);
+            near(n[n.length - 1][0], P.domain[1], 1e-6, `${P.name}: la numérica no llega al final del dominio`);
+            if (P.ask !== 'mu') {
+              const F = (x, y) => math.evaluate(LM.core.prep(P.solution), { x, y }), c = F(P.x0, P.ics[0]);
+              n.forEach(([x, y]) => near(F(x, y), c, 1e-5 * (1 + Math.abs(c)), `${P.name}: F en la solución`));
+            }
+          }
+          if ((P.wrong || []).length < 3) throw new Error(`${P.name}: necesita al menos 3 respuestas erróneas típicas`);
+          return;
+        }
         const r = O.verify(math, P, P.solution);
         eq(r.reason, 'correct', `${P.name}: la oficial ${P.solution} (máx r rel ${r.maxRel}, ic ${r.icErr})`);
         const n = O.numeric(math, P);
