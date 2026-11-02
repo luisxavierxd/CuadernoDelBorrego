@@ -3,7 +3,8 @@
    - Firma animada del hero: Cálculo = secante que se vuelve tangente;
      Física = proyectil con sus vectores v y a. En N2: Cálculo = subir por el
      gradiente entre curvas de nivel; Física = carga de prueba en un dipolo.
-     En N3: Física = carga en órbita en un B uniforme, con v y F = qv×B.
+     En N3: Física = carga en órbita en un B uniforme, con v y F = qv×B;
+     Cálculo = una solución que se traza siguiendo su campo de pendientes.
    - Contadores calculados desde los datos.
    - Línea de tiempo de 15 semanas con marcas de quiz (Q) y parcial (P).
    - Temario por bloque; la tarjeta enlaza solo si la sesión ya existe (ready).
@@ -255,11 +256,44 @@
     return { draw: draw, from: 0, to: 0.62 };
   }
 
+  /* ---------- Firma N3 de Cálculo: una solución que sigue su campo de pendientes ---------- */
+  // y′ = x − y (lineal): el campo de rayitas y la curva del PVI y(0) = 2.4 que se va trazando,
+  // con su tangente en la punta; la curva nunca cruza las rayitas.
+  function signSlope(svg) {
+    var X = function (x) { return 50 + x * 125; }, Y = function (y) { return 370 - (y + 0.6) * 96; };
+    var f = function (x, y) { return x - y; }, sol = function (x) { return x - 1 + 3.4 * Math.exp(-x); };
+    var g = el('g', { 'class': 'sketch' }, svg);
+    el('path', { d: 'M' + X(-0.2) + ' ' + Y(0) + 'H' + X(4.2) + 'M' + X(0) + ' ' + Y(-0.5) + 'V' + Y(3.2), 'class': 'axis', 'stroke-width': 1.6, fill: 'none' }, g);
+    var d = '';
+    for (var i = 0; i < 15; i++) for (var j = 0; j < 10; j++) {
+      var x = 0.15 + i * 0.27, y = -0.35 + j * 0.37, m = f(x, y), k = 125 / 96;
+      if (y < 0.1 && x > 2.3) continue;                 // hueco para la etiqueta
+      var dx = 0.1 / Math.sqrt(1 + m * m / (k * k)) * 1.0, dy = m * dx;
+      d += 'M' + X(x - dx).toFixed(1) + ' ' + Y(y - dy).toFixed(1) + 'L' + X(x + dx).toFixed(1) + ' ' + Y(y + dy).toFixed(1);
+    }
+    el('path', { d: d, 'class': 'aux', 'stroke-width': 2, fill: 'none', 'stroke-linecap': 'round', opacity: 0.8 }, g);
+    var trace = el('path', { 'class': 'ref', 'stroke-width': 3.5, fill: 'none', 'stroke-linecap': 'round' }, g);
+    var tan = el('path', { 'class': 'error', 'stroke-width': 3, fill: 'none', 'stroke-linecap': 'round' }, g);
+    var dot = el('circle', { r: 7, 'class': 'dot-trace' }, g);
+    el('circle', { r: 6, 'class': 'dot-ref', cx: X(0), cy: Y(sol(0)) }, g);
+    var lab = el('text', { 'class': 'ann', 'font-size': 24, x: X(4.15), y: Y(-0.3), 'text-anchor': 'end' }, g);
+    lab.textContent = 'y′ = x − y';
+    function draw(u) {
+      var xe = 0.02 + u * 3.6, dd = '';
+      for (var i = 0; i <= 80; i++) { var x = xe * i / 80; dd += (i ? 'L' : 'M') + X(x).toFixed(1) + ' ' + Y(sol(x)).toFixed(1); }
+      trace.setAttribute('d', dd);
+      var ye = sol(xe), m = f(xe, ye), L = 0.42 / Math.sqrt(1 + m * m);
+      tan.setAttribute('d', 'M' + X(xe - L).toFixed(1) + ' ' + Y(ye - m * L).toFixed(1) + 'L' + X(xe + L).toFixed(1) + ' ' + Y(ye + m * L).toFixed(1));
+      dot.setAttribute('cx', X(xe)); dot.setAttribute('cy', Y(ye));
+    }
+    return { draw: draw, from: 0, to: 0.95 };
+  }
+
   function mountSign(meta) {
     var svg = document.getElementById('course-sign');
     if (!svg) return;
     var n2 = meta.level === 'N2', n3 = meta.level === 'N3';
-    var sign = meta.subject === 'fis' ? (n3 ? signOrbit(svg) : n2 ? signDipole(svg) : signPhysics(svg)) : (n2 ? signGradient(svg) : signCalculus(svg));
+    var sign = meta.subject === 'fis' ? (n3 ? signOrbit(svg) : n2 ? signDipole(svg) : signPhysics(svg)) : (n3 ? signSlope(svg) : n2 ? signGradient(svg) : signCalculus(svg));
     var anim = window.CBAnim;
     if (!anim || !anim.canAnimate()) { sign.draw(sign.to); return; }
     var p = { v: sign.from };
@@ -287,7 +321,8 @@
   function renderStats(meta, root) {
     var sessions = allSessions(meta);
     var labs = {};
-    sessions.forEach(function (s) { if (s.lab) labs[s.lab] = true; });
+    // Un mismo módulo con otro modo por sesión (Cálculo 3: ode-compare) cuenta como otro lab.
+    sessions.forEach(function (s) { if (s.lab) labs[s.lab + (s.labMode ? ':' + s.labMode : '')] = true; });
     var bank = (window.CB_BANK && window.CB_BANK[meta.code]) || {};
     var questions = Object.keys(bank).reduce(function (n, k) { return n + bank[k].questions.length; }, 0);
     var stats = [

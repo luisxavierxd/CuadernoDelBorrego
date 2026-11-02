@@ -13,7 +13,7 @@ window.COURSE_META = {
   level: 'N2',
   sessions: 15,
   lead: 'Quince sesiones de funciones de varias variables: el espacio en 3D, derivadas parciales, gradiente, optimización con restricciones e integrales dobles y triples. Cada una trae explicación gráfica paso a paso, ejemplos resueltos, un lab que compara tu respuesta contra la real y un quiz.',
-  next: { title: 'Cálculo 3: ecuaciones diferenciales', blurb: 'Ecuaciones de primer orden, lineales de orden superior, transformada de Laplace, sistemas y series.' },
+  next: { title: 'Cálculo 3: ecuaciones diferenciales', blurb: 'Ecuaciones de primer orden, lineales de orden superior, coeficientes indeterminados, variación de parámetros, resortes y circuitos RLC.' },
   temario: [],
   groups: [
     {

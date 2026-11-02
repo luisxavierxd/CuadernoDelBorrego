@@ -34,7 +34,7 @@ window.COURSES = [
       {
         level: 'N3', tone: 'mat-n3', status: 'soon',
         title: 'Cálculo 3: ecuaciones diferenciales',
-        blurb: 'Ecuaciones de primer orden, lineales de orden superior, transformada de Laplace, sistemas y series.'
+        blurb: 'Ecuaciones de primer orden, lineales de orden superior, coeficientes indeterminados, variación de parámetros, resortes y circuitos RLC.'
       }
     ]
   },
