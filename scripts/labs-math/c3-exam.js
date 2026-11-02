@@ -5,7 +5,7 @@
 const path = require('path');
 const { loadData } = require('../lib/load');
 
-module.exports = ({ test, near, LM, math }) => {
+module.exports = ({ test, eq, near, LM, math }) => {
   const W = loadData(path.join(__dirname, '..', '..', 'data', 'calculo-3', 'exam-problems.js'), {});
   const list = (W.CB_EXAMS && W.CB_EXAMS.c3) || [];
   const byId = {};
@@ -125,6 +125,52 @@ module.exports = ({ test, near, LM, math }) => {
     near(slope(P, t[2]), 0, 1e-5 * (1 + Math.abs(t[3])), s + ' y′ en el máximo');
     rel(at(P, t[2]), t[3], 1e-7, s + ' máximo');
   }));
+  test('c3 examen · orden 3: y(0.5) del PVI con RK4', () => each('c3-ex-orden3', (v, t, s) => {
+    const P = { order: 3, rhs: '6*d2y - 11*dy + 6y', x0: 0, ics: [v.A, v.B, v.C], domain: [0, 1] };
+    rel(at(P, 0.5), t[3], 1e-6, s + ' y(0.5)');
+  }));
+  test('c3 examen · y_p polinomial y trigonométrica: residuo cero de la y_p armada', () => {
+    each('c3-ex-coef-pol', (v, t, s) => {
+      const P = { kind: 'yp', order: 2, rhs: `-${v.p}*dy - ${v.q}*y + ${v.c}*x + ${v.d}`, g: `${v.c}*x + ${v.d}`, domain: [-2, 2] };
+      eq(O.verifyYp(math, P, `${t[0]}*x + ${t[1]}`).reason, 'correct', s);
+    });
+    each('c3-ex-coef-trig', (v, t, s) => {
+      const P = { kind: 'yp', order: 2, rhs: `-${v.c}*dy - 5y + ${v.F}*cos(2x)`, g: `${v.F}*cos(2x)`, domain: [0, 6] };
+      eq(O.verifyYp(math, P, `${t[0]}*cos(2x) + ${t[1]}*sin(2x)`).reason, 'correct', s);
+      rel(Math.hypot(t[0], t[1]), t[2], 1e-12, s + ' amplitud');
+    });
+  });
+  test('c3 examen · duplicación y resonancia: residuo cero y valores', () => {
+    each('c3-ex-duplica', (v, t, s) => {
+      const P = { kind: 'yp', order: 2, rhs: `${v.a + v.b}*dy - ${v.a * v.b}*y + ${v.C}*e^(${v.a}x)`, g: `${v.C}*e^(${v.a}x)`, domain: [-1, 1] };
+      eq(O.verifyYp(math, P, `${t[0]}*x*e^(${v.a}x)`).reason, 'correct', s);
+    });
+    each('c3-ex-resonancia', (v, t, s) => {
+      const P = { iv: 't', order: 2, rhs: `-${v.w * v.w}*y + ${v.F}*cos(${v.w}*t)`, x0: 0, ics: [0, 0], domain: [0, 5] };
+      rel(at(P, v.t1), t[1], 1e-6, s + ' x(t1)');
+    });
+  });
+  test('c3 examen · variación de parámetros: y_p es solución y y_p′ por diferencias', () => each('c3-ex-variacion', (v, t, s) => {
+    const P = { kind: 'yp', order: 2, rhs: '-y + sec(x)', g: 'sec(x)', domain: [-1.3, 1.3] };
+    eq(O.verifyYp(math, P, 'x*sin(x) + cos(x)*log(cos(x))').reason, 'correct', s);
+    const yp = (x) => x * Math.sin(x) + Math.cos(x) * Math.log(Math.cos(x));
+    rel(yp(v.x0), t[2], 1e-12, s + ' y_p');
+    rel((yp(v.x0 + 1e-5) - yp(v.x0 - 1e-5)) / 2e-5, t[3], 1e-6, s + ' y_p′');
+  }));
+  test('c3 examen · resorte y RLC: periodo entre cruces y carga máxima con RK4', () => {
+    each('c3-ex-resorte', (v, t, s) => {
+      const P = { iv: 't', order: 2, rhs: `(-${v.c}*dy - ${v.k}*y)/${v.m}`, x0: 0, ics: [v.x0, 0], domain: [0, 1] };
+      // Dos máximos consecutivos: en t = 0 y en t = T (x′ = 0 de nuevo con el mismo signo).
+      const T = t[2], d = (tt) => slope(P, tt);
+      near(d(T), 0, 1e-4 * v.x0, s + ' x′(T)');
+      rel(at(P, T), t[3] * Math.sign(at(P, T)), 1e-5, s + ' amplitud tras un periodo');
+    });
+    each('c3-ex-rlc', (v, t, s) => {
+      const C = v.Cm / 1000, P = { iv: 't', order: 2, rhs: `(${v.E} - ${v.R}*dy - y/${C})/${v.L}`, x0: 0, ics: [0, 0], domain: [0, 1] };
+      rel(at(P, Math.PI / t[2]), t[3], 1e-6, s + ' q máxima');
+      near(slope(P, Math.PI / t[2]), 0, 1e-4 * t[3] * t[2], s + ' i = 0');
+    });
+  });
   test('c3 examen · logística: P(t1), K/2 y P′ con RK4', () => each('c3-ex-logistica', (v, t, s) => {
     const P = { iv: 't', order: 1, rhs: 'r*y*(1 - y/K)', params: { r: v.r, K: v.K }, x0: 0, ics: [v.P0], domain: [0, 1] };
     rel(at(P, v.t1), t[1], 1e-7, s + ' P(t1)');

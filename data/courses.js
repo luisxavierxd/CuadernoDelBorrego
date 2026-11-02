@@ -32,7 +32,7 @@ window.COURSES = [
         blurb: 'Funciones de varias variables, integrales dobles y triples.'
       },
       {
-        level: 'N3', tone: 'mat-n3', status: 'live', url: 'calculo-3/', sessions: 15,
+        level: 'N3', tone: 'mat-n3', status: 'live', url: 'calculo-3/', sessions: 15, formulario: true,
         title: 'Cálculo 3: ecuaciones diferenciales',
         blurb: 'Ecuaciones de primer orden, lineales de orden superior, coeficientes indeterminados, variación de parámetros, resortes y circuitos RLC.'
       }

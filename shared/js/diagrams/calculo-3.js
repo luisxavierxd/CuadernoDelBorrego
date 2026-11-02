@@ -410,6 +410,80 @@
     return svgBox('0 0 600 320', 'Raíces de la ecuación característica en el plano complejo y la forma de la solución que les corresponde', s);
   };
 
+  /* ══════════════════════ S11 ══════════════════════ */
+  // S11 · Cada raíz (con su multiplicidad) da sus funciones de la base. state: { p } índice del polinomio.
+  D['c3s11-basis'] = function (st) {
+    var k = Math.max(0, Math.min(2, Math.round(num(st, 'p', 0))));
+    var cases = [
+      { poly: '(r − 1)(r − 2)(r − 3)', roots: [[1, 0, '1'], [2, 0, '1'], [3, 0, '1']], basis: ['eˣ', 'e²ˣ', 'e³ˣ'] },
+      { poly: '(r + 1)³ (r − 2)', roots: [[-1, 0, '3'], [2, 0, '1']], basis: ['e⁻ˣ', 'x e⁻ˣ', 'x² e⁻ˣ', 'e²ˣ'] },
+      { poly: '(r² + 4)² (r + 1)', roots: [[0, 2, '2'], [0, -2, '2'], [-1, 0, '1']], basis: ['cos 2x', 'sin 2x', 'x cos 2x', 'x sin 2x', 'e⁻ˣ'] }
+    ][k];
+    var P = plane({ W: 600, H: 300, x: [-3, 3.6], y: [-3, 3], pad: [20, 250, 30, 30] });
+    var s = P.axes('Re', 'Im');
+    cases.roots.forEach(function (q) {
+      s += P.dot(q[0], q[1], 'dot-ref', 7);
+      if (q[2] !== '1') s += P.tag(around(P.X(q[0]), P.Y(q[1]), '×' + q[2]), 15);
+    });
+    s += text(360, 40, cases.poly + ' = 0', ' font-size="17"');
+    s += text(360, 74, 'base de soluciones:', ' font-size="15"');
+    cases.basis.forEach(function (b, i) { s += text(372, 104 + i * 30, '• ' + b, ' font-size="21"'); });
+    return svgBox('0 0 600 300', 'Raíces de un polinomio característico con su multiplicidad y las funciones de la base que les corresponden', s);
+  };
+
+  /* ══════════════════════ S13 ══════════════════════ */
+  // S13 · Resonancia: y″ + 4y = 4cos ωx con ω cerca de 2 (acotada) y con ω = 2 (crece como x sin 2x).
+  // state: { res } en [0, 1].
+  D['c3s13-resonance'] = function (st) {
+    var fr = num(st, 'res', 0);
+    var P = plane({ W: 600, H: 320, x: [0, 18], y: [-10, 10] });
+    var s = P.axes('x', 'y');
+    var near = function (x) { return 4 / (4 - 2.89) * (Math.cos(1.7 * x) - Math.cos(2 * x)); };
+    s += P.curve(near, 'aux', 2.6);
+    if (fr > 0) s += fade(P.curve(function (x) { return 0.5 * x; }, 'axis', 1.4, null, null, '4 6') + P.curve(function (x) { return -0.5 * x; }, 'axis', 1.4, null, null, '4 6') + P.curve(function (x) { return x * Math.sin(2 * x); }, 'error', 3), fr);
+    s += P.tag([[P.X(0.3), P.Y(-8.6), 'ω = 1.7: la amplitud sube y baja (pulsaciones)', 'start']], 15);
+    if (fr > 0.5) s += P.tag([[P.X(0.3), P.Y(8.8), 'ω = 2: resonancia, yₚ = x sin 2x crece sin parar', 'start']], 15);
+    return svgBox('0 0 600 320', 'Respuesta de un oscilador forzado: acotada fuera de resonancia y creciente como x por seno de 2x en resonancia', s);
+  };
+
+  /* ══════════════════════ S15 ══════════════════════ */
+  // S15 · Masa–resorte–amortiguador y su análogo RLC.
+  D['c3s15-spring'] = function () {
+    var s = '';
+    s += seg('axis', 40, 40, 40, 200, 4);                                    // pared
+    for (var i = 0; i < 8; i++) s += seg('axis', 40, 48 + i * 20, 28, 60 + i * 20, 1.6);
+    // Resorte (arriba) y amortiguador (abajo) entre la pared y la masa.
+    var z = [[40, 90]], n = 10;
+    for (var k = 1; k < n; k++) z.push([40 + k * 18, 90 + (k % 2 ? -14 : 14)]);
+    z.push([220, 90]);
+    s += poly('ref', z, 2.6);
+    s += seg('aux', 40, 150, 120, 150, 2.6) + poly('aux', [[110, 134], [110, 166]], 2.6) + poly('aux', [[100, 128], [160, 128], [160, 172], [100, 172]], 2.6) + seg('aux', 160, 150, 220, 150, 2.6);
+    s += fill('area-fill', [[220, 70], [300, 70], [300, 170], [220, 170]]) + poly('axis', [[220, 70], [300, 70], [300, 170], [220, 170]], 2.6, true);
+    s += text(260, 128, 'm', ' text-anchor="middle" font-size="26"');
+    s += text(130, 66, 'k', ' text-anchor="middle" font-size="20"') + text(130, 198, 'c', ' text-anchor="middle" font-size="20"');
+    s += arrow('error', 304, 120, 60, 0, 3) + text(372, 126, 'F(t)', ' font-size="18"');
+    s += arrow('trace', 220, 225, 80, 0, 2.4) + text(310, 230, 'x(t)', ' font-size="18"');
+    s += seg('axis', 20, 182, 330, 182, 2);
+    s += text(510, 70, 'mecánico', ' text-anchor="middle" font-size="15"') + text(510, 150, 'eléctrico', ' text-anchor="middle" font-size="15"');
+    s += text(510, 98, 'm x″ + c x′ + k x = F', ' text-anchor="middle" font-size="15"');
+    s += text(510, 178, 'L q″ + R q′ + q/C = E', ' text-anchor="middle" font-size="15"');
+    s += text(300, 275, 'm ↔ L    c ↔ R    k ↔ 1/C    F ↔ E    x ↔ q', ' text-anchor="middle" font-size="16"');
+    return svgBox('0 0 600 295', 'Masa sujeta a un resorte y a un amortiguador con una fuerza externa, y su equivalencia con un circuito RLC', s);
+  };
+  // S15 · Amplitud del estado estacionario contra la frecuencia de la fuerza, para varios c.
+  // state: { c } amortiguamiento destacado.
+  D['c3s15-amplitude'] = function (st) {
+    var cc = num(st, 'c', 0.5), m = 1, k = 4, F0 = 1;
+    var A = function (c) { return function (w) { return F0 / Math.sqrt(Math.pow(k - m * w * w, 2) + Math.pow(c * w, 2)); }; };
+    var P = plane({ W: 600, H: 320, x: [0, 4], y: [0, 3.2] });
+    var s = P.axes('ω', 'amplitud', { x: [[2, 'ω₀']] });
+    [0.3, 0.8, 2].forEach(function (c) { s += P.curve(A(c), 'aux', 1.8, null, null, '6 6'); });
+    s += P.curve(A(cc), 'ref', 3.4);
+    s += P.vline(2, 'axis', '3 6');
+    s += P.tag([[P.R - 6, P.T + 18, 'c = ' + cc.toFixed(2), 'end']], 16);
+    return svgBox('0 0 600 320', 'Amplitud de la respuesta forzada contra la frecuencia: el pico está cerca de la frecuencia natural y es más alto entre menos amortiguamiento', s);
+  };
+
   /* ══════════════════════ S07 ══════════════════════ */
   // S07 · (3xy + y²)dx + (x² + xy)dy = 0 no es exacta; con μ = x sí. Las curvas solución no cambian:
   // el campo de pendientes es el mismo y las curvas de nivel de F = x³y + x²y²/2 caen sobre él.

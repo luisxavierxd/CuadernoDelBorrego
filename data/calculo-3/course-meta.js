@@ -39,11 +39,11 @@ window.COURSE_META = {
     {
       id: 'C', label: 'No homogéneas y orden superior',
       sessions: [
-        { n: 11, tag: 'Homogéneas de orden n', title: 'Homogéneas de orden n: polinomio característico, raíces repetidas y complejas', short: 'Homogéneas de orden n', lab: 'ode-compare', ready: false, bank: false },
-        { n: 12, tag: 'Coeficientes indeterminados', title: 'Coeficientes indeterminados: la forma de y_p según g(x)', short: 'Coeficientes indeterminados', lab: 'ode-compare', ready: false, bank: false },
-        { n: 13, tag: 'Duplicación', title: 'Coeficientes indeterminados: duplicación (× xˢ) y orden superior', short: 'Duplicación', lab: 'ode-compare', ready: false, bank: false },
-        { n: 14, tag: 'Variación de parámetros', title: 'Variación de parámetros (segundo orden)', short: 'Variación de parámetros', lab: 'ode-compare', ready: false, bank: false },
-        { n: 15, tag: 'Resortes y RLC', title: 'Aplicaciones: masa–resorte–amortiguador y circuito RLC (libre, amortiguado, forzado y resonancia)', short: 'Resortes y circuitos RLC', lab: 'ode-compare', ready: false, bank: false }
+        { n: 11, tag: 'Homogéneas de orden n', labMode: 'orden-n', title: 'Homogéneas de orden n: polinomio característico, raíces repetidas y complejas', short: 'Homogéneas de orden n', lab: 'ode-compare', ready: true, bank: true },
+        { n: 12, tag: 'Coeficientes indeterminados', labMode: 'yp', title: 'Coeficientes indeterminados: la forma de y_p según g(x)', short: 'Coeficientes indeterminados', lab: 'ode-compare', ready: true, bank: true },
+        { n: 13, tag: 'Duplicación', labMode: 'duplicacion', title: 'Coeficientes indeterminados: duplicación (× xˢ) y orden superior', short: 'Duplicación', lab: 'ode-compare', ready: true, bank: true },
+        { n: 14, tag: 'Variación de parámetros', labMode: 'variacion', title: 'Variación de parámetros (segundo orden)', short: 'Variación de parámetros', lab: 'ode-compare', ready: true, bank: true },
+        { n: 15, tag: 'Resortes y RLC', labMode: 'regimen', title: 'Aplicaciones: masa–resorte–amortiguador y circuito RLC (libre, amortiguado, forzado y resonancia)', short: 'Resortes y circuitos RLC', lab: 'ode-compare', ready: true, bank: true }
       ]
     }
   ]

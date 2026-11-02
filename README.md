@@ -13,8 +13,8 @@
 | ![Portada del sitio en tema pizarrón](docs/media/hub.png) | ![Sesión 5 de Cálculo 1, regla de la cadena](docs/media/sesion.png) | ![Simulacro de examen de Física 1 con reloj sugerido](docs/media/examen.png) |
 
 Clases universitarias de cálculo y física, autogestionadas y pensadas para quien batalla con la materia.
-Ya están completos Cálculo 1, Física 1, Cálculo 2 (multivariable), Física 2 (sistemas eléctricos)
-y Física 3 (sistemas electromagnéticos), con 15 sesiones cada uno; Cálculo 3 (ecuaciones diferenciales) va en camino, con las sesiones 1 a 10 publicadas. Cada sesión trae una lección explicada paso a paso, un lab que compara tu
+Ya están completos Cálculo 1, Física 1, Cálculo 2 (multivariable), Física 2 (sistemas eléctricos),
+Cálculo 3 (ecuaciones diferenciales) y Física 3 (sistemas electromagnéticos), con 15 sesiones cada uno. Cada sesión trae una lección explicada paso a paso, un lab que compara tu
 respuesta contra la real, ejercicios parametrizados y quiz; cada curso tiene banco de preguntas, simulacros
 de examen y formulario imprimible. Sitio estático para GitHub Pages. **Proyecto de alumnos, no oficial.**
 

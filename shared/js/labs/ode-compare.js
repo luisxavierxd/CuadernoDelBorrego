@@ -315,6 +315,57 @@
     return a[0] * b[1] - a[1] * b[0];
   }
   function isFundamental(math, P, s1, s2) { return verifyPair(math, P, s1, s2).reason === 'correct' ? 1 : 0; }
+  /* ---------- Solución particular (S12–S14): P = { kind: 'yp', order, rhs, g, domain } ----------
+     Se acepta cualquier y_p con residuo cero (sumarle una y_h también es solución particular).
+     «homog»: tu y_p resuelve la homogénea (L(y) = 0, residuo = −g): chocó con y_h, falta × xˢ. */
+  function verifyYp(math, P, src, over) {
+    var iv = P.iv || 'x', pv = paramValues(P, over);
+    if (!String(src || '').trim()) return { kind: 'invalid', reason: 'empty' };
+    var extra;
+    try { extra = freeSymbols(math, src, [iv].concat(Object.keys(pv))); } catch (e) { return { kind: 'invalid', reason: 'parse', msg: e.message }; }
+    if (extra.length) return { kind: 'invalid', reason: 'symbols', symbols: extra };
+    var R;
+    try { R = residual(math, P, src, over); } catch (e) { return { kind: 'invalid', reason: 'parse', msg: e.message }; }
+    var out = { maxRel: R.maxRel, maxAbs: R.maxAbs, pts: R.pts };
+    if (R.valid < 0.6 * R.total) { out.kind = 'bad'; out.reason = 'domain'; return out; }
+    if (R.maxRel < 1e-7) { out.kind = 'ok'; out.reason = 'correct'; return out; }
+    // ¿Resuelve la homogénea? Entonces r(x) = −g(x) en todo el dominio.
+    var gc = math.parse(prep(P.g)).compile(), m = 0, valid = 0;
+    R.pts.forEach(function (p) {
+      if (!isFinite(p[1])) return;
+      var sc = Object.assign({}, pv); sc[iv] = p[0];
+      var g; try { g = gc.evaluate(sc); } catch (e) { g = NaN; }
+      if (!isFinite(g)) return;
+      valid++; m = Math.max(m, Math.abs(p[1] + g) / (1 + Math.abs(g)));
+    });
+    if (valid > 10 && m < 1e-7) { out.kind = 'warn'; out.reason = 'homog'; return out; }
+    out.kind = 'bad'; out.reason = 'residual'; return out;
+  }
+  function isParticular(math, P, src) { return verifyYp(math, P, src).reason === 'correct' ? 1 : 0; }
+
+  // Raíces de un polinomio (coeficientes del grado mayor al menor) con Durand–Kerner.
+  function polyRoots(c) {
+    var n = c.length - 1, a = c.map(function (x) { return x / c[0]; }), z = [];
+    for (var i = 0; i < n; i++) { var ang = 2 * Math.PI * i / n + 0.4; z.push([0.9 * Math.cos(ang) + 0.1, 0.9 * Math.sin(ang)]); }
+    function cmul(p, q) { return [p[0] * q[0] - p[1] * q[1], p[0] * q[1] + p[1] * q[0]]; }
+    function cdiv(p, q) { var d = q[0] * q[0] + q[1] * q[1]; return [(p[0] * q[0] + p[1] * q[1]) / d, (p[1] * q[0] - p[0] * q[1]) / d]; }
+    function evalP(x) { var r = [1, 0]; for (var k = 1; k <= n; k++) { r = cmul(r, x); r[0] += a[k]; } return r; }
+    for (var it = 0; it < 500; it++) {
+      var moved = 0;
+      for (var j = 0; j < n; j++) {
+        var den = [1, 0];
+        for (var k = 0; k < n; k++) if (k !== j) den = cmul(den, [z[j][0] - z[k][0], z[j][1] - z[k][1]]);
+        if (Math.hypot(den[0], den[1]) < 1e-300) den = [1e-12, 0];
+        var step = cdiv(evalP(z[j]), den);
+        z[j] = [z[j][0] - step[0], z[j][1] - step[1]];
+        moved = Math.max(moved, Math.hypot(step[0], step[1]));
+      }
+      if (moved < 1e-14) break;
+    }
+    return z.map(function (q) { return [Math.abs(q[0]) < 1e-7 ? 0 : q[0], Math.abs(q[1]) < 1e-7 ? 0 : q[1]]; })
+      .sort(function (p, q) { return p[0] - q[0] || p[1] - q[1]; });
+  }
+
   // Raíces de r² + a r + b = 0: { re1, im1, re2, im2 }.
   function charRoots(a, b) {
     var disc = a * a - 4 * b;
@@ -349,7 +400,8 @@
     derivs: derivs, residual: residual, verify: verify, isSolution: isSolution, slopeField: slopeField,
     traceError: traceError, freeSymbols: freeSymbols, icsOf: icsOf,
     exactRhs: exactRhs, exactGap: exactGap, verifyExact: verifyExact, contour: contour, isPotential: isPotential, isExactEq: isExactEq,
-    wronskian: wronskian, verifyPair: verifyPair, charRoots: charRoots, wronskianAt: wronskianAt, isFundamental: isFundamental
+    wronskian: wronskian, verifyPair: verifyPair, charRoots: charRoots, wronskianAt: wronskianAt, isFundamental: isFundamental,
+    verifyYp: verifyYp, isParticular: isParticular, polyRoots: polyRoots
   };
 
   /* ------------------------------ UI ------------------------------ */
@@ -586,18 +638,41 @@
     }
     // Raíces de r² + a r + b = 0 en el plano complejo (S10, S15): P.roots = ['a', 'b'] nombra los parámetros.
     function drawRoots() {
-      var pv = LabMath.ode.paramValues(cur, over), names = cur.roots || ['a', 'b'];
-      var a = pv[names[0]], b = pv[names[1]], R = LabMath.ode.charRoots(a, b);
-      var s = UI.svg(W, 200, 'Raíces de la ecuación característica en el plano complejo');
-      var lim = Math.max(2, Math.ceil(Math.max(Math.abs(R[0][0]), Math.abs(R[1][0]), Math.abs(R[0][1])) * 1.3));
-      var plot = window.LabPlot(s, { x: [-lim, lim], y: [-lim * 0.55, lim * 0.55] });
+      var pv = LabMath.ode.paramValues(cur, over), names = cur.roots || ['a', 'b'], coeffs, R;
+      // P.poly: coeficientes del polinomio característico (números o expresiones con los parámetros).
+      if (cur.poly) coeffs = cur.poly.map(function (c) { return typeof c === 'number' ? c : math.evaluate(LabMath.core.prep(c), Object.assign({}, pv)); });
+      else coeffs = [1, pv[names[0]], pv[names[1]]];
+      R = coeffs.length === 3 ? LabMath.ode.charRoots(coeffs[1] / coeffs[0], coeffs[2] / coeffs[0]) : LabMath.ode.polyRoots(coeffs);
+      var s = UI.svg(W, 230, 'Raíces de la ecuación característica en el plano complejo');
+      var big = 0, bigIm = 0; R.forEach(function (q) { big = Math.max(big, Math.abs(q[0]), Math.abs(q[1])); bigIm = Math.max(bigIm, Math.abs(q[1])); });
+      var lim = Math.max(2, Math.ceil(big * 1.3)), ylim = Math.max(lim * 0.6, bigIm * 1.3);
+      var plot = window.LabPlot(s, { x: [-lim, lim], y: [-ylim, ylim] });
       plot.clear().grid().axes();
-      scene.appendChild(h('p', { class: 'lab-note' }, ['Raíces de r² + ' + UI.fmt(a, 3) + 'r + ' + UI.fmt(b, 3) + ' = 0 (eje horizontal: parte real; vertical: parte imaginaria)']));
+      var deg = coeffs.length - 1, sup = ['', '', '²', '³', '⁴', '⁵', '⁶'], txt = '';
+      coeffs.forEach(function (c, k) {
+        var p = deg - k; if (Math.abs(c) < 1e-12) return;
+        var mag = UI.fmt(Math.abs(c), 3), term = (p === 0 ? mag : (mag === '1' ? '' : mag) + 'r' + sup[p]);
+        txt += (txt ? (c < 0 ? ' − ' : ' + ') : (c < 0 ? '−' : '')) + term;
+      });
+      scene.appendChild(h('p', { class: 'lab-note' }, ['Raíces de ' + txt + ' = 0 (horizontal: parte real; vertical: parte imaginaria)']));
       scene.appendChild(s);
       R.forEach(function (q) { plot.point(q[0], q[1], 'dot-ref', 7); });
-      var disc = a * a - 4 * b, kindTxt = Math.abs(disc) < 1e-9 ? 'raíz doble: y = (c₁ + c₂x)eʳˣ' : disc > 0 ? 'dos raíces reales: y = c₁eʳ¹ˣ + c₂eʳ²ˣ' : 'complejas α ± βi: y = eᵅˣ(c₁cos βx + c₂sin βx)';
-      facts.appendChild(h('dt', {}, ['tipo de raíces'])); facts.appendChild(h('dd', {}, [kindTxt]));
-      facts.appendChild(h('dt', {}, ['r₁, r₂'])); facts.appendChild(h('dd', {}, [R.map(function (q) { return UI.fmt(q[0], 3) + (q[1] ? (q[1] > 0 ? ' + ' : ' − ') + UI.fmt(Math.abs(q[1]), 3) + 'i' : ''); }).join(' · ')]));
+      var kindTxt;
+      if (deg === 2) {
+        var disc = coeffs[1] * coeffs[1] - 4 * coeffs[0] * coeffs[2], rel = Math.abs(disc) / (1 + coeffs[1] * coeffs[1]);
+        kindTxt = rel < 1e-9 ? 'raíz doble: y = (c₁ + c₂x)eʳˣ' : disc > 0 ? 'dos raíces reales: y = c₁eʳ¹ˣ + c₂eʳ²ˣ' : 'complejas α ± βi: y = eᵅˣ(c₁cos βx + c₂sin βx)';
+        if (cur.spring) kindTxt = Math.abs(coeffs[1]) < 1e-12 ? 'sin amortiguamiento: oscila para siempre' : rel < 1e-9 ? 'amortiguamiento crítico: regresa lo más rápido sin oscilar' : disc > 0 ? 'sobreamortiguado: regresa lento, sin oscilar' : 'subamortiguado: oscila con amplitud que decae';
+      } else {
+        var reps = 0; for (var u = 0; u < R.length; u++) for (var w = u + 1; w < R.length; w++) if (Math.hypot(R[u][0] - R[w][0], R[u][1] - R[w][1]) < 1e-5) reps++;
+        var cx = R.filter(function (q) { return q[1] !== 0; }).length;
+        kindTxt = deg + ' raíces: ' + (R.length - cx) + ' reales' + (cx ? ', ' + cx + ' complejas (en pares conjugados)' : '') + (reps ? '; hay raíces repetidas: multiplica por x, x², …' : '');
+      }
+      facts.appendChild(h('dt', {}, [cur.spring ? 'régimen' : 'tipo de raíces'])); facts.appendChild(h('dd', {}, [kindTxt]));
+      facts.appendChild(h('dt', {}, ['raíces'])); facts.appendChild(h('dd', {}, [R.map(function (q) { return UI.fmt(q[0], 3) + (q[1] ? (q[1] > 0 ? ' + ' : ' − ') + UI.fmt(Math.abs(q[1]), 3) + 'i' : ''); }).join(' · ')]));
+      if (cur.spring && pv.w != null && coeffs.length === 3) {
+        var w0 = Math.sqrt(coeffs[2] / coeffs[0]);
+        facts.appendChild(h('dt', {}, ['ω₀ = √(k/m) · ω de la fuerza'])); facts.appendChild(h('dd', {}, [UI.fmt(w0, 3) + ' · ' + UI.fmt(pv.w, 3) + (Math.abs(pv.w - w0) < 0.05 * w0 ? '  ← cerca de resonancia' : '')]));
+      }
     }
     function drawScene(numPts, stuPts, kind) {
       scene.innerHTML = '';
@@ -666,6 +741,7 @@
       if (!math || !cur) return;
       if (cur.kind === 'exact') { checkExact(); methodNote(); return; }
       if (cur.kind === 'pair') { checkPair(); return; }
+      if (cur.kind === 'yp') { checkYp(); return; }
       checkPvi();
       methodNote();
     }
@@ -784,6 +860,40 @@
       if (before) path(before, 'aux', '6 6');
       path(after, kind === 'ok' ? 'trace' : 'error');
       plot.label(cur.domain[1], M, kind === 'ok' ? 'cero en toda la curva' : 'escala ±' + UI.fmt(M, 2), 'end', 15, -6, 4);
+    }
+
+    /* ---------- Solución particular (S12–S14) ---------- */
+    var YP_MSG = {
+      correct: ['Es una solución particular', 'Al sustituir tu yₚ, la ecuación se cumple en todo el dominio: el residuo es cero. La general es y = yₕ + yₚ.'],
+      homog: ['Casi: tu yₚ choca con yₕ', 'Tu propuesta resuelve la homogénea (da cero en lugar de g). Multiplícala por x (o por x², si vuelve a chocar) y vuelve a calcular los coeficientes.'],
+      residual: ['No es solución particular', 'Al sustituir tu yₚ, los dos lados no coinciden. Revisa la forma que propusiste y los coeficientes.'],
+      domain: ['No pude evaluar tu yₚ', 'Revisa paréntesis, raíces y logaritmos.']
+    };
+    function checkYp() {
+      var src;
+      try { src = readSrc() || (pristine ? startSample : ''); } catch (e) { UI.verdict(verdict, 'bad', 'Completa tu yₚ', e.message); return; }
+      title.textContent = 'Tu solución particular';
+      setLegend([['student', 'tu yₚ']]);
+      rTitle.textContent = 'Residuo r = (lado izquierdo) − g(x) al sustituir tu yₚ';
+      facts.innerHTML = ''; scene.hidden = true;
+      var plot0 = window.LabPlot(svg, { x: cur.domain.slice(), y: cur.yRange || [-2, 2] });
+      plot0.clear().grid().axes();
+      if (!src) { verdict.hidden = true; drawResidual(null); return; }
+      var r = LabMath.ode.verifyYp(math, cur, src, over);
+      if (r.kind === 'invalid') {
+        UI.verdict(verdict, 'bad', 'Revisa tu yₚ', r.reason === 'symbols' ? 'Usa ' + r.symbols.join(', ') + ': escribe los coeficientes con su valor (A, B… ya despejados).' : (r.msg || 'Escribe tu yₚ.'));
+        drawResidual(null);
+        return;
+      }
+      var stu = sampleStudent(src), ys = stu.map(function (p) { return p[1]; });
+      var plot = window.LabPlot(svg, { x: cur.domain.slice(), y: cur.yRange || window.LabPlot.range(ys) });
+      plot.clear().grid().axes();
+      polyPath(plot, stu, r.kind === 'ok' ? 'trace' : 'student', 3.4);
+      drawResidual(r, r.kind);
+      var msg = YP_MSG[r.reason] || YP_MSG.residual;
+      UI.verdict(verdict, r.kind, msg[0], msg[1]);
+      facts.appendChild(h('dt', {}, ['máx |r| en el dominio'])); facts.appendChild(h('dd', {}, [UI.fmt(r.maxAbs, 3)]));
+      if (cur.scene === 'roots') { scene.innerHTML = ''; scene.hidden = false; drawRoots(); }
     }
 
     /* ---------- Wronskiano (S09) ---------- */

@@ -119,6 +119,25 @@ module.exports = ({ test, eq, near, LM, math }) => {
     const C = O.charRoots(2, 5); near(C[0][0], -1, 1e-12); near(Math.abs(C[0][1]), 2, 1e-12);
   });
 
+  test('ode: solución particular — correcta, con y_h sumada, chocando con y_h y equivocada; raíces de grado n', () => {
+    const P = { kind: 'yp', order: 2, rhs: '-dy + 2y + 4x^2', g: '4x^2', domain: [-2, 2] };   // y″ + y′ − 2y = 4x²
+    eq(O.verifyYp(math, P, '-2x^2 - 2x - 3').reason, 'correct');
+    eq(O.verifyYp(math, P, '-2x^2 - 2x - 3 + 5e^x').reason, 'correct', 'y_p + y_h también es particular');
+    eq(O.verifyYp(math, P, 'e^x').reason, 'homog');
+    eq(O.verifyYp(math, P, '-2x^2').reason, 'residual');
+    const Q = { kind: 'yp', order: 2, rhs: '-dy + 2y + 6e^x', g: '6e^x', domain: [-1, 1] };   // choca: e^x es de y_h
+    eq(O.verifyYp(math, Q, '2x*e^x').reason, 'correct');
+    eq(O.verifyYp(math, Q, '3e^x').reason, 'homog');
+    // (r − 1)(r + 2)(r² + 4) = r⁴ + r³ + 2r² + 4r − 8
+    const R = O.polyRoots([1, 1, 2, 4, -8]);
+    eq(R.length, 4);
+    near(R[0][0], -2, 1e-9); near(R[3][0], 1, 1e-9);
+    const cx = R.filter((q) => q[1] !== 0);
+    eq(cx.length, 2); cx.forEach((q) => { near(q[0], 0, 1e-9); near(Math.abs(q[1]), 2, 1e-9); });
+    const D = O.polyRoots([1, -3, 3, -1]);                                                    // (r − 1)³
+    D.forEach((q) => near(Math.hypot(q[0] - 1, q[1]), 0, 1e-4, 'raíz triple'));
+  });
+
   // Problemas de los labs de Cálculo 3: oficial pasa, erróneas rechazadas con su motivo.
   const dir = path.join(__dirname, '..', '..', 'data', 'calculo-3');
   if (!fs.existsSync(dir)) return;
@@ -131,8 +150,8 @@ module.exports = ({ test, eq, near, LM, math }) => {
       if (!probs.length) throw new Error('el lab no tiene problemas');
       let wrongs = 0;
       probs.forEach((P) => {
-        if (P.kind === 'exact' || P.kind === 'pair') {
-          const check = (src) => (P.kind === 'exact' ? O.verifyExact(math, P, src) : O.verifyPair(math, P, src[0], src[1]));
+        if (P.kind === 'exact' || P.kind === 'pair' || P.kind === 'yp') {
+          const check = (src) => (P.kind === 'exact' ? O.verifyExact(math, P, src) : P.kind === 'yp' ? O.verifyYp(math, P, src) : O.verifyPair(math, P, src[0], src[1]));
           eq(check(P.solution).reason, 'correct', `${P.name}: la oficial ${P.solution}`);
           (P.wrong || []).forEach((w) => {
             const g = check(w.src);

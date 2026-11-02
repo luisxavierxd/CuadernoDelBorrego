@@ -6,6 +6,8 @@
    lineales y Bernoulli) con su modelo físico.
    Bloque B (S06–S10): 8 problemas (exactas, factor integrante, RL, tanque con
    volumen variable, conjunto fundamental, reducción de orden y los casos de raíces).
+   Bloque C (S11–S15): 8 problemas (orden 3, coeficientes indeterminados con y sin
+   duplicación, resonancia, variación de parámetros, resorte amortiguado y RLC).
    Todas las figuras usan el graficador genérico exam-fn.
    Las respuestas se comprueban por otro camino en scripts/labs-math/c3-exam.js
    (integrando cada PVI con RK4 de LabMath.ode).
@@ -568,6 +570,275 @@
           prompt: function () { return 'Con tus resultados, ¿cuánto vale ese máximo?'; },
           answer: function (v, prev) { return (v.A + prev[0] * prev[2]) * Math.exp(-v.k * prev[2]); },
           solution: function (v) { var c2 = v.B + v.k * v.A, x = v.B / (v.k * c2); return '$y_{máx} = (' + v.A + ' + ' + c2 + '\\cdot ' + fx(x, 3) + ')e^{-' + v.k + '(' + fx(x, 3) + ')} \\approx ' + fx((v.A + c2 * x) * Math.exp(-v.k * x), 3) + '$.'; }
+        }
+      ]
+    },
+
+    /* ================= Bloque C · No homogéneas y orden superior (S11–S15) ================= */
+    {
+      id: 'c3-ex-orden3', tags: ['c3.S11'], block: 'C', title: 'Un PVI de tercer orden',
+      vars: { A: [-2, 2, 1], B: [-2, 3, 1], C: [-3, 6, 1] },
+      where: function (v) { var c3 = (v.C - 3 * v.B + 2 * v.A) / 2, c2 = v.B - v.A - 2 * c3; return Math.abs(c3) >= 0.5 && Math.abs(c2) >= 0.5 && Math.abs(v.A - c2 - c3) >= 0.5; },
+      statement: function (v) { return '<p>Resuelve $y\'\'\' - 6y\'\' + 11y\' - 6y = 0$ con $y(0) = ' + v.A + '$, $y\'(0) = ' + v.B + '$, $y\'\'(0) = ' + v.C + '$. El polinomio característico es $(r - 1)(r - 2)(r - 3)$, así que $y = c_1e^{x} + c_2e^{2x} + c_3e^{3x}$.</p>'; },
+      diagram: { id: 'exam-fn', state: function (v) {
+        var c3 = (v.C - 3 * v.B + 2 * v.A) / 2, c2 = v.B - v.A - 2 * c3, c1 = v.A - c2 - c3;
+        return { x: [-1, 0.8], fns: [{ f: function (x) { return c1 * Math.exp(x) + c2 * Math.exp(2 * x) + c3 * Math.exp(3 * x); }, cls: 'ref', label: 'y(x)' }], pts: [{ x: 0, y: v.A, label: 'y(0)' }], xlab: 'x', ylab: 'y' };
+      } },
+      parts: [
+        {
+          label: 'a', type: 'numeric', points: 3,
+          prompt: function () { return 'Del sistema de condiciones iniciales, ¿cuánto vale $c_3$?'; },
+          answer: function (v) { return (v.C - 3 * v.B + 2 * v.A) / 2; },
+          solution: function (v) { return 'Con $c_1 + c_2 + c_3 = ' + v.A + '$, $c_1 + 2c_2 + 3c_3 = ' + v.B + '$ y $c_1 + 4c_2 + 9c_3 = ' + v.C + '$, restando dos veces: $2c_3 = ' + v.C + ' - 3(' + v.B + ') + 2(' + v.A + ')$, así que $c_3 = ' + fx((v.C - 3 * v.B + 2 * v.A) / 2) + '$.'; }
+        },
+        {
+          label: 'b', type: 'numeric', points: 2,
+          prompt: function () { return 'Con tu $c_3$, ¿cuánto vale $c_2$? (Usa $c_2 + 2c_3 = y\'(0) - y(0)$.)'; },
+          answer: function (v, prev) { return v.B - v.A - 2 * prev[0]; },
+          solution: function (v) { var c3 = (v.C - 3 * v.B + 2 * v.A) / 2; return '$c_2 = ' + v.B + ' - (' + v.A + ') - 2(' + fx(c3) + ') = ' + fx(v.B - v.A - 2 * c3) + '$.'; }
+        },
+        {
+          label: 'c', type: 'numeric', points: 2,
+          prompt: function () { return 'Con tus resultados, ¿cuánto vale $c_1$?'; },
+          answer: function (v, prev) { return v.A - prev[1] - prev[0]; },
+          solution: function (v) { var c3 = (v.C - 3 * v.B + 2 * v.A) / 2, c2 = v.B - v.A - 2 * c3; return '$c_1 = ' + v.A + ' - c_2 - c_3 = ' + fx(v.A - c2 - c3) + '$.'; }
+        },
+        {
+          label: 'd', type: 'numeric', points: 3,
+          prompt: function () { return 'Con tus constantes, ¿cuánto vale $y(0.5)$?'; },
+          answer: function (v, prev) { return prev[2] * Math.exp(0.5) + prev[1] * Math.exp(1) + prev[0] * Math.exp(1.5); },
+          solution: function (v) { var c3 = (v.C - 3 * v.B + 2 * v.A) / 2, c2 = v.B - v.A - 2 * c3, c1 = v.A - c2 - c3; return '$y(0.5) = ' + fx(c1) + 'e^{0.5} + ' + fx(c2) + 'e^{1} + ' + fx(c3) + 'e^{1.5} \\approx ' + fx(c1 * Math.exp(0.5) + c2 * Math.E + c3 * Math.exp(1.5), 3) + '$.'; }
+        }
+      ]
+    },
+    {
+      id: 'c3-ex-coef-pol', tags: ['c3.S12'], block: 'C', title: 'Una y_p polinomial',
+      vars: { p: [1, 4, 1], q: [1, 4, 1], c: [2, 8, 1], d: [-6, 6, 1] },
+      where: function (v) { var A = v.c / v.q, B = (v.d - v.p * A) / v.q; return Math.abs(B) > 0.3; },
+      statement: function (v) { return '<p>Para $y\'\' + ' + (v.p === 1 ? '' : v.p) + "y' + " + (v.q === 1 ? '' : v.q) + 'y = ' + v.c + 'x ' + (v.d < 0 ? '- ' + (-v.d) : '+ ' + v.d) + '$ se propone $y_p = Ax + B$.</p>'; },
+      diagram: { id: 'exam-fn', state: function (v) {
+        var A = v.c / v.q, B = (v.d - v.p * A) / v.q;
+        return { x: [-2, 3], fns: [{ f: function (x) { return A * x + B; }, cls: 'ref', label: 'yₚ' }], xlab: 'x', ylab: 'y' };
+      } },
+      parts: [
+        {
+          label: 'a', type: 'numeric', points: 3,
+          prompt: function () { return '¿Cuánto vale $A$?'; },
+          answer: function (v) { return v.c / v.q; },
+          solution: function (v) { return 'Con $y_p\' = A$, $y_p\'\' = 0$: el término en $x$ da $' + v.q + 'A = ' + v.c + '$, $A = ' + fx(v.c / v.q, 3) + '$.'; }
+        },
+        {
+          label: 'b', type: 'numeric', points: 3,
+          prompt: function () { return 'Con tu $A$, ¿cuánto vale $B$?'; },
+          answer: function (v, prev) { return (v.d - v.p * prev[0]) / v.q; },
+          solution: function (v) { var A = v.c / v.q; return 'La constante: $' + v.p + 'A + ' + v.q + 'B = ' + v.d + '$, así que $B = ' + fx((v.d - v.p * A) / v.q, 3) + '$.'; }
+        },
+        {
+          label: 'c', type: 'numeric', points: 2,
+          prompt: function () { return 'Con tus coeficientes, ¿cuánto vale $y_p(2)$?'; },
+          answer: function (v, prev) { return 2 * prev[0] + prev[1]; },
+          solution: function (v) { var A = v.c / v.q, B = (v.d - v.p * A) / v.q; return '$y_p(2) = 2(' + fx(A, 3) + ') + (' + fx(B, 3) + ') \\approx ' + fx(2 * A + B, 3) + '$.'; }
+        }
+      ]
+    },
+    {
+      id: 'c3-ex-coef-trig', tags: ['c3.S12', 'c3.S15'], block: 'C', title: 'Un seno con amortiguamiento',
+      vars: { c: [1, 3, 1], F: [5, 30, 5] },
+      statement: function (v) { return '<p>Para $y\'\' + ' + (v.c === 1 ? '' : v.c) + "y' + 5y = " + v.F + '\\cos 2x$ se propone $y_p = A\\cos 2x + B\\sin 2x$. Al sustituir quedan $A + ' + (2 * v.c) + 'B = ' + v.F + '$ y $B - ' + (2 * v.c) + 'A = 0$.</p>'; },
+      diagram: { id: 'exam-fn', state: function (v) {
+        var A = v.F / (1 + 4 * v.c * v.c), B = 2 * v.c * A;
+        return { x: [0, 6.5], fns: [{ f: function (x) { return A * Math.cos(2 * x) + B * Math.sin(2 * x); }, cls: 'ref', label: 'yₚ' }], xlab: 'x', ylab: 'y' };
+      } },
+      parts: [
+        {
+          label: 'a', type: 'numeric', points: 3,
+          prompt: function () { return '¿Cuánto vale $A$?'; },
+          answer: function (v) { return v.F / (1 + 4 * v.c * v.c); },
+          solution: function (v) { return 'De la segunda, $B = ' + (2 * v.c) + 'A$; en la primera, $A(1 + ' + (4 * v.c * v.c) + ') = ' + v.F + '$, así que $A = ' + fx(v.F / (1 + 4 * v.c * v.c), 3) + '$.'; }
+        },
+        {
+          label: 'b', type: 'numeric', points: 2,
+          prompt: function () { return 'Con tu $A$, ¿cuánto vale $B$?'; },
+          answer: function (v, prev) { return 2 * v.c * prev[0]; },
+          solution: function (v) { var A = v.F / (1 + 4 * v.c * v.c); return '$B = ' + (2 * v.c) + 'A \\approx ' + fx(2 * v.c * A, 3) + '$.'; }
+        },
+        {
+          label: 'c', type: 'numeric', points: 3,
+          prompt: function () { return 'Con tus coeficientes, ¿qué amplitud tiene $y_p$ ($\\sqrt{A^2 + B^2}$)?'; },
+          answer: function (v, prev) { return Math.hypot(prev[0], prev[1]); },
+          solution: function (v) { var A = v.F / (1 + 4 * v.c * v.c), B = 2 * v.c * A; return '$\\sqrt{A^2 + B^2} \\approx ' + fx(Math.hypot(A, B), 3) + '$.'; }
+        },
+        {
+          label: 'd', type: 'numeric', points: 2,
+          prompt: function () { return 'Con tus coeficientes, ¿cuánto vale $y_p(\\pi/4)$?'; },
+          answer: function (v, prev) { return prev[1]; },
+          solution: function (v) { var A = v.F / (1 + 4 * v.c * v.c); return 'En $x = \\pi/4$, $\\cos(\\pi/2) = 0$ y $\\sin(\\pi/2) = 1$: $y_p = B \\approx ' + fx(2 * v.c * A, 3) + '$.'; }
+        }
+      ]
+    },
+    {
+      id: 'c3-ex-duplica', tags: ['c3.S13'], block: 'C', title: 'Cuando y_p choca',
+      vars: { a: [1, 3, 1], b: [-3, -1, 1], C: [2, 12, 2] },
+      statement: function (v) { var s = v.a + v.b, p = v.a * v.b; return '<p>Para $y\'\'' + (s ? (s > 0 ? ' - ' + (s === 1 ? '' : s) : ' + ' + (-s === 1 ? '' : -s)) + "y'" : '') + ' - ' + (-p) + 'y = ' + v.C + 'e^{' + (v.a === 1 ? '' : v.a) + 'x}$, $e^{' + (v.a === 1 ? '' : v.a) + 'x}$ ya está en $y_h$, así que se propone $y_p = Ax\\,e^{' + (v.a === 1 ? '' : v.a) + 'x}$. Al sustituir queda $A(' + v.a + ' - (' + v.b + '))e^{' + (v.a === 1 ? '' : v.a) + 'x} = ' + v.C + 'e^{' + (v.a === 1 ? '' : v.a) + 'x}$.</p>'; },
+      diagram: { id: 'exam-fn', state: function (v) {
+        var A = v.C / (v.a - v.b);
+        return { x: [-1, 1], fns: [{ f: function (x) { return A * x * Math.exp(v.a * x); }, cls: 'ref', label: 'yₚ' }], xlab: 'x', ylab: 'y' };
+      } },
+      parts: [
+        {
+          label: 'a', type: 'numeric', points: 3,
+          prompt: function () { return '¿Cuánto vale $A$?'; },
+          answer: function (v) { return v.C / (v.a - v.b); },
+          solution: function (v) { return '$A = \\dfrac{' + v.C + '}{' + (v.a - v.b) + '} \\approx ' + fx(v.C / (v.a - v.b), 3) + '$.'; }
+        },
+        {
+          label: 'b', type: 'numeric', points: 3,
+          prompt: function () { return 'Con tu $A$, ¿cuánto vale $y_p(1)$?'; },
+          answer: function (v, prev) { return prev[0] * Math.exp(v.a); },
+          solution: function (v) { var A = v.C / (v.a - v.b); return '$y_p(1) = A\\,e^{' + v.a + '} \\approx ' + fx(A * Math.exp(v.a), 3) + '$.'; }
+        },
+        {
+          label: 'c', type: 'numeric', points: 2,
+          prompt: function () { return 'Con tu $A$, ¿cuánto vale $y_p\'(0)$?'; },
+          answer: function (v, prev) { return prev[0]; },
+          solution: function (v) { return '$y_p\' = A(1 + ' + v.a + 'x)e^{' + v.a + 'x}$, así que $y_p\'(0) = A \\approx ' + fx(v.C / (v.a - v.b), 3) + '$.'; }
+        }
+      ]
+    },
+    {
+      id: 'c3-ex-resonancia', tags: ['c3.S13', 'c3.S15'], block: 'C', title: 'Resonancia sin fricción',
+      vars: { w: [2, 5, 1], F: [2, 12, 2], t1: [1, 4, 0.5] },
+      where: function (v) { return Math.abs(Math.sin(v.w * v.t1)) > 0.2; },
+      statement: function (v) { return '<p>Un resorte sin fricción con frecuencia natural $\\omega_0 = ' + v.w + '$ rad/s recibe la fuerza en resonancia: $x\'\' + ' + (v.w * v.w) + 'x = ' + v.F + '\\cos ' + v.w + 't$, con $x(0) = 0$ y $x\'(0) = 0$. La solución es $x = Bt\\sin ' + v.w + 't$.</p>'; },
+      diagram: { id: 'exam-fn', state: function (v) {
+        var B = v.F / (2 * v.w);
+        return { x: [0, 8], fns: [{ f: function (t) { return B * t * Math.sin(v.w * t); }, cls: 'ref', label: 'x(t)' }, { f: function (t) { return B * t; }, cls: 'aux', dash: '5 6' }, { f: function (t) { return -B * t; }, cls: 'aux', dash: '5 6' }], xlab: 't (s)', ylab: 'x' };
+      } },
+      parts: [
+        {
+          label: 'a', type: 'numeric', points: 3,
+          prompt: function () { return '¿Cuánto vale $B$?'; },
+          answer: function (v) { return v.F / (2 * v.w); },
+          solution: function (v) { return 'Al sustituir queda $2\\omega B\\cos\\omega t = F\\cos\\omega t$, así que $B = \\dfrac{' + v.F + '}{2(' + v.w + ')} = ' + fx(v.F / (2 * v.w), 3) + '$.'; }
+        },
+        {
+          label: 'b', type: 'numeric', points: 3,
+          prompt: function (v) { return 'Con tu $B$, ¿dónde está la masa a los ' + v.t1 + ' s?'; },
+          answer: function (v, prev) { return prev[0] * v.t1 * Math.sin(v.w * v.t1); },
+          solution: function (v) { var B = v.F / (2 * v.w); return '$x(' + v.t1 + ') = ' + fx(B, 3) + '(' + v.t1 + ')\\sin(' + fx(v.w * v.t1) + ') \\approx ' + fx(B * v.t1 * Math.sin(v.w * v.t1), 3) + '$.'; }
+        },
+        {
+          label: 'c', type: 'numeric', points: 2,
+          prompt: function () { return 'Con tu $B$, ¿qué amplitud máxima puede alcanzar a los 10 s (la envolvente $Bt$)?'; },
+          answer: function (v, prev) { return 10 * prev[0]; },
+          solution: function (v) { return 'La envolvente es $Bt$: a los 10 s vale $' + fx(10 * v.F / (2 * v.w), 3) + '$. Sin fricción, crece sin límite.'; }
+        }
+      ]
+    },
+    {
+      id: 'c3-ex-variacion', tags: ['c3.S14'], block: 'C', title: 'Variación de parámetros con secante',
+      vars: { x0: [0.2, 1.2, 0.1] },
+      statement: function () { return '<p>Para $y\'\' + y = \sec x$ en $-\pi/2 < x < \pi/2$, con $y_1 = \cos x$, $y_2 = \sin x$ y $W = 1$, se usa $y_p = u_1y_1 + u_2y_2$ con $u_1\' = -\tan x$ y $u_2\' = 1$ (integrales sin constante).</p>'; },
+      diagram: { id: 'exam-fn', state: function () {
+        return { x: [-1.4, 1.4], fns: [{ f: function (x) { return x * Math.sin(x) + Math.cos(x) * Math.log(Math.cos(x)); }, cls: 'ref', label: 'yₚ' }], xlab: 'x', ylab: 'y' };
+      } },
+      parts: [
+        {
+          label: 'a', type: 'numeric', points: 3,
+          prompt: function (v) { return 'Integrando, ¿cuánto vale $u_1(' + v.x0 + ')$?'; },
+          answer: function (v) { return Math.log(Math.cos(v.x0)); },
+          solution: function (v) { return '$u_1 = \int -\tan x\,dx = \ln(\cos x)$; en $' + v.x0 + '$ vale $' + fx(Math.log(Math.cos(v.x0)), 4) + '$.'; }
+        },
+        {
+          label: 'b', type: 'numeric', points: 1,
+          prompt: function (v) { return '¿Cuánto vale $u_2(' + v.x0 + ')$?'; },
+          answer: function (v) { return v.x0; },
+          solution: function (v) { return '$u_2 = \int 1\,dx = x$, así que $u_2(' + v.x0 + ') = ' + v.x0 + '$.'; }
+        },
+        {
+          label: 'c', type: 'numeric', points: 3,
+          prompt: function (v) { return 'Con tus resultados, ¿cuánto vale $y_p(' + v.x0 + ')$?'; },
+          answer: function (v, prev) { return prev[0] * Math.cos(v.x0) + prev[1] * Math.sin(v.x0); },
+          solution: function (v) { var y = Math.log(Math.cos(v.x0)) * Math.cos(v.x0) + v.x0 * Math.sin(v.x0); return '$y_p = u_1\cos x + u_2\sin x \approx ' + fx(y, 4) + '$.'; }
+        },
+        {
+          label: 'd', type: 'numeric', points: 3,
+          prompt: function (v) { return 'Con tus resultados, ¿cuánto vale $y_p\'(' + v.x0 + ')$? (En variación de parámetros, $y_p\' = u_1y_1\' + u_2y_2\'$.)'; },
+          answer: function (v, prev) { return -prev[0] * Math.sin(v.x0) + prev[1] * Math.cos(v.x0); },
+          solution: function (v) { var u1 = Math.log(Math.cos(v.x0)); return '$y_p\' = -u_1\sin x + u_2\cos x \approx ' + fx(-u1 * Math.sin(v.x0) + v.x0 * Math.cos(v.x0), 4) + '$.'; }
+        }
+      ]
+    },
+    {
+      id: 'c3-ex-resorte', tags: ['c3.S15', 'c3.S10'], block: 'C', title: 'Un resorte amortiguado',
+      vars: { m: [1, 3, 1], c: [1, 4, 1], k: [10, 30, 5], x0: [1, 3, 1] },
+      where: function (v) { return v.c * v.c < 4 * v.m * v.k * 0.7; },
+      statement: function (v) { return '<p>Una masa de ' + v.m + ' kg cuelga de un resorte con $k = ' + v.k + '$ N/m y amortiguamiento $c = ' + v.c + '$ kg/s. Se suelta desde $x = ' + v.x0 + '$ m en reposo: $' + (v.m === 1 ? '' : v.m) + "x'' + " + (v.c === 1 ? '' : v.c) + "x' + " + v.k + 'x = 0$.</p>'; },
+      diagram: { id: 'exam-fn', state: function (v) {
+        var al = -v.c / (2 * v.m), be = Math.sqrt(4 * v.m * v.k - v.c * v.c) / (2 * v.m);
+        return { x: [0, 8], fns: [{ f: function (t) { return v.x0 * Math.exp(al * t) * (Math.cos(be * t) - al / be * Math.sin(be * t)); }, cls: 'ref', label: 'x(t)' }], xlab: 't (s)', ylab: 'x (m)' };
+      } },
+      parts: [
+        {
+          label: 'a', type: 'numeric', points: 2,
+          prompt: function () { return '¿Cuánto vale el discriminante $c^2 - 4mk$?'; },
+          answer: function (v) { return v.c * v.c - 4 * v.m * v.k; },
+          solution: function (v) { return '$' + (v.c * v.c) + ' - 4(' + v.m + ')(' + v.k + ') = ' + (v.c * v.c - 4 * v.m * v.k) + '$: negativo, subamortiguado.'; }
+        },
+        {
+          label: 'b', type: 'numeric', points: 3, unit: 'rad/s',
+          prompt: function () { return 'Con tu discriminante, ¿con qué frecuencia $\\beta$ oscila? ($\\beta = \\sqrt{-(c^2 - 4mk)}/(2m)$.)'; },
+          answer: function (v, prev) { return Math.sqrt(Math.abs(prev[0])) / (2 * v.m); },
+          solution: function (v) { return '$\\beta = \\dfrac{\\sqrt{' + (4 * v.m * v.k - v.c * v.c) + '}}{' + (2 * v.m) + '} \\approx ' + fx(Math.sqrt(4 * v.m * v.k - v.c * v.c) / (2 * v.m), 3) + '$ rad/s.'; }
+        },
+        {
+          label: 'c', type: 'numeric', points: 2, unit: 's',
+          prompt: function () { return 'Con tu $\\beta$, ¿cuánto tarda cada oscilación (el periodo)?'; },
+          answer: function (v, prev) { return 2 * Math.PI / prev[1]; },
+          solution: function (v) { var be = Math.sqrt(4 * v.m * v.k - v.c * v.c) / (2 * v.m); return '$T = 2\\pi/\\beta \\approx ' + fx(2 * Math.PI / be, 3) + '$ s.'; }
+        },
+        {
+          label: 'd', type: 'numeric', points: 3, unit: 'm',
+          prompt: function () { return 'Con tu periodo, ¿qué amplitud tiene la oscilación después de un periodo? (La envolvente es $x_0e^{-ct/2m}$.)'; },
+          answer: function (v, prev) { return v.x0 * Math.exp(-v.c * prev[2] / (2 * v.m)); },
+          solution: function (v) { var T = 2 * Math.PI / (Math.sqrt(4 * v.m * v.k - v.c * v.c) / (2 * v.m)); return '$x_0e^{-cT/2m} = ' + v.x0 + 'e^{-' + v.c + '(' + fx(T, 3) + ')/' + (2 * v.m) + '} \\approx ' + fx(v.x0 * Math.exp(-v.c * T / (2 * v.m)), 3) + '$ m.'; }
+        }
+      ]
+    },
+    {
+      id: 'c3-ex-rlc', tags: ['c3.S15'], block: 'C', title: 'Un circuito RLC',
+      vars: { L: [0.5, 2, 0.5], R: [1, 4, 1], Cm: [10, 100, 10], E: [6, 24, 6] },
+      where: function (v) { var C = v.Cm / 1000; return 1 / (v.L * C) > Math.pow(v.R / (2 * v.L), 2) * 1.5; },
+      statement: function (v) { return '<p>Un RLC en serie tiene $L = ' + v.L + '$ H, $R = ' + v.R + '$ Ω, $C = ' + v.Cm + '$ mF y una batería de ' + v.E + ' V: $Lq\'\' + Rq\' + q/C = \\varepsilon$, con $q(0) = 0$ e $i(0) = 0$.</p>'; },
+      diagram: { id: 'exam-fn', state: function (v) {
+        var C = v.Cm / 1000, al = -v.R / (2 * v.L), be = Math.sqrt(1 / (v.L * C) - al * al), Q = C * v.E;
+        return { x: [0, 8 / Math.abs(al)], fns: [{ f: function (t) { return Q * (1 - Math.exp(al * t) * (Math.cos(be * t) - al / be * Math.sin(be * t))); }, cls: 'ref', label: 'q(t)' }], hlines: [{ y: Q, label: 'Cε' }], xlab: 't (s)', ylab: 'q (C)' };
+      } },
+      parts: [
+        {
+          label: 'a', type: 'numeric', points: 2, unit: 'C',
+          prompt: function () { return '¿A qué carga tiende el capacitor ($q_p$)?'; },
+          answer: function (v) { return v.Cm / 1000 * v.E; },
+          tol: { rel: 0.01 },
+          solution: function (v) { return '$q_p = C\\varepsilon = ' + (v.Cm / 1000) + '(' + v.E + ') = ' + fx(v.Cm / 1000 * v.E, 3) + '$ C.'; }
+        },
+        {
+          label: 'b', type: 'numeric', points: 2, unit: 'rad/s',
+          prompt: function () { return '¿Cuánto vale la frecuencia natural $\\omega_0 = 1/\\sqrt{LC}$?'; },
+          answer: function (v) { return 1 / Math.sqrt(v.L * v.Cm / 1000); },
+          solution: function (v) { return '$\\omega_0 = 1/\\sqrt{' + v.L + '\\cdot ' + (v.Cm / 1000) + '} \\approx ' + fx(1 / Math.sqrt(v.L * v.Cm / 1000), 3) + '$ rad/s.'; }
+        },
+        {
+          label: 'c', type: 'numeric', points: 3, unit: 'rad/s',
+          prompt: function () { return 'Con tu $\\omega_0$, ¿con qué frecuencia $\\beta = \\sqrt{\\omega_0^2 - (R/2L)^2}$ oscila la carga?'; },
+          answer: function (v, prev) { return Math.sqrt(Math.max(0, prev[1] * prev[1] - Math.pow(v.R / (2 * v.L), 2))); },
+          solution: function (v) { var w0 = 1 / Math.sqrt(v.L * v.Cm / 1000); return '$\\beta = \\sqrt{' + fx(w0 * w0) + ' - ' + fx(Math.pow(v.R / (2 * v.L), 2), 3) + '} \\approx ' + fx(Math.sqrt(w0 * w0 - Math.pow(v.R / (2 * v.L), 2)), 3) + '$ rad/s.'; }
+        },
+        {
+          label: 'd', type: 'numeric', points: 3, unit: 'C',
+          prompt: function () { return 'Con tus resultados, ¿cuál es la carga máxima (la primera vez que $i = 0$, en $t = \\pi/\\beta$)? Usa $q = q_p\\left[1 - e^{-Rt/2L}\\left(\\cos\\beta t + \\tfrac{R}{2L\\beta}\\sin\\beta t\\right)\\right]$.'; },
+          answer: function (v, prev) { return prev[0] * (1 + Math.exp(-v.R / (2 * v.L) * Math.PI / prev[2])); },
+          solution: function (v) { var C = v.Cm / 1000, be = Math.sqrt(1 / (v.L * C) - Math.pow(v.R / (2 * v.L), 2)), qm = C * v.E * (1 + Math.exp(-v.R / (2 * v.L) * Math.PI / be)); return 'En $t = \\pi/\\beta$: $\\cos = -1$, $\\sin = 0$, así que $q = q_p(1 + e^{-R\\pi/2L\\beta}) \\approx ' + fx(qm, 4) + '$ C: se pasa de $C\\varepsilon$.'; }
         }
       ]
     }
