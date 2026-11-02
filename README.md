@@ -14,7 +14,7 @@
 
 Clases universitarias de cálculo y física, autogestionadas y pensadas para quien batalla con la materia.
 Ya están completos Cálculo 1, Física 1, Cálculo 2 (multivariable), Física 2 (sistemas eléctricos)
-y Física 3 (sistemas electromagnéticos), con 15 sesiones cada uno; Cálculo 3 (ecuaciones diferenciales) está en el plan. Cada sesión trae una lección explicada paso a paso, un lab que compara tu
+y Física 3 (sistemas electromagnéticos), con 15 sesiones cada uno; Cálculo 3 (ecuaciones diferenciales) va en camino, con las sesiones 1 a 5 publicadas. Cada sesión trae una lección explicada paso a paso, un lab que compara tu
 respuesta contra la real, ejercicios parametrizados y quiz; cada curso tiene banco de preguntas, simulacros
 de examen y formulario imprimible. Sitio estático para GitHub Pages. **Proyecto de alumnos, no oficial.**
 
@@ -35,7 +35,7 @@ KaTeX 0.16.47, math.js 15.2.0, MathLive 0.110.0, anime.js 3.2.1 y manim-web 0.3.
 
 ```
 index.html                         Hub: hero, cómo funciona, biblioteca y atajos de práctica
-calculo-1/ · fisica-1/ · calculo-2/ · fisica-2/ · fisica-3/   Portadas de curso
+calculo-1/ · fisica-1/ · calculo-2/ · fisica-2/ · calculo-3/ · fisica-3/   Portadas de curso
   sesiones/sesion-NN/index.html    Shell mínimo de cada sesión (lo crea scripts/make-shell.js)
 quiz/                              Lanzador de práctica (quiz, simulacro, personalizado) e historial
 quiz/examen/                       Intento y revisión de un examen (?intento=ID)
