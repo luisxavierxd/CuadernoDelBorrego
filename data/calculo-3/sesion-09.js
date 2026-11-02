@@ -132,6 +132,7 @@
       },
       {
         type: 'concept', heading: 'Independencia lineal y Wronskiano', short: 'Wronskiano',
+        diagram: 'c3s09-indep', caption: 'Si una solución es múltiplo de la otra, solo tienes una dirección: el Wronskiano vale cero.',
         body: [
           'Las funciones $y_1, \\dots, y_n$ son <strong>linealmente dependientes</strong> en $I$ si alguna combinación $c_1y_1 + \\dots + c_ny_n = 0$ con no todos los $c$ cero vale para todo $x$. Con dos funciones, eso es que una sea múltiplo de la otra. Si no, son <strong>independientes</strong>.',
           'El <strong>Wronskiano</strong> de dos funciones es $$W(y_1, y_2) = \\begin{vmatrix} y_1 & y_2 \\\\ y_1\' & y_2\' \\end{vmatrix} = y_1y_2\' - y_1\'y_2$$ (con $n$ funciones, la matriz lleva hasta la derivada $n - 1$).',
@@ -158,6 +159,7 @@
       },
       {
         type: 'example', heading: 'PVI con el conjunto fundamental',
+        diagram: 'c3s09-pvi',
         problem: '<p>Con el conjunto fundamental $\\{e^{2x}, e^{-x}\\}$ de $y\'\' - y\' - 2y = 0$, resuelve el PVI $y(0) = 4$, $y\'(0) = -1$.</p>',
         steps: [
           { text: 'Escribe la general y su derivada.', math: "y = c_1e^{2x} + c_2e^{-x}, \\qquad y' = 2c_1e^{2x} - c_2e^{-x}" },

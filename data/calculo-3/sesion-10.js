@@ -105,6 +105,7 @@
       },
       {
         type: 'concept', heading: 'Imagínalo así', short: 'Imagínalo así',
+        diagram: 'c3s10-door', caption: 'El amortiguamiento crítico es la frontera entre rebotar y tardar de más.',
         body: [
           'Una puerta con cierre hidráulico: si el amortiguador es muy fuerte, la puerta se cierra lento y sin rebotar; si es muy débil, se azota y rebota unas veces antes de quedarse quieta. Hay un punto justo en medio donde se cierra lo más rápido posible sin rebotar.',
           'Esos tres comportamientos son los tres casos de esta sesión: dos raíces reales (lento, sin rebote), una raíz doble (justo en medio) y raíces complejas (rebota). La parte real dice qué tan rápido se apaga; la imaginaria, qué tan rápido oscila.'
@@ -159,6 +160,7 @@
       },
       {
         type: 'concept', heading: 'Por qué aparecen seno y coseno', short: 'Fórmula de Euler',
+        diagram: 'c3s10-euler', caption: 'Una raíz compleja gira en el plano; vista desde un eje, ese giro es un coseno o un seno.',
         body: [
           'Con $r = \\alpha \\pm \\beta i$, las soluciones complejas son $e^{(\\alpha \\pm \\beta i)x} = e^{\\alpha x}e^{\\pm\\beta ix}$. La <strong>fórmula de Euler</strong> dice $e^{i\\theta} = \\cos\\theta + i\\sin\\theta$.',
           'Sumando y restando las dos soluciones (superposición, S09) y dividiendo entre 2 o $2i$ salen dos soluciones <strong>reales</strong>: $e^{\\alpha x}\\cos\\beta x$ y $e^{\\alpha x}\\sin\\beta x$. Su Wronskiano es $\\beta e^{2\\alpha x} \\neq 0$, así que forman un conjunto fundamental.'
@@ -166,6 +168,7 @@
       },
       {
         type: 'example', heading: 'Raíces complejas',
+        diagram: 'c3s10-envelope',
         problem: '<p>Resuelve $y\'\' + 2y\' + 5y = 0$ con $y(0) = 1$, $y\'(0) = 1$, y calcula $y(1)$.</p>',
         steps: [
           { text: '$r = \\frac{-2 \\pm \\sqrt{4 - 20}}{2} = -1 \\pm 2i$: $\\alpha = -1$, $\\beta = 2$.', math: 'y = e^{-x}(c_1\\cos 2x + c_2\\sin 2x)' },

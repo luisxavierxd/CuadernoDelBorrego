@@ -126,6 +126,7 @@
       },
       {
         type: 'example', heading: 'Un factor μ(x)',
+        diagram: 'c3s07-gap',
         problem: '<p>Resuelve $(3xy + y^2)\\,dx + (x^2 + xy)\\,dy = 0$.</p>',
         steps: [
           { text: 'No es exacta.', math: 'M_y = 3x + 2y \\qquad N_x = 2x + y' },
@@ -158,6 +159,7 @@
       },
       {
         type: 'example', heading: 'La constante de la solución',
+        diagram: 'c3s07-curve',
         problem: '<p>Resuelve $(2y^2 + 3x)\\,dx + 2xy\\,dy = 0$ con $y(1) = 1$ y calcula $y(0.5)$.</p>',
         steps: [
           { text: '$M_y = 4y$, $N_x = 2y$, y $\\frac{M_y - N_x}{N} = \\frac{2y}{2xy} = \\frac{1}{x}$: $\\mu = x$.', math: '(2xy^2 + 3x^2)\\,dx + 2x^2y\\,dy = 0' },

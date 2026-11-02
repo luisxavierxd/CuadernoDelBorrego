@@ -111,6 +111,7 @@
       },
       {
         type: 'concept', heading: 'Imagínalo así', short: 'Imagínalo así',
+        diagram: 'c3s01-speed', caption: 'La ecuación da la rapidez (la regla); con el punto de salida se reconstruye la posición (la historia).',
         body: [
           'Vas en carretera y el velocímetro marca 90 km/h. Eso no te dice dónde estás: te dice qué tan rápido <em>cambia</em> tu posición. Si además sabes de dónde saliste, puedes reconstruir todo el viaje. Una ecuación diferencial es justo eso: una regla para el cambio, y una condición inicial que fija el punto de partida.',
           'Otro ejemplo: un café recién servido se enfría rápido al principio y cada vez más lento. Nadie te da la fórmula de la temperatura; lo que sí se sabe es que <strong>se enfría más rápido entre más caliente está respecto al cuarto</strong>. Eso, escrito con derivadas, es $T\' = -k(T - T_a)$. De esa regla sale la fórmula de $T(t)$.',
@@ -153,6 +154,7 @@
       },
       {
         type: 'example', heading: 'Comprobar una solución de segundo orden',
+        diagram: 'c3s01-check',
         problem: '<p>Comprueba que $y = \\cos 2x + \\sin 2x$ es solución de $y\'\' + 4y = 0$.</p>',
         steps: [
           { text: 'Deriva dos veces (regla de la cadena: sale un 2 cada vez).', math: "y' = -2\\sin 2x + 2\\cos 2x \\qquad y'' = -4\\cos 2x - 4\\sin 2x" },
@@ -236,6 +238,7 @@
       },
       {
         type: 'callout', heading: 'La solución puede explotar',
+        diagram: 'c3s01-blowup', caption: 'y = 1/(1 − x) solo vale a la izquierda de x = 1; la rama punteada ya es otra solución.',
         body: [
           'El teorema garantiza la solución solo «en algún intervalo». El PVI $y\' = y^2$, $y(0) = 1$ tiene solución $y = \\dfrac{1}{1 - x}$, que se va a infinito en $x = 1$ aunque la ecuación se vea inofensiva. El <strong>intervalo de validez</strong> es $(-\\infty, 1)$: el que contiene a $x_0 = 0$. Lo puedes ver en el problema 5 del lab.'
         ]

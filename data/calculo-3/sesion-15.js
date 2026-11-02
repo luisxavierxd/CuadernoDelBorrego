@@ -142,6 +142,7 @@
       },
       {
         type: 'concept', heading: 'Movimiento libre: los cuatro regímenes', short: 'Regímenes',
+        diagram: 'c3s15-regimes', caption: 'Todas salen de x = 1 en reposo; solo cambia el amortiguamiento c.',
         body: [
           'Con $F = 0$, el característico es $mr^2 + cr + k = 0$. Según el discriminante $c^2 - 4mk$:'
         ],
@@ -191,6 +192,7 @@
       },
       {
         type: 'example', heading: 'Un RLC que se carga',
+        diagram: 'c3s15-rlc',
         problem: '<p>Un RLC tiene $L = 1$ H, $R = 2$ Ω, $C = 0.1$ F y una batería de 10 V. Empieza descargado y sin corriente. Encuentra $q(t)$ y $q(1)$.</p>',
         steps: [
           { text: 'Ecuación: $q\'\' + 2q\' + 10q = 10$. Particular constante: $10q_p = 10$, $q_p = 1$ C ($= C\\varepsilon$).', math: 'q = 1 + e^{-t}(c_1\\cos 3t + c_2\\sin 3t)' },
@@ -218,6 +220,7 @@
       },
       {
         type: 'example', heading: 'Un sistema que ya sabes resolver',
+        diagram: 'c3s15-phase',
         problem: '<p>Resuelve el sistema $x\' = y$, $y\' = -4x$ con $x(0) = 1$, $y(0) = 0$.</p>',
         steps: [
           { text: 'Deriva la primera y sustituye la segunda: $x\'\' = y\' = -4x$.', math: "x'' + 4x = 0,\\qquad x(0) = 1,\\ x'(0) = y(0) = 0" },

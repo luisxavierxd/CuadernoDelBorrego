@@ -112,6 +112,7 @@
       },
       {
         type: 'concept', heading: 'Imagínalo así', short: 'Imagínalo así',
+        diagram: 'c3s03-streets', caption: 'El recorrido es el mismo; con las calles alineadas se describe en dos tramos rectos.',
         body: [
           'Imagina que te dan las direcciones de una ciudad en coordenadas raras: «camina $3$ calles en diagonal y $2$ hacia la otra diagonal». Si cambias a calles y avenidas normales, el mismo recorrido se describe fácil. El camino no cambió, solo cómo lo describes.',
           'Con las ecuaciones pasa igual. En $y\' = (x + y)^2$ lo que manda es la suma $x + y$. Si llamas $u = x + y$, la ecuación habla solo de $u$ y queda $u\' = 1 + u^2$, que ya es separable. En una ecuación <strong>homogénea</strong>, lo que manda es el cociente $y/x$, así que usas $u = y/x$.'
@@ -192,6 +193,7 @@
       },
       {
         type: 'example', heading: 'u = x + y',
+        diagram: 'c3s03-before-after',
         problem: '<p>Resuelve $y\' = (x + y)^2$ con $y(0) = 0$.</p>',
         steps: [
           { text: 'Con $u = x + y$: $u\' = 1 + y\' = 1 + u^2$.', math: "u' = 1 + u^2" },

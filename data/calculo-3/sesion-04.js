@@ -127,6 +127,7 @@
       },
       {
         type: 'concept', heading: 'Imagínalo así', short: 'Imagínalo así',
+        diagram: 'c3s04-tub', caption: 'Al principio entra más de lo que sale; el nivel sube hasta que se igualan.',
         body: [
           'Una tina se llena con la llave abierta y al mismo tiempo se vacía por la coladera, más rápido entre más agua tiene. Lo que entra es fijo; lo que sale es proporcional a lo que hay. Al final se equilibra en un nivel donde lo que entra iguala a lo que sale.',
           'Eso es una ecuación lineal: $y\' = (\\text{entra}) - k\\,y$. Ya no se puede separar como en S02 si lo que entra depende del tiempo, pero hay un truco que siempre funciona: multiplicar por el factor justo para que el lado izquierdo sea la derivada de un producto.'
@@ -225,6 +226,7 @@
       },
       {
         type: 'example', heading: 'Un capacitor que se carga',
+        diagram: 'c3s04-tau',
         problem: '<p>Un circuito RC tiene $R = 2$ kΩ, $C = 3$ μF y una fem de 12 V. El capacitor empieza descargado. ¿Qué carga tiene a los 10 ms?</p>',
         steps: [
           { text: 'Ley de mallas: $\\varepsilon - Rq\' - \\frac{q}{C} = 0$. En forma estándar, con $\\tau = RC = 6$ ms:', math: "q' + \\frac{q}{RC} = \\frac{\\varepsilon}{R}" },

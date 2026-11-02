@@ -122,6 +122,17 @@
         ]
       },
       {
+        type: 'explainer', heading: 'Las constantes se vuelven funciones', short: 'u₁ y u₂',
+        title: 'y″ + y = sec x en −π/2 < x < π/2',
+        intro: 'El ejemplo «Con secante», dibujado.',
+        diagram: 'c3s14-vary',
+        steps: [
+          { text: 'La base de $y_h$ es $\\cos x$ y $\\sin x$. Con constantes fijas, $c_1\\cos x + c_2\\sin x$ solo resuelve la homogénea.', state: { k: 0 } },
+          { text: 'Las fórmulas dan $u_1\' = -\\tan x$ y $u_2\' = 1$, así que $u_1 = \\ln(\\cos x)$ y $u_2 = x$: «constantes» que cambian con $x$.', state: { k: 1 } },
+          { text: 'Con ellas, $y_p = u_1\\cos x + u_2\\sin x = x\\sin x + \\cos x\\ln(\\cos x)$. Cerca de $\\pm\\pi/2$, $\\sec x$ se dispara y $y_p$ también se curva.', state: { k: 2 } }
+        ]
+      },
+      {
         type: 'recipe', heading: 'Receta: variación de parámetros', short: 'Receta',
         steps: [
           { text: 'Escribe la ecuación en forma estándar y lee $g(x)$.', tip: 'Si te la dan como $x^2y\'\' + \\dots = x^3$, divide entre $x^2$: $g = x$, no $x^3$. Es el error más caro.' },
@@ -166,6 +177,7 @@
       },
       {
         type: 'example', heading: 'PVI con tangente',
+        diagram: 'c3s14-tan',
         problem: '<p>Resuelve $y\'\' + y = \\tan x$ con $y(0) = 0$, $y\'(0) = 0$, y calcula $y(1)$.</p>',
         steps: [
           { text: '$u_1\' = -\\sin x\\tan x = \\cos x - \\sec x$ y $u_2\' = \\sin x$, así que $u_1 = \\sin x - \\ln(\\sec x + \\tan x)$ y $u_2 = -\\cos x$.', math: 'y_p = -\\cos x\\,\\ln(\\sec x + \\tan x)' },

@@ -137,6 +137,7 @@
       },
       {
         type: 'example', heading: 'Tres raíces reales',
+        diagram: 'c3s11-notes',
         problem: '<p>Resuelve $y\'\'\' - 6y\'\' + 11y\' - 6y = 0$ con $y(0) = 0$, $y\'(0) = 0$, $y\'\'(0) = 2$.</p>',
         steps: [
           { text: 'Característico: $r^3 - 6r^2 + 11r - 6$. Con $r = 1$ da $0$; dividiendo queda $r^2 - 5r + 6 = (r - 2)(r - 3)$.', math: 'y = c_1e^{x} + c_2e^{2x} + c_3e^{3x}' },
@@ -159,6 +160,7 @@
       },
       {
         type: 'example', heading: 'Reales y complejas juntas',
+        diagram: 'c3s11-chord',
         problem: '<p>Resuelve $y^{(4)} - 16y = 0$ con $y(0) = 2$ y $y\'(0) = y\'\'(0) = y\'\'\'(0) = 0$. Calcula $y(1)$.</p>',
         steps: [
           { text: '$r^4 - 16 = (r - 2)(r + 2)(r^2 + 4)$: raíces $2, -2, \\pm 2i$.', math: 'y = c_1e^{2x} + c_2e^{-2x} + c_3\\cos 2x + c_4\\sin 2x' },

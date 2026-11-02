@@ -151,6 +151,7 @@
       },
       {
         type: 'example', heading: 'Corriente en un RL',
+        diagram: 'c3s08-rl',
         problem: '<p>Un circuito RL tiene $L = 0.5$ H, $R = 10$ Ω y una batería de 12 V. Se cierra el interruptor en $t = 0$. ¿Cuánta corriente hay a los 0.05 s?</p>',
         steps: [
           { text: 'Plantea con Kirchhoff y escribe la forma estándar.', math: "0.5\\,i' + 10\\,i = 12 \\;\\Rightarrow\\; i' + 20\\,i = 24, \\qquad i(0) = 0" },
@@ -171,6 +172,7 @@
       },
       {
         type: 'example', heading: 'Un tanque que se llena',
+        diagram: 'c3s08-volume',
         problem: '<p>Un tanque tiene 100 L de agua pura. Entra salmuera con 2 g/L a 3 L/min y sale la mezcla a 2 L/min. ¿Cuánta sal hay a los 50 minutos?</p>',
         steps: [
           { text: 'El volumen es $V = 100 + t$. El balance:', math: "A' = 3(2) - 2\\,\\frac{A}{100 + t} \\;\\Rightarrow\\; A' + \\frac{2}{100 + t}A = 6" },

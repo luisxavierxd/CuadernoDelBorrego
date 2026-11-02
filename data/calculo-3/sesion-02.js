@@ -154,6 +154,7 @@
       },
       {
         type: 'example', heading: 'Separar, integrar y despejar',
+        diagram: 'c3s02-gauss',
         problem: '<p>Resuelve $\\dfrac{dy}{dx} = 2xy$ con $y(0) = 3$.</p>',
         steps: [
           { text: 'Es separable con $g = 2x$ y $h = y$. La solución de equilibrio es $y = 0$ (no cumple $y(0) = 3$). Separa:', math: '\\frac{dy}{y} = 2x\\,dx' },
@@ -166,6 +167,7 @@
       },
       {
         type: 'example', heading: 'Cuando sale una raíz: elige el signo',
+        diagram: 'c3s02-branch',
         problem: '<p>Resuelve $\\dfrac{dy}{dx} = \\dfrac{x}{y}$ con $y(0) = 2$.</p>',
         steps: [
           { text: 'Separa multiplicando por $y$ y por $dx$.', math: 'y\\,dy = x\\,dx' },
@@ -189,6 +191,7 @@
       },
       {
         type: 'callout', heading: 'No pierdas las soluciones de equilibrio',
+        diagram: 'c3s02-equilibrium', caption: 'Las curvas 1/(C − x) nunca tocan y = 0, pero y = 0 también sigue el campo.',
         body: [
           'Al dividir entre $h(y)$ supones que no es cero. Las raíces de $h(y) = 0$ dan soluciones constantes que la fórmula a veces no incluye. En $y\' = y^2$ la familia es $y = \\dfrac{1}{C - x}$, y ningún valor de $C$ da la solución $y = 0$, que también cumple la ecuación. Si el PVI pide $y(x_0) = 0$, la respuesta es justo esa: $y = 0$.'
         ]

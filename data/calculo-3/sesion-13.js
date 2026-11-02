@@ -133,6 +133,7 @@
       },
       {
         type: 'example', heading: 'Raíz simple',
+        diagram: 'c3s13-kill',
         problem: '<p>Encuentra $y_p$ para $y\'\' - 3y\' + 2y = 4e^{x}$.</p>',
         steps: [
           { text: 'Característico $(r - 1)(r - 2)$: $y_h = c_1e^x + c_2e^{2x}$. La propuesta $Ae^x$ choca ($k = 1$ es raíz simple).', math: "y_p = Ax\\,e^{x},\\quad y_p' = A(1 + x)e^{x},\\quad y_p'' = A(2 + x)e^{x}" },
@@ -163,6 +164,7 @@
       },
       {
         type: 'example', heading: 'La resonancia, en cuentas',
+        diagram: 'c3s13-grow',
         problem: '<p>Encuentra $y_p$ para $y\'\' + 4y = 4\\cos 2x$.</p>',
         steps: [
           { text: '$\\pm 2i$ son raíces simples: $s = 1$. Con $u = A\\cos 2x + B\\sin 2x$ (que cumple $u\'\' = -4u$):', math: "y_p = x\\,u \\;\\Rightarrow\\; y_p'' + 4y_p = 2u' = -4A\\sin 2x + 4B\\cos 2x" },

@@ -108,6 +108,7 @@
       },
       {
         type: 'concept', heading: 'Imagínalo así', short: 'Imagínalo así',
+        diagram: 'c3s06-hill', caption: 'Sobre una curva de nivel F no cambia: eso dice F_x dx + F_y dy = 0.',
         body: [
           'Piensa en un mapa topográfico de un cerro. Si caminas por una curva de nivel, tu altura no cambia: cada paso $dx$ hacia el este y $dy$ hacia el norte suma un cambio de altura $F_x\\,dx + F_y\\,dy = 0$.',
           'Una ecuación exacta te da justo esa regla, $M\\,dx + N\\,dy = 0$, con $M = F_x$ y $N = F_y$. Lo que hay que hacer es reconstruir el cerro $F(x, y)$ a partir de sus pendientes. Una vez que lo tienes, cada solución es una curva de nivel.'
@@ -177,6 +178,7 @@
       },
       {
         type: 'example', heading: 'De la implícita a la explícita',
+        diagram: 'c3s06-implicit',
         problem: '<p>Resuelve $(2x + y)\\,dx + (x + 2y)\\,dy = 0$ con $y(1) = 1$ y calcula $y(0)$.</p>',
         steps: [
           { text: '$M_y = 1 = N_x$. Integrando: $F = x^2 + xy + h(y)$ y $F_y = x + h\'(y) = x + 2y$, así que $h = y^2$.', math: 'x^2 + xy + y^2 = C, \\qquad C = 1 + 1 + 1 = 3' },

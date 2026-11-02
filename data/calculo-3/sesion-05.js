@@ -120,6 +120,7 @@
       },
       {
         type: 'concept', heading: 'Imagínalo así', short: 'Imagínalo así',
+        diagram: 'c3s05-brake', caption: 'Con pocos peces la rapidez es casi rP; el factor 1 − P/K la frena hasta cero en P = K.',
         body: [
           'Una población de peces en un lago crece rápido cuando hay pocos (comida de sobra) y se frena cuando el lago se llena. El crecimiento es $rP$ por la parte de «más peces, más crías», pero se va apagando con un factor $\\left(1 - \\frac{P}{K}\\right)$ que llega a 0 cuando $P = K$, la capacidad del lago.',
           'Al desarrollar, $P\' = rP - \\frac{r}{K}P^2$: casi lineal, salvo el $P^2$. Si en vez de contar peces miras $v = 1/P$ («qué tanto lago le toca a cada pez»), la ecuación se vuelve lineal. Esa es la idea de Bernoulli.'
@@ -150,6 +151,7 @@
       },
       {
         type: 'example', heading: 'Bernoulli con n = 2',
+        diagram: 'c3s05-yv',
         problem: '<p>Resuelve $y\' + y = y^2$ con $y(0) = \\tfrac{1}{2}$.</p>',
         steps: [
           { text: 'Aquí $P = 1$, $Q = 1$, $n = 2$. Con $v = y^{-1}$, la ecuación en $v$ es:', math: "v' + (1 - 2)(1)\\,v = (1 - 2)(1) \\;\\Rightarrow\\; v' - v = -1" },

@@ -156,6 +156,17 @@
         verify: { lab: 'call', mod: 'ode', fn: 'isParticular', math: true, args: [P_COS, '-3cos(2x) + 4sin(2x)'], value: 1 }
       },
       {
+        type: 'explainer', heading: 'La respuesta copia a la fuerza', short: 'Transitorio y estacionario',
+        title: 'y″ + 2y′ + y = 25 cos 2x, desde el reposo',
+        intro: 'La misma ecuación del ejemplo, ahora con $y(0) = 0$, $y\'(0) = 0$.',
+        diagram: 'c3s12-response',
+        steps: [
+          { text: 'La fuerza $g = 25\\cos 2x$ (dibujada a escala 1/5) empuja con frecuencia 2.', state: { k: 0 } },
+          { text: 'La particular $y_p = -3\\cos 2x + 4\\sin 2x$ tiene la <strong>misma frecuencia</strong>, con otra amplitud ($5$) y desfasada.', state: { k: 1 } },
+          { text: 'La solución completa es $y = (3 - 5x)e^{-x} + y_p$. La parte $y_h$ se apaga (es el <strong>transitorio</strong>) y lo que queda es $y_p$: el <strong>estado estacionario</strong>.', state: { k: 2 } }
+        ]
+      },
+      {
         type: 'concept', heading: 'Superposición del lado derecho', short: 'Sumas en g',
         body: [
           'Si $g = g_1 + g_2$, encuentra $y_{p1}$ para $g_1$ y $y_{p2}$ para $g_2$ por separado y súmalas: $y_p = y_{p1} + y_{p2}$. Funciona porque la ecuación es lineal.',
@@ -164,6 +175,7 @@
       },
       {
         type: 'example', heading: 'El PVI completo',
+        diagram: 'c3s12-pvi',
         problem: '<p>Resuelve $y\'\' - y = 2$ con $y(0) = 0$, $y\'(0) = 0$, y calcula $y(1)$.</p>',
         steps: [
           { text: 'Homogénea: $r^2 - 1 = 0$, $y_h = c_1e^x + c_2e^{-x}$. Particular: $y_p = A$ da $-A = 2$.', math: 'y = c_1e^{x} + c_2e^{-x} - 2' },
